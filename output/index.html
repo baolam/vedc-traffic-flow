@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ Camera Giao thông TP.HCM</title>
+    <!-- Thêm CSS của Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Thêm MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { width: 100vw; height: 100vh; }
+        .header {
+            position: absolute; top: 10px; left: 50px; z-index: 1000;
+            background: white; padding: 10px 20px; border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .popup-content { font-size: 13px; line-height: 1.5; }
+        .popup-content b { font-size: 15px; color: #d35400; }
+        .popup-content span.label { font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Bản đồ Camera TP.HCM (<span id="count">0</span> camera)</h2>
+        <p>Dữ liệu chi tiết: Tọa độ, Tên đường, Quận/Huyện.</p>
+    </div>
+    <div id="map"></div>
+
+    <!-- Thêm JS của Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+        var map = L.map('map').setView([10.7769, 106.7009], 12);
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 19, attribution: '&copy; Google Maps'
+        }).addTo(map);
+
+        var cameraIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684849.png',
+            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+        });
+
+        var markers = L.markerClusterGroup();
+
+        // Đọc dữ liệu từ file JSON đầy đủ
+        fetch('cameras_hcm_full.json')
+            .then(response => response.json())
+            .then(cameraData => {
+                document.getElementById('count').innerText = cameraData.length;
+                
+                cameraData.forEach(function(cam) {
+                    var marker = L.marker([cam.lat, cam.lng], {icon: cameraIcon});
+                    
+                    var district = cam.district ? cam.district : "Đang cập nhật";
+                    var street = cam.street ? cam.street : "Đang cập nhật";
+                    
+                    var popupHtml = `<div class="popup-content">
+                        <b>${cam.name}</b><br>
+                        <span class="label">Mã ID:</span> ${cam.id}<br>
+                        <span class="label">Đường/Nút giao:</span> ${street}<br>
+                        <span class="label">Khu vực:</span> ${district}
+                    </div>`;
+                    
+                    marker.bindPopup(popupHtml);
+                    markers.addLayer(marker);
+                });
+                
+                map.addLayer(markers);
+            })
+            .catch(error => console.error('Lỗi khi tải dữ liệu camera:', error));
+    </script>
+</body>
+</html>
