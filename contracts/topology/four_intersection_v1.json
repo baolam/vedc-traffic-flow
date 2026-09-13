@@ -1,0 +1,52 @@
+{
+  "topology_id": "four_intersection_v1",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "J1",
+      "name": "Intersection 1",
+      "approaches": ["J1_N_IN", "J1_S_IN", "J1_E_IN", "J1_W_IN"],
+      "phases": [
+        { "phase_id": "J1_PHASE_NS", "name": "North-South Green" },
+        { "phase_id": "J1_PHASE_EW", "name": "East-West Green" }
+      ]
+    },
+    {
+      "node_id": "J2",
+      "name": "Intersection 2",
+      "approaches": ["J2_N_IN", "J2_S_IN", "J2_E_IN", "J2_W_IN"],
+      "phases": [
+        { "phase_id": "J2_PHASE_NS", "name": "North-South Green" },
+        { "phase_id": "J2_PHASE_EW", "name": "East-West Green" }
+      ]
+    },
+    {
+      "node_id": "J3",
+      "name": "Intersection 3",
+      "approaches": ["J3_N_IN", "J3_S_IN", "J3_E_IN", "J3_W_IN"],
+      "phases": [
+        { "phase_id": "J3_PHASE_NS", "name": "North-South Green" },
+        { "phase_id": "J3_PHASE_EW", "name": "East-West Green" }
+      ]
+    },
+    {
+      "node_id": "J4",
+      "name": "Intersection 4",
+      "approaches": ["J4_N_IN", "J4_S_IN", "J4_E_IN", "J4_W_IN"],
+      "phases": [
+        { "phase_id": "J4_PHASE_NS", "name": "North-South Green" },
+        { "phase_id": "J4_PHASE_EW", "name": "East-West Green" }
+      ]
+    }
+  ],
+  "edges": [
+    { "edge_id": "E_J1_J2_EB", "source": "J1", "target": "J2" },
+    { "edge_id": "E_J2_J1_WB", "source": "J2", "target": "J1" },
+    { "edge_id": "E_J1_J3_SB", "source": "J1", "target": "J3" },
+    { "edge_id": "E_J3_J1_NB", "source": "J3", "target": "J1" },
+    { "edge_id": "E_J2_J4_SB", "source": "J2", "target": "J4" },
+    { "edge_id": "E_J4_J2_NB", "source": "J4", "target": "J2" },
+    { "edge_id": "E_J3_J4_EB", "source": "J3", "target": "J4" },
+    { "edge_id": "E_J4_J3_WB", "source": "J4", "target": "J3" }
+  ]
+}

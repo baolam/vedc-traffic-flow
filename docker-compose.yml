@@ -1,0 +1,134 @@
+version: "3.8"
+
+services:
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: edgeflow-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -c 1 -i healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - simulation
+      - vision
+      - hardware
+      - dev
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: edgeflow-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    profiles:
+      - simulation
+      - vision
+      - hardware
+      - dev
+
+  graph-control:
+    build:
+      context: ./services/graph-control
+      dockerfile: Dockerfile
+    container_name: edgeflow-graph-control
+    restart: unless-stopped
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - EDGEFLOW_CONTROLLER=${EDGEFLOW_CONTROLLER:-fixed_time}
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    profiles:
+      - simulation
+      - vision
+      - hardware
+      - dev
+
+  simulator:
+    build:
+      context: ./services/simulator
+      dockerfile: Dockerfile
+    container_name: edgeflow-simulator
+    restart: unless-stopped
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - EDGEFLOW_TOPOLOGY=${EDGEFLOW_TOPOLOGY:-four_intersection_v1}
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    profiles:
+      - simulation
+      - dev
+
+  vision:
+    build:
+      context: ./services/vision
+      dockerfile: Dockerfile
+    container_name: edgeflow-vision
+    restart: unless-stopped
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    profiles:
+      - vision
+      - dev
+
+  actuator:
+    build:
+      context: ./services/actuator
+      dockerfile: Dockerfile
+    container_name: edgeflow-actuator
+    restart: unless-stopped
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    profiles:
+      - simulation
+      - vision
+      - hardware
+      - dev
+
+  dashboard:
+    build:
+      context: ./services/dashboard
+      dockerfile: Dockerfile
+    container_name: edgeflow-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    profiles:
+      - simulation
+      - vision
+      - hardware
+      - dev

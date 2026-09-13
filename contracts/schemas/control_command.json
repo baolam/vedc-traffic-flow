@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ControlCommand",
+  "type": "object",
+  "properties": {
+    "command_id": { "type": "string" },
+    "node_id": { "type": "string" },
+    "target_phase_id": { "type": "string" },
+    "min_green_s": { "type": "number" },
+    "max_green_s": { "type": "number" },
+    "controller": { "type": "string" }
+  },
+  "required": ["command_id", "node_id", "target_phase_id", "min_green_s", "max_green_s", "controller"]
+}

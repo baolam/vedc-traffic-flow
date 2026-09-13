@@ -1,0 +1,17 @@
+{
+  "node_id": "J1",
+  "source_type": "simulation",
+  "simulation_time_s": 46.0,
+  "timestamp_ms": 1727005820123,
+  "current_phase_id": "J1_PHASE_NS",
+  "approaches": [
+    {
+      "approach_id": "J1_W_IN",
+      "queue_vehicles": 8,
+      "flow_veh_per_s": 0.42,
+      "mean_speed_mps": 1.8,
+      "occupancy_ratio": 0.63,
+      "confidence": 1.0
+    }
+  ]
+}

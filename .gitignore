@@ -1,9 +1,11 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# C Extensions
 build/
 develop-eggs/
 dist/
@@ -14,34 +16,72 @@ lib/
 lib64/
 parts/
 sdist/
-var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environments
 venv/
 .venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 
-# IDE & Editors
+# Environment variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Node / Frontend Dependencies & Builds
+node_modules/
+services/dashboard/node_modules/
+services/dashboard/build/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Databases & Persistence
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# SUMO & Simulation artifacts
+*.sumocfg.bak
+*.net.xml.bak
+*.alt.xml
+*.rou.alt.xml
+
+# Output & Artifacts
+artifacts/*
+!artifacts/.gitkeep
+
+# IDEs & Editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 .DS_Store
+Thumbs.db
 
 # Testing & Coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.nox/
+.tox/
 
-# Environment Variables
-.env
-.env.local
-
-# Temporary / Log files
+# Logs & Temporary files
 *.log
 scratch/
+tmp/

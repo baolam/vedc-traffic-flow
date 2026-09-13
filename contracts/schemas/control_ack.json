@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ControlACK",
+  "type": "object",
+  "properties": {
+    "command_id": { "type": "string" },
+    "node_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["ACCEPTED", "APPLIED", "REJECTED", "EXPIRED", "FAILED"] },
+    "timestamp_ms": { "type": "integer" },
+    "reason": { "type": "string" }
+  },
+  "required": ["command_id", "node_id", "status"]
+}
