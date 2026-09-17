@@ -1,8 +1,68 @@
 import os
+import json
 import time
+import logging
+from typing import Dict, Any
 
-print(f"Starting EdgeFlow Graph-Control Service (Controller: {os.getenv('EDGEFLOW_CONTROLLER', 'fixed_time')})...")
+from graph_contracts_helper import load_topology, validate_payload
+from controller import MaxPressureController, FixedTimeController
 
-if __name__ == "__main__":
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("graph-control")
+
+def create_controller():
+    controller_type = os.getenv("EDGEFLOW_CONTROLLER", "max_pressure").lower()
+    if controller_type == "max_pressure":
+        logger.info("Initializing MaxPressureController")
+        return MaxPressureController()
+    else:
+        logger.info("Initializing FixedTimeController")
+        return FixedTimeController()
+
+def main():
+    logger.info("Starting EdgeFlow Graph-Control Service...")
+    topology_id = os.getenv("EDGEFLOW_TOPOLOGY", "four_intersection_v1")
+    topology = load_topology(topology_id)
+    controller = create_controller()
+
+    mqtt_host = os.getenv("MQTT_HOST", "mqtt")
+    mqtt_port = int(os.getenv("MQTT_PORT", 1883))
+
+    def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            logger.info("Connected to MQTT Broker successfully.")
+            client.subscribe("edgeflow/v1/telemetry/+")
+        else:
+            logger.warning(f"MQTT Connect failed with code {rc}")
+
+    def on_message(client, userdata, msg):
+        try:
+            payload = json.loads(msg.payload.decode("utf-8"))
+            validate_payload(payload, "telemetry")
+            node_id = payload["node_id"]
+
+            cmd = controller.compute_command(node_id, payload, topology)
+            validate_payload(cmd, "control_command")
+
+            pub_topic = f"edgeflow/v1/control/{node_id}/command"
+            client.publish(pub_topic, json.dumps(cmd))
+            logger.info(f"Published ControlCommand to {pub_topic}: {cmd['target_phase_id']}")
+        except Exception as e:
+            logger.error(f"Error processing telemetry message: {e}")
+
+    try:
+        import paho.mqtt.client as mqtt
+        client = mqtt.Client(client_id="graph-control-service")
+        client.on_connect = on_connect
+        client.on_message = on_message
+        logger.info(f"Connecting to MQTT broker at {mqtt_host}:{mqtt_port}...")
+        client.connect_async(mqtt_host, mqtt_port, 60)
+        client.loop_start()
+    except Exception as e:
+        logger.warning(f"MQTT Client setup skipped or failed: {e}. Service running in passive mode.")
+
     while True:
         time.sleep(10)
+
+if __name__ == "__main__":
+    main()
