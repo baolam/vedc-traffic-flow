@@ -1,38 +1,26 @@
-import json
+import sys
+import os
 from pathlib import Path
 from typing import Dict, Any
-import jsonschema
 
-import os
+# Ensure contracts root is in sys.path for importing contracts_sdk
+contracts_dir = Path(__file__).resolve().parents[2] / "contracts"
+if str(contracts_dir) not in sys.path:
+    sys.path.insert(0, str(contracts_dir))
 
-def _get_contracts_dir() -> Path:
-    env_dir = os.getenv("CONTRACTS_DIR")
-    if env_dir and Path(env_dir).exists():
-        return Path(env_dir)
-    if Path("/contracts").exists():
-        return Path("/contracts")
-    curr = Path(__file__).resolve().parent
-    for p in [curr] + list(curr.parents):
-        if (p / "contracts").is_dir():
-            return p / "contracts"
-    return Path("/contracts")
-
-CONTRACTS_DIR = _get_contracts_dir()
+try:
+    import contracts_sdk
+except ImportError:
+    import contracts.contracts_sdk as contracts_sdk
 
 def load_topology(topology_id: str = "four_intersection_v1") -> Dict[str, Any]:
-    topo_file = CONTRACTS_DIR / "topology" / f"{topology_id}.json"
-    if not topo_file.exists():
-        raise FileNotFoundError(f"Topology file not found: {topo_file}")
-    with open(topo_file, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return contracts_sdk.load_topology(topology_id)
 
 def load_schema(schema_name: str) -> Dict[str, Any]:
-    schema_file = CONTRACTS_DIR / "schemas" / f"{schema_name}.json"
-    if not schema_file.exists():
-        raise FileNotFoundError(f"Schema file not found: {schema_file}")
-    with open(schema_file, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return contracts_sdk.load_schema(schema_name)
 
 def validate_payload(payload: Dict[str, Any], schema_name: str) -> None:
-    schema = load_schema(schema_name)
-    jsonschema.validate(instance=payload, schema=schema)
+    contracts_sdk.validate_payload(payload, schema_name)
+
+def list_topologies():
+    return contracts_sdk.list_topologies()

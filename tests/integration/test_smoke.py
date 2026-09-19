@@ -35,9 +35,10 @@ def test_full_pipeline_smoke():
     ack = actuator.process_command(command, now=100.0)
     validate_payload(ack, "control_ack")
     assert ack["status"] in ["APPLIED", "REJECTED"]
+    assert ack.get("target_phase_id") == command["target_phase_id"]
 
     # 5. If APPLIED, update simulator active phase
     if ack["status"] == "APPLIED":
-        sim_engine.update_node_phase("J1", command["target_phase_id"])
+        sim_engine.update_node_phase("J1", ack["target_phase_id"])
         next_telemetry = sim_engine.generate_telemetry("J1", sim_time_s=2.0)
         assert next_telemetry["current_phase_id"] == command["target_phase_id"]

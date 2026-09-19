@@ -21,6 +21,7 @@ def test_actuator_same_phase():
     }
     ack = sm.process_command(cmd, now=100.0)
     assert ack["status"] == "APPLIED"
+    assert ack.get("target_phase_id") == "J1_PHASE_NS"
     validate_payload(ack, "control_ack")
 
 def test_actuator_min_green_rejection():
@@ -40,6 +41,7 @@ def test_actuator_min_green_rejection():
     }
     ack = sm.process_command(cmd, now=105.0)
     assert ack["status"] == "REJECTED"
+    assert ack.get("target_phase_id") == "J1_PHASE_EW"
     assert "Min green time" in ack["reason"]
     validate_payload(ack, "control_ack")
 
@@ -59,5 +61,6 @@ def test_actuator_successful_transition():
     }
     ack = sm.process_command(cmd, now=112.0)
     assert ack["status"] == "APPLIED"
+    assert ack.get("target_phase_id") == "J1_PHASE_EW"
     assert node.current_phase_id == "J1_PHASE_EW"
     validate_payload(ack, "control_ack")

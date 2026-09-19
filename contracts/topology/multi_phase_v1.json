@@ -1,0 +1,40 @@
+{
+  "topology_id": "multi_phase_v1",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "MP1",
+      "name": "5-Way Complex Urban Intersection",
+      "approaches": ["MP1_N_IN", "MP1_S_IN", "MP1_E_IN", "MP1_W_IN", "MP1_NE_DIAG_IN"],
+      "phases": [
+        {
+          "phase_id": "MP1_PHASE_NS_STRAIGHT",
+          "name": "North-South Straight Phase",
+          "approaches": ["MP1_N_IN", "MP1_S_IN"]
+        },
+        {
+          "phase_id": "MP1_PHASE_EW_STRAIGHT",
+          "name": "East-West Straight Phase",
+          "approaches": ["MP1_E_IN", "MP1_W_IN"]
+        },
+        {
+          "phase_id": "MP1_PHASE_DIAG_PROTECTED",
+          "name": "NorthEast Diagonal Protected Phase",
+          "approaches": ["MP1_NE_DIAG_IN"]
+        },
+        {
+          "phase_id": "MP1_PHASE_ALL_LEFT_TURNS",
+          "name": "Protected Left Turn Phase",
+          "approaches": ["MP1_N_IN", "MP1_E_IN"]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    { "edge_id": "E_MP1_N_OUT", "source": "MP1", "target": "NORTH_EXIT" },
+    { "edge_id": "E_MP1_S_OUT", "source": "MP1", "target": "SOUTH_EXIT" },
+    { "edge_id": "E_MP1_E_OUT", "source": "MP1", "target": "EAST_EXIT" },
+    { "edge_id": "E_MP1_W_OUT", "source": "MP1", "target": "WEST_EXIT" },
+    { "edge_id": "E_MP1_NE_OUT", "source": "MP1", "target": "NORTHEAST_EXIT" }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "topology_id": "three_way_junction_v1",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "TJ1",
+      "name": "T-Junction Main & Highway",
+      "approaches": ["TJ1_NORTH_IN", "TJ1_SOUTH_IN", "TJ1_EAST_IN"],
+      "phases": [
+        {
+          "phase_id": "TJ1_PHASE_THROUGH",
+          "name": "North-South Main Through",
+          "approaches": ["TJ1_NORTH_IN", "TJ1_SOUTH_IN"]
+        },
+        {
+          "phase_id": "TJ1_PHASE_LEFT_TURN",
+          "name": "North to East Left Turn",
+          "approaches": ["TJ1_NORTH_IN"]
+        },
+        {
+          "phase_id": "TJ1_PHASE_SIDE_APPROACH",
+          "name": "East Side Branch Inflow",
+          "approaches": ["TJ1_EAST_IN"]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    { "edge_id": "E_TJ1_N_OUT", "source": "TJ1", "target": "NORTH_BOUND" },
+    { "edge_id": "E_TJ1_S_OUT", "source": "TJ1", "target": "SOUTH_BOUND" },
+    { "edge_id": "E_TJ1_E_OUT", "source": "TJ1", "target": "EAST_BOUND" }
+  ]
+}

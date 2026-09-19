@@ -8,7 +8,7 @@ if str(simulator_dir) not in sys.path:
 
 import pytest
 from simulator_contracts_helper import load_topology, validate_payload
-from traffic_engine import TrafficEngine
+from traffic_engine import TrafficEngine, create_traffic_engine
 
 def test_load_topology():
     topology = load_topology("four_intersection_v1")
@@ -52,4 +52,13 @@ def test_telemetry_schema_validation():
     assert len(telemetry["approaches"]) == 4
     
     # Schema validation against contracts/schemas/telemetry.json
+    validate_payload(telemetry, "telemetry")
+
+def test_sumo_engine_fallback():
+    topology = load_topology("four_intersection_v1")
+    # Instantiating with use_sumo=True should either use SUMO or fallback gracefully to synthetic
+    engine = TrafficEngine(topology, use_sumo=True)
+    telemetry = engine.generate_telemetry("J1", sim_time_s=10.0)
+    assert telemetry["node_id"] == "J1"
+    assert telemetry["source_type"] == "simulation"
     validate_payload(telemetry, "telemetry")

@@ -35,6 +35,10 @@ services:
     depends_on:
       mqtt:
         condition: service_healthy
+    volumes:
+      - ./contracts:/contracts
+      - ./src:/app/src
+      - ./output:/app/output
     profiles:
       - simulation
       - vision
@@ -51,7 +55,7 @@ services:
       - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
       - MQTT_HOST=${MQTT_HOST:-mqtt}
       - MQTT_PORT=${MQTT_PORT:-1883}
-      - EDGEFLOW_CONTROLLER=${EDGEFLOW_CONTROLLER:-fixed_time}
+      - EDGEFLOW_CONTROLLER=${EDGEFLOW_CONTROLLER:-max_pressure}
     depends_on:
       mqtt:
         condition: service_healthy

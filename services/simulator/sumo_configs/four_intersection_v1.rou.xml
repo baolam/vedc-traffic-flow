@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="passenger" accel="2.6" decel="4.5" sigma="0.5" length="5.0" minGap="2.5" maxSpeed="13.89" vClass="passenger"/>
+
+    <route id="r_J1_NS" edges="J1_N_IN J3_N_IN"/>
+    <route id="r_J1_EW" edges="J1_W_IN J2_W_IN"/>
+    <route id="r_J2_NS" edges="J2_N_IN J4_N_IN"/>
+    <route id="r_J2_EW" edges="J2_E_IN J1_E_IN"/>
+    <route id="r_J3_NS" edges="J3_S_IN J3_N_IN"/>
+    <route id="r_J3_EW" edges="J3_W_IN J4_W_IN"/>
+    <route id="r_J4_NS" edges="J4_S_IN J4_N_IN"/>
+    <route id="r_J4_EW" edges="J4_E_IN J3_E_IN"/>
+
+    <flow id="f_J1_NS" type="passenger" route="r_J1_NS" begin="0" end="3600" period="exp(0.3)"/>
+    <flow id="f_J1_EW" type="passenger" route="r_J1_EW" begin="0" end="3600" period="exp(0.4)"/>
+    <flow id="f_J2_NS" type="passenger" route="r_J2_NS" begin="0" end="3600" period="exp(0.35)"/>
+    <flow id="f_J2_EW" type="passenger" route="r_J2_EW" begin="0" end="3600" period="exp(0.45)"/>
+    <flow id="f_J3_NS" type="passenger" route="r_J3_NS" begin="0" end="3600" period="exp(0.3)"/>
+    <flow id="f_J3_EW" type="passenger" route="r_J3_EW" begin="0" end="3600" period="exp(0.3)"/>
+    <flow id="f_J4_NS" type="passenger" route="r_J4_NS" begin="0" end="3600" period="exp(0.4)"/>
+    <flow id="f_J4_EW" type="passenger" route="r_J4_EW" begin="0" end="3600" period="exp(0.4)"/>
+</routes>

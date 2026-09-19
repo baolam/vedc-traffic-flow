@@ -7,8 +7,16 @@
       "name": "Intersection 1",
       "approaches": ["J1_N_IN", "J1_S_IN", "J1_E_IN", "J1_W_IN"],
       "phases": [
-        { "phase_id": "J1_PHASE_NS", "name": "North-South Green" },
-        { "phase_id": "J1_PHASE_EW", "name": "East-West Green" }
+        {
+          "phase_id": "J1_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": ["J1_N_IN", "J1_S_IN"]
+        },
+        {
+          "phase_id": "J1_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": ["J1_E_IN", "J1_W_IN"]
+        }
       ]
     },
     {
@@ -16,8 +24,16 @@
       "name": "Intersection 2",
       "approaches": ["J2_N_IN", "J2_S_IN", "J2_E_IN", "J2_W_IN"],
       "phases": [
-        { "phase_id": "J2_PHASE_NS", "name": "North-South Green" },
-        { "phase_id": "J2_PHASE_EW", "name": "East-West Green" }
+        {
+          "phase_id": "J2_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": ["J2_N_IN", "J2_S_IN"]
+        },
+        {
+          "phase_id": "J2_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": ["J2_E_IN", "J2_W_IN"]
+        }
       ]
     },
     {
@@ -25,8 +41,16 @@
       "name": "Intersection 3",
       "approaches": ["J3_N_IN", "J3_S_IN", "J3_E_IN", "J3_W_IN"],
       "phases": [
-        { "phase_id": "J3_PHASE_NS", "name": "North-South Green" },
-        { "phase_id": "J3_PHASE_EW", "name": "East-West Green" }
+        {
+          "phase_id": "J3_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": ["J3_N_IN", "J3_S_IN"]
+        },
+        {
+          "phase_id": "J3_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": ["J3_E_IN", "J3_W_IN"]
+        }
       ]
     },
     {
@@ -34,8 +58,16 @@
       "name": "Intersection 4",
       "approaches": ["J4_N_IN", "J4_S_IN", "J4_E_IN", "J4_W_IN"],
       "phases": [
-        { "phase_id": "J4_PHASE_NS", "name": "North-South Green" },
-        { "phase_id": "J4_PHASE_EW", "name": "East-West Green" }
+        {
+          "phase_id": "J4_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": ["J4_N_IN", "J4_S_IN"]
+        },
+        {
+          "phase_id": "J4_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": ["J4_E_IN", "J4_W_IN"]
+        }
       ]
     }
   ],

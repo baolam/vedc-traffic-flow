@@ -12,7 +12,8 @@ logger = logging.getLogger("simulator")
 
 def main():
     topology_id = os.getenv("EDGEFLOW_TOPOLOGY", "four_intersection_v1")
-    logger.info(f"Starting EdgeFlow SUMO Simulator Service (Topology: {topology_id})...")
+    use_sumo = os.getenv("USE_SUMO", "false").lower() in ("true", "1", "yes")
+    logger.info(f"Starting EdgeFlow Simulator Service (Topology: {topology_id}, USE_SUMO: {use_sumo})...")
 
     try:
         topology = load_topology(topology_id)
@@ -21,7 +22,7 @@ def main():
         logger.error(f"Failed to load topology '{topology_id}': {e}")
         raise e
 
-    engine = TrafficEngine(topology)
+    engine = TrafficEngine(topology, use_sumo=use_sumo)
     mqtt_host = os.getenv("MQTT_HOST", "mqtt")
     mqtt_port = int(os.getenv("MQTT_PORT", 1883))
     sim_interval = float(os.getenv("SIM_INTERVAL_S", "1.0"))
@@ -45,9 +46,10 @@ def main():
                 status = payload.get("status")
                 # If signal transition was applied, update simulator phase state
                 if status == "APPLIED" and node_id:
-                    reason = payload.get("reason", "")
-                    if "transitioned to phase " in reason:
-                        phase_id = reason.split("transitioned to phase ")[1].split()[0]
+                    phase_id = payload.get("target_phase_id")
+                    if not phase_id and "transitioned to phase " in payload.get("reason", ""):
+                        phase_id = payload.get("reason", "").split("transitioned to phase ")[1].split()[0]
+                    if phase_id:
                         engine.update_node_phase(node_id, phase_id)
                         logger.info(f"Simulator updated active phase for node {node_id} to {phase_id}")
         except Exception as e:

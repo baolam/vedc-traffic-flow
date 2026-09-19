@@ -10,7 +10,7 @@ class BaseController(ABC):
 
 
 class FixedTimeController(BaseController):
-    """Simple Fixed-Time Controller that cycles between available phases."""
+    """Fixed-Time Controller cycling between available topology phases."""
     def __init__(self, cycle_time_s: float = 30.0):
         self.cycle_time_s = cycle_time_s
         self.phase_counters: Dict[str, int] = {}
@@ -18,7 +18,7 @@ class FixedTimeController(BaseController):
     def compute_command(self, node_id: str, telemetry: Dict[str, Any], topology: Dict[str, Any]) -> Dict[str, Any]:
         node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
         if not node_info or not node_info.get("phases"):
-            target_phase = "J1_PHASE_NS"
+            target_phase = telemetry.get("current_phase_id", "J1_PHASE_NS")
         else:
             phases = node_info["phases"]
             current_idx = self.phase_counters.get(node_id, 0)
@@ -38,10 +38,10 @@ class FixedTimeController(BaseController):
 
 class MaxPressureController(BaseController):
     """
-    Max-Pressure Controller.
-    Calculates queue pressure for each phase of an intersection node and selects
-    the phase with maximum queue pressure.
-    Pressure P(phase) = sum(Q_in) - sum(Q_out)
+    Generic Max-Pressure Controller.
+    Calculates queue pressure for each phase of an intersection node using the topology phase's
+    explicit 'approaches' definition. Works seamlessly across 3-way, 4-way, 5-way, and complex SUMO graphs.
+    Pressure P(phase) = sum(Queue(approach) for approach in phase.approaches)
     """
     def __init__(self, min_green_s: float = 10.0, max_green_s: float = 60.0):
         self.min_green_s = min_green_s
@@ -58,11 +58,8 @@ class MaxPressureController(BaseController):
 
         for phase in phases:
             phase_id = phase["phase_id"]
-            pressure = 0.0
-            for app_id, q_val in queue_map.items():
-                if self._approach_belongs_to_phase(app_id, phase_id):
-                    pressure += q_val
-
+            phase_apps = phase.get("approaches", [])
+            pressure = sum(queue_map.get(app_id, 0.0) for app_id in phase_apps)
             phase_pressures[phase_id] = pressure
 
         if phase_pressures:
@@ -78,14 +75,3 @@ class MaxPressureController(BaseController):
             "max_green_s": self.max_green_s,
             "controller": "max_pressure"
         }
-
-    def _approach_belongs_to_phase(self, approach_id: str, phase_id: str) -> bool:
-        """Helper to match approach IDs to phase IDs based on cardinal directions (NS vs EW)."""
-        app_upper = approach_id.upper()
-        phase_upper = phase_id.upper()
-
-        if "PHASE_NS" in phase_upper or "_NS" in phase_upper:
-            return ("_N_" in app_upper or "_S_" in app_upper or app_upper.endswith("_N") or app_upper.endswith("_S"))
-        elif "PHASE_EW" in phase_upper or "_EW" in phase_upper:
-            return ("_E_" in app_upper or "_W_" in app_upper or app_upper.endswith("_E") or app_upper.endswith("_W"))
-        return False

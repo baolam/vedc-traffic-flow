@@ -26,6 +26,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.manifest
+*.spec
 
 # ------------------------------------------
 # Virtual Environments
@@ -44,6 +46,7 @@ node_modules/
 **/node_modules/
 services/dashboard/node_modules/
 services/dashboard/build/
+services/dashboard/dist/
 .npm
 npm-debug.log*
 yarn-debug.log*
@@ -69,13 +72,20 @@ yarn-error.log*
 *.db-journal
 
 # ------------------------------------------
-# SUMO Traffic Simulator & Digital Twin
+# SUMO Traffic Simulator & Digital Twin Outputs
 # ------------------------------------------
 *.sumocfg.bak
 *.net.xml.bak
 *.alt.xml
 *.rou.alt.xml
 *.traci.log
+*.tripinfo.xml
+*.summary.xml
+*.queue.xml
+*.edgedata.xml
+*.vehroute.xml
+*.vtypeprobe.xml
+*.netstate.xml
 
 # ------------------------------------------
 # Data, Output & Generated Artifacts
@@ -85,6 +95,11 @@ output/*
 data/processed/*.pkl
 data/processed/*.json
 data/raw/*.csv
+*.onnx
+*.pth
+*.pt
+*.weights
+*.h5
 
 # ------------------------------------------
 # Testing & Code Quality
@@ -95,6 +110,8 @@ data/raw/*.csv
 htmlcov/
 .nox/
 .tox/
+.mypy_cache/
+.ruff_cache/
 
 # ------------------------------------------
 # IDEs & System Metadata
@@ -106,6 +123,7 @@ htmlcov/
 *~
 .DS_Store
 Thumbs.db
+ehthumbs.db
 
 # ------------------------------------------
 # Logs & Temporary Files
@@ -113,3 +131,4 @@ Thumbs.db
 *.log
 scratch/
 tmp/
+.tmp/

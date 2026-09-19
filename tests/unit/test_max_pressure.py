@@ -52,6 +52,50 @@ def test_max_pressure_controller_selection():
     assert cmd_ew["target_phase_id"] == "J1_PHASE_EW"
     validate_payload(cmd_ew, "control_command")
 
+def test_max_pressure_three_way_junction():
+    topology = load_topology("three_way_junction_v1")
+    controller = MaxPressureController()
+
+    telemetry = {
+        "node_id": "TJ1",
+        "source_type": "simulation",
+        "simulation_time_s": 10.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "TJ1_PHASE_THROUGH",
+        "approaches": [
+            {"approach_id": "TJ1_NORTH_IN", "queue_vehicles": 2, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
+            {"approach_id": "TJ1_SOUTH_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
+            {"approach_id": "TJ1_EAST_IN", "queue_vehicles": 20, "flow_veh_per_s": 0.8, "mean_speed_mps": 1.0, "occupancy_ratio": 0.9}
+        ]
+    }
+
+    cmd = controller.compute_command("TJ1", telemetry, topology)
+    assert cmd["target_phase_id"] == "TJ1_PHASE_SIDE_APPROACH"
+    validate_payload(cmd, "control_command")
+
+def test_max_pressure_multi_phase_junction():
+    topology = load_topology("multi_phase_v1")
+    controller = MaxPressureController()
+
+    telemetry = {
+        "node_id": "MP1",
+        "source_type": "simulation",
+        "simulation_time_s": 10.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "MP1_PHASE_NS_STRAIGHT",
+        "approaches": [
+            {"approach_id": "MP1_N_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
+            {"approach_id": "MP1_S_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
+            {"approach_id": "MP1_E_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
+            {"approach_id": "MP1_W_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
+            {"approach_id": "MP1_NE_DIAG_IN", "queue_vehicles": 25, "flow_veh_per_s": 0.9, "mean_speed_mps": 0.5, "occupancy_ratio": 0.95}
+        ]
+    }
+
+    cmd = controller.compute_command("MP1", telemetry, topology)
+    assert cmd["target_phase_id"] == "MP1_PHASE_DIAG_PROTECTED"
+    validate_payload(cmd, "control_command")
+
 def test_fixed_time_controller():
     topology = load_topology("four_intersection_v1")
     controller = FixedTimeController(cycle_time_s=30.0)

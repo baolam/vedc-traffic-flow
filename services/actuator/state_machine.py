@@ -47,6 +47,7 @@ class ActuatorStateMachine:
             return {
                 "command_id": command.get("command_id", "unknown"),
                 "node_id": command.get("node_id", "unknown"),
+                "target_phase_id": command.get("target_phase_id", "unknown"),
                 "status": "REJECTED",
                 "timestamp_ms": int(now * 1000),
                 "reason": f"Invalid ControlCommand schema: {str(e)}"
@@ -65,6 +66,7 @@ class ActuatorStateMachine:
             return {
                 "command_id": cmd_id,
                 "node_id": node_id,
+                "target_phase_id": target_phase,
                 "status": "APPLIED",
                 "timestamp_ms": int(now * 1000),
                 "reason": f"Phase {target_phase} is already active. Green time extended."
@@ -75,6 +77,7 @@ class ActuatorStateMachine:
             return {
                 "command_id": cmd_id,
                 "node_id": node_id,
+                "target_phase_id": target_phase,
                 "status": "REJECTED",
                 "timestamp_ms": int(now * 1000),
                 "reason": f"Min green time constraint not met ({elapsed:.1f}s < {min_green_s}s)"
@@ -90,6 +93,7 @@ class ActuatorStateMachine:
         return {
             "command_id": cmd_id,
             "node_id": node_id,
+            "target_phase_id": target_phase,
             "status": "APPLIED",
             "timestamp_ms": int(now * 1000),
             "reason": f"Safely transitioned to phase {target_phase} via Yellow ({self.yellow_duration_s}s) and All-Red ({self.all_red_duration_s}s)."

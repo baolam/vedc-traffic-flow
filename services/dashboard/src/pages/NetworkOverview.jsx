@@ -44,8 +44,8 @@ const NetworkOverview = () => {
   return (
     <div className="page-container">
       <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 8px 0' }}>Network Topology & Live Traffic State</h2>
-        <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 8px 0', color: '#0f172a' }}>Network Topology & Live Traffic State</h2>
+        <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
           Real-time Graph State $G_t=(V,E,X_t)$ across 4 interconnected intersections.
         </p>
       </div>
@@ -53,42 +53,42 @@ const NetworkOverview = () => {
       {/* Top Metric Cards */}
       <div className="grid-cols-4" style={{ marginBottom: '24px' }}>
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '12px', borderRadius: '10px' }}>
-            <Car size={24} color="#38bdf8" />
+          <div style={{ backgroundColor: 'rgba(2, 132, 199, 0.1)', padding: '12px', borderRadius: '10px' }}>
+            <Car size={24} color="#0284c7" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Total Queue</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>{totalQueue} veh</div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Total Queue</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{totalQueue} veh</div>
           </div>
         </div>
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', padding: '12px', borderRadius: '10px' }}>
-            <Gauge size={24} color="#22c55e" />
+          <div style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)', padding: '12px', borderRadius: '10px' }}>
+            <Gauge size={24} color="#16a34a" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Avg Speed</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>{avgSpeed} m/s</div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Avg Speed</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{avgSpeed} m/s</div>
           </div>
         </div>
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', padding: '12px', borderRadius: '10px' }}>
-            <Zap size={24} color="#eab308" />
+          <div style={{ backgroundColor: 'rgba(202, 138, 4, 0.1)', padding: '12px', borderRadius: '10px' }}>
+            <Zap size={24} color="#ca8a04" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Controller Mode</span>
-            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc' }}>Max-Pressure</div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Controller Mode</span>
+            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>Max-Pressure</div>
           </div>
         </div>
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', padding: '12px', borderRadius: '10px' }}>
-            <Activity size={24} color="#a855f7" />
+          <div style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)', padding: '12px', borderRadius: '10px' }}>
+            <Activity size={24} color="#9333ea" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Telemetry Rate</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>10 Hz</div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Telemetry Rate</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>10 Hz</div>
           </div>
         </div>
       </div>
@@ -96,16 +96,16 @@ const NetworkOverview = () => {
       {/* Main Map & Live Intersection Summary */}
       <div className="grid-cols-2">
         <div className="card">
-          <h3 style={{ fontSize: '1.1rem', margin: '0 0 16px 0', fontWeight: 600 }}>Interactive Network Topology Map</h3>
+          <h3 style={{ fontSize: '1.1rem', margin: '0 0 16px 0', fontWeight: 700, color: '#0f172a' }}>Interactive Network Topology Map</h3>
           <TopologyMap nodesData={nodes} />
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: '0 0 4px 0', fontWeight: 600 }}>Intersection Live Summary</h3>
+          <h3 style={{ fontSize: '1.1rem', margin: '0 0 4px 0', fontWeight: 700, color: '#0f172a' }}>Intersection Live Summary</h3>
           {Object.entries(nodes).map(([nodeId, data]) => (
             <div key={nodeId} style={{
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: '8px',
               padding: '12px 16px',
               display: 'flex',
@@ -113,8 +113,8 @@ const NetworkOverview = () => {
               justifyContent: 'space-between'
             }}>
               <div>
-                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#38bdf8' }}>{nodeId}</span>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '8px' }}>Queue: {data.total_queue} vehicles</span>
+                <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0284c7' }}>{nodeId}</span>
+                <span style={{ fontSize: '0.85rem', color: '#64748b', marginLeft: '8px' }}>Queue: {data.total_queue} vehicles</span>
               </div>
               <PhaseIndicator activePhase={data.current_phase_id} state="GREEN" />
             </div>

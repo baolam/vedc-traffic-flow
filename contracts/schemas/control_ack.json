@@ -5,6 +5,7 @@
   "properties": {
     "command_id": { "type": "string" },
     "node_id": { "type": "string" },
+    "target_phase_id": { "type": "string" },
     "status": { "type": "string", "enum": ["ACCEPTED", "APPLIED", "REJECTED", "EXPIRED", "FAILED"] },
     "timestamp_ms": { "type": "integer" },
     "reason": { "type": "string" }

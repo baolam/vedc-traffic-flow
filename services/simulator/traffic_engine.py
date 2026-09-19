@@ -1,7 +1,11 @@
+import os
 import time
 import random
+import logging
 from typing import Dict, Any, List
 from simulator_contracts_helper import validate_payload
+
+logger = logging.getLogger("traffic_engine")
 
 class ApproachState:
     def __init__(self, approach_id: str, capacity: float = 30.0):
@@ -48,12 +52,9 @@ class NodeTrafficState:
         }
 
     def approach_belongs_to_phase(self, approach_id: str, phase_id: str) -> bool:
-        app_upper = approach_id.upper()
-        phase_upper = phase_id.upper()
-        if "PHASE_NS" in phase_upper or "_NS" in phase_upper:
-            return "_N_" in app_upper or "_S_" in app_upper or app_upper.endswith("_N") or app_upper.endswith("_S")
-        elif "PHASE_EW" in phase_upper or "_EW" in phase_upper:
-            return "_E_" in app_upper or "_W_" in app_upper or app_upper.endswith("_E") or app_upper.endswith("_W")
+        phase = next((p for p in self.phases if p.get("phase_id") == phase_id), None)
+        if phase and "approaches" in phase:
+            return approach_id in phase["approaches"]
         return False
 
     def step(self, dt_s: float = 1.0):
@@ -65,9 +66,10 @@ class NodeTrafficState:
         self.current_phase_id = phase_id
 
 
-class TrafficEngine:
+class SyntheticTrafficEngine:
     """
-    Traffic engine simulating network-level node dynamics for SUMO / Digital Twin simulator.
+    Synthetic Python-based traffic engine simulating network-level node dynamics.
+    Used as standalone default and fallback when SUMO is disabled/unavailable.
     """
     def __init__(self, topology: Dict[str, Any]):
         self.topology = topology
@@ -114,3 +116,54 @@ class TrafficEngine:
         }
         validate_payload(telemetry, "telemetry")
         return telemetry
+
+
+def create_traffic_engine(topology: Dict[str, Any], use_sumo: bool = False):
+    """
+    Factory function returning SumoTrafficEngine if use_sumo is True and available,
+    otherwise falling back to SyntheticTrafficEngine.
+    """
+    if use_sumo:
+        try:
+            from sumo_engine import SumoTrafficEngine
+            logger.info("Initializing SUMO Traffic Engine...")
+            return SumoTrafficEngine(topology)
+        except Exception as e:
+            logger.warning(f"Failed to initialize SUMO Traffic Engine: {e}. Falling back to Synthetic Engine.")
+
+    logger.info("Initializing Synthetic Python Traffic Engine...")
+    return SyntheticTrafficEngine(topology)
+
+
+class TrafficEngine(SyntheticTrafficEngine):
+    """
+    Alias class for backward compatibility with existing imports and unit tests.
+    """
+    def __init__(self, topology: Dict[str, Any], use_sumo: bool = False):
+        if use_sumo:
+            try:
+                from sumo_engine import SumoTrafficEngine
+                self._real_engine = SumoTrafficEngine(topology)
+                self.nodes = getattr(self._real_engine, "nodes", {})
+                return
+            except Exception as e:
+                logger.warning(f"SUMO init failed: {e}. Falling back to Synthetic Engine.")
+        self._real_engine = None
+        super().__init__(topology)
+
+    def step(self, dt_s: float = 1.0):
+        if self._real_engine is not None:
+            self._real_engine.step(dt_s=dt_s)
+        else:
+            super().step(dt_s=dt_s)
+
+    def update_node_phase(self, node_id: str, phase_id: str):
+        if self._real_engine is not None:
+            self._real_engine.update_node_phase(node_id, phase_id)
+        else:
+            super().update_node_phase(node_id, phase_id)
+
+    def generate_telemetry(self, node_id: str, sim_time_s: float) -> Dict[str, Any]:
+        if self._real_engine is not None:
+            return self._real_engine.generate_telemetry(node_id, sim_time_s)
+        return super().generate_telemetry(node_id, sim_time_s)
