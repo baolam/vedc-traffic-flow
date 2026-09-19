@@ -62,3 +62,33 @@ def test_sumo_engine_fallback():
     assert telemetry["node_id"] == "J1"
     assert telemetry["source_type"] == "simulation"
     validate_payload(telemetry, "telemetry")
+
+def test_sumo_configs_existence():
+    sumo_config_dir = Path(__file__).parents[2] / "services" / "simulator" / "sumo_configs"
+    assert (sumo_config_dir / "four_intersection_v1.sumocfg").exists()
+    assert (sumo_config_dir / "four_intersection_v1.net.xml").exists()
+    assert (sumo_config_dir / "four_intersection_v1.rou.xml").exists()
+
+def test_sumo_engine_node_initialization():
+    topology = load_topology("four_intersection_v1")
+    try:
+        from sumo_engine import SumoTrafficEngine, TRACI_AVAILABLE
+        if TRACI_AVAILABLE:
+            # Check node configuration mapping
+            dummy_engine = SumoTrafficEngine.__new__(SumoTrafficEngine)
+            dummy_engine.topology = topology
+            dummy_engine.nodes = {}
+            dummy_engine.traffic_light_ids = {"J1", "J2"}
+            dummy_engine.edge_ids = set()
+            dummy_engine.is_connected = True
+            dummy_engine._init_nodes()
+            assert len(dummy_engine.nodes) == 4
+            assert "J1" in dummy_engine.nodes
+            assert dummy_engine.nodes["J1"]["current_phase_id"] == "J1_PHASE_NS"
+
+            # Test updating phase for unsignalized node not in traffic_light_ids does not raise or invoke setPhase
+            dummy_engine.update_node_phase("J3", "J3_PHASE_EW")
+            assert dummy_engine.nodes["J3"]["current_phase_id"] == "J3_PHASE_EW"
+    except ImportError:
+        pytest.skip("SUMO module not available in environment")
+

@@ -5,49 +5,46 @@ import pickle
 import numpy as np
 from sklearn.neighbors import BallTree
 import math
-import time
+import argparse
+import logging
+from pathlib import Path
 
-def main():
-    # Cấu hình OSRM. Bạn có thể đổi port nếu docker của bạn dùng port khác
-    OSRM_URL = "http://localhost:5005/route/v1/driving"
-    K_NEIGHBORS = 4  # Số lượng node lân cận cần nối (tính cả chính nó nên thực tế là 3)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("build-camera-graph")
 
-    print("Reading camera data...")
-    with open('data/raw/cameras_hcm_full.json', 'r', encoding='utf-8') as f:
+def build_camera_graph(input_file: str, output_file: str, osrm_url: str = "http://localhost:5005/route/v1/driving", k_neighbors: int = 4):
+    logger.info(f"Reading camera data from {input_file}...")
+    if not Path(input_file).exists():
+        raise FileNotFoundError(f"Input camera file not found: {input_file}")
+
+    with open(input_file, 'r', encoding='utf-8') as f:
         cameras = json.load(f)
 
-    # Lọc các camera có tọa độ hợp lệ
     valid_cameras = [c for c in cameras if c.get('lat') and c.get('lng')]
-    print(f"Total valid cameras: {len(valid_cameras)}")
+    logger.info(f"Total valid cameras: {len(valid_cameras)}")
 
-    # Chuẩn bị dữ liệu tọa độ (đổi sang radians) cho BallTree tính Haversine distance
     coords = np.array([[math.radians(c['lat']), math.radians(c['lng'])] for c in valid_cameras])
     
-    print("Finding nearest neighbors...")
+    logger.info(f"Finding nearest neighbors (k={k_neighbors})...")
     tree = BallTree(coords, metric='haversine')
-    distances, indices = tree.query(coords, k=K_NEIGHBORS)
+    distances, indices = tree.query(coords, k=k_neighbors)
 
-    # Khởi tạo đồ thị có hướng, cho phép đa cạnh (MultiDiGraph)
     G = nx.MultiDiGraph()
 
-    print("Adding nodes to graph...")
     for i, cam in enumerate(valid_cameras):
         G.add_node(cam['id'], name=cam.get('name'), lat=cam['lat'], lng=cam['lng'], status=cam.get('status'))
 
-    print("Querying OSRM for routes...")
+    logger.info("Querying OSRM for routes...")
     processed_count = 0
-    total_pairs = len(valid_cameras) * (K_NEIGHBORS - 1)
+    total_pairs = len(valid_cameras) * (k_neighbors - 1)
 
     for i, neighbors_idx in enumerate(indices):
         src_cam = valid_cameras[i]
         
-        # neighbors_idx[0] luôn là chính nó, nên duyệt từ 1
         for j in range(1, len(neighbors_idx)):
             dst_cam = valid_cameras[neighbors_idx[j]]
-            
-            # Chuỗi tọa độ cho OSRM (định dạng: lng,lat;lng,lat)
             coords_str = f"{src_cam['lng']},{src_cam['lat']};{dst_cam['lng']},{dst_cam['lat']}"
-            url = f"{OSRM_URL}/{coords_str}?alternatives=true&geometries=geojson&overview=full"
+            url = f"{osrm_url}/{coords_str}?alternatives=true&geometries=geojson&overview=full"
             
             try:
                 resp = requests.get(url, timeout=2)
@@ -55,38 +52,43 @@ def main():
                     data = resp.json()
                     if data.get('code') == 'Ok':
                         routes = data.get('routes', [])
-                        # Nếu có nhiều đường đi (alternatives), sẽ add nhiều cạnh
                         for route in routes:
                             distance = route.get('distance')
                             duration = route.get('duration')
-                            geometry = route.get('geometry')  # GeoJSON định dạng LineString
+                            geometry = route.get('geometry')
                             
-                            # Thêm cạnh vào đồ thị
                             G.add_edge(src_cam['id'], dst_cam['id'], 
                                        distance=distance, 
                                        duration=duration, 
                                        geometry=geometry)
-                else:
-                    print(f"OSRM Error: HTTP {resp.status_code}")
             except Exception as e:
-                # Nếu OSRM không phản hồi hoặc lỗi, có thể bỏ qua hoặc in ra
                 pass
             
             processed_count += 1
             if processed_count % 500 == 0:
-                print(f"Processed {processed_count}/{total_pairs} pairs...")
+                logger.info(f"Processed {processed_count}/{total_pairs} pairs...")
 
-    print(f"Done! Graph has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
+    logger.info(f"Done! Graph has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
     
-    # Lưu đồ thị dưới dạng pickle để giữ nguyên NetworkX object
-    output_file = 'data/processed/camera_traffic_graph.pkl'
+    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, 'wb') as f:
         pickle.dump(G, f)
-    print(f"Đã lưu đồ thị vào file: {output_file}")
+    logger.info(f"Saved graph to: {output_file}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Build camera network graph using BallTree nearest neighbors and OSRM routing.")
+    parser.add_argument("--input", "-i", default="data/raw/cameras_hcm_full.json", help="Path to raw camera json dataset")
+    parser.add_argument("--output", "-o", default="data/processed/camera_traffic_graph.pkl", help="Path to save output pkl graph")
+    parser.add_argument("--osrm-url", default="http://localhost:5005/route/v1/driving", help="OSRM API routing server URL")
+    parser.add_argument("--k-neighbors", "-k", type=int, default=4, help="Number of nearest neighbors (including self)")
     
-    # Bạn có thể load lại bằng:
-    # with open('camera_traffic_graph.pkl', 'rb') as f:
-    #     G_loaded = pickle.load(f)
+    args = parser.parse_args()
+    build_camera_graph(
+        input_file=args.input,
+        output_file=args.output,
+        osrm_url=args.osrm_url,
+        k_neighbors=args.k_neighbors
+    )
 
 if __name__ == "__main__":
     main()

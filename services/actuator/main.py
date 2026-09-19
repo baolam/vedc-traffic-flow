@@ -3,18 +3,19 @@ import json
 import time
 import logging
 
+from config import settings
 from actuator_contracts_helper import validate_payload
 from state_machine import ActuatorStateMachine
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("actuator")
 
 def main():
     logger.info("Starting EdgeFlow Signal Actuator Service...")
     state_machine = ActuatorStateMachine()
 
-    mqtt_host = os.getenv("MQTT_HOST", "mqtt")
-    mqtt_port = int(os.getenv("MQTT_PORT", 1883))
+    mqtt_host = settings.mqtt_host
+    mqtt_port = settings.mqtt_port
 
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -40,7 +41,10 @@ def main():
 
     try:
         import paho.mqtt.client as mqtt
-        client = mqtt.Client(client_id="actuator-service")
+        try:
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, client_id="actuator-service")
+        except AttributeError:
+            client = mqtt.Client(client_id="actuator-service")
         client.on_connect = on_connect
         client.on_message = on_message
         logger.info(f"Connecting to MQTT broker at {mqtt_host}:{mqtt_port}...")

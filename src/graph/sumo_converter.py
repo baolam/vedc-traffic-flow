@@ -44,7 +44,7 @@ class SumoNetworkConverter:
                 node_approaches = node["approaches"]
                 
                 phase_idx = 1
-                for p in tl.findall("phase"):
+                for raw_sumo_phase_idx, p in enumerate(tl.findall("phase")):
                     state = p.attrib.get("state", "")
                     # Filter out yellow/red phases if state contains 'G' or 'g'
                     if "G" in state or "g" in state or not node["phases"]:
@@ -64,25 +64,28 @@ class SumoNetworkConverter:
                         node["phases"].append({
                             "phase_id": f"{tl_id}_PHASE_{phase_idx}",
                             "name": f"Phase {phase_idx} ({state})",
-                            "approaches": active_apps
+                            "approaches": active_apps,
+                            "sumo_phase_index": raw_sumo_phase_idx
                         })
                         phase_idx += 1
 
-        # Fallback for nodes without explicit tlsLogic in XML
+        # Fallback for traffic light nodes without explicit tlsLogic in XML
         for n_id, node in nodes_dict.items():
-            if not node["phases"]:
+            if not node["phases"] and node.get("type", "").startswith("traffic_light"):
                 apps = node["approaches"]
                 half = max(1, len(apps) // 2)
                 node["phases"] = [
                     {
                         "phase_id": f"{n_id}_PHASE_1",
                         "name": "Phase 1 Green",
-                        "approaches": apps[:half]
+                        "approaches": apps[:half],
+                        "sumo_phase_index": 0
                     },
                     {
                         "phase_id": f"{n_id}_PHASE_2",
                         "name": "Phase 2 Green",
-                        "approaches": apps[half:] if len(apps) > half else apps
+                        "approaches": apps[half:] if len(apps) > half else apps,
+                        "sumo_phase_index": 2 if len(apps) > 2 else 1
                     }
                 ]
 
@@ -140,3 +143,20 @@ class SumoNetworkConverter:
             "nodes": nodes,
             "edges": graph_data.get("edges", [])
         }
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Convert SUMO .net.xml network into canonical EdgeFlow AI topology contract JSON.")
+    parser.add_argument("--input", "-i", required=True, help="Path to input SUMO .net.xml file")
+    parser.add_argument("--output", "-o", required=True, help="Path to output JSON topology file")
+    parser.add_argument("--topology-id", default="sumo_converted_v1", help="Topology contract ID")
+
+    args = parser.parse_args()
+    with open(args.input, "r", encoding="utf-8") as f:
+        xml_content = f.read()
+
+    topology = SumoNetworkConverter.parse_net_xml(xml_content, topology_id=args.topology_id)
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    with open(args.output, "w", encoding="utf-8") as f:
+        json.dump(topology, f, indent=2, ensure_ascii=False)
+    print(f"Successfully converted {args.input} -> {args.output} (topology_id: {args.topology_id})")

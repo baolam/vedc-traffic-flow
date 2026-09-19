@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests/unit",
+    "tests/integration"
+]
+pythonpath = [
+    ".",
+    "contracts",
+    "services/actuator",
+    "services/api",
+    "services/graph-control",
+    "services/simulator",
+    "src/graph"
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+select = ["E", "F", "W"]
+ignore = []

@@ -1,0 +1,1885 @@
+{
+  "topology_id": "cologne8",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "1679948677",
+      "name": "SUMO Junction 1679948677",
+      "type": "priority",
+      "approaches": [
+        "-194017408#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "1679948681",
+      "name": "SUMO Junction 1679948681",
+      "type": "priority",
+      "approaches": [
+        "-297047308",
+        "28675493"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "2340562483",
+      "name": "SUMO Junction 2340562483",
+      "type": "priority",
+      "approaches": [
+        "194017408#0",
+        "25168493"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "247379907",
+      "name": "SUMO Junction 247379907",
+      "type": "traffic_light",
+      "approaches": [
+        "-186623965#18",
+        "-22917421#14",
+        "186623965#15",
+        "22917421#3"
+      ],
+      "phases": [
+        {
+          "phase_id": "247379907_PHASE_1",
+          "name": "Phase 1 (rrrrGGGggrrrrGGGgg)",
+          "approaches": [
+            "-186623965#18",
+            "-22917421#14",
+            "186623965#15",
+            "22917421#3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "247379907_PHASE_2",
+          "name": "Phase 2 (rrrryyyggrrrryyygg)",
+          "approaches": [
+            "22917421#3",
+            "-186623965#18",
+            "-22917421#14"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "247379907_PHASE_3",
+          "name": "Phase 3 (rrrrrrrGGrrrrrrrGG)",
+          "approaches": [
+            "22917421#3",
+            "-186623965#18",
+            "-22917421#14"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "247379907_PHASE_4",
+          "name": "Phase 4 (GGggrrrrrGGggrrrrr)",
+          "approaches": [
+            "-186623965#18",
+            "-22917421#14",
+            "186623965#15",
+            "22917421#3"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "247379907_PHASE_5",
+          "name": "Phase 5 (yyggrrrrryyggrrrrr)",
+          "approaches": [
+            "186623965#15",
+            "22917421#3",
+            "-186623965#18"
+          ],
+          "sumo_phase_index": 5
+        },
+        {
+          "phase_id": "247379907_PHASE_6",
+          "name": "Phase 6 (rrGGrrrrrrrGGrrrrr)",
+          "approaches": [
+            "186623965#15",
+            "22917421#3",
+            "-186623965#18"
+          ],
+          "sumo_phase_index": 6
+        }
+      ]
+    },
+    {
+      "node_id": "247379910",
+      "name": "SUMO Junction 247379910",
+      "type": "priority",
+      "approaches": [
+        "42925825#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "247380547",
+      "name": "SUMO Junction 247380547",
+      "type": "right_before_left",
+      "approaches": [
+        "22959550#1",
+        "22959552#5"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "247380550",
+      "name": "SUMO Junction 247380550",
+      "type": "right_before_left",
+      "approaches": [
+        "-132042183"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "247380551",
+      "name": "SUMO Junction 247380551",
+      "type": "priority",
+      "approaches": [
+        "-8716807#5",
+        "22959552#2",
+        "8716807#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252015689",
+      "name": "SUMO Junction 252015689",
+      "type": "priority",
+      "approaches": [
+        "23283580#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016108",
+      "name": "SUMO Junction 252016108",
+      "type": "dead_end",
+      "approaches": [
+        "23283436"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016270",
+      "name": "SUMO Junction 252016270",
+      "type": "priority",
+      "approaches": [
+        "23283470#3"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016271",
+      "name": "SUMO Junction 252016271",
+      "type": "priority",
+      "approaches": [
+        "-133081985#1",
+        "133081985#0",
+        "23283469"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016273",
+      "name": "SUMO Junction 252016273",
+      "type": "right_before_left",
+      "approaches": [
+        "22959550#3",
+        "23840712#4"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016274",
+      "name": "SUMO Junction 252016274",
+      "type": "priority",
+      "approaches": [
+        "-8716807#4",
+        "23283470#2",
+        "8716807#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016275",
+      "name": "SUMO Junction 252016275",
+      "type": "priority",
+      "approaches": [
+        "24610382"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016277",
+      "name": "SUMO Junction 252016277",
+      "type": "right_before_left",
+      "approaches": [
+        "-24610382",
+        "23283470#5"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016278",
+      "name": "SUMO Junction 252016278",
+      "type": "right_before_left",
+      "approaches": [
+        "132042183",
+        "23283472#0",
+        "24694889"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016280",
+      "name": "SUMO Junction 252016280",
+      "type": "priority",
+      "approaches": [
+        "8716827#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016281",
+      "name": "SUMO Junction 252016281",
+      "type": "priority",
+      "approaches": [
+        "-23686088#1",
+        "23283473",
+        "23686088#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252016282",
+      "name": "SUMO Junction 252016282",
+      "type": "right_before_left",
+      "approaches": [
+        "-23283472#2",
+        "23283474"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252017285",
+      "name": "SUMO Junction 252017285",
+      "type": "traffic_light",
+      "approaches": [
+        "-23283579#0",
+        "-28675510#0",
+        "-8716807#0",
+        "133081985#1"
+      ],
+      "phases": [
+        {
+          "phase_id": "252017285_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
+          "approaches": [
+            "-23283579#0",
+            "-28675510#0",
+            "-8716807#0",
+            "133081985#1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "252017285_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
+          "approaches": [
+            "-23283579#0",
+            "-28675510#0",
+            "-8716807#0",
+            "133081985#1"
+          ],
+          "sumo_phase_index": 2
+        }
+      ]
+    },
+    {
+      "node_id": "252017289",
+      "name": "SUMO Junction 252017289",
+      "type": "priority",
+      "approaches": [
+        "-23283580#1",
+        "23286179#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252041405",
+      "name": "SUMO Junction 252041405",
+      "type": "right_before_left",
+      "approaches": [
+        "22959552#1",
+        "23285888#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252046468",
+      "name": "SUMO Junction 252046468",
+      "type": "priority",
+      "approaches": [
+        "-23283579#1",
+        "23283579#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "252046469",
+      "name": "SUMO Junction 252046469",
+      "type": "priority",
+      "approaches": [
+        "23286179#1",
+        "60909001"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256189976",
+      "name": "SUMO Junction 256189976",
+      "type": "priority",
+      "approaches": [
+        "22959552#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256189977",
+      "name": "SUMO Junction 256189977",
+      "type": "dead_end",
+      "approaches": [
+        "256189977_APP_1",
+        "256189977_APP_2"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256189978",
+      "name": "SUMO Junction 256189978",
+      "type": "priority",
+      "approaches": [
+        "297047309#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256190118",
+      "name": "SUMO Junction 256190118",
+      "type": "priority",
+      "approaches": [
+        "-8716807#6",
+        "23647118",
+        "23647126",
+        "8716807#5"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256190139",
+      "name": "SUMO Junction 256190139",
+      "type": "priority",
+      "approaches": [
+        "-297047307",
+        "297047310#3"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256190156",
+      "name": "SUMO Junction 256190156",
+      "type": "priority",
+      "approaches": [
+        "22959550#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "256201389",
+      "name": "SUMO Junction 256201389",
+      "type": "traffic_light",
+      "approaches": [
+        "-225249129#0",
+        "-24487264",
+        "23648008#2"
+      ],
+      "phases": [
+        {
+          "phase_id": "256201389_PHASE_1",
+          "name": "Phase 1 (rrrGGgGgg)",
+          "approaches": [
+            "-225249129#0",
+            "-24487264",
+            "23648008#2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "256201389_PHASE_2",
+          "name": "Phase 2 (rrryygygg)",
+          "approaches": [
+            "23648008#2",
+            "-24487264"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "256201389_PHASE_3",
+          "name": "Phase 3 (rrrrrGrGG)",
+          "approaches": [
+            "23648008#2",
+            "-24487264"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "256201389_PHASE_4",
+          "name": "Phase 4 (GGgGrrrrr)",
+          "approaches": [
+            "-225249129#0",
+            "-24487264",
+            "23648008#2"
+          ],
+          "sumo_phase_index": 4
+        }
+      ]
+    },
+    {
+      "node_id": "256490868",
+      "name": "SUMO Junction 256490868",
+      "type": "priority",
+      "approaches": [
+        "4936412"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258346770",
+      "name": "SUMO Junction 258346770",
+      "type": "priority",
+      "approaches": [
+        "-28675510#5",
+        "28675510#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258346772",
+      "name": "SUMO Junction 258346772",
+      "type": "priority",
+      "approaches": [
+        "-23840712#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258346773",
+      "name": "SUMO Junction 258346773",
+      "type": "right_before_left",
+      "approaches": [
+        "-23840712#3",
+        "-290365598#1",
+        "23840712#0",
+        "23840713#2"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258346776",
+      "name": "SUMO Junction 258346776",
+      "type": "right_before_left",
+      "approaches": [
+        "-23840888#1",
+        "23840888#0",
+        "290365598#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258347996",
+      "name": "SUMO Junction 258347996",
+      "type": "priority",
+      "approaches": [
+        "-297047310#3",
+        "155600123#0",
+        "23840887#3"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258347997",
+      "name": "SUMO Junction 258347997",
+      "type": "right_before_left",
+      "approaches": [
+        "-23840712#4",
+        "23840712#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258347999",
+      "name": "SUMO Junction 258347999",
+      "type": "priority",
+      "approaches": [
+        "-23840888#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258348002",
+      "name": "SUMO Junction 258348002",
+      "type": "right_before_left",
+      "approaches": [
+        "23840887#0",
+        "23840888#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258348232",
+      "name": "SUMO Junction 258348232",
+      "type": "right_before_left",
+      "approaches": [
+        "-23840935",
+        "23840887#2"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258348233",
+      "name": "SUMO Junction 258348233",
+      "type": "priority",
+      "approaches": [
+        "23840935"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258348534",
+      "name": "SUMO Junction 258348534",
+      "type": "priority",
+      "approaches": [
+        "23840972"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258348535",
+      "name": "SUMO Junction 258348535",
+      "type": "priority",
+      "approaches": [
+        "23840971"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "258585973",
+      "name": "SUMO Junction 258585973",
+      "type": "priority",
+      "approaches": [
+        "-186623965#14"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "26110729",
+      "name": "SUMO Junction 26110729",
+      "type": "traffic_light",
+      "approaches": [
+        "-186623965#16",
+        "-297047310#2",
+        "-42925825#2",
+        "186623965#9"
+      ],
+      "phases": [
+        {
+          "phase_id": "26110729_PHASE_1",
+          "name": "Phase 1 (rrrrGGGggrrrrGGGgg)",
+          "approaches": [
+            "-186623965#16",
+            "-297047310#2",
+            "-42925825#2",
+            "186623965#9"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "26110729_PHASE_2",
+          "name": "Phase 2 (rrrryyyggrrrryyygg)",
+          "approaches": [
+            "186623965#9",
+            "-186623965#16",
+            "-297047310#2"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "26110729_PHASE_3",
+          "name": "Phase 3 (rrrrrrrGGrrrrrrrGG)",
+          "approaches": [
+            "186623965#9",
+            "-186623965#16",
+            "-297047310#2"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "26110729_PHASE_4",
+          "name": "Phase 4 (GGggrrrrrGGggrrrrr)",
+          "approaches": [
+            "-186623965#16",
+            "-297047310#2",
+            "-42925825#2",
+            "186623965#9"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "26110729_PHASE_5",
+          "name": "Phase 5 (yyggrrrrryyggrrrrr)",
+          "approaches": [
+            "-42925825#2",
+            "186623965#9",
+            "-186623965#16"
+          ],
+          "sumo_phase_index": 5
+        },
+        {
+          "phase_id": "26110729_PHASE_6",
+          "name": "Phase 6 (rrGGrrrrrrrGGrrrrr)",
+          "approaches": [
+            "-42925825#2",
+            "186623965#9",
+            "-186623965#16"
+          ],
+          "sumo_phase_index": 6
+        }
+      ]
+    },
+    {
+      "node_id": "266570009",
+      "name": "SUMO Junction 266570009",
+      "type": "priority",
+      "approaches": [
+        "186623965#17"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "266574870",
+      "name": "SUMO Junction 266574870",
+      "type": "priority",
+      "approaches": [
+        "24487264"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "26715772",
+      "name": "SUMO Junction 26715772",
+      "type": "dead_end",
+      "approaches": [
+        "26715772_APP_1",
+        "26715772_APP_2"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "26716586",
+      "name": "SUMO Junction 26716586",
+      "type": "priority",
+      "approaches": [
+        "-133081987#2",
+        "160807420",
+        "23686088#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "26718384",
+      "name": "SUMO Junction 26718384",
+      "type": "priority",
+      "approaches": [
+        "24675285"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "268061678",
+      "name": "SUMO Junction 268061678",
+      "type": "priority",
+      "approaches": [
+        "-22917421#4"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "268197981",
+      "name": "SUMO Junction 268197981",
+      "type": "dead_end",
+      "approaches": [
+        "268197981_APP_1",
+        "268197981_APP_2"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "274331914",
+      "name": "SUMO Junction 274331914",
+      "type": "priority",
+      "approaches": [
+        "25166682#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "274333875",
+      "name": "SUMO Junction 274333875",
+      "type": "priority",
+      "approaches": [
+        "-23648008#1",
+        "-25166682#0",
+        "23648008#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "274353299",
+      "name": "SUMO Junction 274353299",
+      "type": "priority",
+      "approaches": [
+        "-25168493"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "280120513",
+      "name": "SUMO Junction 280120513",
+      "type": "traffic_light",
+      "approaches": [
+        "-23648008#0",
+        "-28675493",
+        "297047310#4"
+      ],
+      "phases": [
+        {
+          "phase_id": "280120513_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
+          "approaches": [
+            "-23648008#0",
+            "-28675493",
+            "297047310#4"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "280120513_PHASE_2",
+          "name": "Phase 2 (yggrrryyg)",
+          "approaches": [
+            "-28675493",
+            "297047310#4"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "280120513_PHASE_3",
+          "name": "Phase 3 (rGGrrrrrG)",
+          "approaches": [
+            "-28675493",
+            "297047310#4"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "280120513_PHASE_4",
+          "name": "Phase 4 (rrrGGgGrr)",
+          "approaches": [
+            "-23648008#0",
+            "-28675493",
+            "297047310#4"
+          ],
+          "sumo_phase_index": 4
+        }
+      ]
+    },
+    {
+      "node_id": "294223020",
+      "name": "SUMO Junction 294223020",
+      "type": "priority",
+      "approaches": [
+        "28675510#7"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "3008854750",
+      "name": "SUMO Junction 3008854750",
+      "type": "priority",
+      "approaches": [
+        "-297047309#0",
+        "28675494#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "315372838",
+      "name": "SUMO Junction 315372838",
+      "type": "right_before_left",
+      "approaches": [
+        "-28691861",
+        "23283470#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "315373118",
+      "name": "SUMO Junction 315373118",
+      "type": "right_before_left",
+      "approaches": [
+        "22959552#4",
+        "28691861"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "32319828",
+      "name": "SUMO Junction 32319828",
+      "type": "traffic_light",
+      "approaches": [
+        "-23686088#0",
+        "-4936412"
+      ],
+      "phases": [
+        {
+          "phase_id": "32319828_PHASE_1",
+          "name": "Phase 1 (GGggGGgg)",
+          "approaches": [
+            "-23686088#0",
+            "-4936412"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "32319828_PHASE_2",
+          "name": "Phase 2 (yyggyygg)",
+          "approaches": [
+            "-23686088#0",
+            "-4936412"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "32319828_PHASE_3",
+          "name": "Phase 3 (rrGGrrGG)",
+          "approaches": [
+            "-23686088#0",
+            "-4936412"
+          ],
+          "sumo_phase_index": 2
+        }
+      ]
+    },
+    {
+      "node_id": "32319829",
+      "name": "SUMO Junction 32319829",
+      "type": "dead_end",
+      "approaches": [
+        "155723703#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "3302156369",
+      "name": "SUMO Junction 3302156369",
+      "type": "priority",
+      "approaches": [
+        "323416262"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "3302422976",
+      "name": "SUMO Junction 3302422976",
+      "type": "priority",
+      "approaches": [
+        "-23648008#3",
+        "-323450710#0",
+        "23648008#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "3302422984",
+      "name": "SUMO Junction 3302422984",
+      "type": "priority",
+      "approaches": [
+        "323450710#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "3329935579",
+      "name": "SUMO Junction 3329935579",
+      "type": "priority",
+      "approaches": [
+        "22959475#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "3588475451",
+      "name": "SUMO Junction 3588475451",
+      "type": "priority",
+      "approaches": [
+        "-225249129#1",
+        "-353069169#0",
+        "225249129#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "476189",
+      "name": "SUMO Junction 476189",
+      "type": "priority",
+      "approaches": [
+        "-309744810#1",
+        "133081987#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "62426694",
+      "name": "SUMO Junction 62426694",
+      "type": "traffic_light",
+      "approaches": [
+        "-28675494#1",
+        "297047308",
+        "8716807#6"
+      ],
+      "phases": [
+        {
+          "phase_id": "62426694_PHASE_1",
+          "name": "Phase 1 (GGgGggrrr)",
+          "approaches": [
+            "-28675494#1",
+            "297047308",
+            "8716807#6"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "62426694_PHASE_2",
+          "name": "Phase 2 (yygyggrrr)",
+          "approaches": [
+            "8716807#6",
+            "297047308"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "62426694_PHASE_3",
+          "name": "Phase 3 (rrGrGGrrr)",
+          "approaches": [
+            "8716807#6",
+            "297047308"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "62426694_PHASE_4",
+          "name": "Phase 4 (GrrrrrGGg)",
+          "approaches": [
+            "-28675494#1",
+            "297047308",
+            "8716807#6"
+          ],
+          "sumo_phase_index": 4
+        }
+      ]
+    },
+    {
+      "node_id": "652791048",
+      "name": "SUMO Junction 652791048",
+      "type": "priority",
+      "approaches": [
+        "225249129#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "762399659",
+      "name": "SUMO Junction 762399659",
+      "type": "priority",
+      "approaches": [
+        "23286180"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "796761043",
+      "name": "SUMO Junction 796761043",
+      "type": "priority",
+      "approaches": [
+        "-28675510#3",
+        "22959550#4",
+        "28675510#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "cluster_1098574052_1098574061_247379905",
+      "name": "SUMO Junction cluster_1098574052_1098574061_247379905",
+      "type": "traffic_light",
+      "approaches": [
+        "-22959475#4",
+        "-28675510#11",
+        "22917421#5",
+        "28675510#4"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_1098574052_1098574061_247379905_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
+          "approaches": [
+            "-22959475#4",
+            "-28675510#11",
+            "22917421#5",
+            "28675510#4"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "cluster_1098574052_1098574061_247379905_PHASE_2",
+          "name": "Phase 2 (rrrryyggrrrryygg)",
+          "approaches": [
+            "22917421#5",
+            "28675510#4"
+          ],
+          "sumo_phase_index": 1
+        },
+        {
+          "phase_id": "cluster_1098574052_1098574061_247379905_PHASE_3",
+          "name": "Phase 3 (rrrrrrGGrrrrrrGG)",
+          "approaches": [
+            "22917421#5",
+            "28675510#4"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "cluster_1098574052_1098574061_247379905_PHASE_4",
+          "name": "Phase 4 (GGggrrrrGGggrrrr)",
+          "approaches": [
+            "-22959475#4",
+            "-28675510#11",
+            "22917421#5",
+            "28675510#4"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "cluster_1098574052_1098574061_247379905_PHASE_5",
+          "name": "Phase 5 (yyggrrrryyggrrrr)",
+          "approaches": [
+            "22917421#5",
+            "28675510#4"
+          ],
+          "sumo_phase_index": 5
+        },
+        {
+          "phase_id": "cluster_1098574052_1098574061_247379905_PHASE_6",
+          "name": "Phase 6 (rrGGrrrrrrGGrrrr)",
+          "approaches": [
+            "22917421#5",
+            "28675510#4"
+          ],
+          "sumo_phase_index": 6
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_252046467_252046470",
+      "name": "SUMO Junction cluster_252046467_252046470",
+      "type": "priority",
+      "approaches": [
+        "23283435#1",
+        "23283579#1",
+        "23286179#2"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "cluster_258346775_2665408833",
+      "name": "SUMO Junction cluster_258346775_2665408833",
+      "type": "right_before_left",
+      "approaches": [
+        "-23840971",
+        "-23840972",
+        "23840713#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "cluster_26718385_738066527_738066531_738066575",
+      "name": "SUMO Junction cluster_26718385_738066527_738066531_738066575",
+      "type": "priority",
+      "approaches": [
+        "-133081985#0",
+        "133081987#3",
+        "23656410#0"
+      ],
+      "phases": []
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "-132042183",
+      "source": "252016278",
+      "target": "247380550"
+    },
+    {
+      "edge_id": "-133081985#0",
+      "source": "252016271",
+      "target": "cluster_26718385_738066527_738066531_738066575"
+    },
+    {
+      "edge_id": "-133081985#1",
+      "source": "252017285",
+      "target": "252016271"
+    },
+    {
+      "edge_id": "-133081987#2",
+      "source": "476189",
+      "target": "26716586"
+    },
+    {
+      "edge_id": "-186623965#14",
+      "source": "26110729",
+      "target": "258585973"
+    },
+    {
+      "edge_id": "-186623965#16",
+      "source": "247379907",
+      "target": "26110729"
+    },
+    {
+      "edge_id": "-186623965#18",
+      "source": "266570009",
+      "target": "247379907"
+    },
+    {
+      "edge_id": "-194017408#1",
+      "source": "2340562483",
+      "target": "1679948677"
+    },
+    {
+      "edge_id": "-225249129#0",
+      "source": "3588475451",
+      "target": "256201389"
+    },
+    {
+      "edge_id": "-225249129#1",
+      "source": "652791048",
+      "target": "3588475451"
+    },
+    {
+      "edge_id": "-22917421#14",
+      "source": "cluster_1098574052_1098574061_247379905",
+      "target": "247379907"
+    },
+    {
+      "edge_id": "-22917421#4",
+      "source": "247379907",
+      "target": "268061678"
+    },
+    {
+      "edge_id": "-22959475#4",
+      "source": "3329935579",
+      "target": "cluster_1098574052_1098574061_247379905"
+    },
+    {
+      "edge_id": "-23283472#2",
+      "source": "252016278",
+      "target": "252016282"
+    },
+    {
+      "edge_id": "-23283579#0",
+      "source": "252046468",
+      "target": "252017285"
+    },
+    {
+      "edge_id": "-23283579#1",
+      "source": "cluster_252046467_252046470",
+      "target": "252046468"
+    },
+    {
+      "edge_id": "-23283580#1",
+      "source": "252015689",
+      "target": "252017289"
+    },
+    {
+      "edge_id": "-23648008#0",
+      "source": "274333875",
+      "target": "280120513"
+    },
+    {
+      "edge_id": "-23648008#1",
+      "source": "3302422976",
+      "target": "274333875"
+    },
+    {
+      "edge_id": "-23648008#3",
+      "source": "256201389",
+      "target": "3302422976"
+    },
+    {
+      "edge_id": "-23686088#0",
+      "source": "252016281",
+      "target": "32319828"
+    },
+    {
+      "edge_id": "-23686088#1",
+      "source": "26716586",
+      "target": "252016281"
+    },
+    {
+      "edge_id": "-23840712#0",
+      "source": "258346773",
+      "target": "258346772"
+    },
+    {
+      "edge_id": "-23840712#3",
+      "source": "258347997",
+      "target": "258346773"
+    },
+    {
+      "edge_id": "-23840712#4",
+      "source": "252016273",
+      "target": "258347997"
+    },
+    {
+      "edge_id": "-23840888#0",
+      "source": "258346776",
+      "target": "258347999"
+    },
+    {
+      "edge_id": "-23840888#1",
+      "source": "258348002",
+      "target": "258346776"
+    },
+    {
+      "edge_id": "-23840935",
+      "source": "258348233",
+      "target": "258348232"
+    },
+    {
+      "edge_id": "-23840971",
+      "source": "258348535",
+      "target": "cluster_258346775_2665408833"
+    },
+    {
+      "edge_id": "-23840972",
+      "source": "258348534",
+      "target": "cluster_258346775_2665408833"
+    },
+    {
+      "edge_id": "-24487264",
+      "source": "266574870",
+      "target": "256201389"
+    },
+    {
+      "edge_id": "-24610382",
+      "source": "252016275",
+      "target": "252016277"
+    },
+    {
+      "edge_id": "-25166682#0",
+      "source": "274331914",
+      "target": "274333875"
+    },
+    {
+      "edge_id": "-25168493",
+      "source": "2340562483",
+      "target": "274353299"
+    },
+    {
+      "edge_id": "-28675493",
+      "source": "1679948681",
+      "target": "280120513"
+    },
+    {
+      "edge_id": "-28675494#1",
+      "source": "3008854750",
+      "target": "62426694"
+    },
+    {
+      "edge_id": "-28675510#0",
+      "source": "796761043",
+      "target": "252017285"
+    },
+    {
+      "edge_id": "-28675510#11",
+      "source": "294223020",
+      "target": "cluster_1098574052_1098574061_247379905"
+    },
+    {
+      "edge_id": "-28675510#3",
+      "source": "258346770",
+      "target": "796761043"
+    },
+    {
+      "edge_id": "-28675510#5",
+      "source": "cluster_1098574052_1098574061_247379905",
+      "target": "258346770"
+    },
+    {
+      "edge_id": "-28691861",
+      "source": "315373118",
+      "target": "315372838"
+    },
+    {
+      "edge_id": "-290365598#1",
+      "source": "258346776",
+      "target": "258346773"
+    },
+    {
+      "edge_id": "-297047307",
+      "source": "280120513",
+      "target": "256190139"
+    },
+    {
+      "edge_id": "-297047308",
+      "source": "62426694",
+      "target": "1679948681"
+    },
+    {
+      "edge_id": "-297047309#0",
+      "source": "256189978",
+      "target": "3008854750"
+    },
+    {
+      "edge_id": "-297047310#2",
+      "source": "258347996",
+      "target": "26110729"
+    },
+    {
+      "edge_id": "-297047310#3",
+      "source": "256190139",
+      "target": "258347996"
+    },
+    {
+      "edge_id": "-309744810#1",
+      "source": "cluster_26718385_738066527_738066531_738066575",
+      "target": "476189"
+    },
+    {
+      "edge_id": "-323450710#0",
+      "source": "3302422984",
+      "target": "3302422976"
+    },
+    {
+      "edge_id": "-353069169#0",
+      "source": "3302156369",
+      "target": "3588475451"
+    },
+    {
+      "edge_id": "-42925825#2",
+      "source": "247379910",
+      "target": "26110729"
+    },
+    {
+      "edge_id": "-4936412",
+      "source": "256490868",
+      "target": "32319828"
+    },
+    {
+      "edge_id": "-8716807#0",
+      "source": "252016274",
+      "target": "252017285"
+    },
+    {
+      "edge_id": "-8716807#4",
+      "source": "247380551",
+      "target": "252016274"
+    },
+    {
+      "edge_id": "-8716807#5",
+      "source": "256190118",
+      "target": "247380551"
+    },
+    {
+      "edge_id": "-8716807#6",
+      "source": "62426694",
+      "target": "256190118"
+    },
+    {
+      "edge_id": "132042183",
+      "source": "247380550",
+      "target": "252016278"
+    },
+    {
+      "edge_id": "133081985#0",
+      "source": "cluster_26718385_738066527_738066531_738066575",
+      "target": "252016271"
+    },
+    {
+      "edge_id": "133081985#1",
+      "source": "252016271",
+      "target": "252017285"
+    },
+    {
+      "edge_id": "133081987#0",
+      "source": "26716586",
+      "target": "476189"
+    },
+    {
+      "edge_id": "133081987#3",
+      "source": "476189",
+      "target": "cluster_26718385_738066527_738066531_738066575"
+    },
+    {
+      "edge_id": "155600123#0",
+      "source": "26110729",
+      "target": "258347996"
+    },
+    {
+      "edge_id": "155723703#0",
+      "source": "32319828",
+      "target": "32319829"
+    },
+    {
+      "edge_id": "160807420",
+      "source": "26715772",
+      "target": "26716586"
+    },
+    {
+      "edge_id": "186623965#15",
+      "source": "26110729",
+      "target": "247379907"
+    },
+    {
+      "edge_id": "186623965#17",
+      "source": "247379907",
+      "target": "266570009"
+    },
+    {
+      "edge_id": "186623965#9",
+      "source": "258585973",
+      "target": "26110729"
+    },
+    {
+      "edge_id": "194017408#0",
+      "source": "1679948677",
+      "target": "2340562483"
+    },
+    {
+      "edge_id": "225249129#0",
+      "source": "256201389",
+      "target": "3588475451"
+    },
+    {
+      "edge_id": "225249129#1",
+      "source": "3588475451",
+      "target": "652791048"
+    },
+    {
+      "edge_id": "22917421#3",
+      "source": "268061678",
+      "target": "247379907"
+    },
+    {
+      "edge_id": "22917421#5",
+      "source": "247379907",
+      "target": "cluster_1098574052_1098574061_247379905"
+    },
+    {
+      "edge_id": "22959475#0",
+      "source": "cluster_1098574052_1098574061_247379905",
+      "target": "3329935579"
+    },
+    {
+      "edge_id": "22959550#0",
+      "source": "256190139",
+      "target": "256190156"
+    },
+    {
+      "edge_id": "22959550#1",
+      "source": "256190156",
+      "target": "247380547"
+    },
+    {
+      "edge_id": "22959550#3",
+      "source": "247380547",
+      "target": "252016273"
+    },
+    {
+      "edge_id": "22959550#4",
+      "source": "252016273",
+      "target": "796761043"
+    },
+    {
+      "edge_id": "22959552#0",
+      "source": "247380550",
+      "target": "256189976"
+    },
+    {
+      "edge_id": "22959552#1",
+      "source": "256189976",
+      "target": "252041405"
+    },
+    {
+      "edge_id": "22959552#2",
+      "source": "252041405",
+      "target": "247380551"
+    },
+    {
+      "edge_id": "22959552#4",
+      "source": "247380551",
+      "target": "315373118"
+    },
+    {
+      "edge_id": "22959552#5",
+      "source": "315373118",
+      "target": "247380547"
+    },
+    {
+      "edge_id": "23283435#1",
+      "source": "cluster_26718385_738066527_738066531_738066575",
+      "target": "cluster_252046467_252046470"
+    },
+    {
+      "edge_id": "23283436",
+      "source": "476189",
+      "target": "252016108"
+    },
+    {
+      "edge_id": "23283469",
+      "source": "252016270",
+      "target": "252016271"
+    },
+    {
+      "edge_id": "23283470#0",
+      "source": "252016273",
+      "target": "315372838"
+    },
+    {
+      "edge_id": "23283470#2",
+      "source": "315372838",
+      "target": "252016274"
+    },
+    {
+      "edge_id": "23283470#3",
+      "source": "252016274",
+      "target": "252016270"
+    },
+    {
+      "edge_id": "23283470#5",
+      "source": "252016270",
+      "target": "252016277"
+    },
+    {
+      "edge_id": "23283472#0",
+      "source": "252016282",
+      "target": "252016278"
+    },
+    {
+      "edge_id": "23283473",
+      "source": "252016282",
+      "target": "252016281"
+    },
+    {
+      "edge_id": "23283474",
+      "source": "252016280",
+      "target": "252016282"
+    },
+    {
+      "edge_id": "23283579#0",
+      "source": "252017285",
+      "target": "252046468"
+    },
+    {
+      "edge_id": "23283579#1",
+      "source": "252046468",
+      "target": "cluster_252046467_252046470"
+    },
+    {
+      "edge_id": "23283580#0",
+      "source": "252017289",
+      "target": "252015689"
+    },
+    {
+      "edge_id": "23285888#0",
+      "source": "252016270",
+      "target": "252041405"
+    },
+    {
+      "edge_id": "23286179#0",
+      "source": "252046468",
+      "target": "252017289"
+    },
+    {
+      "edge_id": "23286179#1",
+      "source": "252017289",
+      "target": "252046469"
+    },
+    {
+      "edge_id": "23286179#2",
+      "source": "252046469",
+      "target": "cluster_252046467_252046470"
+    },
+    {
+      "edge_id": "23286180",
+      "source": "252046469",
+      "target": "762399659"
+    },
+    {
+      "edge_id": "23647118",
+      "source": "256189977",
+      "target": "256190118"
+    },
+    {
+      "edge_id": "23647126",
+      "source": "256190156",
+      "target": "256190118"
+    },
+    {
+      "edge_id": "23648008#0",
+      "source": "280120513",
+      "target": "274333875"
+    },
+    {
+      "edge_id": "23648008#1",
+      "source": "274333875",
+      "target": "3302422976"
+    },
+    {
+      "edge_id": "23648008#2",
+      "source": "3302422976",
+      "target": "256201389"
+    },
+    {
+      "edge_id": "23656410#0",
+      "source": "26718384",
+      "target": "cluster_26718385_738066527_738066531_738066575"
+    },
+    {
+      "edge_id": "23686088#0",
+      "source": "32319828",
+      "target": "252016281"
+    },
+    {
+      "edge_id": "23686088#1",
+      "source": "252016281",
+      "target": "26716586"
+    },
+    {
+      "edge_id": "23840712#0",
+      "source": "258346772",
+      "target": "258346773"
+    },
+    {
+      "edge_id": "23840712#1",
+      "source": "258346773",
+      "target": "258347997"
+    },
+    {
+      "edge_id": "23840712#4",
+      "source": "258347997",
+      "target": "252016273"
+    },
+    {
+      "edge_id": "23840713#0",
+      "source": "258346770",
+      "target": "cluster_258346775_2665408833"
+    },
+    {
+      "edge_id": "23840713#2",
+      "source": "cluster_258346775_2665408833",
+      "target": "258346773"
+    },
+    {
+      "edge_id": "23840887#0",
+      "source": "258347997",
+      "target": "258348002"
+    },
+    {
+      "edge_id": "23840887#2",
+      "source": "258348002",
+      "target": "258348232"
+    },
+    {
+      "edge_id": "23840887#3",
+      "source": "258348232",
+      "target": "258347996"
+    },
+    {
+      "edge_id": "23840888#0",
+      "source": "258347999",
+      "target": "258346776"
+    },
+    {
+      "edge_id": "23840888#1",
+      "source": "258346776",
+      "target": "258348002"
+    },
+    {
+      "edge_id": "23840935",
+      "source": "258348232",
+      "target": "258348233"
+    },
+    {
+      "edge_id": "23840971",
+      "source": "cluster_258346775_2665408833",
+      "target": "258348535"
+    },
+    {
+      "edge_id": "23840972",
+      "source": "cluster_258346775_2665408833",
+      "target": "258348534"
+    },
+    {
+      "edge_id": "24487264",
+      "source": "256201389",
+      "target": "266574870"
+    },
+    {
+      "edge_id": "24610382",
+      "source": "252016277",
+      "target": "252016275"
+    },
+    {
+      "edge_id": "24675285",
+      "source": "268197981",
+      "target": "26718384"
+    },
+    {
+      "edge_id": "24694889",
+      "source": "252016277",
+      "target": "252016278"
+    },
+    {
+      "edge_id": "25166682#0",
+      "source": "274333875",
+      "target": "274331914"
+    },
+    {
+      "edge_id": "25168493",
+      "source": "274353299",
+      "target": "2340562483"
+    },
+    {
+      "edge_id": "28675493",
+      "source": "280120513",
+      "target": "1679948681"
+    },
+    {
+      "edge_id": "28675494#0",
+      "source": "62426694",
+      "target": "3008854750"
+    },
+    {
+      "edge_id": "28675510#0",
+      "source": "252017285",
+      "target": "796761043"
+    },
+    {
+      "edge_id": "28675510#1",
+      "source": "796761043",
+      "target": "258346770"
+    },
+    {
+      "edge_id": "28675510#4",
+      "source": "258346770",
+      "target": "cluster_1098574052_1098574061_247379905"
+    },
+    {
+      "edge_id": "28675510#7",
+      "source": "cluster_1098574052_1098574061_247379905",
+      "target": "294223020"
+    },
+    {
+      "edge_id": "28691861",
+      "source": "315372838",
+      "target": "315373118"
+    },
+    {
+      "edge_id": "290365598#0",
+      "source": "258346773",
+      "target": "258346776"
+    },
+    {
+      "edge_id": "297047308",
+      "source": "1679948681",
+      "target": "62426694"
+    },
+    {
+      "edge_id": "297047309#0",
+      "source": "3008854750",
+      "target": "256189978"
+    },
+    {
+      "edge_id": "297047310#3",
+      "source": "258347996",
+      "target": "256190139"
+    },
+    {
+      "edge_id": "297047310#4",
+      "source": "256190139",
+      "target": "280120513"
+    },
+    {
+      "edge_id": "323416262",
+      "source": "3588475451",
+      "target": "3302156369"
+    },
+    {
+      "edge_id": "323450710#0",
+      "source": "3302422976",
+      "target": "3302422984"
+    },
+    {
+      "edge_id": "42925825#0",
+      "source": "26110729",
+      "target": "247379910"
+    },
+    {
+      "edge_id": "4936412",
+      "source": "32319828",
+      "target": "256490868"
+    },
+    {
+      "edge_id": "60909001",
+      "source": "762399659",
+      "target": "252046469"
+    },
+    {
+      "edge_id": "8716807#0",
+      "source": "252017285",
+      "target": "252016274"
+    },
+    {
+      "edge_id": "8716807#1",
+      "source": "252016274",
+      "target": "247380551"
+    },
+    {
+      "edge_id": "8716807#5",
+      "source": "247380551",
+      "target": "256190118"
+    },
+    {
+      "edge_id": "8716807#6",
+      "source": "256190118",
+      "target": "62426694"
+    },
+    {
+      "edge_id": "8716827#0",
+      "source": "32319828",
+      "target": "252016280"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# Development & Setup Guide
+# Development & Setup Guide (Hướng Dẫn Phát Triển & Chuẩn Hoá)
 
 ## Quick Start (Docker Environment)
 
@@ -34,21 +34,58 @@ docker compose --profile simulation up --build
 docker compose down
 ```
 
-### 5. Run Tests
-- **Unit tests**:
+---
+
+## 🛠️ Microservice Configuration (`pydantic-settings`)
+
+Mọi Microservice trong hệ thống (`graph-control`, `actuator`, `simulator`, `api`) đều đọc biến môi trường tập trung thông qua `pydantic-settings` tại file `config.py` của từng service:
+- Đọc tự động từ `.env` hoặc hệ thống.
+- Ép kiểu dữ liệu an toàn & giá trị mặc định chuẩn.
+- Dễ dàng thay đổi thuật toán controller (`EDGEFLOW_CONTROLLER=max_pressure` hoặc `fixed_time`) hay topology (`EDGEFLOW_TOPOLOGY=four_intersection_v1`).
+
+---
+
+## 🧪 Standardized Testing Commands
+
+Chạy kiểm thử nhanh chóng bằng `pytest` hoặc `make`:
+
+- **Chạy toàn bộ hợp đồng & kiểm thử (Khuyên dùng)**:
   ```bash
-  python -m pytest tests/unit
+  make check-all
   ```
 - **Contract tests**:
   ```bash
   python -m pytest tests/unit/test_contracts.py
   ```
-- **Integration & Smoke tests**:
+- **Unit tests**:
+  ```bash
+  python -m pytest tests/unit
+  ```
+- **Integration tests**:
   ```bash
   python -m pytest tests/integration
   ```
+- **Dọn dẹp cache test**:
+  ```bash
+  make clean
+  ```
 
-*(Note: If you are on Linux/macOS/WSL with `make` installed, you can optionally use shortcut targets like `make up-sim`, `make test`, and `make down`)*.
+---
+
+## 📐 Graph & Data Pipeline Execution
+
+Các script trong `src/graph/` được chuẩn hoá giao diện dòng lệnh (`argparse` CLI):
+
+```bash
+# Xây dựng đồ thị camera theo thuật toán BallTree
+python src/graph/build_camera_graph.py --input data/raw/cameras_hcm_full.json --output data/processed/camera_traffic_graph.pkl
+
+# Xây dựng đồ thị camera theo tam giác hoá Delaunay
+python src/graph/build_camera_graph_delaunay.py --input data/raw/cameras_hcm_full.json --output data/processed/camera_traffic_graph_delaunay.pkl
+
+# Chuyển đổi file SUMO network .net.xml sang JSON Topology contract
+python src/graph/sumo_converter.py --input path/to/net.xml --output contracts/topology/custom_topo.json --topology-id custom_topo_v1
+```
 
 ---
 

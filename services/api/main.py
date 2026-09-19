@@ -6,9 +6,11 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import settings
+
 # Add contracts and src to sys.path safely
 def _get_contracts_dir() -> Path:
-    env_dir = os.getenv("CONTRACTS_DIR")
+    env_dir = settings.contracts_dir or os.getenv("CONTRACTS_DIR")
     if env_dir and Path(env_dir).exists():
         return Path(env_dir)
     if Path("/contracts").exists():
@@ -76,12 +78,51 @@ def root():
         "status": "running",
         "endpoints": [
             "/health",
+            "/api/v1/scenarios",
             "/api/v1/topologies",
             "/api/v1/topologies/{topology_id}",
             "/api/v1/topologies/convert-sumo",
             "/api/v1/cameras",
             "/api/v1/map/hcm-cameras"
         ]
+    }
+
+@app.get("/api/v1/scenarios")
+def list_scenarios():
+    """Returns list of all available simulation scenarios and SUMO configs with contract metadata."""
+    available_ids = contracts_sdk.list_topologies()
+    sumo_config_dir = Path(__file__).resolve().parent.parent / "simulator" / "sumo_configs"
+    
+    scenarios = []
+    for tid in available_ids:
+        has_sumo = False
+        if sumo_config_dir.exists():
+            sumo_file = sumo_config_dir / f"{tid}.sumocfg"
+            has_sumo = sumo_file.exists()
+        
+        try:
+            summary = contracts_sdk.get_topology_summary(tid)
+            scenarios.append({
+                "scenario_id": tid,
+                "topology_id": tid,
+                "name": tid.replace("_", " ").title(),
+                "has_sumo_config": has_sumo,
+                "total_nodes": summary.get("total_nodes", 0),
+                "total_edges": summary.get("total_edges", 0),
+                "total_phases": summary.get("total_phases", 0),
+            })
+        except Exception as e:
+            scenarios.append({
+                "scenario_id": tid,
+                "topology_id": tid,
+                "name": tid,
+                "has_sumo_config": has_sumo,
+                "error": str(e)
+            })
+    
+    return {
+        "total_scenarios": len(scenarios),
+        "scenarios": scenarios
     }
 
 @app.get("/health")
@@ -164,4 +205,4 @@ def get_hcm_camera_map():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=settings.api_host, port=settings.api_port)

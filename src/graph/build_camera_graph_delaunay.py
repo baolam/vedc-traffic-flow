@@ -5,40 +5,39 @@ import pickle
 import numpy as np
 from scipy.spatial import Delaunay
 import math
-import time
+import argparse
+import logging
+from pathlib import Path
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("build-camera-graph-delaunay")
 
 def haversine(lat1, lon1, lat2, lon2):
-    # Tính khoảng cách giữa 2 tọa độ (đơn vị: km)
-    R = 6371.0 # Bán kính trái đất
+    R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-def main():
-    OSRM_URL = "http://localhost:5005/route/v1/driving"
-    MAX_DISTANCE_KM = 3.0  # Loại bỏ các node cách nhau quá 3km
+def build_delaunay_graph(input_file: str, output_file: str, osrm_url: str = "http://localhost:5005/route/v1/driving", max_distance_km: float = 3.0):
+    logger.info(f"Reading camera data from {input_file}...")
+    if not Path(input_file).exists():
+        raise FileNotFoundError(f"Input camera file not found: {input_file}")
 
-    print("Reading camera data...")
-    with open('data/raw/cameras_hcm_full.json', 'r', encoding='utf-8') as f:
+    with open(input_file, 'r', encoding='utf-8') as f:
         cameras = json.load(f)
 
-    # Lọc các camera hợp lệ
     valid_cameras = [c for c in cameras if c.get('lat') and c.get('lng')]
-    print(f"Total valid cameras: {len(valid_cameras)}")
+    logger.info(f"Total valid cameras: {len(valid_cameras)}")
 
-    # Tạo mảng tọa độ (lat, lng)
     coords = np.array([[c['lat'], c['lng']] for c in valid_cameras])
     
-    print("Computing Delaunay Triangulation...")
+    logger.info("Computing Delaunay Triangulation...")
     tri = Delaunay(coords)
 
-    # Trích xuất các cạnh (edges) từ các lưới tam giác (simplices)
     unique_edges = set()
     for simplex in tri.simplices:
-        # Một tam giác có 3 đỉnh, tạo ra 3 cạnh
-        # Sắp xếp index để tránh bị trùng lặp (1,2) và (2,1)
         edges = [
             tuple(sorted((simplex[0], simplex[1]))),
             tuple(sorted((simplex[1], simplex[2]))),
@@ -46,38 +45,30 @@ def main():
         ]
         unique_edges.update(edges)
 
-    print(f"Generated {len(unique_edges)} candidate edges from Delaunay.")
+    logger.info(f"Generated {len(unique_edges)} candidate edges from Delaunay.")
 
-    # Khởi tạo đồ thị có hướng (MultiDiGraph)
     G = nx.MultiDiGraph()
     for i, cam in enumerate(valid_cameras):
         G.add_node(cam['id'], name=cam.get('name'), lat=cam['lat'], lng=cam['lng'], status=cam.get('status'))
 
-    print("Filtering long edges and querying OSRM...")
+    logger.info("Filtering long edges and querying OSRM...")
     processed_count = 0
     total_edges = len(unique_edges)
     
-    # Do giao thông có tính chất chiều đi và chiều về (đường 1 chiều), ta sẽ query cả 2 chiều
     for idx_u, idx_v in unique_edges:
         processed_count += 1
-        
         cam_u = valid_cameras[idx_u]
         cam_v = valid_cameras[idx_v]
         
-        # Kiểm tra khoảng cách chim bay
         dist_km = haversine(cam_u['lat'], cam_u['lng'], cam_v['lat'], cam_v['lng'])
-        if dist_km > MAX_DISTANCE_KM:
-            continue # Bỏ qua các cạnh quá dài
+        if dist_km > max_distance_km:
+            continue
 
-        # Query cả chiều U -> V và V -> U
-        directions = [
-            (cam_u, cam_v),
-            (cam_v, cam_u)
-        ]
+        directions = [(cam_u, cam_v), (cam_v, cam_u)]
         
         for src_cam, dst_cam in directions:
             coords_str = f"{src_cam['lng']},{src_cam['lat']};{dst_cam['lng']},{dst_cam['lat']}"
-            url = f"{OSRM_URL}/{coords_str}?alternatives=true&geometries=geojson&overview=full"
+            url = f"{osrm_url}/{coords_str}?alternatives=true&geometries=geojson&overview=full"
             
             try:
                 resp = requests.get(url, timeout=2)
@@ -90,22 +81,37 @@ def main():
                             duration = route.get('duration')
                             geometry = route.get('geometry')
                             
-                            # Thêm cạnh vào đồ thị
                             G.add_edge(src_cam['id'], dst_cam['id'], 
                                        distance=distance, 
                                        duration=duration, 
                                        geometry=geometry)
-            except Exception as e:
+            except Exception:
                 pass
         
         if processed_count % 500 == 0:
-            print(f"Processed {processed_count}/{total_edges} candidate edges...")
+            logger.info(f"Processed {processed_count}/{total_edges} candidate edges...")
 
-    print(f"Done! Graph has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
+    logger.info(f"Done! Graph has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
     
-    output_file = 'data/processed/camera_traffic_graph_delaunay.pkl'
+    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, 'wb') as f:
         pickle.dump(G, f)
+    logger.info(f"Saved graph to: {output_file}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Build camera network graph using Delaunay triangulation and OSRM routing.")
+    parser.add_argument("--input", "-i", default="data/raw/cameras_hcm_full.json", help="Path to raw camera json dataset")
+    parser.add_argument("--output", "-o", default="data/processed/camera_traffic_graph_delaunay.pkl", help="Path to save output pkl graph")
+    parser.add_argument("--osrm-url", default="http://localhost:5005/route/v1/driving", help="OSRM API routing server URL")
+    parser.add_argument("--max-distance-km", type=float, default=3.0, help="Maximum straight-line distance filter in km")
+    
+    args = parser.parse_args()
+    build_delaunay_graph(
+        input_file=args.input,
+        output_file=args.output,
+        osrm_url=args.osrm_url,
+        max_distance_km=args.max_distance_km
+    )
 
 if __name__ == "__main__":
     main()

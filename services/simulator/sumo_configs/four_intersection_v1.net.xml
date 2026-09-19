@@ -55,28 +55,28 @@
     </edge>
 
     <tlLogic id="J1" type="static" programID="0" offset="0">
-        <phase duration="30" state="GGgrrrGGgrrr"/>
-        <phase duration="5"  state="yyyrrryyyrrr"/>
-        <phase duration="30" state="rrrGGgrrrGGg"/>
-        <phase duration="5"  state="rrryyyrrryyy"/>
+        <phase duration="30" state="GGrr"/>
+        <phase duration="5"  state="yyrr"/>
+        <phase duration="30" state="rrGG"/>
+        <phase duration="5"  state="rryy"/>
     </tlLogic>
     <tlLogic id="J2" type="static" programID="0" offset="0">
-        <phase duration="30" state="GGgrrrGGgrrr"/>
-        <phase duration="5"  state="yyyrrryyyrrr"/>
-        <phase duration="30" state="rrrGGgrrrGGg"/>
-        <phase duration="5"  state="rrryyyrrryyy"/>
+        <phase duration="30" state="GGrr"/>
+        <phase duration="5"  state="yyrr"/>
+        <phase duration="30" state="rrGG"/>
+        <phase duration="5"  state="rryy"/>
     </tlLogic>
     <tlLogic id="J3" type="static" programID="0" offset="0">
-        <phase duration="30" state="GGgrrrGGgrrr"/>
-        <phase duration="5"  state="yyyrrryyyrrr"/>
-        <phase duration="30" state="rrrGGgrrrGGg"/>
-        <phase duration="5"  state="rrryyyrrryyy"/>
+        <phase duration="30" state="GGrr"/>
+        <phase duration="5"  state="yyrr"/>
+        <phase duration="30" state="rrGG"/>
+        <phase duration="5"  state="rryy"/>
     </tlLogic>
     <tlLogic id="J4" type="static" programID="0" offset="0">
-        <phase duration="30" state="GGgrrrGGgrrr"/>
-        <phase duration="5"  state="yyyrrryyyrrr"/>
-        <phase duration="30" state="rrrGGgrrrGGg"/>
-        <phase duration="5"  state="rrryyyrrryyy"/>
+        <phase duration="30" state="GGrr"/>
+        <phase duration="5"  state="yyrr"/>
+        <phase duration="30" state="rrGG"/>
+        <phase duration="5"  state="rryy"/>
     </tlLogic>
 
     <junction id="J1" type="traffic_light" x="100.00" y="300.00" incLanes="J1_N_IN_0 J1_S_IN_0 J1_E_IN_0 J1_W_IN_0" intLanes="" shape="95.00,305.00 105.00,305.00 105.00,295.00 95.00,295.00"/>
@@ -93,4 +93,24 @@
     <junction id="W3" type="dead_end" x="0.00" y="100.00"/>
     <junction id="S4" type="dead_end" x="300.00" y="0.00"/>
     <junction id="E4" type="dead_end" x="500.00" y="100.00"/>
+
+    <connection from="J1_N_IN" to="J3_N_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="J1_S_IN" to="J3_N_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="J1_E_IN" to="J2_W_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="J1_W_IN" to="J2_W_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+
+    <connection from="J2_N_IN" to="J4_N_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="J2_S_IN" to="J4_N_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="J2_E_IN" to="J1_E_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="J2_W_IN" to="J1_E_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+
+    <connection from="J3_N_IN" to="J1_S_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="J3_S_IN" to="J1_S_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="J3_E_IN" to="J4_W_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="J3_W_IN" to="J4_W_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+
+    <connection from="J4_N_IN" to="J2_S_IN" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="J4_S_IN" to="J2_S_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="J4_E_IN" to="J3_E_IN" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="J4_W_IN" to="J3_E_IN" fromLane="0" toLane="0" dir="t" state="M"/>
 </net>

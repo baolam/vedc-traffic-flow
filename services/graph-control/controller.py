@@ -18,13 +18,12 @@ class FixedTimeController(BaseController):
     def compute_command(self, node_id: str, telemetry: Dict[str, Any], topology: Dict[str, Any]) -> Dict[str, Any]:
         node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
         if not node_info or not node_info.get("phases"):
-            target_phase = telemetry.get("current_phase_id", "J1_PHASE_NS")
-        else:
-            phases = node_info["phases"]
-            current_idx = self.phase_counters.get(node_id, 0)
-            next_idx = (current_idx + 1) % len(phases)
-            self.phase_counters[node_id] = next_idx
-            target_phase = phases[next_idx]["phase_id"]
+            return None
+        phases = node_info["phases"]
+        current_idx = self.phase_counters.get(node_id, 0)
+        next_idx = (current_idx + 1) % len(phases)
+        self.phase_counters[node_id] = next_idx
+        target_phase = phases[next_idx]["phase_id"]
 
         return {
             "command_id": str(uuid.uuid4()),
@@ -50,6 +49,8 @@ class MaxPressureController(BaseController):
     def compute_command(self, node_id: str, telemetry: Dict[str, Any], topology: Dict[str, Any]) -> Dict[str, Any]:
         node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
         phases = node_info.get("phases", []) if node_info else []
+        if not phases:
+            return None
 
         approaches = telemetry.get("approaches", [])
         queue_map: Dict[str, float] = {app["approach_id"]: float(app.get("queue_vehicles", 0)) for app in approaches}

@@ -1,13 +1,26 @@
-import React from 'react';
-import { Activity, ShieldCheck, Clock, Server } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Activity, ShieldCheck, Clock, Server, Layers } from 'lucide-react';
 
 const Header = ({ systemStatus = "ONLINE", activeController = "Max-Pressure" }) => {
-  const [time, setTime] = React.useState(new Date().toLocaleTimeString());
+  const [time, setTime] = useState(new Date().toLocaleTimeString());
+  const [activeScenario, setActiveScenario] = useState(
+    localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
+  );
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const scenarioTimer = setInterval(() => {
+      const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
+      if (current !== activeScenario) {
+        setActiveScenario(current);
+      }
+    }, 1000);
+    return () => clearInterval(scenarioTimer);
+  }, [activeScenario]);
 
   return (
     <header style={{
@@ -39,6 +52,14 @@ const Header = ({ systemStatus = "ONLINE", activeController = "Max-Pressure" }) 
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+          <Layers size={16} color="#0284c7" />
+          <span style={{ color: '#64748b' }}>Scenario:</span>
+          <span style={{ fontWeight: 700, color: '#0284c7', backgroundColor: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+            {activeScenario}
+          </span>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
           <Server size={16} color="#0284c7" />
           <span style={{ color: '#64748b' }}>Controller:</span>

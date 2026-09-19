@@ -1,10 +1,12 @@
-.PHONY: help contracts test integration smoke up-sim down experiment
+.PHONY: help contracts test integration check-all clean smoke up-sim down experiment
 
 help:
 	@echo "EdgeFlow AI - Standard Developer Commands:"
 	@echo "  make contracts       Validate shared contracts and generate types"
 	@echo "  make test            Run unit and contract tests"
 	@echo "  make integration     Run service integration tests"
+	@echo "  make check-all       Run contracts, unit tests, and integration tests"
+	@echo "  make clean           Clean cache files and pytest artifacts"
 	@echo "  make smoke           Run docker compose smoke test"
 	@echo "  make up-sim          Start simulation stack with Docker Compose"
 	@echo "  make down            Stop all Docker Compose services"
@@ -18,6 +20,11 @@ test:
 
 integration:
 	python -m pytest tests/integration
+
+check-all: contracts test integration
+
+clean:
+	python -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('.pytest_cache')]"
 
 smoke:
 	docker compose --profile simulation up -d --build

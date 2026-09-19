@@ -1,13 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Camera, Network, BarChart3, Sliders, Cpu } from 'lucide-react';
 
 const Sidebar = () => {
+  const activeScenarioId = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
+  
+  const [topologyStats, setTopologyStats] = useState({
+    total_nodes: 4,
+    total_edges: 8,
+    topology_id: activeScenarioId
+  });
+
+  const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/v1/topologies/${activeScenarioId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          setTopologyStats({
+            total_nodes: data.nodes ? data.nodes.length : 4,
+            total_edges: data.edges ? data.edges.length : 8,
+            topology_id: data.topology_id || activeScenarioId
+          });
+        }
+      })
+      .catch(() => {});
+  }, [activeScenarioId, apiBase]);
+
   const navItems = [
     { to: '/', label: 'Overview Map', icon: LayoutDashboard },
     { to: '/hcm-cameras', label: 'HCM Geo SUMO Map', icon: Camera },
     { to: '/intersections/J1', label: 'Intersection J1', icon: Network },
-    { to: '/intersections/J2', label: 'Intersection J2', icon: Network },
     { to: '/analytics', label: 'Benchmark Analytics', icon: BarChart3 },
     { to: '/experiments', label: 'Control & Experiments', icon: Sliders },
   ];
@@ -61,9 +85,10 @@ const Sidebar = () => {
           <Cpu size={16} color="#0284c7" />
           <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>Graph Twin $G=(V,E)$</span>
         </div>
-        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-          Nodes: 4 Intersections<br />
-          Edges: 8 Directional Lanes<br />
+        <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: '1.5' }}>
+          Scenario: <strong style={{ color: '#0284c7' }}>{topologyStats.topology_id}</strong><br />
+          Nodes: <strong>{topologyStats.total_nodes}</strong> Intersections<br />
+          Edges: <strong>{topologyStats.total_edges}</strong> Directed Lanes<br />
           Telemetry: SUMO / Vision
         </div>
       </div>

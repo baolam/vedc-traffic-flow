@@ -4,15 +4,16 @@ import time
 import logging
 from typing import Dict, Any
 
+from config import settings
 from simulator_contracts_helper import load_topology
 from traffic_engine import TrafficEngine
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("simulator")
 
 def main():
-    topology_id = os.getenv("EDGEFLOW_TOPOLOGY", "four_intersection_v1")
-    use_sumo = os.getenv("USE_SUMO", "false").lower() in ("true", "1", "yes")
+    topology_id = settings.edgeflow_topology
+    use_sumo = settings.use_sumo
     logger.info(f"Starting EdgeFlow Simulator Service (Topology: {topology_id}, USE_SUMO: {use_sumo})...")
 
     try:
@@ -23,9 +24,9 @@ def main():
         raise e
 
     engine = TrafficEngine(topology, use_sumo=use_sumo)
-    mqtt_host = os.getenv("MQTT_HOST", "mqtt")
-    mqtt_port = int(os.getenv("MQTT_PORT", 1883))
-    sim_interval = float(os.getenv("SIM_INTERVAL_S", "1.0"))
+    mqtt_host = settings.mqtt_host
+    mqtt_port = settings.mqtt_port
+    sim_interval = settings.sim_interval_s
 
     mqtt_client = None
 
@@ -57,7 +58,10 @@ def main():
 
     try:
         import paho.mqtt.client as mqtt
-        mqtt_client = mqtt.Client(client_id="simulator-service")
+        try:
+            mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, client_id="simulator-service")
+        except AttributeError:
+            mqtt_client = mqtt.Client(client_id="simulator-service")
         mqtt_client.on_connect = on_connect
         mqtt_client.on_message = on_message
         logger.info(f"Connecting to MQTT broker at {mqtt_host}:{mqtt_port}...")

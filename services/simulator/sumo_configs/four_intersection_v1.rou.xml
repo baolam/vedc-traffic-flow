@@ -6,9 +6,9 @@
     <route id="r_J1_EW" edges="J1_W_IN J2_W_IN"/>
     <route id="r_J2_NS" edges="J2_N_IN J4_N_IN"/>
     <route id="r_J2_EW" edges="J2_E_IN J1_E_IN"/>
-    <route id="r_J3_NS" edges="J3_S_IN J3_N_IN"/>
+    <route id="r_J3_NS" edges="J3_S_IN J1_S_IN"/>
     <route id="r_J3_EW" edges="J3_W_IN J4_W_IN"/>
-    <route id="r_J4_NS" edges="J4_S_IN J4_N_IN"/>
+    <route id="r_J4_NS" edges="J4_S_IN J2_S_IN"/>
     <route id="r_J4_EW" edges="J4_E_IN J3_E_IN"/>
 
     <flow id="f_J1_NS" type="passenger" route="r_J1_NS" begin="0" end="3600" period="exp(0.3)"/>

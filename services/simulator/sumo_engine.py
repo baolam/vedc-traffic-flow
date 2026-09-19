@@ -33,6 +33,8 @@ class SumoTrafficEngine:
 
         self.config_path = config_path
         self.nodes: Dict[str, Dict[str, Any]] = {}
+        self.traffic_light_ids: set = set()
+        self.edge_ids: set = set()
         self.is_connected = False
         self._init_nodes()
         self._start_sumo()
@@ -49,6 +51,17 @@ class SumoTrafficEngine:
             }
 
     def _start_sumo(self):
+        nod_file = self.config_path.replace(".sumocfg", ".nod.xml")
+        edg_file = self.config_path.replace(".sumocfg", ".edg.xml")
+        net_file = self.config_path.replace(".sumocfg", ".net.xml")
+        if os.path.exists(nod_file) and os.path.exists(edg_file):
+            try:
+                import subprocess
+                logger.info(f"Running SUMO netconvert for {nod_file} and {edg_file}...")
+                subprocess.run(["netconvert", "--node-files", nod_file, "--edge-files", edg_file, "-o", net_file, "--no-turnarounds", "true"], check=True)
+            except Exception as ne:
+                logger.warning(f"netconvert step skipped: {ne}")
+
         sumo_binary = os.getenv("SUMO_BINARY", "sumo")
         cmd = [
             sumo_binary,
@@ -57,8 +70,23 @@ class SumoTrafficEngine:
             "--waiting-time-memory", "1000"
         ]
         logger.info(f"Starting SUMO simulation with command: {' '.join(cmd)}")
-        traci.start(cmd)
-        self.is_connected = True
+        try:
+            traci.start(cmd)
+            self.is_connected = True
+            try:
+                self.traffic_light_ids = set(traci.trafficlight.getIDList())
+                self.edge_ids = set(traci.edge.getIDList())
+                logger.info(f"SUMO connected. Active traffic lights: {len(self.traffic_light_ids)}, active edges: {len(self.edge_ids)}")
+            except Exception as e:
+                logger.warning(f"Could not query TraCI trafficlight/edge IDs: {e}")
+        except Exception as err:
+            logger.error(f"traci.start failed: {err}")
+            import subprocess
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            logger.error(f"SUMO exit code: {res.returncode}")
+            logger.error(f"SUMO stdout: {res.stdout}")
+            logger.error(f"SUMO stderr: {res.stderr}")
+            raise err
 
     def step(self, dt_s: float = 1.0):
         if not self.is_connected:
@@ -74,18 +102,25 @@ class SumoTrafficEngine:
         if not self.is_connected:
             return
 
+        if node_id not in self.traffic_light_ids:
+            logger.debug(f"Node {node_id} is not a SUMO traffic light; skipping SUMO setPhase.")
+            return
+
         # Map canonical phase_id dynamically to SUMO traffic light phase index
         phase_list = self.nodes[node_id].get("phases", [])
-        canonical_indices = [idx for idx, p in enumerate(phase_list) if p.get("phase_id") == phase_id]
+        matched_phase = next((p for p in phase_list if p.get("phase_id") == phase_id), None)
 
-        if canonical_indices:
-            idx = canonical_indices[0]
-            # Standard SUMO signalized junctions alternate Green and Yellow states (e.g. index 0, 2, 4...)
-            phase_index = idx * 2
-        elif "EW" in phase_id.upper():
-            phase_index = 2
+        if matched_phase and "sumo_phase_index" in matched_phase:
+            phase_index = int(matched_phase["sumo_phase_index"])
         else:
-            phase_index = 0
+            canonical_indices = [idx for idx, p in enumerate(phase_list) if p.get("phase_id") == phase_id]
+            if canonical_indices:
+                idx = canonical_indices[0]
+                phase_index = idx * 2
+            elif "EW" in phase_id.upper():
+                phase_index = 2
+            else:
+                phase_index = 0
 
         try:
             traci.trafficlight.setPhase(node_id, phase_index)
@@ -107,7 +142,7 @@ class SumoTrafficEngine:
             occupancy_ratio = 0.0
             flow_veh_per_s = 0.0
 
-            if self.is_connected:
+            if self.is_connected and (not self.edge_ids or edge_id in self.edge_ids):
                 try:
                     # TraCI queries for edge metrics
                     halting_vehicles = traci.edge.getLastStepHaltingNumber(edge_id)
