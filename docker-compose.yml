@@ -77,6 +77,8 @@ services:
     depends_on:
       mqtt:
         condition: service_healthy
+    volumes:
+      - ./contracts:/contracts
     profiles:
       - simulation
       - dev
