@@ -6,12 +6,33 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add contracts to sys.path
-contracts_dir = Path(__file__).resolve().parents[2] / "contracts"
+# Add contracts and src to sys.path safely
+def _get_contracts_dir() -> Path:
+    env_dir = os.getenv("CONTRACTS_DIR")
+    if env_dir and Path(env_dir).exists():
+        return Path(env_dir)
+    if Path("/contracts").exists():
+        return Path("/contracts")
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "contracts").is_dir():
+            return p / "contracts"
+        if (p / "contracts_sdk.py").is_file():
+            return p
+    return Path("/contracts")
+
+contracts_dir = _get_contracts_dir()
 if str(contracts_dir) not in sys.path:
     sys.path.insert(0, str(contracts_dir))
 
-src_graph_dir = Path(__file__).resolve().parents[2] / "src" / "graph"
+def _get_src_graph_dir() -> Path:
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "src" / "graph").is_dir():
+            return p / "src" / "graph"
+    return curr / "src" / "graph"
+
+src_graph_dir = _get_src_graph_dir()
 if str(src_graph_dir) not in sys.path:
     sys.path.insert(0, str(src_graph_dir))
 
@@ -38,7 +59,15 @@ app.add_middleware(
 )
 
 TOPOLOGY_FILE = contracts_sdk.CONTRACTS_DIR / "topology" / "hcm_realworld_v1.json"
-MAP_HTML_FILE = Path(__file__).resolve().parents[2] / "output" / "camera_graph_map.html"
+
+def _get_map_html_file() -> Path:
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "output" / "camera_graph_map.html").exists():
+            return p / "output" / "camera_graph_map.html"
+    return curr / "output" / "camera_graph_map.html"
+
+MAP_HTML_FILE = _get_map_html_file()
 
 @app.get("/")
 def root():

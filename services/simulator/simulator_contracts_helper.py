@@ -3,8 +3,21 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
-# Ensure contracts root is in sys.path for importing contracts_sdk
-contracts_dir = Path(__file__).resolve().parents[2] / "contracts"
+def _get_contracts_dir() -> Path:
+    env_dir = os.getenv("CONTRACTS_DIR")
+    if env_dir and Path(env_dir).exists():
+        return Path(env_dir)
+    if Path("/contracts").exists():
+        return Path("/contracts")
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "contracts").is_dir():
+            return p / "contracts"
+        if (p / "contracts_sdk.py").is_file():
+            return p
+    return Path("/contracts")
+
+contracts_dir = _get_contracts_dir()
 if str(contracts_dir) not in sys.path:
     sys.path.insert(0, str(contracts_dir))
 
