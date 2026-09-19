@@ -11,6 +11,36 @@ const NetworkOverview = () => {
     J4: { current_phase_id: "J4_PHASE_EW", total_queue: 19, speed: 1.5 }
   });
 
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setNodes(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(nodeId => {
+          const deltaQueue = Math.floor(Math.random() * 5) - 2;
+          const newQueue = Math.max(0, next[nodeId].total_queue + deltaQueue);
+          const newSpeed = Math.max(0.5, +(next[nodeId].speed + (Math.random() * 0.6 - 0.3)).toFixed(1));
+          const phaseChange = Math.random() < 0.2;
+          const currentPhase = next[nodeId].current_phase_id;
+          const newPhase = phaseChange 
+            ? (currentPhase.includes('NS') ? `${nodeId}_PHASE_EW` : `${nodeId}_PHASE_NS`)
+            : currentPhase;
+
+          next[nodeId] = {
+            current_phase_id: newPhase,
+            total_queue: newQueue,
+            speed: newSpeed
+          };
+        });
+        return next;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const totalQueue = Object.values(nodes).reduce((acc, curr) => acc + curr.total_queue, 0);
+  const avgSpeed = (Object.values(nodes).reduce((acc, curr) => acc + curr.speed, 0) / Object.keys(nodes).length).toFixed(1);
+
   return (
     <div className="page-container">
       <div style={{ marginBottom: '24px' }}>
@@ -28,7 +58,7 @@ const NetworkOverview = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Total Queue</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>47 veh</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>{totalQueue} veh</div>
           </div>
         </div>
 
@@ -38,7 +68,7 @@ const NetworkOverview = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Avg Speed</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>2.9 m/s</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>{avgSpeed} m/s</div>
           </div>
         </div>
 

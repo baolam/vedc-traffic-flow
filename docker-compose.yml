@@ -10,7 +10,7 @@ services:
     volumes:
       - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -c 1 -i healthcheck || exit 1"]
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 -i healthcheck || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -55,6 +55,8 @@ services:
     depends_on:
       mqtt:
         condition: service_healthy
+    volumes:
+      - ./contracts:/contracts
     profiles:
       - simulation
       - vision
@@ -109,6 +111,8 @@ services:
     depends_on:
       mqtt:
         condition: service_healthy
+    volumes:
+      - ./contracts:/contracts
     profiles:
       - simulation
       - vision

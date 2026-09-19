@@ -18,7 +18,7 @@ const ControlPanel = () => {
   return (
     <div className="page-container">
       <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight 700, margin: '0 0 4px 0' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px 0' }}>
           Control & Experiment Management Panel
         </h2>
         <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>

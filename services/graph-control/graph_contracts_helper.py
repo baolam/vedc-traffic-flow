@@ -3,7 +3,21 @@ from pathlib import Path
 from typing import Dict, Any
 import jsonschema
 
-CONTRACTS_DIR = Path(__file__).resolve().parents[2] / "contracts"
+import os
+
+def _get_contracts_dir() -> Path:
+    env_dir = os.getenv("CONTRACTS_DIR")
+    if env_dir and Path(env_dir).exists():
+        return Path(env_dir)
+    if Path("/contracts").exists():
+        return Path("/contracts")
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "contracts").is_dir():
+            return p / "contracts"
+    return Path("/contracts")
+
+CONTRACTS_DIR = _get_contracts_dir()
 
 def load_topology(topology_id: str = "four_intersection_v1") -> Dict[str, Any]:
     topo_file = CONTRACTS_DIR / "topology" / f"{topology_id}.json"
