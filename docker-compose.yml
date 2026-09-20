@@ -163,3 +163,26 @@ services:
       - vision
       - hardware
       - dev
+
+  experiment-runner:
+    build:
+      context: ./services/experiment-runner
+      dockerfile: Dockerfile
+    container_name: edgeflow-experiment-runner
+    env_file:
+      - .env
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-dev}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    depends_on:
+      mqtt:
+        condition: service_healthy
+    volumes:
+      - ./contracts:/contracts
+      - ./artifacts:/app/artifacts
+    profiles:
+      - experiment
+      - dev
+

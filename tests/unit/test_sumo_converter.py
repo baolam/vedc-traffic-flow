@@ -94,3 +94,46 @@ def test_imported_scenarios_topology_contracts():
         assert data["topology_id"] == "grid4x4"
         assert len(data["nodes"]) > 0
 
+def test_sumo_converter_internal_junction_filtering():
+    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+    <net version="1.16">
+        <junction id=":J1_0" type="internal"/>
+        <junction id="J1" type="traffic_light" incLanes="edge_N_0 edge_S_0"/>
+        <tlLogic id="J1" type="static">
+            <phase duration="30" state="GG"/>
+        </tlLogic>
+    </net>
+    """
+    topo = SumoNetworkConverter.parse_net_xml(xml_content)
+    # :J1_0 internal junction should be ignored
+    assert len(topo["nodes"]) == 1
+    assert topo["nodes"][0]["node_id"] == "J1"
+
+def test_sumo_converter_no_tl_logic_fallback():
+    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+    <net version="1.16">
+        <junction id="J_NO_LOGIC" type="traffic_light" incLanes="edge_A_0 edge_B_0 edge_C_0"/>
+    </net>
+    """
+    topo = SumoNetworkConverter.parse_net_xml(xml_content)
+    node = topo["nodes"][0]
+    assert node["node_id"] == "J_NO_LOGIC"
+    # Should fall back to creating 2 default phases
+    assert len(node["phases"]) == 2
+
+def test_dict_to_topology_missing_phases_fallback():
+    graph_dict = {
+        "nodes": [
+            {
+                "node_id": "SIMPLE_NODE",
+                "approaches": ["IN_1", "IN_2"]
+            }
+        ]
+    }
+    topo = SumoNetworkConverter.dict_to_topology(graph_dict)
+    node = topo["nodes"][0]
+    assert len(node["phases"]) == 1
+    assert node["phases"][0]["phase_id"] == "SIMPLE_NODE_PHASE_1"
+    assert node["phases"][0]["approaches"] == ["IN_1", "IN_2"]
+
+

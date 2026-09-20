@@ -114,3 +114,78 @@ def test_fixed_time_controller():
     cmd2 = controller.compute_command("J1", telemetry, topology)
     validate_payload(cmd2, "control_command")
     assert cmd1["target_phase_id"] != cmd2["target_phase_id"]
+
+def test_controllers_invalid_node_or_no_phases():
+    topology = load_topology("four_intersection_v1")
+    fixed_ctrl = FixedTimeController()
+    mp_ctrl = MaxPressureController()
+
+    telemetry = {
+        "node_id": "UNKNOWN_NODE",
+        "source_type": "simulation",
+        "simulation_time_s": 10.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "PHASE_X",
+        "approaches": []
+    }
+
+    # Non-existent node ID should return None
+    assert fixed_ctrl.compute_command("UNKNOWN_NODE", telemetry, topology) is None
+    assert mp_ctrl.compute_command("UNKNOWN_NODE", telemetry, topology) is None
+
+    # Node with no phases should return None
+    empty_phases_topo = {
+        "topology_id": "empty_phases",
+        "nodes": [{"node_id": "N1", "approaches": [], "phases": []}]
+    }
+    assert fixed_ctrl.compute_command("N1", telemetry, empty_phases_topo) is None
+    assert mp_ctrl.compute_command("N1", telemetry, empty_phases_topo) is None
+
+def test_fixed_time_phase_cycling():
+    topology = load_topology("four_intersection_v1")
+    controller = FixedTimeController(cycle_time_s=45.0)
+
+    telemetry = {"node_id": "J1", "approaches": []}
+    phases = [p["phase_id"] for p in topology["nodes"][0]["phases"]]
+
+    # Verify cycling through all phases sequentially and wrapping around
+    first_target = controller.compute_command("J1", telemetry, topology)["target_phase_id"]
+    second_target = controller.compute_command("J1", telemetry, topology)["target_phase_id"]
+    third_target = controller.compute_command("J1", telemetry, topology)["target_phase_id"]
+
+    assert first_target == phases[1 % len(phases)]
+    assert second_target == phases[0]
+    assert third_target == phases[1 % len(phases)]
+
+def test_max_pressure_telemetry_edge_cases():
+    topology = load_topology("four_intersection_v1")
+    controller = MaxPressureController()
+
+    # Telemetry with empty approaches list -> defaults to selecting top phase gracefully
+    telemetry_empty = {
+        "node_id": "J1",
+        "source_type": "simulation",
+        "simulation_time_s": 10.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "J1_PHASE_NS",
+        "approaches": []
+    }
+    cmd_empty = controller.compute_command("J1", telemetry_empty, topology)
+    validate_payload(cmd_empty, "control_command")
+    assert cmd_empty["target_phase_id"] in ["J1_PHASE_NS", "J1_PHASE_EW"]
+
+    # Telemetry with missing approach IDs in dict -> unmentioned approaches count as 0 queue
+    telemetry_partial = {
+        "node_id": "J1",
+        "source_type": "simulation",
+        "simulation_time_s": 10.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "J1_PHASE_NS",
+        "approaches": [
+            {"approach_id": "J1_E_IN", "queue_vehicles": 20, "flow_veh_per_s": 0.5, "mean_speed_mps": 1.0}
+            # N, S, W approaches omitted
+        ]
+    }
+    cmd_partial = controller.compute_command("J1", telemetry_partial, topology)
+    assert cmd_partial["target_phase_id"] == "J1_PHASE_EW"
+

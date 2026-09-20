@@ -64,3 +64,52 @@ def test_actuator_successful_transition():
     assert ack.get("target_phase_id") == "J1_PHASE_EW"
     assert node.current_phase_id == "J1_PHASE_EW"
     validate_payload(ack, "control_ack")
+
+def test_actuator_invalid_command_schema():
+    sm = ActuatorStateMachine()
+    # Missing required 'controller' and 'node_id' fields
+    invalid_cmd = {
+        "command_id": str(uuid.uuid4()),
+        "target_phase_id": "J1_PHASE_EW"
+    }
+    ack = sm.process_command(invalid_cmd)
+    assert ack["status"] == "REJECTED"
+    assert "Invalid ControlCommand schema" in ack["reason"]
+
+def test_actuator_default_timestamp_and_params():
+    sm = ActuatorStateMachine()
+    # Valid command schema passing now=None (uses system time)
+    cmd = {
+        "command_id": str(uuid.uuid4()),
+        "node_id": "J1",
+        "target_phase_id": "J1_PHASE_NS",
+        "min_green_s": 10.0,
+        "max_green_s": 30.0,
+        "controller": "max_pressure"
+    }
+    ack = sm.process_command(cmd, now=None)
+    assert ack["status"] == "APPLIED"
+    assert "timestamp_ms" in ack
+    assert ack["timestamp_ms"] > 0
+
+def test_actuator_multi_node_isolation():
+    sm = ActuatorStateMachine()
+    node_j1 = sm.get_or_create_node("J1", default_phase="J1_PHASE_NS")
+    node_j2 = sm.get_or_create_node("J2", default_phase="J2_PHASE_NS")
+    node_j1.phase_start_time = 100.0
+    node_j2.phase_start_time = 100.0
+
+    cmd_j1 = {
+        "command_id": str(uuid.uuid4()),
+        "node_id": "J1",
+        "target_phase_id": "J1_PHASE_EW",
+        "min_green_s": 10.0,
+        "max_green_s": 30.0,
+        "controller": "max_pressure"
+    }
+    ack_j1 = sm.process_command(cmd_j1, now=115.0)
+    assert ack_j1["status"] == "APPLIED"
+    assert node_j1.current_phase_id == "J1_PHASE_EW"
+    assert node_j2.current_phase_id == "J2_PHASE_NS"  # J2 unaffected
+
+

@@ -92,3 +92,36 @@ def test_sumo_engine_node_initialization():
     except ImportError:
         pytest.skip("SUMO module not available in environment")
 
+def test_approach_state_dynamics():
+    from traffic_engine import ApproachState
+    app = ApproachState("APP_1", capacity=20.0)
+    app.queue_vehicles = 10.0
+
+    # Step on GREEN light
+    app.step(is_green=True, dt_s=2.0)
+    assert app.flow_veh_per_s > 0.0
+    assert 0.0 <= app.occupancy_ratio <= 1.0
+
+    # Step on RED light
+    initial_q = app.queue_vehicles
+    app.step(is_green=False, dt_s=2.0)
+    assert app.flow_veh_per_s == 0.0
+    assert app.queue_vehicles >= initial_q
+
+def test_synthetic_engine_unknown_node():
+    topology = load_topology("four_intersection_v1")
+    engine = TrafficEngine(topology)
+    with pytest.raises(ValueError, match="Unknown node_id"):
+        engine.generate_telemetry("NON_EXISTENT_NODE", sim_time_s=5.0)
+
+def test_create_traffic_engine_factory():
+    topology = load_topology("four_intersection_v1")
+    engine_synth = create_traffic_engine(topology, use_sumo=False)
+    assert engine_synth is not None
+    telemetry = engine_synth.generate_telemetry("J1", sim_time_s=1.0)
+    assert telemetry["node_id"] == "J1"
+
+    engine_sumo_fb = create_traffic_engine(topology, use_sumo=True)
+    assert engine_sumo_fb is not None
+
+

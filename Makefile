@@ -1,4 +1,4 @@
-.PHONY: help contracts test integration check-all clean smoke up-sim down experiment
+.PHONY: help contracts test integration check-all clean smoke up-sim down experiment experiment-gui
 
 help:
 	@echo "EdgeFlow AI - Standard Developer Commands:"
@@ -11,6 +11,7 @@ help:
 	@echo "  make up-sim          Start simulation stack with Docker Compose"
 	@echo "  make down            Stop all Docker Compose services"
 	@echo "  make experiment EXP=<name> Run experiment manifest"
+	@echo "  make experiment-gui  Run experiment with live SUMO-GUI window"
 
 contracts:
 	python -m pytest tests/unit/test_contracts.py
@@ -39,3 +40,7 @@ down:
 experiment:
 	@if [ -z "$(EXP)" ]; then echo "Usage: make experiment EXP=<manifest_name>"; exit 1; fi
 	python -m experiment_runner.runner --manifest experiments/$(EXP).yaml
+
+experiment-gui:
+	python src/tools/run_experiment_gui.py --duration 60 --controller max_pressure
+
