@@ -31,10 +31,16 @@ class ExperimentManifest(BaseModel):
         "controller_latency_ms"
     ]
 
+    def _dump_dict(self) -> Dict[str, Any]:
+        if hasattr(self, "model_dump"):
+            return self.model_dump()
+        return self.dict()
+
     def to_yaml(self) -> str:
+        data = self._dump_dict()
         if yaml is not None:
-            return yaml.dump(self.dict(), sort_keys=False)
-        return json.dumps(self.dict(), indent=2)
+            return yaml.dump(data, sort_keys=False)
+        return json.dumps(data, indent=2)
 
     def save_yaml(self, file_path: str) -> None:
         os.makedirs(os.path.dirname(file_path), exist_ok=True)

@@ -160,7 +160,7 @@ class SingleExperimentRunner:
         # 3. Save summary.json
         summary_path = self.artifacts_dir / "summary.json"
         summary = self.collector.compute_summary()
-        summary["manifest"] = self.manifest.dict()
+        summary["manifest"] = self.manifest._dump_dict()
         with open(summary_path, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2)
 

@@ -119,6 +119,31 @@ def test_batch_runner_report_generation():
             assert "improvements" in data
             assert "balanced" in data["improvements"]
 
+def test_multi_topology_batch_runner_report_generation():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        batch = BatchRunner(
+            scenarios=["balanced"],
+            controllers=["fixed_time", "max_pressure"],
+            seeds=[42],
+            topology=["four_intersection_v1", "grid4x4"],
+            duration_s=1,
+            output_dir=tmpdir
+        )
+        batch.run_all()
+
+        assert len(batch.results) == 4  # 2 topologies x 1 scenario x 2 controllers x 1 seed
+        json_report = Path(tmpdir) / "benchmark_comparison_report.json"
+        md_report = Path(tmpdir) / "benchmark_summary.md"
+
+        assert json_report.exists()
+        assert md_report.exists()
+
+        with open(json_report, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            assert data["total_completed_runs"] == 4
+            assert "grid4x4" in data["improvements"]
+            assert "four_intersection_v1" in data["improvements"]
+
 def test_metrics_collector_invalid_json_handling():
     collector = MetricsCollector()
     collector.start()
@@ -143,4 +168,3 @@ def test_metrics_collector_empty_summary():
     assert summary["total_samples"] == 0
     assert summary["average_waiting_time_s"] == 0.0
     assert summary["average_queue_veh"] == 0.0
-
