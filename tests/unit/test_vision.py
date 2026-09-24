@@ -14,6 +14,8 @@ if str(CONTRACTS_DIR) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_DIR))
 
 import contracts_sdk
+cv2 = pytest.importorskip("cv2")
+
 from video_source import SyntheticVideoSource, create_video_source
 from roi_manager import ROIManager
 from metrics_extractor import MetricsExtractor
