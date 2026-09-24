@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("batch-runner")
 
 SCENARIOS = ["balanced", "directional_surge", "downstream_congestion"]
-CONTROLLERS = ["fixed_time", "max_pressure"]
+CONTROLLERS = ["fixed_time", "max_pressure", "flow_theory"]
 TOPOLOGIES = ["four_intersection_v1", "grid4x4", "cologne8", "hcm_realworld_v1"]
 
 class BatchRunner:

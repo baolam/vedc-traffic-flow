@@ -76,3 +76,67 @@ class MaxPressureController(BaseController):
             "max_green_s": self.max_green_s,
             "controller": "max_pressure"
         }
+
+
+class FlowTheoryController(BaseController):
+    """
+    Traffic Flow Theory Controller based on Cell Transmission Model (CTM).
+    Calculates effective flow throughput F(p) = sum(min(Sending_Capacity, Receiving_Capacity)) for each phase.
+    Sending Capacity S_a = min(Q_max, Queue / dt + FlowIn)
+    Receiving Capacity R_d = Q_max * (1.0 - occupancy)
+    Prevents gridlock by cutting green when downstream occupancy is saturated (> 0.9).
+    """
+    def __init__(self, min_green_s: float = 10.0, max_green_s: float = 60.0, saturation_flow_vps: float = 0.5):
+        self.min_green_s = min_green_s
+        self.max_green_s = max_green_s
+        self.saturation_flow_vps = saturation_flow_vps
+
+    def compute_command(self, node_id: str, telemetry: Dict[str, Any], topology: Dict[str, Any]) -> Dict[str, Any]:
+        node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
+        phases = node_info.get("phases", []) if node_info else []
+        if not phases:
+            return None
+
+        approaches = telemetry.get("approaches", [])
+        approach_map: Dict[str, Dict[str, Any]] = {app["approach_id"]: app for app in approaches}
+
+        phase_flows: Dict[str, float] = {}
+
+        for phase in phases:
+            phase_id = phase["phase_id"]
+            phase_apps = phase.get("approaches", [])
+            total_effective_flow = 0.0
+
+            for app_id in phase_apps:
+                app_data = approach_map.get(app_id, {})
+                queue = float(app_data.get("queue_vehicles", 0.0))
+                flow_in = float(app_data.get("flow_rate", 0.0)) / 3600.0  # veh/sec
+                occupancy = float(app_data.get("occupancy", 0.0))       # 0.0 to 1.0
+
+                # Sending capacity (demand from upstream)
+                sending_capacity = min(self.saturation_flow_vps, queue / 10.0 + flow_in)
+
+                # Receiving capacity (supply at downstream / link capacity)
+                # If occupancy is high (>0.9), receiving capacity drops toward 0 to prevent gridlock
+                receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - occupancy)
+
+                # Bottleneck flow
+                effective_flow = min(sending_capacity, receiving_capacity)
+                total_effective_flow += effective_flow
+
+            phase_flows[phase_id] = total_effective_flow
+
+        if phase_flows:
+            target_phase = max(phase_flows.items(), key=lambda x: x[1])[0]
+        else:
+            target_phase = telemetry.get("current_phase_id", "J1_PHASE_NS")
+
+        return {
+            "command_id": str(uuid.uuid4()),
+            "node_id": node_id,
+            "target_phase_id": target_phase,
+            "min_green_s": self.min_green_s,
+            "max_green_s": self.max_green_s,
+            "controller": "flow_theory"
+        }
+

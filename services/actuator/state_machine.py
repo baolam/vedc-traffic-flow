@@ -10,6 +10,7 @@ class SignalNodeState:
         self.phase_start_time = time.time()
         self.yellow_duration_s = yellow_duration_s
         self.all_red_duration_s = all_red_duration_s
+        self.last_transition_time = 0.0
 
     def elapsed_green_time(self, now: Optional[float] = None) -> float:
         if now is None:
@@ -83,8 +84,22 @@ class ActuatorStateMachine:
                 "reason": f"Min green time constraint not met ({elapsed:.1f}s < {min_green_s}s)"
             }
 
+        # Check if node is in active clearance transition
+        transition_buffer = self.yellow_duration_s + self.all_red_duration_s
+        if node.last_transition_time > 0 and (now - node.last_transition_time) < transition_buffer:
+            rem = transition_buffer - (now - node.last_transition_time)
+            return {
+                "command_id": cmd_id,
+                "node_id": node_id,
+                "target_phase_id": target_phase,
+                "status": "REJECTED",
+                "timestamp_ms": int(now * 1000),
+                "reason": f"Phase transition currently in progress ({rem:.1f}s clearance remaining)"
+            }
+
         # Perform phase transition: GREEN -> YELLOW -> ALL_RED -> GREEN (target)
         node.state = "YELLOW"
+        node.last_transition_time = now
         node.state = "ALL_RED"
         node.current_phase_id = target_phase
         node.state = "GREEN"
@@ -98,3 +113,4 @@ class ActuatorStateMachine:
             "timestamp_ms": int(now * 1000),
             "reason": f"Safely transitioned to phase {target_phase} via Yellow ({self.yellow_duration_s}s) and All-Red ({self.all_red_duration_s}s)."
         }
+

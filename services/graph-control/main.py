@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 from config import settings
 from graph_contracts_helper import load_topology, validate_payload
-from controller import MaxPressureController, FixedTimeController
+from controller import MaxPressureController, FixedTimeController, FlowTheoryController
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("graph-control")
@@ -16,6 +16,9 @@ def create_controller():
     if controller_type == "max_pressure":
         logger.info("Initializing MaxPressureController")
         return MaxPressureController()
+    elif controller_type in ("flow_theory", "ctm"):
+        logger.info("Initializing FlowTheoryController (CTM)")
+        return FlowTheoryController()
     else:
         logger.info("Initializing FixedTimeController")
         return FixedTimeController()

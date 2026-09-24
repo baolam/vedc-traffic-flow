@@ -14,7 +14,7 @@ class ScenarioConfig(BaseModel):
     random_seed: int = 42
 
 class ControllerConfig(BaseModel):
-    type: str = "max_pressure"  # 'max_pressure' or 'fixed_time'
+    type: str = "max_pressure"  # 'max_pressure', 'flow_theory', or 'fixed_time'
     decision_interval_s: float = 1.0
 
 class ExperimentManifest(BaseModel):

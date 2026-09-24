@@ -1,57 +1,97 @@
 {
-  "timestamp": "2026-09-20T14:49:39Z",
-  "total_completed_runs": 12,
-  "scenario_aggregates": {
-    "balanced": {
-      "fixed_time": {
-        "total_runs": 2,
-        "average_waiting_time_s": 49.54,
-        "average_queue_veh": 11.0,
-        "maximum_queue_veh": 14,
-        "throughput_veh_per_s": 0.219
+  "timestamp": "2026-09-24T15:03:09Z",
+  "total_completed_runs": 18,
+  "topology_aggregates": {
+    "four_intersection_v1": {
+      "balanced": {
+        "fixed_time": {
+          "total_runs": 2,
+          "average_waiting_time_s": 49.54,
+          "average_queue_veh": 11.0,
+          "maximum_queue_veh": 14,
+          "throughput_veh_per_s": 0.219
+        },
+        "max_pressure": {
+          "total_runs": 2,
+          "average_waiting_time_s": 18.89,
+          "average_queue_veh": 7.5,
+          "maximum_queue_veh": 8,
+          "throughput_veh_per_s": 0.4206
+        },
+        "flow_theory": {
+          "total_runs": 2,
+          "average_waiting_time_s": 49.54,
+          "average_queue_veh": 11.0,
+          "maximum_queue_veh": 14,
+          "throughput_veh_per_s": 0.219
+        }
       },
-      "max_pressure": {
-        "total_runs": 2,
-        "average_waiting_time_s": 18.89,
-        "average_queue_veh": 7.5,
-        "maximum_queue_veh": 8,
-        "throughput_veh_per_s": 0.4206
-      }
-    },
-    "directional_surge": {
-      "fixed_time": {
-        "total_runs": 2,
-        "average_waiting_time_s": 49.54,
-        "average_queue_veh": 11.0,
-        "maximum_queue_veh": 14,
-        "throughput_veh_per_s": 0.219
+      "directional_surge": {
+        "fixed_time": {
+          "total_runs": 2,
+          "average_waiting_time_s": 49.54,
+          "average_queue_veh": 11.0,
+          "maximum_queue_veh": 14,
+          "throughput_veh_per_s": 0.219
+        },
+        "max_pressure": {
+          "total_runs": 2,
+          "average_waiting_time_s": 18.89,
+          "average_queue_veh": 7.5,
+          "maximum_queue_veh": 8,
+          "throughput_veh_per_s": 0.4206
+        },
+        "flow_theory": {
+          "total_runs": 2,
+          "average_waiting_time_s": 49.54,
+          "average_queue_veh": 11.0,
+          "maximum_queue_veh": 14,
+          "throughput_veh_per_s": 0.219
+        }
       },
-      "max_pressure": {
-        "total_runs": 2,
-        "average_waiting_time_s": 18.89,
-        "average_queue_veh": 7.5,
-        "maximum_queue_veh": 8,
-        "throughput_veh_per_s": 0.4206
-      }
-    },
-    "downstream_congestion": {
-      "fixed_time": {
-        "total_runs": 2,
-        "average_waiting_time_s": 49.54,
-        "average_queue_veh": 11.0,
-        "maximum_queue_veh": 14,
-        "throughput_veh_per_s": 0.219
-      },
-      "max_pressure": {
-        "total_runs": 2,
-        "average_waiting_time_s": 18.89,
-        "average_queue_veh": 7.5,
-        "maximum_queue_veh": 8,
-        "throughput_veh_per_s": 0.4206
+      "downstream_congestion": {
+        "fixed_time": {
+          "total_runs": 2,
+          "average_waiting_time_s": 49.54,
+          "average_queue_veh": 11.0,
+          "maximum_queue_veh": 14,
+          "throughput_veh_per_s": 0.219
+        },
+        "max_pressure": {
+          "total_runs": 2,
+          "average_waiting_time_s": 18.89,
+          "average_queue_veh": 7.5,
+          "maximum_queue_veh": 8,
+          "throughput_veh_per_s": 0.4206
+        },
+        "flow_theory": {
+          "total_runs": 2,
+          "average_waiting_time_s": 49.54,
+          "average_queue_veh": 11.0,
+          "maximum_queue_veh": 14,
+          "throughput_veh_per_s": 0.219
+        }
       }
     }
   },
   "improvements": {
+    "four_intersection_v1": {
+      "balanced": {
+        "waiting_time_reduction_pct": 61.87,
+        "queue_length_reduction_pct": 31.82,
+        "throughput_gain_pct": 92.05
+      },
+      "directional_surge": {
+        "waiting_time_reduction_pct": 61.87,
+        "queue_length_reduction_pct": 31.82,
+        "throughput_gain_pct": 92.05
+      },
+      "downstream_congestion": {
+        "waiting_time_reduction_pct": 61.87,
+        "queue_length_reduction_pct": 31.82,
+        "throughput_gain_pct": 92.05
+      }
+    },
     "balanced": {
       "waiting_time_reduction_pct": 61.87,
       "queue_length_reduction_pct": 31.82,
