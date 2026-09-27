@@ -1,0 +1,169 @@
+version: "3.8"
+
+# ==============================================================================
+# EdgeFlow AI - Docker Compose Configuration for Raspberry Pi (ARM64)
+# Designed for Distributed Edge Execution (VEDC 2026 Tabletop Demo)
+# ==============================================================================
+#
+# USAGE MODES:
+# 1. Vision Edge Node (Chỉ Perception trên Pi, gửi dữ liệu về Laptop):
+#    docker compose -f docker-compose.rpi.yml --profile vision up -d
+#
+# 2. Distributed Edge Control (Vision + Graph-Control cục bộ trên Pi):
+#    docker compose -f docker-compose.rpi.yml --profile edge-node up -d
+#
+# 3. Standalone Edge Gateway (Toàn bộ dịch vụ chạy trực tiếp trên Pi):
+#    docker compose -f docker-compose.rpi.yml --profile standalone up -d
+#
+# 4. Edge Management (Chỉ Control + API + Dashboard trên Pi):
+#    docker compose -f docker-compose.rpi.yml --profile management up -d
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Edge MQTT Broker (Tùy chọn: dùng khi Pi đóng vai trò Gateway độc lập)
+  # ----------------------------------------------------------------------------
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: edgeflow-rpi-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 -i healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - standalone
+      - local-broker
+
+  # ----------------------------------------------------------------------------
+  # 2. Edge AI Perception (Chạy trên Pi 5 - Camera + YOLOv8/OpenCV DNN)
+  # ----------------------------------------------------------------------------
+  vision:
+    build:
+      context: ./services/vision
+      dockerfile: Dockerfile
+    container_name: edgeflow-rpi-vision
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.rpi}
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MQTT_HOST=${MQTT_HOST:-192.168.1.100}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - VISION_NODE_ID=${VISION_NODE_ID:-J1}
+      - VIDEO_SOURCE=${VIDEO_SOURCE:-0}
+      - VISION_FPS=${VISION_FPS:-10.0}
+      - TELEMETRY_PERIOD_S=${TELEMETRY_PERIOD_S:-1.0}
+      - DETECTION_MODEL_PATH=${DETECTION_MODEL_PATH:-models/yolov8n.onnx}
+      - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD:-0.4}
+      - ENABLE_HARDWARE_TELEMETRY=true
+    devices:
+      - "/dev/video0:/dev/video0"
+    volumes:
+      - ./contracts:/contracts:ro
+      - ./models:/models:ro
+      - /sys/class/thermal:/sys/class/thermal:ro
+    profiles:
+      - vision
+      - edge-node
+      - standalone
+
+  # ----------------------------------------------------------------------------
+  # 3. Distributed Graph Control (Thuật toán Max-Pressure / RL tại biên)
+  # ----------------------------------------------------------------------------
+  graph-control:
+    build:
+      context: .
+      dockerfile: services/graph-control/Dockerfile
+    container_name: edgeflow-rpi-graph-control
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.rpi}
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MQTT_HOST=${MQTT_HOST:-192.168.1.100}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - EDGEFLOW_TOPOLOGY=${EDGEFLOW_TOPOLOGY:-four_intersection_v1}
+      - EDGEFLOW_CONTROLLER=${EDGEFLOW_CONTROLLER:-max_pressure}
+      - RL_MODEL_PATH=${RL_MODEL_PATH:-}
+    volumes:
+      - ./contracts:/contracts:ro
+      - ./models:/models:ro
+    profiles:
+      - edge-node
+      - management
+      - standalone
+
+  # ----------------------------------------------------------------------------
+  # 4. Central / Edge REST & WebSocket API
+  # ----------------------------------------------------------------------------
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: edgeflow-rpi-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ${ENV_FILE:-.env.rpi}
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MQTT_HOST=${MQTT_HOST:-192.168.1.100}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      - ./contracts:/contracts:ro
+      - ./output:/app/output
+    profiles:
+      - management
+      - standalone
+
+  # ----------------------------------------------------------------------------
+  # 5. React IOC Operations Dashboard
+  # ----------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: ./services/dashboard
+      dockerfile: Dockerfile
+    container_name: edgeflow-rpi-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    profiles:
+      - management
+      - standalone
+
+  # ----------------------------------------------------------------------------
+  # 6. Actuator Bridge (Điều khiển đèn tín hiệu mô phỏng / phần cứng trên Pi)
+  # ----------------------------------------------------------------------------
+  actuator:
+    build:
+      context: ./services/actuator
+      dockerfile: Dockerfile
+    container_name: edgeflow-rpi-actuator
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.rpi}
+    environment:
+      - EDGEFLOW_ENV=${EDGEFLOW_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MQTT_HOST=${MQTT_HOST:-192.168.1.100}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    volumes:
+      - ./contracts:/contracts:ro
+    profiles:
+      - standalone

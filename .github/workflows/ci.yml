@@ -1,38 +1,88 @@
-name: EdgeFlow AI CI Pipeline
+name: EdgeFlow AI — CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    name: Contract & Unit Verification
+  lint-and-validate:
+    name: Code Quality & Schema Contract Verification
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Lint & Contract Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema pyyaml pydantic pydantic-settings pytest flake8
+
+      - name: Lint Code Syntax (Flake8)
+        run: |
+          # Stop build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv,node_modules,build,dist
+
+      - name: Verify Contract Schemas & Topology JSON
+        run: |
+          python -m pytest tests/unit/test_contracts.py -v
+
+  test-matrix:
+    name: Test Suite (Python ${{ matrix.python-version }})
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.9"
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pydantic pydantic-settings pyyaml jsonschema networkx paho-mqtt fastapi uvicorn websockets requests scikit-learn numpy opencv-python-headless
+      - name: Install Core Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pydantic pydantic-settings pyyaml jsonschema networkx paho-mqtt fastapi uvicorn websockets requests scikit-learn scipy numpy opencv-python-headless httpx
 
-    - name: Run Schema Contract Tests
-      run: |
-        python -m pytest tests/unit/test_contracts.py
+      - name: Run Full Unit Test Suite
+        run: |
+          python -m pytest tests/unit -v --durations=10
 
-    - name: Run Unit Tests
-      run: |
-        python -m pytest tests/unit
+      - name: Run Integration Tests & Smoke Checks
+        run: |
+          python -m pytest tests/integration -v
 
-    - name: Run Integration Tests
-      run: |
-        python -m pytest tests/integration
+  validate-docker:
+    name: Docker Compose Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Server Docker Compose
+        run: |
+          docker compose -f docker-compose.yml config > /dev/null
+          echo "Server docker-compose.yml is valid."
+
+      - name: Validate Raspberry Pi Edge Docker Compose
+        run: |
+          docker compose -f docker-compose.rpi.yml config > /dev/null
+          echo "Raspberry Pi docker-compose.rpi.yml is valid."

@@ -1,96 +1,121 @@
-# Development & Setup Guide (Hướng Dẫn Phát Triển & Chuẩn Hoá)
+# EdgeFlow AI — Development, Deployment & Demo Guide
 
-## Quick Start (Docker Environment)
+Hướng dẫn chi tiết quy trình phát triển, kiểm thử cục bộ và thiết lập môi trường trình diễn thực tế theo kiến trúc **3 Tầng Phân Tán (Laptop Server $\leftrightarrow$ Raspberry Pi 5 $\leftrightarrow$ ESP32 Hardware)**.
 
-### 1. Copy local configuration
-- **Bash / Linux / macOS**:
-  ```bash
-  cp .env.example .env
-  ```
+> [!TIP]
+> **Xem chi tiết các kịch bản và chế độ chạy:** [`docs/SYSTEM_RUN_MODES.md`](file:///e:/vedc-traffic-flow/docs/SYSTEM_RUN_MODES.md) | **Hướng dẫn Docker Pi 5:** [`docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
+
+---
+
+## 💻 1. Thiết Lập Tầng 1: Laptop Server (Chạy Docker Microservices)
+
+Laptop đóng vai trò là **Máy Chủ Điều Phối Trung Tâm (Central Server)**:
+
+### 1.1. Cấu hình biến môi trường
 - **Windows PowerShell**:
   ```powershell
   Copy-Item .env.example .env
   ```
-
-### 2. Start the Simulation Stack
-Run Docker Compose directly (no `make` required):
-```bash
-docker compose --profile simulation up --build
-```
-*(To run in background mode, add `-d`: `docker compose --profile simulation up -d --build`)*
-
-### 3. Verify Service Health & View Logs
-- **Check container status**:
+- **Linux / macOS**:
   ```bash
-  docker compose ps
-  ```
-- **Tail logs**:
-  ```bash
-  docker compose logs -f
+  cp .env.example .env
   ```
 
-### 4. Stop Services
+### 1.2. Khởi chạy toàn bộ dịch vụ trung tâm bằng Docker Compose
 ```bash
-docker compose down
+# Khởi chạy chế độ mô phỏng hoàn chỉnh (Broker, Control, API, Dashboard, SUMO)
+docker compose up -d --build
+
+# Xem log các dịch vụ thời gian thực
+docker compose logs -f
 ```
 
----
-
-## 🛠️ Microservice Configuration (`pydantic-settings`)
-
-Mọi Microservice trong hệ thống (`graph-control`, `actuator`, `simulator`, `api`) đều đọc biến môi trường tập trung thông qua `pydantic-settings` tại file `config.py` của từng service:
-- Đọc tự động từ `.env` hoặc hệ thống.
-- Ép kiểu dữ liệu an toàn & giá trị mặc định chuẩn.
-- Dễ dàng thay đổi thuật toán controller (`EDGEFLOW_CONTROLLER=max_pressure` hoặc `fixed_time`) hay topology (`EDGEFLOW_TOPOLOGY=four_intersection_v1`).
-
----
-
-## 🧪 Standardized Testing Commands
-
-Chạy kiểm thử nhanh chóng bằng `pytest` hoặc `make`:
-
-- **Chạy toàn bộ hợp đồng & kiểm thử (Khuyên dùng)**:
-  ```bash
-  make check-all
-  ```
-- **Contract tests**:
-  ```bash
-  python -m pytest tests/unit/test_contracts.py
-  ```
-- **Unit tests**:
-  ```bash
-  python -m pytest tests/unit
-  ```
-- **Integration tests**:
-  ```bash
-  python -m pytest tests/integration
-  ```
-- **Dọn dẹp cache test**:
-  ```bash
-  make clean
-  ```
-
----
-
-## 📐 Graph & Data Pipeline Execution
-
-Các script trong `src/graph/` được chuẩn hoá giao diện dòng lệnh (`argparse` CLI):
-
+### 1.3. Khởi chạy riêng lẻ bằng Python CLI (Không cần Docker)
 ```bash
-# Xây dựng đồ thị camera theo thuật toán BallTree
-python src/graph/build_camera_graph.py --input data/raw/cameras_hcm_full.json --output data/processed/camera_traffic_graph.pkl
+# Terminal 1: Chạy MQTT Broker (nếu cài cục bộ mosquitto)
+mosquitto -v
 
-# Xây dựng đồ thị camera theo tam giác hoá Delaunay
-python src/graph/build_camera_graph_delaunay.py --input data/raw/cameras_hcm_full.json --output data/processed/camera_traffic_graph_delaunay.pkl
+# Terminal 2: Chạy bộ điều khiển thích ứng (Graph-Control)
+python services/graph-control/main.py
 
-# Chuyển đổi file SUMO network .net.xml sang JSON Topology contract
-python src/graph/sumo_converter.py --input path/to/net.xml --output contracts/topology/custom_topo.json --topology-id custom_topo_v1
+# Terminal 3: Chạy Control Plane REST API
+python services/api/main.py
+
+# Terminal 4: Mở Dashboard điều hành Web
+# Truy cập http://localhost:8000/dashboard hoặc chạy services/dashboard (npm start)
 ```
 
 ---
 
-## Local Development Requirements
+## 🍓 2. Thiết Lập Tầng 2: Raspberry Pi 5 (Thị Giác AI Sa Bàn)
 
-- Docker & Docker Compose v2 (Docker Desktop for Windows/macOS)
-- Python 3.9+
-- Git
+Raspberry Pi 5 đóng vai trò là **Edge AI Perception Node** ghi hình sa bàn mô hình xe:
+
+### 2.1. Kết nối phần cứng
+- Cắm **Raspberry Pi Camera Module 3** vào cổng CSI hoặc cắm Camera USB vào cổng USB 3.0.
+- Kết nối Raspberry Pi 5 vào cùng mạng WiFi cục bộ với Laptop Server.
+
+### 2.2. Khởi chạy tiến trình nhận diện thị giác
+```bash
+# Trên Raspberry Pi 5 terminal
+cd services/vision
+
+# Cài đặt thư viện phụ thuộc nhẹ
+pip install -r requirements.txt
+
+# Khởi chạy dịch vụ thị giác bắn dữ liệu về Laptop
+python main.py --video 0 --mqtt-host <IP_LAPTOP_SERVER> --node-id J1
+```
+> [!TIP]
+> Dịch vụ sẽ tự động đọc cảm biến nhiệt độ CPU của chip Broadcom BCM2712 trên Pi 5 và báo cáo trạng thái định kỳ lên topic `edgeflow/v1/health/vision`.
+
+---
+
+## ⚡ 3. Thiết Lập Tầng 3: ESP32 Hardware Nodes (Chấp Hành Đèn)
+
+Hai board vi điều khiển ESP32 đóng vai trò là **Bộ Chấp Hành Tín Hiệu Đèn Giao Thông Cục Bộ**:
+
+### 3.1. Đấu nối mạch điện
+- Tham khảo sơ đồ chân chi tiết tại: [`src/hardware/schematic_and_pinout.md`](file:///e:/vedc-traffic-flow/src/hardware/schematic_and_pinout.md).
+- Kết nối 4 cụm đèn (12 bóng LED) cho mỗi nút giao vào các chân GPIO 23, 22, 21 (Bắc-Nam) và 19, 18, 5 (Đông-Tây).
+
+### 3.2. Cấu hình & Nạp Firmware
+- Mở file [`src/hardware/firmware/esp32_signal_controller.ino`](file:///e:/vedc-traffic-flow/src/hardware/firmware/esp32_signal_controller.ino) trong Arduino IDE / PlatformIO.
+- Đặt cấu hình `NODE_ID`:
+  - **Board 1 (Ngã tư J1)**: `#define NODE_ID "J1"`
+  - **Board 2 (Ngã tư J2)**: `#define NODE_ID "J2"`
+- Đặt `MQTT_BROKER` trỏ về IP của Laptop Server (ví dụ: `192.168.1.100`).
+- Nạp code vào ESP32 qua cổng USB Type-C.
+
+---
+
+## 🧪 4. Quy Trình Kiểm Thử Chuẩn (Standardized Testing)
+
+Hệ thống được trang bị bộ kiểm thử tự động toàn diện:
+
+```bash
+# 1. Kiểm thử Schema & Hợp đồng giao tiếp (Bắt buộc chạy trước khi commit)
+pytest tests/unit/test_contracts.py
+
+# 2. Kiểm thử logic máy trạng thái an toàn chuyển pha (State Machine)
+pytest tests/unit/test_actuator_state_machine.py
+
+# 3. Kiểm thử toàn bộ Unit Tests (88 tests)
+pytest tests/unit
+
+# 4. Kiểm thử tích hợp độ trễ End-to-End
+pytest tests/integration/test_end_to_end_latency.py
+```
+
+---
+
+## 📐 5. Dữ Liệu & Bản Đồ Giao Thông TP.HCM
+
+```bash
+# Xây dựng đồ thị camera Delaunay & OSRM
+python src/graph/delaunay_builder.py --input data/raw/cameras_hcm_full.json --output data/processed/camera_traffic_graph_delaunay.pkl
+
+# Xuất bản đồ tương tác Folium ra file HTML
+python src/visualization/map_visualizer.py
+```
+Mở file `output/camera_graph_map.html` trên trình duyệt để quan sát mạng lưới camera TP.HCM.
