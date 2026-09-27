@@ -1,13 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, Line } from 'recharts';
-import { Award, Clock, ArrowDownRight, TrendingUp } from 'lucide-react';
+import { Award, Clock, ArrowDownRight, TrendingUp, CheckCircle, Database } from 'lucide-react';
 
 const PerformanceAnalytics = () => {
-  const benchmarkData = [
+  const [experiments, setExperiments] = useState([]);
+  const [benchmarkData, setBenchmarkData] = useState([
     { metric: 'Avg Wait Time (s)', FixedTime: 42.5, MaxPressure: 21.8 },
     { metric: 'Max Queue Length', FixedTime: 28.0, MaxPressure: 14.2 },
-    { metric: 'Network Throughput (veh/min)', FixedTime: 110, MaxPressure: 165 }
-  ];
+    { metric: 'Throughput (veh/s)', FixedTime: 0.28, MaxPressure: 0.42 }
+  ]);
+
+  const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/v1/experiments`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.experiments && data.experiments.length > 0) {
+          setExperiments(data.experiments);
+          
+          // Separate into fixed_time and adaptive (max_pressure / edgeflow)
+          const ftRuns = data.experiments.filter(e => e.summary?.manifest?.controller?.type === 'fixed_time');
+          const mpRuns = data.experiments.filter(e => e.summary?.manifest?.controller?.type !== 'fixed_time');
+          
+          if (ftRuns.length > 0 && mpRuns.length > 0) {
+            const avgFtWait = ftRuns.reduce((acc, r) => acc + (r.average_waiting_time_s || 0), 0) / ftRuns.length;
+            const avgMpWait = mpRuns.reduce((acc, r) => acc + (r.average_waiting_time_s || 0), 0) / mpRuns.length;
+            
+            const avgFtQ = ftRuns.reduce((acc, r) => acc + (r.average_queue_veh || 0), 0) / ftRuns.length;
+            const avgMpQ = mpRuns.reduce((acc, r) => acc + (r.average_queue_veh || 0), 0) / mpRuns.length;
+
+            const avgFtTh = ftRuns.reduce((acc, r) => acc + (r.throughput_veh_per_s || 0), 0) / ftRuns.length;
+            const avgMpTh = mpRuns.reduce((acc, r) => acc + (r.throughput_veh_per_s || 0), 0) / mpRuns.length;
+
+            setBenchmarkData([
+              { metric: 'Avg Wait Time (s)', FixedTime: Math.round(avgFtWait * 10) / 10, MaxPressure: Math.round(avgMpWait * 10) / 10 },
+              { metric: 'Avg Queue (veh)', FixedTime: Math.round(avgFtQ * 10) / 10, MaxPressure: Math.round(avgMpQ * 10) / 10 },
+              { metric: 'Throughput (veh/s)', FixedTime: Math.round(avgFtTh * 100) / 100, MaxPressure: Math.round(avgMpTh * 100) / 100 }
+            ]);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [apiBase]);
 
   const timeSeriesDelay = [
     { t: '0m', FixedTime: 35, MaxPressure: 20 },

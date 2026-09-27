@@ -38,8 +38,7 @@ down:
 	docker compose down
 
 experiment:
-	@if [ -z "$(EXP)" ]; then echo "Usage: make experiment EXP=<manifest_name>"; exit 1; fi
-	python -m experiment_runner.runner --manifest experiments/$(EXP).yaml
+	python services/experiment-runner/runner.py $(if $(EXP),--experiment-id $(EXP),)
 
 experiment-gui:
 	python src/tools/run_experiment_gui.py --duration 60 --controller max_pressure

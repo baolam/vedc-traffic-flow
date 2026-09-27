@@ -1,0 +1,4 @@
+# EdgeFlow AI — Final Holdout Seeds
+# Strictly held-out test seeds never seen during tuning or diagnostics.
+seeds: [701, 702, 703, 704, 705, 801, 802, 803, 804, 805]
+count: 10

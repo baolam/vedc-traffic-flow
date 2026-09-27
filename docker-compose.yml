@@ -18,6 +18,7 @@ services:
       - simulation
       - vision
       - hardware
+      - experiment
       - dev
 
   api:
@@ -52,8 +53,8 @@ services:
 
   graph-control:
     build:
-      context: ./services/graph-control
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/graph-control/Dockerfile
     container_name: edgeflow-graph-control
     restart: unless-stopped
     env_file:
@@ -65,11 +66,13 @@ services:
       - MQTT_PORT=${MQTT_PORT:-1883}
       - EDGEFLOW_TOPOLOGY=${EDGEFLOW_TOPOLOGY:-four_intersection_v1}
       - EDGEFLOW_CONTROLLER=${EDGEFLOW_CONTROLLER:-max_pressure}
+      - RL_MODEL_PATH=${RL_MODEL_PATH:-}
     depends_on:
       mqtt:
         condition: service_healthy
     volumes:
       - ./contracts:/contracts
+      - ./models:/models:ro
     profiles:
       - simulation
       - vision
@@ -118,6 +121,8 @@ services:
     depends_on:
       mqtt:
         condition: service_healthy
+    volumes:
+      - ./contracts:/contracts
     profiles:
       - vision
       - dev

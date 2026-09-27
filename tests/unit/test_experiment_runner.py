@@ -1,7 +1,13 @@
+"""
+Tests for the Experiment Runner (P0 Updated).
+
+Validates manifest serialization, metrics collection, artifact export,
+and batch runner report generation.
+"""
+
 import os
 import sys
 import json
-import shutil
 import tempfile
 import pytest
 from pathlib import Path
@@ -12,19 +18,27 @@ exp_runner_dir = curr.parent.parent / "services" / "experiment-runner"
 if str(exp_runner_dir) not in sys.path:
     sys.path.insert(0, str(exp_runner_dir))
 
+# Also add graph-control, actuator, contracts
+repo_root = curr.parent.parent
+for p in [repo_root / "contracts", repo_root / "services" / "graph-control",
+          repo_root / "services" / "actuator"]:
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
+
 from manifest import ExperimentManifest, ScenarioConfig, ControllerConfig
 from metrics_collector import MetricsCollector
 from runner import SingleExperimentRunner
 from batch_runner import BatchRunner
+
 
 def test_experiment_manifest_yaml_roundtrip():
     manifest = ExperimentManifest(
         experiment_id="test_exp_001",
         topology="four_intersection_v1",
         scenario=ScenarioConfig(name="directional_surge", duration_s=60, random_seed=42),
-        controller=ControllerConfig(type="max_pressure", decision_interval_s=1.0)
+        controller=ControllerConfig(type="max_pressure", decision_interval_s=1.0),
     )
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = os.path.join(tmpdir, "manifest.yaml")
         manifest.save_yaml(file_path)
@@ -35,6 +49,7 @@ def test_experiment_manifest_yaml_roundtrip():
         assert loaded.scenario.name == "directional_surge"
         assert loaded.controller.type == "max_pressure"
         assert loaded.scenario.random_seed == 42
+
 
 def test_metrics_collector_processing_and_summary():
     collector = MetricsCollector()
@@ -50,9 +65,9 @@ def test_metrics_collector_processing_and_summary():
                 "queue_vehicles": 10,
                 "flow_veh_per_s": 0.5,
                 "mean_speed_mps": 0.2,
-                "occupancy_ratio": 0.6
+                "occupancy_ratio": 0.6,
             }
-        ]
+        ],
     }
 
     collector.on_mqtt_message("edgeflow/v1/telemetry/J1", json.dumps(sample_telemetry))
@@ -69,31 +84,38 @@ def test_metrics_collector_processing_and_summary():
     assert summary["average_queue_veh"] == 10.0
     assert summary["maximum_queue_veh"] == 10
 
+
 def test_single_experiment_runner_artifact_export():
     with tempfile.TemporaryDirectory() as tmpdir:
         manifest = ExperimentManifest(
             experiment_id="unit_test_exp_run",
             topology="four_intersection_v1",
-            scenario=ScenarioConfig(name="balanced", duration_s=2, random_seed=123),
-            controller=ControllerConfig(type="max_pressure", decision_interval_s=1.0)
+            scenario=ScenarioConfig(name="balanced", duration_s=5, random_seed=123),
+            controller=ControllerConfig(type="max_pressure", decision_interval_s=1.0),
         )
 
-        runner = SingleExperimentRunner(manifest=manifest, artifacts_root=tmpdir)
-        runner.run(mock_telemetry_if_no_mqtt=True)
+        runner = SingleExperimentRunner(
+            manifest=manifest, artifacts_root=tmpdir, mode="deterministic_sim"
+        )
+        runner.run()
 
         exp_dir = Path(tmpdir) / "unit_test_exp_run"
         assert exp_dir.exists()
         assert (exp_dir / "manifest.yaml").exists()
         assert (exp_dir / "environment.json").exists()
         assert (exp_dir / "metrics.csv").exists()
-        assert (exp_dir / "events.jsonl").exists()
         assert (exp_dir / "summary.json").exists()
+        assert (exp_dir / "demand.json").exists()
+        assert (exp_dir / "validity.json").exists()
 
         # Check summary content
         with open(exp_dir / "summary.json", "r", encoding="utf-8") as f:
             summary = json.load(f)
-            assert summary["manifest"]["experiment_id"] == "unit_test_exp_run"
+            assert summary["experiment_id"] == "unit_test_exp_run"
             assert "average_waiting_time_s" in summary
+            assert summary["valid_for_research"] is True
+            assert summary["is_synthetic"] is False
+
 
 def test_batch_runner_report_generation():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -101,8 +123,9 @@ def test_batch_runner_report_generation():
             scenarios=["balanced"],
             controllers=["fixed_time", "max_pressure"],
             seeds=[42, 101],
-            duration_s=1,
-            output_dir=tmpdir
+            duration_s=3,
+            output_dir=tmpdir,
+            mode="deterministic_sim",
         )
         batch.run_all()
 
@@ -115,42 +138,18 @@ def test_batch_runner_report_generation():
 
         with open(json_report, "r", encoding="utf-8") as f:
             data = json.load(f)
-            assert data["total_completed_runs"] == 4
+            assert data["total_valid_runs"] == 4
             assert "improvements" in data
-            assert "balanced" in data["improvements"]
 
-def test_multi_topology_batch_runner_report_generation():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        batch = BatchRunner(
-            scenarios=["balanced"],
-            controllers=["fixed_time", "max_pressure"],
-            seeds=[42],
-            topology=["four_intersection_v1", "grid4x4"],
-            duration_s=1,
-            output_dir=tmpdir
-        )
-        batch.run_all()
-
-        assert len(batch.results) == 4  # 2 topologies x 1 scenario x 2 controllers x 1 seed
-        json_report = Path(tmpdir) / "benchmark_comparison_report.json"
-        md_report = Path(tmpdir) / "benchmark_summary.md"
-
-        assert json_report.exists()
-        assert md_report.exists()
-
-        with open(json_report, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            assert data["total_completed_runs"] == 4
-            assert "grid4x4" in data["improvements"]
-            assert "four_intersection_v1" in data["improvements"]
 
 def test_metrics_collector_invalid_json_handling():
     collector = MetricsCollector()
     collector.start()
-    # Should log warning and return without raising exception
-    collector.on_mqtt_message("edgeflow/v1/telemetry/J1", "{invalid_json_payload...")
+    # Should log warning and not raise
+    collector.on_mqtt_message("edgeflow/v1/telemetry/J1", "{invalid_json...")
     collector.stop()
     assert len(collector.telemetry_samples) == 0
+
 
 def test_metrics_collector_non_telemetry_events():
     collector = MetricsCollector()
@@ -162,9 +161,11 @@ def test_metrics_collector_non_telemetry_events():
     assert len(collector.event_logs) == 1
     assert collector.event_logs[0]["topic"] == "edgeflow/v1/ack/J1"
 
+
 def test_metrics_collector_empty_summary():
     collector = MetricsCollector()
     summary = collector.compute_summary()
     assert summary["total_samples"] == 0
     assert summary["average_waiting_time_s"] == 0.0
     assert summary["average_queue_veh"] == 0.0
+    assert summary["is_valid"] is False

@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     mqtt_port: int = 1883
     edgeflow_topology: str = "four_intersection_v1"
     edgeflow_controller: str = "max_pressure"
+    rl_model_path: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
