@@ -35,10 +35,14 @@ for p in [ROOT_DIR, VISION_DIR, ACTUATOR_DIR, GRAPH_CONTROL_DIR, CONTRACTS_DIR]:
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
+import pytest
+cv2 = pytest.importorskip("cv2")
+
 import contracts_sdk
 from perception_engine import PerceptionEngine
 from controller import EdgeFlowController
 from state_machine import SignalNodeState, ActuatorStateMachine
+
 
 
 def test_end_to_end_latency_benchmark():
