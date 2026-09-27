@@ -31,8 +31,18 @@ def main():
     topology_id = settings.edgeflow_topology
     topology = load_topology(topology_id)
     nodes = topology.get("nodes", [])
+    nodes = [n for n in nodes if n["node_id"] == settings.vision_node_id]
+    if not nodes:
+        raise ValueError(f"VISION_NODE_ID {settings.vision_node_id!r} is absent from topology")
 
-    engine = PerceptionEngine(video_source_str=settings.video_source)
+    engine = PerceptionEngine(video_source_str=settings.video_source,
+                              model_path=settings.detection_model_path or None,
+                              input_size=settings.detector_input_size,
+                              output_format=settings.detector_output_format,
+                              motion_scale=settings.motion_scale,
+                              conf_threshold=settings.confidence_threshold,
+                              num_classes=settings.detector_num_classes,
+                              vehicle_classes=tuple(int(c) for c in settings.detector_vehicle_classes.split(",")))
     if nodes:
         first_node = nodes[0].get("node_id", "J1")
         engine.setup_topology(topology, node_id=first_node)
@@ -71,16 +81,18 @@ def main():
                 # Extract approaches metrics from vision engine
                 approaches = engine.process_frame(node_id=node_id)
                 if not approaches:
-                    # Provide fallback approaches if frame was empty
+                    # Explicit camera failure/no frame state with 0.0 confidence (never fabricate fake queue with high confidence)
+                    node_approaches = node.get("approaches", [f"{node_id}_N_IN", f"{node_id}_S_IN", f"{node_id}_E_IN", f"{node_id}_W_IN"])
                     approaches = [
                         {
-                            "approach_id": f"{node_id}_W_IN",
-                            "queue_vehicles": 2.0,
-                            "flow_veh_per_s": 0.15,
-                            "mean_speed_mps": 4.5,
-                            "occupancy_ratio": 0.25,
-                            "confidence": 0.90
+                            "approach_id": app_id,
+                            "queue_vehicles": 0.0,
+                            "flow_veh_per_s": 0.0,
+                            "mean_speed_mps": 0.0,
+                            "occupancy_ratio": 0.0,
+                            "confidence": 0.0
                         }
+                        for app_id in node_approaches
                     ]
 
                 payload = {

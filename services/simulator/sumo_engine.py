@@ -1,6 +1,16 @@
 import os
+import time
 import logging
 from typing import Dict, Any, List
+
+# ================================================================
+# SUMO Metric Definitions (P0 TASK 5):
+#
+# queue_vehicles   = getLastStepHaltingNumber (vehicles speed < 0.1 m/s)
+# flow_veh_per_s   = getLastStepVehicleNumber / step_interval (approx veh/s at 1s steps)
+# occupancy_ratio  = getLastStepOccupancy / 100 (SUMO returns 0-100, we normalize to 0-1)
+# mean_speed_mps   = getLastStepMeanSpeed (m/s, -1 if no vehicles -> default 13.89)
+# ================================================================
 
 logger = logging.getLogger("sumo_engine")
 
@@ -144,16 +154,21 @@ class SumoTrafficEngine:
 
             if self.is_connected and (not self.edge_ids or edge_id in self.edge_ids):
                 try:
-                    # TraCI queries for edge metrics
                     halting_vehicles = traci.edge.getLastStepHaltingNumber(edge_id)
                     speed = traci.edge.getLastStepMeanSpeed(edge_id)
-                    occ = traci.edge.getLastStepOccupancy(edge_id)  # 0 to 1
+                    raw_occ = traci.edge.getLastStepOccupancy(edge_id)  # May be 0-100% or 0-1
                     vehicle_count = traci.edge.getLastStepVehicleNumber(edge_id)
 
                     queue_vehicles = float(halting_vehicles)
                     mean_speed_mps = round(float(speed) if speed >= 0 else 13.89, 2)
-                    occupancy_ratio = round(min(1.0, max(0.0, float(occ))), 2)
-                    flow_veh_per_s = round(float(vehicle_count) / 1.0, 2)
+                    
+                    # Convert occupancy percentage (0-100) to ratio (0-1)
+                    occ_val = float(raw_occ)
+                    if occ_val > 1.0:
+                        occ_val = occ_val / 100.0
+                    occupancy_ratio = round(min(1.0, max(0.0, occ_val)), 3)
+                    # flow = vehicles per step; at 1s step interval this is veh/s
+                    flow_veh_per_s = round(float(vehicle_count), 2)
                 except Exception as e:
                     logger.debug(f"TraCI query fallback for edge {edge_id}: {e}")
 
@@ -166,11 +181,12 @@ class SumoTrafficEngine:
                 "confidence": 1.0
             })
 
+        sim_ts = round(sim_time_s, 2)
         return {
             "node_id": node_id,
             "source_type": "simulation",
-            "simulation_time_s": round(sim_time_s, 2),
-            "timestamp_ms": int(sim_time_s * 1000),
+            "simulation_time_s": sim_ts,
+            "timestamp_ms": int(time.time() * 1000),
             "current_phase_id": node_data["current_phase_id"],
             "approaches": approaches_telemetry
         }

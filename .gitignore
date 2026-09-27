@@ -96,6 +96,7 @@ artifacts/*
 !artifacts/.gitkeep
 !artifacts/benchmark_summary.md
 !artifacts/benchmark_comparison_report.json
+!artifacts/end_to_end_latency_report.json
 data/processed/*.pkl
 data/processed/*.json
 data/raw/*.csv
@@ -109,6 +110,7 @@ data/raw/*.csv
 # Testing & Code Quality
 # ------------------------------------------
 .pytest_cache/
+tmp_pytest/
 .coverage
 .coverage.*
 htmlcov/

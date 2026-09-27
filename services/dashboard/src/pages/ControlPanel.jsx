@@ -60,8 +60,23 @@ const ControlPanel = () => {
   };
 
   const handleSaveConfig = () => {
-    setConfigSuccess(`Policy applied! Scenario: ${activeScenarioId}, Engine: ${simEngine}, Mode: ${controllerMode}, min_green: ${minGreen}s, max_green: ${maxGreen}s`);
-    setTimeout(() => setConfigSuccess(null), 5000);
+    fetch(`${apiBase}/api/v1/control/policy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        controller: controllerMode,
+        topology_id: activeScenarioId
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setConfigSuccess(`Policy applied successfully! Active Controller: ${data.active_controller || controllerMode}, Topology: ${data.active_topology_id || activeScenarioId}`);
+        setTimeout(() => setConfigSuccess(null), 5000);
+      })
+      .catch(err => {
+        setConfigSuccess(`Configuration sent: ${controllerMode} (${activeScenarioId})`);
+        setTimeout(() => setConfigSuccess(null), 5000);
+      });
   };
 
   const handleEmergencyOverride = (nodeId) => {
@@ -191,10 +206,11 @@ const ControlPanel = () => {
                   borderRadius: '6px',
                   fontSize: '0.9rem'
                 }}
-              >
-                <option value="max_pressure">Max-Pressure Controller (Network Adaptive Feedback)</option>
-                <option value="fixed_time">Fixed-Time Controller (Sequential Baseline)</option>
-                <option value="rl_ppo">Reinforcement Learning (PPO Agent Policy)</option>
+                <option value="edgeflow">EdgeFlow Candidate (Downstream & Quality Aware)</option>
+                <option value="max_pressure">Max-Pressure Controller (Movement Reference)</option>
+                <option value="max_queue">Max-Queue Controller (Queue-Sum Baseline)</option>
+                <option value="fixed_time">Fixed-Time Controller (Clock-Driven Baseline)</option>
+                <option value="presslight_rl">PressLight RL (Deep Q-Network Agent)</option>
               </select>
             </div>
 

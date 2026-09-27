@@ -1,0 +1,36 @@
+# Fixed-Time Controller Configuration v1
+# ==========================================
+# Tuned on training seeds only.
+# Clock-driven: phase determined by simulation time modulo cycle.
+#
+# This is a COMPETENT baseline, not a deliberately weak strawman.
+
+controller: fixed_time
+version: 1
+
+timing:
+  cycle_time_s: 30.0
+  yellow_s: 3.0
+  all_red_s: 2.0
+
+# Per-scenario green splits (seconds of green per phase)
+# With 2 phases and clearance=5s each, green = (cycle - 2*5) / 2 = 10s default
+scenarios:
+  balanced:
+    # Equal demand → equal splits
+    green_splits: [10.0, 10.0]  # [NS, EW]
+
+  directional_surge:
+    # Heavy NS demand → favor NS
+    green_splits: [16.0, 4.0]  # [NS, EW]
+
+  downstream_congestion:
+    # Moderate demand → slightly favor NS
+    green_splits: [12.0, 8.0]  # [NS, EW]
+
+constraints:
+  min_green_s: 5.0
+  max_green_s: 25.0
+
+# Hash: to be computed after freeze
+config_hash: null

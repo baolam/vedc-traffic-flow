@@ -1,0 +1,35 @@
+# EdgeFlow AI — Seed Separation Policy
+# ==========================================
+#
+# Training seeds (for parameter tuning ONLY):
+#   11, 22, 33, 44, 55
+#
+# Test seeds (NEVER used for tuning):
+#   101, 202, 303, 404, 505
+#
+# Rules:
+#   1. Controller parameters may ONLY be tuned on training seeds.
+#   2. Test seeds are reserved for the final evaluation.
+#   3. This file is version-controlled and must not be modified
+#      after the test study begins.
+
+training_seeds:
+  - 11
+  - 22
+  - 33
+  - 44
+  - 55
+
+test_seeds:
+  - 101
+  - 202
+  - 303
+  - 404
+  - 505
+
+scenarios:
+  - balanced
+  - directional_surge
+  - downstream_congestion
+
+topology: four_intersection_v1

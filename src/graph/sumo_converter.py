@@ -36,37 +36,72 @@ class SumoNetworkConverter:
                 "phases": []
             }
 
-        # 2. Parse Traffic Light Logic (tlsLogic)
+        # 2. Parse Connections to map linkIndex to from_edge and to_edge
+        tl_connections: Dict[str, Dict[int, Dict[str, Any]]] = {}
+        for conn in root.findall("connection"):
+            tl_id = conn.attrib.get("tl")
+            link_idx_str = conn.attrib.get("linkIndex")
+            from_edge = conn.attrib.get("from")
+            to_edge = conn.attrib.get("to")
+            
+            if tl_id and link_idx_str is not None and from_edge:
+                try:
+                    link_idx = int(link_idx_str)
+                    if tl_id not in tl_connections:
+                        tl_connections[tl_id] = {}
+                    tl_connections[tl_id][link_idx] = {
+                        "from_edge": from_edge,
+                        "to_edge": to_edge
+                    }
+                except ValueError:
+                    pass
+
+        # 3. Parse Traffic Light Logic (tlsLogic)
         for tl in root.findall("tlLogic"):
             tl_id = tl.attrib.get("id")
             if tl_id in nodes_dict:
                 node = nodes_dict[tl_id]
                 node_approaches = node["approaches"]
+                conns = tl_connections.get(tl_id, {})
                 
                 phase_idx = 1
                 for raw_sumo_phase_idx, p in enumerate(tl.findall("phase")):
                     state = p.attrib.get("state", "")
                     # Filter out yellow/red phases if state contains 'G' or 'g'
                     if "G" in state or "g" in state or not node["phases"]:
-                        # Map green light indexes in state string to node approaches
                         active_apps = []
-                        num_apps = len(node_approaches)
-                        if num_apps > 0:
-                            for idx, char in enumerate(state):
-                                if char in ("G", "g"):
-                                    app_target = node_approaches[idx % num_apps]
+                        movements = []
+                        
+                        for idx, char in enumerate(state):
+                            if char in ("G", "g"):
+                                if idx in conns:
+                                    app_target = conns[idx]["from_edge"]
+                                    to_e = conns[idx]["to_edge"]
+                                    if app_target not in active_apps:
+                                        active_apps.append(app_target)
+                                    movements.append({
+                                        "from_approach": app_target,
+                                        "to_edge": to_e,
+                                        "link_index": idx
+                                    })
+                                elif len(node_approaches) > 0:
+                                    app_target = node_approaches[idx % len(node_approaches)]
                                     if app_target not in active_apps:
                                         active_apps.append(app_target)
                         
                         if not active_apps and node_approaches:
-                            active_apps = [node_approaches[(phase_idx - 1) % num_apps]]
+                            active_apps = [node_approaches[(phase_idx - 1) % len(node_approaches)]]
 
-                        node["phases"].append({
+                        phase_dict = {
                             "phase_id": f"{tl_id}_PHASE_{phase_idx}",
                             "name": f"Phase {phase_idx} ({state})",
                             "approaches": active_apps,
                             "sumo_phase_index": raw_sumo_phase_idx
-                        })
+                        }
+                        if movements:
+                            phase_dict["movements"] = movements
+
+                        node["phases"].append(phase_dict)
                         phase_idx += 1
 
         # Fallback for traffic light nodes without explicit tlsLogic in XML
@@ -89,7 +124,7 @@ class SumoNetworkConverter:
                     }
                 ]
 
-        # 3. Parse Edges
+        # 4. Parse Edges
         edges = []
         for edge in root.findall("edge"):
             e_id = edge.attrib.get("id")

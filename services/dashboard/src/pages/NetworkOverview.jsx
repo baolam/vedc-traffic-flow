@@ -75,42 +75,41 @@ const NetworkOverview = () => {
       });
   }, [activeScenarioId, apiBase]);
 
-  // 3. Live telemetry update timer simulation
+  // 3. Live telemetry polling from API backend
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNodes(prev => {
-        const next = { ...prev };
-        const keys = Object.keys(next);
-        if (!keys.length) return prev;
-
-        keys.forEach(nodeId => {
-          const deltaQueue = Math.floor(Math.random() * 5) - 2;
-          const newQueue = Math.max(0, next[nodeId].total_queue + deltaQueue);
-          const newSpeed = Math.max(0.5, +(next[nodeId].speed + (Math.random() * 0.6 - 0.3)).toFixed(1));
-          
-          // Phase switching simulation logic
-          const currentPhase = next[nodeId].current_phase_id || `${nodeId}_PHASE_1`;
-          const phaseChange = Math.random() < 0.15;
-          let newPhase = currentPhase;
-          if (phaseChange) {
-            if (currentPhase.includes('NS')) newPhase = currentPhase.replace('NS', 'EW');
-            else if (currentPhase.includes('EW')) newPhase = currentPhase.replace('EW', 'NS');
-            else if (currentPhase.includes('PHASE_1')) newPhase = currentPhase.replace('PHASE_1', 'PHASE_2');
-            else if (currentPhase.includes('PHASE_2')) newPhase = currentPhase.replace('PHASE_2', 'PHASE_1');
+    const fetchLiveState = () => {
+      fetch(`${apiBase}/api/v1/network/state`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.nodes && data.nodes.length > 0) {
+            const updated = {};
+            data.nodes.forEach(n => {
+              const approaches = n.approaches || [];
+              const totalQ = approaches.reduce((acc, a) => acc + (a.queue_vehicles || 0), 0);
+              const avgSpd = approaches.length 
+                ? (approaches.reduce((acc, a) => acc + (a.mean_speed_mps || 0), 0) / approaches.length)
+                : 13.89;
+              
+              updated[n.node_id] = {
+                current_phase_id: n.current_phase_id || `${n.node_id}_PHASE_NS`,
+                total_queue: Math.round(totalQ * 10) / 10,
+                speed: Math.round(avgSpd * 10) / 10,
+                source_type: n.source_type || 'simulation',
+                status: n.status || 'ONLINE'
+              };
+            });
+            setNodes(updated);
           }
-
-          next[nodeId] = {
-            current_phase_id: newPhase,
-            total_queue: newQueue,
-            speed: newSpeed
-          };
+        })
+        .catch(() => {
+          // If live API unavailable, preserve last valid state or display offline
         });
-        return next;
-      });
-    }, 2000);
+    };
 
+    fetchLiveState();
+    const interval = setInterval(fetchLiveState, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [apiBase]);
 
   const handleScenarioChange = (e) => {
     const newId = e.target.value;

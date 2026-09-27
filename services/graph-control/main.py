@@ -6,16 +6,33 @@ from typing import Dict, Any
 
 from config import settings
 from graph_contracts_helper import load_topology, validate_payload
-from controller import MaxPressureController, FixedTimeController
+from controller import (
+    MaxPressureController, FixedTimeController, ActuatedController,
+    MaxQueueController, EdgeFlowController, PressLightRLController
+)
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("graph-control")
 
 def create_controller():
     controller_type = settings.edgeflow_controller.lower()
-    if controller_type == "max_pressure":
-        logger.info("Initializing MaxPressureController")
+    if controller_type == "edgeflow":
+        logger.info("Initializing EdgeFlowController (Downstream-aware)")
+        return EdgeFlowController()
+    elif controller_type == "actuated":
+        logger.info("Initializing ActuatedController (Demand-responsive gap-out)")
+        return ActuatedController()
+    elif controller_type == "max_pressure":
+        logger.info("Initializing MaxPressureController (Movement-based)")
         return MaxPressureController()
+    elif controller_type == "max_queue":
+        logger.info("Initializing MaxQueueController (Baseline queue-sum)")
+        return MaxQueueController()
+    elif controller_type in ["presslight_rl", "rl", "presslight", "rl_ppo"]:
+        logger.info("Initializing PressLightRLController (Deep Q-Network Agent)")
+        if not settings.rl_model_path:
+            raise ValueError("RL_MODEL_PATH is required for a learned RL controller")
+        return PressLightRLController(model_path=settings.rl_model_path)
     else:
         logger.info("Initializing FixedTimeController")
         return FixedTimeController()
@@ -28,6 +45,7 @@ def main():
 
     mqtt_host = settings.mqtt_host
     mqtt_port = settings.mqtt_port
+    network_state: Dict[str, Any] = {}
 
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -41,8 +59,14 @@ def main():
             payload = json.loads(msg.payload.decode("utf-8"))
             validate_payload(payload, "telemetry")
             node_id = payload["node_id"]
+            network_state[node_id] = payload
 
-            cmd = controller.compute_command(node_id, payload, topology)
+            cmd = controller.compute_command(
+                node_id=node_id, 
+                telemetry=payload, 
+                topology=topology,
+                network_state=network_state
+            )
             if not cmd:
                 logger.debug(f"Node {node_id} has no traffic light phases; skipping command.")
                 return

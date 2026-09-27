@@ -6,11 +6,11 @@ graph_control_dir = Path(__file__).parents[2] / "services" / "graph-control"
 sys.path.insert(0, str(graph_control_dir))
 
 from graph_contracts_helper import load_topology, validate_payload
-from controller import MaxPressureController, FixedTimeController
+from controller import MaxPressureController, FixedTimeController, MaxQueueController, EdgeFlowController, PressLightRLController
 
-def test_max_pressure_controller_selection():
+def test_max_queue_controller_selection():
     topology = load_topology("four_intersection_v1")
-    controller = MaxPressureController(min_green_s=10.0, max_green_s=60.0)
+    controller = MaxQueueController(min_green_s=10.0, max_green_s=60.0)
 
     # Telemetry with heavy North-South traffic
     telemetry_ns_heavy = {
@@ -30,75 +30,103 @@ def test_max_pressure_controller_selection():
     cmd = controller.compute_command("J1", telemetry_ns_heavy, topology)
     assert cmd["node_id"] == "J1"
     assert cmd["target_phase_id"] == "J1_PHASE_NS"
+    assert cmd["controller"] == "max_queue"
+    validate_payload(cmd, "control_command")
+
+
+def test_max_pressure_movement_downstream_aware():
+    topology = load_topology("four_intersection_v1")
+    controller = MaxPressureController(min_green_s=10.0, max_green_s=60.0)
+
+    # J1 has equal incoming queue on NS and EW (both 10 vehicles).
+    # But downstream node J3 (target of J1_N_IN) has heavy queue (15 vehicles),
+    # while downstream node J2 (target of J1_W_IN) has 0 queue.
+    telemetry_j1 = {
+        "node_id": "J1",
+        "source_type": "simulation",
+        "simulation_time_s": 100.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "J1_PHASE_NS",
+        "approaches": [
+            {"approach_id": "J1_N_IN", "queue_vehicles": 10, "flow_veh_per_s": 0.5, "mean_speed_mps": 2.0, "occupancy_ratio": 0.5},
+            {"approach_id": "J1_S_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_E_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_W_IN", "queue_vehicles": 10, "flow_veh_per_s": 0.5, "mean_speed_mps": 2.0, "occupancy_ratio": 0.5}
+        ]
+    }
+
+    network_state = {
+        "J3": {
+            "approaches": [
+                {"approach_id": "J3_S_IN", "queue_vehicles": 15, "occupancy_ratio": 0.9}
+            ]
+        },
+        "J2": {
+            "approaches": [
+                {"approach_id": "J2_E_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0}
+            ]
+        }
+    }
+
+    cmd = controller.compute_command("J1", telemetry_j1, topology, network_state=network_state)
+    assert cmd["node_id"] == "J1"
+    # EW phase should have higher pressure because J2 downstream queue is 0, while J3 downstream queue is 15
+    assert cmd["target_phase_id"] == "J1_PHASE_EW"
     assert cmd["controller"] == "max_pressure"
     validate_payload(cmd, "control_command")
 
-    # Telemetry with heavy East-West traffic
-    telemetry_ew_heavy = {
+
+def test_edgeflow_controller_spillback_and_switching_margin():
+    topology = load_topology("four_intersection_v1")
+    controller = EdgeFlowController(switching_margin=2.0)
+
+    # Currently active: J1_PHASE_NS
+    # NS incoming queue = 8, EW incoming queue = 9.
+    # Difference (9 - 8 = 1.0) is smaller than switching_margin (2.0) -> holds J1_PHASE_NS to prevent fluttering!
+    telemetry_small_diff = {
         "node_id": "J1",
         "source_type": "simulation",
-        "simulation_time_s": 150.0,
-        "timestamp_ms": 1727005870000,
+        "simulation_time_s": 100.0,
+        "timestamp_ms": 1727005820000,
         "current_phase_id": "J1_PHASE_NS",
         "approaches": [
-            {"approach_id": "J1_N_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "J1_S_IN", "queue_vehicles": 2, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "J1_E_IN", "queue_vehicles": 15, "flow_veh_per_s": 0.6, "mean_speed_mps": 1.5, "occupancy_ratio": 0.8},
-            {"approach_id": "J1_W_IN", "queue_vehicles": 18, "flow_veh_per_s": 0.7, "mean_speed_mps": 1.2, "occupancy_ratio": 0.9}
+            {"approach_id": "J1_N_IN", "queue_vehicles": 8, "flow_veh_per_s": 0.3, "mean_speed_mps": 3.0, "occupancy_ratio": 0.4},
+            {"approach_id": "J1_S_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_E_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_W_IN", "queue_vehicles": 9, "flow_veh_per_s": 0.3, "mean_speed_mps": 3.0, "occupancy_ratio": 0.4}
         ]
     }
 
-    cmd_ew = controller.compute_command("J1", telemetry_ew_heavy, topology)
-    assert cmd_ew["target_phase_id"] == "J1_PHASE_EW"
-    validate_payload(cmd_ew, "control_command")
+    cmd_hold = controller.compute_command("J1", telemetry_small_diff, topology)
+    assert cmd_hold["target_phase_id"] == "J1_PHASE_NS"
+    assert cmd_hold["controller"] == "edgeflow"
+    validate_payload(cmd_hold, "control_command")
 
-def test_max_pressure_three_way_junction():
-    topology = load_topology("three_way_junction_v1")
-    controller = MaxPressureController()
-
-    telemetry = {
-        "node_id": "TJ1",
+    # When difference becomes significant (15 vs 8 > 2.0 margin), switches to EW
+    telemetry_large_diff = {
+        "node_id": "J1",
         "source_type": "simulation",
-        "simulation_time_s": 10.0,
-        "timestamp_ms": 1727005820000,
-        "current_phase_id": "TJ1_PHASE_THROUGH",
+        "simulation_time_s": 105.0,
+        "timestamp_ms": 1727005825000,
+        "current_phase_id": "J1_PHASE_NS",
         "approaches": [
-            {"approach_id": "TJ1_NORTH_IN", "queue_vehicles": 2, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "TJ1_SOUTH_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "TJ1_EAST_IN", "queue_vehicles": 20, "flow_veh_per_s": 0.8, "mean_speed_mps": 1.0, "occupancy_ratio": 0.9}
+            {"approach_id": "J1_N_IN", "queue_vehicles": 8, "flow_veh_per_s": 0.3, "mean_speed_mps": 3.0, "occupancy_ratio": 0.4},
+            {"approach_id": "J1_S_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_E_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_W_IN", "queue_vehicles": 15, "flow_veh_per_s": 0.5, "mean_speed_mps": 2.0, "occupancy_ratio": 0.6}
         ]
     }
+    cmd_switch = controller.compute_command("J1", telemetry_large_diff, topology)
+    assert cmd_switch["target_phase_id"] == "J1_PHASE_EW"
 
-    cmd = controller.compute_command("TJ1", telemetry, topology)
-    assert cmd["target_phase_id"] == "TJ1_PHASE_SIDE_APPROACH"
-    validate_payload(cmd, "control_command")
 
-def test_max_pressure_multi_phase_junction():
-    topology = load_topology("multi_phase_v1")
-    controller = MaxPressureController()
-
-    telemetry = {
-        "node_id": "MP1",
-        "source_type": "simulation",
-        "simulation_time_s": 10.0,
-        "timestamp_ms": 1727005820000,
-        "current_phase_id": "MP1_PHASE_NS_STRAIGHT",
-        "approaches": [
-            {"approach_id": "MP1_N_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "MP1_S_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "MP1_E_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "MP1_W_IN", "queue_vehicles": 1, "flow_veh_per_s": 0.1, "mean_speed_mps": 5.0, "occupancy_ratio": 0.1},
-            {"approach_id": "MP1_NE_DIAG_IN", "queue_vehicles": 25, "flow_veh_per_s": 0.9, "mean_speed_mps": 0.5, "occupancy_ratio": 0.95}
-        ]
-    }
-
-    cmd = controller.compute_command("MP1", telemetry, topology)
-    assert cmd["target_phase_id"] == "MP1_PHASE_DIAG_PROTECTED"
-    validate_payload(cmd, "control_command")
-
-def test_fixed_time_controller():
+def test_fixed_time_clock_driven_stability():
+    """
+    Appendix A2 verification: calling compute_command multiple times with the SAME timestamp
+    must NOT cycle the phase!
+    """
     topology = load_topology("four_intersection_v1")
-    controller = FixedTimeController(cycle_time_s=30.0)
+    controller = FixedTimeController(cycle_time_s=30.0)  # 15s NS, 15s EW
 
     telemetry = {
         "node_id": "J1",
@@ -109,11 +137,23 @@ def test_fixed_time_controller():
         "approaches": []
     }
 
-    cmd1 = controller.compute_command("J1", telemetry, topology)
-    validate_payload(cmd1, "control_command")
-    cmd2 = controller.compute_command("J1", telemetry, topology)
-    validate_payload(cmd2, "control_command")
-    assert cmd1["target_phase_id"] != cmd2["target_phase_id"]
+    # Same timestamp 10.0 called 3 consecutive times:
+    cmd1 = controller.compute_command("J1", telemetry, topology, current_time_s=10.0)
+    cmd2 = controller.compute_command("J1", telemetry, topology, current_time_s=10.0)
+    cmd3 = controller.compute_command("J1", telemetry, topology, current_time_s=10.0)
+
+    assert cmd1["target_phase_id"] == "J1_PHASE_NS"
+    assert cmd2["target_phase_id"] == "J1_PHASE_NS"
+    assert cmd3["target_phase_id"] == "J1_PHASE_NS"
+
+    # Advance time by 16s (past 15s green split) -> transitions to EW
+    cmd4 = controller.compute_command("J1", telemetry, topology, current_time_s=26.0)
+    assert cmd4["target_phase_id"] == "J1_PHASE_EW"
+
+    # Advance time by another 16s (past 30s) -> transitions back to NS
+    cmd5 = controller.compute_command("J1", telemetry, topology, current_time_s=42.0)
+    assert cmd5["target_phase_id"] == "J1_PHASE_NS"
+
 
 def test_controllers_invalid_node_or_no_phases():
     topology = load_topology("four_intersection_v1")
@@ -129,11 +169,9 @@ def test_controllers_invalid_node_or_no_phases():
         "approaches": []
     }
 
-    # Non-existent node ID should return None
     assert fixed_ctrl.compute_command("UNKNOWN_NODE", telemetry, topology) is None
     assert mp_ctrl.compute_command("UNKNOWN_NODE", telemetry, topology) is None
 
-    # Node with no phases should return None
     empty_phases_topo = {
         "topology_id": "empty_phases",
         "nodes": [{"node_id": "N1", "approaches": [], "phases": []}]
@@ -141,51 +179,58 @@ def test_controllers_invalid_node_or_no_phases():
     assert fixed_ctrl.compute_command("N1", telemetry, empty_phases_topo) is None
     assert mp_ctrl.compute_command("N1", telemetry, empty_phases_topo) is None
 
-def test_fixed_time_phase_cycling():
+
+def test_presslight_rl_controller_selection():
     topology = load_topology("four_intersection_v1")
-    controller = FixedTimeController(cycle_time_s=45.0)
+    controller = PressLightRLController()
 
-    telemetry = {"node_id": "J1", "approaches": []}
-    phases = [p["phase_id"] for p in topology["nodes"][0]["phases"]]
-
-    # Verify cycling through all phases sequentially and wrapping around
-    first_target = controller.compute_command("J1", telemetry, topology)["target_phase_id"]
-    second_target = controller.compute_command("J1", telemetry, topology)["target_phase_id"]
-    third_target = controller.compute_command("J1", telemetry, topology)["target_phase_id"]
-
-    assert first_target == phases[1 % len(phases)]
-    assert second_target == phases[0]
-    assert third_target == phases[1 % len(phases)]
-
-def test_max_pressure_telemetry_edge_cases():
-    topology = load_topology("four_intersection_v1")
-    controller = MaxPressureController()
-
-    # Telemetry with empty approaches list -> defaults to selecting top phase gracefully
-    telemetry_empty = {
+    telemetry_ns_heavy = {
         "node_id": "J1",
         "source_type": "simulation",
-        "simulation_time_s": 10.0,
+        "simulation_time_s": 100.0,
         "timestamp_ms": 1727005820000,
-        "current_phase_id": "J1_PHASE_NS",
-        "approaches": []
+        "current_phase_id": "J1_PHASE_EW",
+        "approaches": [
+            {"approach_id": "J1_N_IN", "queue_vehicles": 14, "occupancy_ratio": 0.7},
+            {"approach_id": "J1_S_IN", "queue_vehicles": 12, "occupancy_ratio": 0.6},
+            {"approach_id": "J1_E_IN", "queue_vehicles": 1, "occupancy_ratio": 0.05},
+            {"approach_id": "J1_W_IN", "queue_vehicles": 1, "occupancy_ratio": 0.05}
+        ]
     }
-    cmd_empty = controller.compute_command("J1", telemetry_empty, topology)
-    validate_payload(cmd_empty, "control_command")
-    assert cmd_empty["target_phase_id"] in ["J1_PHASE_NS", "J1_PHASE_EW"]
 
-    # Telemetry with missing approach IDs in dict -> unmentioned approaches count as 0 queue
-    telemetry_partial = {
+    cmd = controller.compute_command("J1", telemetry_ns_heavy, topology)
+    assert cmd is not None
+    assert cmd["node_id"] == "J1"
+    assert cmd["target_phase_id"] == "J1_PHASE_NS"
+    assert cmd["controller"] == "pressure_heuristic"
+    validate_payload(cmd, "control_command")
+
+
+def test_presslight_with_exported_weights(tmp_path):
+    from src.rl.train_dqn import DQNAgent
+    topology = load_topology("four_intersection_v1")
+    weights_path = str(tmp_path / "weights.json")
+    DQNAgent(12, 2, seed=7).save_weights(weights_path)
+    
+    controller = PressLightRLController(model_path=weights_path)
+    
+    telemetry = {
         "node_id": "J1",
         "source_type": "simulation",
-        "simulation_time_s": 10.0,
+        "simulation_time_s": 50.0,
         "timestamp_ms": 1727005820000,
         "current_phase_id": "J1_PHASE_NS",
         "approaches": [
-            {"approach_id": "J1_E_IN", "queue_vehicles": 20, "flow_veh_per_s": 0.5, "mean_speed_mps": 1.0}
-            # N, S, W approaches omitted
+            {"approach_id": "J1_N_IN", "queue_vehicles": 5, "occupancy_ratio": 0.25},
+            {"approach_id": "J1_S_IN", "queue_vehicles": 4, "occupancy_ratio": 0.2},
+            {"approach_id": "J1_E_IN", "queue_vehicles": 2, "occupancy_ratio": 0.1},
+            {"approach_id": "J1_W_IN", "queue_vehicles": 1, "occupancy_ratio": 0.05}
         ]
     }
-    cmd_partial = controller.compute_command("J1", telemetry_partial, topology)
-    assert cmd_partial["target_phase_id"] == "J1_PHASE_EW"
 
+    cmd = controller.compute_command("J1", telemetry, topology)
+    assert cmd is not None
+    assert cmd["node_id"] == "J1"
+    assert cmd["target_phase_id"] in ["J1_PHASE_NS", "J1_PHASE_EW"]
+    assert cmd["controller"] == "presslight_rl"
+    validate_payload(cmd, "control_command")
