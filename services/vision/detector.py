@@ -41,8 +41,28 @@ class VehicleDetector:
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
             self.output_names = self.net.getUnconnectedOutLayersNames()
             self.model_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+            self._self_test(path)
         else:
             self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=25, detectShadows=False)
+
+    def _self_test(self, path):
+        """One blank forward at load: an OpenCV build that cannot execute the graph, or a
+        class count that does not match the export, fails at startup instead of on frame 1."""
+        blank = np.zeros((1, 3, self.input_size, self.input_size), dtype=np.float32)
+        try:
+            self.net.setInput(blank)
+            outputs = self.net.forward(self.output_names)
+        except cv2.error as exc:
+            # Raw YOLOv8/11 ONNX hits a shape_utils assertion in OpenCV 4.6/4.7 (checked 4.6.0, 4.7.0).
+            raise RuntimeError(
+                f"OpenCV {cv2.__version__} cannot run {path.name}: {str(exc).strip()}. "
+                "YOLOv8/YOLO11 ONNX needs OpenCV >= 4.8; Raspberry Pi OS Bookworm's python3-opencv "
+                "is 4.6, use Raspberry Pi OS Trixie (4.10)") from exc
+        try:
+            self.postprocess(outputs, (self.input_size, self.input_size, 3), (1.0, 0, 0))
+        except ValueError as exc:
+            raise ValueError(f"{path.name} does not match DETECTOR_OUTPUT_FORMAT="
+                             f"{self.output_format}/DETECTOR_NUM_CLASSES={self.num_classes}: {exc}") from exc
 
     @property
     def backend(self):
