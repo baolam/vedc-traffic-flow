@@ -161,6 +161,12 @@ def run_demo_simulation(
     emission_out = output_dir / "emission.xml"
     csv_out = output_dir / "metrics.csv"
 
+    # Ensure raster vehicles folder (car, motorcycle, taxi, bus, truck PNGs) is present in output_dir
+    src_vehicles_dir = sumo_configs_dir / "vehicles"
+    dst_vehicles_dir = output_dir / "vehicles"
+    if src_vehicles_dir.exists() and not dst_vehicles_dir.exists():
+        shutil.copytree(src_vehicles_dir, dst_vehicles_dir, dirs_exist_ok=True)
+
     # Handle hcm_corridor real-world topology natively
     if resolved_topo == "hcm_corridor" and topo_config_dir.exists():
         sumocfg_path = topo_config_dir / "hcm_corridor.sumocfg"

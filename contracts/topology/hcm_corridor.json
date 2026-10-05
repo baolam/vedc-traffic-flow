@@ -1,12 +1,38 @@
 {
   "topology_id": "hcm_corridor",
   "version": "1.0",
-  "name": "TP.HCM Urban Corridor Graph (29 Traffic Light Junctions)",
-  "description": "Canonical TP.HCM urban corridor network with 29 traffic light intersections, polygon map layer, and raster vehicle fleet icons.",
   "nodes": [
     {
+      "node_id": "11082694019",
+      "name": "SUMO Junction 11082694019",
+      "type": "priority",
+      "approaches": [
+        "-32576061#0"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "11082694020",
+      "name": "SUMO Junction 11082694020",
+      "type": "priority",
+      "approaches": [
+        "606543124"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "11553495260",
+      "name": "SUMO Junction 11553495260",
+      "type": "priority",
+      "approaches": [
+        "1243137731"
+      ],
+      "phases": []
+    },
+    {
       "node_id": "2217938301",
-      "name": "Junction 2217938301",
+      "name": "SUMO Junction 2217938301",
+      "type": "traffic_light",
       "approaches": [
         "-211849412",
         "-32576065#1",
@@ -14,53 +40,228 @@
       ],
       "phases": [
         {
-          "phase_id": "2217938301_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217938301_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-211849412",
-            "-32576065#1"
+            "32576065#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-211849412",
+              "to_edge": "-32576065#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-211849412",
+              "to_edge": "32576065#1",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-211849412",
+              "to_edge": "211849412",
+              "link_index": 2
+            },
+            {
+              "from_approach": "32576065#0",
+              "to_edge": "32576065#1",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32576065#0",
+              "to_edge": "211849412",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576065#0",
+              "to_edge": "-32576065#0",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "2217938301_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217938301_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "32576065#0"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "32576065#0",
+              "to_edge": "32576065#1",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217938301_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "-32576065#1",
+            "32576065#0"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32576065#1",
+              "to_edge": "211849412",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32576065#1",
+              "to_edge": "-32576065#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32576065#1",
+              "to_edge": "32576065#1",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32576065#0",
+              "to_edge": "32576065#1",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217938301_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "32576065#0"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "32576065#0",
+              "to_edge": "32576065#1",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
       "node_id": "2217938309",
-      "name": "Junction 2217938309",
+      "name": "SUMO Junction 2217938309",
+      "type": "traffic_light",
       "approaches": [
-        "-32576061#4",
         "-211849413#0",
-        "32576061#3",
-        "1061035915#2"
+        "-32576061#4",
+        "1061035915#2",
+        "32576061#3"
       ],
       "phases": [
         {
-          "phase_id": "2217938309_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217938309_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "-32576061#4",
-            "-211849413#0"
+            "-211849413#0",
+            "1061035915#2"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-211849413#0",
+              "to_edge": "32576061#4",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-211849413#0",
+              "to_edge": "-1061035915#2",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-211849413#0",
+              "to_edge": "-32576061#3",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-211849413#0",
+              "to_edge": "211849413#0",
+              "link_index": 7
+            },
+            {
+              "from_approach": "1061035915#2",
+              "to_edge": "-32576061#3",
+              "link_index": 12
+            },
+            {
+              "from_approach": "1061035915#2",
+              "to_edge": "211849413#0",
+              "link_index": 13
+            },
+            {
+              "from_approach": "1061035915#2",
+              "to_edge": "32576061#4",
+              "link_index": 14
+            },
+            {
+              "from_approach": "1061035915#2",
+              "to_edge": "-1061035915#2",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "2217938309_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217938309_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "32576061#3",
-            "1061035915#2"
+            "-32576061#4",
+            "32576061#3"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32576061#4",
+              "to_edge": "-1061035915#2",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576061#4",
+              "to_edge": "-32576061#3",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576061#4",
+              "to_edge": "211849413#0",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576061#4",
+              "to_edge": "32576061#4",
+              "link_index": 3
+            },
+            {
+              "from_approach": "32576061#3",
+              "to_edge": "211849413#0",
+              "link_index": 8
+            },
+            {
+              "from_approach": "32576061#3",
+              "to_edge": "32576061#4",
+              "link_index": 9
+            },
+            {
+              "from_approach": "32576061#3",
+              "to_edge": "-1061035915#2",
+              "link_index": 10
+            },
+            {
+              "from_approach": "32576061#3",
+              "to_edge": "-32576061#3",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
       "node_id": "2217938311",
-      "name": "Junction 2217938311",
+      "name": "SUMO Junction 2217938311",
+      "type": "traffic_light",
       "approaches": [
         "-290729088#0",
         "-290729089",
@@ -68,25 +269,113 @@
       ],
       "phases": [
         {
-          "phase_id": "2217938311_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217938311_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-290729088#0",
-            "-290729089"
+            "211849415#1"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-290729088#0",
+              "to_edge": "-211849415#1",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-290729088#0",
+              "to_edge": "290729089",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-290729088#0",
+              "to_edge": "290729088#0",
+              "link_index": 2
+            },
+            {
+              "from_approach": "211849415#1",
+              "to_edge": "290729089",
+              "link_index": 6
+            },
+            {
+              "from_approach": "211849415#1",
+              "to_edge": "290729088#0",
+              "link_index": 7
+            },
+            {
+              "from_approach": "211849415#1",
+              "to_edge": "-211849415#1",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "2217938311_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217938311_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "211849415#1"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "211849415#1",
+              "to_edge": "290729089",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217938311_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "-290729089",
+            "211849415#1"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-290729089",
+              "to_edge": "290729088#0",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-290729089",
+              "to_edge": "-211849415#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-290729089",
+              "to_edge": "290729089",
+              "link_index": 5
+            },
+            {
+              "from_approach": "211849415#1",
+              "to_edge": "290729089",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217938311_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "211849415#1"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "211849415#1",
+              "to_edge": "290729089",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
       "node_id": "2217938313",
-      "name": "Junction 2217938313",
+      "name": "SUMO Junction 2217938313",
+      "type": "traffic_light",
       "approaches": [
         "-32577015#7",
         "211849412",
@@ -94,81 +383,352 @@
       ],
       "phases": [
         {
-          "phase_id": "2217938313_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217938313_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-32577015#7",
-            "211849412"
+            "32577015#6"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32577015#7",
+              "to_edge": "-32577015#6",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32577015#7",
+              "to_edge": "-211849412",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32577015#7",
+              "to_edge": "32577015#7",
+              "link_index": 2
+            },
+            {
+              "from_approach": "32577015#6",
+              "to_edge": "-211849412",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32577015#6",
+              "to_edge": "32577015#7",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32577015#6",
+              "to_edge": "-32577015#6",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "2217938313_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217938313_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "32577015#6"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "32577015#6",
+              "to_edge": "-211849412",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217938313_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "211849412",
+            "32577015#6"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "211849412",
+              "to_edge": "32577015#7",
+              "link_index": 3
+            },
+            {
+              "from_approach": "211849412",
+              "to_edge": "-32577015#6",
+              "link_index": 4
+            },
+            {
+              "from_approach": "211849412",
+              "to_edge": "-211849412",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32577015#6",
+              "to_edge": "-211849412",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217938313_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "32577015#6"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "32577015#6",
+              "to_edge": "-211849412",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
       "node_id": "2217938327",
-      "name": "Junction 2217938327",
+      "name": "SUMO Junction 2217938327",
+      "type": "traffic_light",
       "approaches": [
-        "-32576061#3",
         "-290729088#3",
-        "32576061#2",
-        "290729088#2"
+        "-32576061#3",
+        "290729088#2",
+        "32576061#2"
       ],
       "phases": [
         {
-          "phase_id": "2217938327_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217938327_PHASE_1",
+          "name": "Phase 1 (GGggrrrrGGggrrrr)",
           "approaches": [
             "-32576061#3",
-            "-290729088#3"
+            "32576061#2"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576061#3",
+              "to_edge": "-290729088#2",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576061#3",
+              "to_edge": "-32576061#2",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576061#3",
+              "to_edge": "290729088#3",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576061#3",
+              "to_edge": "32576061#3",
+              "link_index": 3
+            },
+            {
+              "from_approach": "32576061#2",
+              "to_edge": "290729088#3",
+              "link_index": 8
+            },
+            {
+              "from_approach": "32576061#2",
+              "to_edge": "32576061#3",
+              "link_index": 9
+            },
+            {
+              "from_approach": "32576061#2",
+              "to_edge": "-290729088#2",
+              "link_index": 10
+            },
+            {
+              "from_approach": "32576061#2",
+              "to_edge": "-32576061#2",
+              "link_index": 11
+            }
           ]
         },
         {
-          "phase_id": "2217938327_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217938327_PHASE_2",
+          "name": "Phase 2 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "32576061#2",
+            "-290729088#3",
             "290729088#2"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-290729088#3",
+              "to_edge": "32576061#3",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-290729088#3",
+              "to_edge": "-290729088#2",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-290729088#3",
+              "to_edge": "-32576061#2",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-290729088#3",
+              "to_edge": "290729088#3",
+              "link_index": 7
+            },
+            {
+              "from_approach": "290729088#2",
+              "to_edge": "-32576061#2",
+              "link_index": 12
+            },
+            {
+              "from_approach": "290729088#2",
+              "to_edge": "290729088#3",
+              "link_index": 13
+            },
+            {
+              "from_approach": "290729088#2",
+              "to_edge": "32576061#3",
+              "link_index": 14
+            },
+            {
+              "from_approach": "290729088#2",
+              "to_edge": "-290729088#2",
+              "link_index": 15
+            }
           ]
         }
       ]
     },
     {
       "node_id": "2217939289",
-      "name": "Junction 2217939289",
+      "name": "SUMO Junction 2217939289",
+      "type": "traffic_light",
       "approaches": [
         "-211849500#0",
+        "-32576063",
         "1060982830",
-        "606543127",
-        "-32576063"
+        "606543127"
       ],
       "phases": [
         {
-          "phase_id": "2217939289_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217939289_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "-211849500#0",
-            "1060982830"
+            "1060982830",
+            "-32576063"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "1060982830",
+              "to_edge": "211849500#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "1060982830",
+              "to_edge": "32576063",
+              "link_index": 5
+            },
+            {
+              "from_approach": "1060982830",
+              "to_edge": "-606543127",
+              "link_index": 6
+            },
+            {
+              "from_approach": "1060982830",
+              "to_edge": "-1060982830",
+              "link_index": 7
+            },
+            {
+              "from_approach": "-32576063",
+              "to_edge": "-606543127",
+              "link_index": 12
+            },
+            {
+              "from_approach": "-32576063",
+              "to_edge": "-1060982830",
+              "link_index": 13
+            },
+            {
+              "from_approach": "-32576063",
+              "to_edge": "211849500#0",
+              "link_index": 14
+            },
+            {
+              "from_approach": "-32576063",
+              "to_edge": "32576063",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "2217939289_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217939289_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "606543127",
-            "-32576063"
+            "-211849500#0",
+            "606543127"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-211849500#0",
+              "to_edge": "32576063",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-211849500#0",
+              "to_edge": "-606543127",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-211849500#0",
+              "to_edge": "-1060982830",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-211849500#0",
+              "to_edge": "211849500#0",
+              "link_index": 3
+            },
+            {
+              "from_approach": "606543127",
+              "to_edge": "-1060982830",
+              "link_index": 8
+            },
+            {
+              "from_approach": "606543127",
+              "to_edge": "211849500#0",
+              "link_index": 9
+            },
+            {
+              "from_approach": "606543127",
+              "to_edge": "32576063",
+              "link_index": 10
+            },
+            {
+              "from_approach": "606543127",
+              "to_edge": "-606543127",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
+      "node_id": "2217939290",
+      "name": "SUMO Junction 2217939290",
+      "type": "priority",
+      "approaches": [
+        "32576064#1"
+      ],
+      "phases": []
+    },
+    {
       "node_id": "2217939291",
-      "name": "Junction 2217939291",
+      "name": "SUMO Junction 2217939291",
+      "type": "traffic_light",
       "approaches": [
         "-211849500#1",
         "211849499",
@@ -176,105 +736,490 @@
       ],
       "phases": [
         {
-          "phase_id": "2217939291_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2217939291_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-211849500#1",
-            "211849499"
+            "211849500#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-211849500#1",
+              "to_edge": "-211849500#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-211849500#1",
+              "to_edge": "-211849499",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-211849500#1",
+              "to_edge": "211849500#1",
+              "link_index": 2
+            },
+            {
+              "from_approach": "211849500#0",
+              "to_edge": "-211849499",
+              "link_index": 6
+            },
+            {
+              "from_approach": "211849500#0",
+              "to_edge": "211849500#1",
+              "link_index": 7
+            },
+            {
+              "from_approach": "211849500#0",
+              "to_edge": "-211849500#0",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "2217939291_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2217939291_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "211849500#0"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "211849500#0",
+              "to_edge": "-211849499",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217939291_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "211849499",
+            "211849500#0"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "211849499",
+              "to_edge": "211849500#1",
+              "link_index": 3
+            },
+            {
+              "from_approach": "211849499",
+              "to_edge": "-211849500#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "211849499",
+              "to_edge": "-211849499",
+              "link_index": 5
+            },
+            {
+              "from_approach": "211849500#0",
+              "to_edge": "-211849499",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2217939291_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "211849500#0"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "211849500#0",
+              "to_edge": "-211849499",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
-      "node_id": "2938641215",
-      "name": "Junction 2938641215",
+      "node_id": "2938641204",
+      "name": "SUMO Junction 2938641204",
+      "type": "priority",
       "approaches": [
-        "290307095",
+        "-290307095"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "2938641215",
+      "name": "SUMO Junction 2938641215",
+      "type": "traffic_light",
+      "approaches": [
         "-32577015#6",
+        "290307095",
         "32577015#5"
       ],
       "phases": [
         {
-          "phase_id": "2938641215_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2938641215_PHASE_1",
+          "name": "Phase 1 (rrrGGGg)",
+          "approaches": [
+            "-32577015#6",
+            "32577015#5"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32577015#6",
+              "to_edge": "-290307095",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32577015#6",
+              "to_edge": "-32577015#5",
+              "link_index": 4
+            },
+            {
+              "from_approach": "32577015#5",
+              "to_edge": "32577015#6",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32577015#5",
+              "to_edge": "-290307095",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "2938641215_PHASE_2",
+          "name": "Phase 2 (rrrGyyy)",
+          "approaches": [
+            "-32577015#6"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32577015#6",
+              "to_edge": "-290307095",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "2938641215_PHASE_3",
+          "name": "Phase 3 (GGgGrrr)",
           "approaches": [
             "290307095",
             "-32577015#6"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "290307095",
+              "to_edge": "-32577015#5",
+              "link_index": 0
+            },
+            {
+              "from_approach": "290307095",
+              "to_edge": "32577015#6",
+              "link_index": 1
+            },
+            {
+              "from_approach": "290307095",
+              "to_edge": "-290307095",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32577015#6",
+              "to_edge": "-290307095",
+              "link_index": 3
+            }
           ]
         },
         {
-          "phase_id": "2938641215_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2938641215_PHASE_4",
+          "name": "Phase 4 (yyyGrrr)",
           "approaches": [
-            "32577015#5"
+            "-32577015#6"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32577015#6",
+              "to_edge": "-290307095",
+              "link_index": 3
+            }
           ]
         }
       ]
+    },
+    {
+      "node_id": "2942327937",
+      "name": "SUMO Junction 2942327937",
+      "type": "dead_end",
+      "approaches": [
+        "290729090#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "2942327967",
+      "name": "SUMO Junction 2942327967",
+      "type": "priority",
+      "approaches": [
+        "290729094#1"
+      ],
+      "phases": []
     },
     {
       "node_id": "2942327970",
-      "name": "Junction 2942327970",
+      "name": "SUMO Junction 2942327970",
+      "type": "traffic_light",
       "approaches": [
-        "-32576064#1",
         "-290729095#1",
-        "32576064#0",
-        "290729095#0"
+        "-32576064#1",
+        "290729095#0",
+        "32576064#0"
       ],
       "phases": [
         {
-          "phase_id": "2942327970_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2942327970_PHASE_1",
+          "name": "Phase 1 (GGggrrrrGGggrrrr)",
           "approaches": [
             "-32576064#1",
-            "-290729095#1"
+            "32576064#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576064#1",
+              "to_edge": "-290729095#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576064#1",
+              "to_edge": "-32576064#0",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576064#1",
+              "to_edge": "290729095#1",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576064#1",
+              "to_edge": "32576064#1",
+              "link_index": 3
+            },
+            {
+              "from_approach": "32576064#0",
+              "to_edge": "290729095#1",
+              "link_index": 8
+            },
+            {
+              "from_approach": "32576064#0",
+              "to_edge": "32576064#1",
+              "link_index": 9
+            },
+            {
+              "from_approach": "32576064#0",
+              "to_edge": "-290729095#0",
+              "link_index": 10
+            },
+            {
+              "from_approach": "32576064#0",
+              "to_edge": "-32576064#0",
+              "link_index": 11
+            }
           ]
         },
         {
-          "phase_id": "2942327970_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2942327970_PHASE_2",
+          "name": "Phase 2 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "32576064#0",
+            "-290729095#1",
             "290729095#0"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-290729095#1",
+              "to_edge": "32576064#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-290729095#1",
+              "to_edge": "-290729095#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-290729095#1",
+              "to_edge": "-32576064#0",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-290729095#1",
+              "to_edge": "290729095#1",
+              "link_index": 7
+            },
+            {
+              "from_approach": "290729095#0",
+              "to_edge": "-32576064#0",
+              "link_index": 12
+            },
+            {
+              "from_approach": "290729095#0",
+              "to_edge": "290729095#1",
+              "link_index": 13
+            },
+            {
+              "from_approach": "290729095#0",
+              "to_edge": "32576064#1",
+              "link_index": 14
+            },
+            {
+              "from_approach": "290729095#0",
+              "to_edge": "-290729095#0",
+              "link_index": 15
+            }
           ]
         }
       ]
+    },
+    {
+      "node_id": "2942327975",
+      "name": "SUMO Junction 2942327975",
+      "type": "priority",
+      "approaches": [
+        "290729088#3"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "2942327991",
+      "name": "SUMO Junction 2942327991",
+      "type": "priority",
+      "approaches": [
+        "-290729098"
+      ],
+      "phases": []
     },
     {
       "node_id": "2942327993",
-      "name": "Junction 2942327993",
+      "name": "SUMO Junction 2942327993",
+      "type": "traffic_light",
       "approaches": [
-        "290729098",
+        "-32577015#0",
         "-32585157#1",
-        "-32577015#0"
+        "290729098"
       ],
       "phases": [
         {
-          "phase_id": "2942327993_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "2942327993_PHASE_1",
+          "name": "Phase 1 (rrrGGGg)",
           "approaches": [
-            "290729098",
-            "-32585157#1"
+            "-32585157#1",
+            "-32577015#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32585157#1",
+              "to_edge": "-290729098",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32585157#1",
+              "to_edge": "-32585157#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32577015#0",
+              "to_edge": "32585157#1",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-32577015#0",
+              "to_edge": "-290729098",
+              "link_index": 6
+            }
           ]
         },
         {
-          "phase_id": "2942327993_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "2942327993_PHASE_2",
+          "name": "Phase 2 (rrrGyyy)",
           "approaches": [
-            "-32577015#0"
+            "-32585157#1"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32585157#1",
+              "to_edge": "-290729098",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "2942327993_PHASE_3",
+          "name": "Phase 3 (GGgGrrr)",
+          "approaches": [
+            "290729098",
+            "-32585157#1"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "290729098",
+              "to_edge": "-32585157#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "290729098",
+              "to_edge": "32585157#1",
+              "link_index": 1
+            },
+            {
+              "from_approach": "290729098",
+              "to_edge": "-290729098",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32585157#1",
+              "to_edge": "-290729098",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "2942327993_PHASE_4",
+          "name": "Phase 4 (yyyGrrr)",
+          "approaches": [
+            "-32585157#1"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32585157#1",
+              "to_edge": "-290729098",
+              "link_index": 3
+            }
           ]
         }
       ]
     },
     {
+      "node_id": "366377391",
+      "name": "SUMO Junction 366377391",
+      "type": "priority",
+      "approaches": [
+        "32585157#1"
+      ],
+      "phases": []
+    },
+    {
       "node_id": "366384741",
-      "name": "Junction 366384741",
+      "name": "SUMO Junction 366384741",
+      "type": "traffic_light",
       "approaches": [
         "-32577015#9",
         "211849500#1",
@@ -282,213 +1227,1053 @@
       ],
       "phases": [
         {
-          "phase_id": "366384741_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "366384741_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-32577015#9",
-            "211849500#1"
+            "32577015#8"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32577015#9",
+              "to_edge": "-32577015#8",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32577015#9",
+              "to_edge": "-211849500#1",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32577015#9",
+              "to_edge": "32577015#9",
+              "link_index": 2
+            },
+            {
+              "from_approach": "32577015#8",
+              "to_edge": "-211849500#1",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32577015#8",
+              "to_edge": "32577015#9",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32577015#8",
+              "to_edge": "-32577015#8",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "366384741_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "366384741_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "32577015#8"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "32577015#8",
+              "to_edge": "-211849500#1",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "366384741_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "211849500#1",
+            "32577015#8"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "211849500#1",
+              "to_edge": "32577015#9",
+              "link_index": 3
+            },
+            {
+              "from_approach": "211849500#1",
+              "to_edge": "-32577015#8",
+              "link_index": 4
+            },
+            {
+              "from_approach": "211849500#1",
+              "to_edge": "-211849500#1",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32577015#8",
+              "to_edge": "-211849500#1",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "366384741_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "32577015#8"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "32577015#8",
+              "to_edge": "-211849500#1",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
       "node_id": "366400259",
-      "name": "Junction 366400259",
+      "name": "SUMO Junction 366400259",
+      "type": "traffic_light",
       "approaches": [
-        "-32577015#1",
         "-32576066#0",
+        "-32577015#1",
         "-32585157#0"
       ],
       "phases": [
         {
-          "phase_id": "366400259_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "366400259_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-32577015#1",
-            "-32576066#0"
+            "-32585157#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32577015#1",
+              "to_edge": "-32577015#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32577015#1",
+              "to_edge": "32576066#0",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32577015#1",
+              "to_edge": "32577015#1",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32585157#0",
+              "to_edge": "32576066#0",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-32585157#0",
+              "to_edge": "32577015#1",
+              "link_index": 7
+            },
+            {
+              "from_approach": "-32585157#0",
+              "to_edge": "-32577015#0",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "366400259_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "366400259_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "-32585157#0"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32585157#0",
+              "to_edge": "32576066#0",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "366400259_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "-32576066#0",
+            "-32585157#0"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32576066#0",
+              "to_edge": "32577015#1",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32576066#0",
+              "to_edge": "-32577015#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32576066#0",
+              "to_edge": "32576066#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-32585157#0",
+              "to_edge": "32576066#0",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "366400259_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "-32585157#0"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32585157#0",
+              "to_edge": "32576066#0",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
       "node_id": "366415782",
-      "name": "Junction 366415782",
+      "name": "SUMO Junction 366415782",
+      "type": "traffic_light",
       "approaches": [
+        "-211849499",
+        "-290729094#0",
         "-32576061#6",
         "-32576064#0",
-        "-290729094#0",
-        "32576061#5",
-        "-211849499"
+        "32576061#5"
       ],
       "phases": [
         {
-          "phase_id": "366415782_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "366415782_PHASE_1",
+          "name": "Phase 1 (rrrrrrrrrrGGGggrrrrrGGggg)",
           "approaches": [
-            "-32576061#6",
-            "-32576064#0"
+            "-290729094#0",
+            "-211849499"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "32576064#0",
+              "link_index": 10
+            },
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "32576061#6",
+              "link_index": 11
+            },
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "211849499",
+              "link_index": 12
+            },
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "-32576061#5",
+              "link_index": 13
+            },
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "290729094#0",
+              "link_index": 14
+            },
+            {
+              "from_approach": "-211849499",
+              "to_edge": "-32576061#5",
+              "link_index": 20
+            },
+            {
+              "from_approach": "-211849499",
+              "to_edge": "290729094#0",
+              "link_index": 21
+            },
+            {
+              "from_approach": "-211849499",
+              "to_edge": "32576064#0",
+              "link_index": 22
+            },
+            {
+              "from_approach": "-211849499",
+              "to_edge": "32576061#6",
+              "link_index": 23
+            },
+            {
+              "from_approach": "-211849499",
+              "to_edge": "211849499",
+              "link_index": 24
+            }
           ]
         },
         {
-          "phase_id": "366415782_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "366415782_PHASE_2",
+          "name": "Phase 2 (GGgggrrrrrrrrrrGGGggrrrrr)",
           "approaches": [
-            "-290729094#0",
-            "32576061#5",
-            "-211849499"
+            "-32576061#6",
+            "32576061#5"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32576061#6",
+              "to_edge": "211849499",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576061#6",
+              "to_edge": "-32576061#5",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576061#6",
+              "to_edge": "290729094#0",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576061#6",
+              "to_edge": "32576064#0",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32576061#6",
+              "to_edge": "32576061#6",
+              "link_index": 4
+            },
+            {
+              "from_approach": "32576061#5",
+              "to_edge": "290729094#0",
+              "link_index": 15
+            },
+            {
+              "from_approach": "32576061#5",
+              "to_edge": "32576064#0",
+              "link_index": 16
+            },
+            {
+              "from_approach": "32576061#5",
+              "to_edge": "32576061#6",
+              "link_index": 17
+            },
+            {
+              "from_approach": "32576061#5",
+              "to_edge": "211849499",
+              "link_index": 18
+            },
+            {
+              "from_approach": "32576061#5",
+              "to_edge": "-32576061#5",
+              "link_index": 19
+            }
+          ]
+        },
+        {
+          "phase_id": "366415782_PHASE_3",
+          "name": "Phase 3 (rrrrrGGGGgGrrrrrrrrrrrrrr)",
+          "approaches": [
+            "-32576064#0",
+            "-290729094#0"
+          ],
+          "sumo_phase_index": 4,
+          "movements": [
+            {
+              "from_approach": "-32576064#0",
+              "to_edge": "32576061#6",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-32576064#0",
+              "to_edge": "211849499",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-32576064#0",
+              "to_edge": "-32576061#5",
+              "link_index": 7
+            },
+            {
+              "from_approach": "-32576064#0",
+              "to_edge": "290729094#0",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-32576064#0",
+              "to_edge": "32576064#0",
+              "link_index": 9
+            },
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "32576064#0",
+              "link_index": 10
+            }
+          ]
+        },
+        {
+          "phase_id": "366415782_PHASE_4",
+          "name": "Phase 4 (rrrrryyyyyGrrrrrrrrrrrrrr)",
+          "approaches": [
+            "-290729094#0"
+          ],
+          "sumo_phase_index": 5,
+          "movements": [
+            {
+              "from_approach": "-290729094#0",
+              "to_edge": "32576064#0",
+              "link_index": 10
+            }
           ]
         }
       ]
     },
     {
       "node_id": "366426721",
-      "name": "Junction 366426721",
+      "name": "SUMO Junction 366426721",
+      "type": "traffic_light",
       "approaches": [
         "-32576061#1",
-        "606543119",
         "32576061#0",
-        "32576066#5"
+        "32576066#5",
+        "606543119"
       ],
       "phases": [
         {
-          "phase_id": "366426721_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "366426721_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "-32576061#1",
-            "606543119"
+            "606543119",
+            "32576066#5"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "606543119",
+              "to_edge": "32576061#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "606543119",
+              "to_edge": "-32576066#5",
+              "link_index": 5
+            },
+            {
+              "from_approach": "606543119",
+              "to_edge": "-32576061#0",
+              "link_index": 6
+            },
+            {
+              "from_approach": "606543119",
+              "to_edge": "-606543119",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576066#5",
+              "to_edge": "-32576061#0",
+              "link_index": 12
+            },
+            {
+              "from_approach": "32576066#5",
+              "to_edge": "-606543119",
+              "link_index": 13
+            },
+            {
+              "from_approach": "32576066#5",
+              "to_edge": "32576061#1",
+              "link_index": 14
+            },
+            {
+              "from_approach": "32576066#5",
+              "to_edge": "-32576066#5",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "366426721_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "366426721_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "32576061#0",
-            "32576066#5"
+            "-32576061#1",
+            "32576061#0"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32576061#1",
+              "to_edge": "-32576066#5",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576061#1",
+              "to_edge": "-32576061#0",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576061#1",
+              "to_edge": "-606543119",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576061#1",
+              "to_edge": "32576061#1",
+              "link_index": 3
+            },
+            {
+              "from_approach": "32576061#0",
+              "to_edge": "-606543119",
+              "link_index": 8
+            },
+            {
+              "from_approach": "32576061#0",
+              "to_edge": "32576061#1",
+              "link_index": 9
+            },
+            {
+              "from_approach": "32576061#0",
+              "to_edge": "-32576066#5",
+              "link_index": 10
+            },
+            {
+              "from_approach": "32576061#0",
+              "to_edge": "-32576061#0",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
       "node_id": "366459280",
-      "name": "Junction 366459280",
+      "name": "SUMO Junction 366459280",
+      "type": "traffic_light",
       "approaches": [
+        "-1060982830",
         "-32576061#5",
-        "32576061#4",
-        "-1060982830"
+        "32576061#4"
       ],
       "phases": [
         {
-          "phase_id": "366459280_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "366459280_PHASE_1",
+          "name": "Phase 1 (GGgGggrrr)",
           "approaches": [
             "-32576061#5",
             "32576061#4"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576061#5",
+              "to_edge": "1060982830",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576061#5",
+              "to_edge": "-32576061#4",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576061#5",
+              "to_edge": "32576061#5",
+              "link_index": 2
+            },
+            {
+              "from_approach": "32576061#4",
+              "to_edge": "32576061#5",
+              "link_index": 3
+            },
+            {
+              "from_approach": "32576061#4",
+              "to_edge": "1060982830",
+              "link_index": 4
+            },
+            {
+              "from_approach": "32576061#4",
+              "to_edge": "-32576061#4",
+              "link_index": 5
+            }
           ]
         },
         {
-          "phase_id": "366459280_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "366459280_PHASE_2",
+          "name": "Phase 2 (Gyyyyyrrr)",
           "approaches": [
+            "-32576061#5"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32576061#5",
+              "to_edge": "1060982830",
+              "link_index": 0
+            }
+          ]
+        },
+        {
+          "phase_id": "366459280_PHASE_3",
+          "name": "Phase 3 (GrrrrrGGg)",
+          "approaches": [
+            "-32576061#5",
             "-1060982830"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32576061#5",
+              "to_edge": "1060982830",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-1060982830",
+              "to_edge": "-32576061#4",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-1060982830",
+              "to_edge": "32576061#5",
+              "link_index": 7
+            },
+            {
+              "from_approach": "-1060982830",
+              "to_edge": "1060982830",
+              "link_index": 8
+            }
+          ]
+        },
+        {
+          "phase_id": "366459280_PHASE_4",
+          "name": "Phase 4 (Grrrrryyy)",
+          "approaches": [
+            "-32576061#5"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32576061#5",
+              "to_edge": "1060982830",
+              "link_index": 0
+            }
           ]
         }
       ]
     },
     {
-      "node_id": "5750599983",
-      "name": "Junction 5750599983",
+      "node_id": "366475559",
+      "name": "SUMO Junction 366475559",
+      "type": "priority",
       "approaches": [
-        "-606543102",
+        "606549682#1"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "5750599983",
+      "name": "SUMO Junction 5750599983",
+      "type": "traffic_light",
+      "approaches": [
         "-32576066#1",
+        "-606543102",
         "32576066#0"
       ],
       "phases": [
         {
-          "phase_id": "5750599983_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "5750599983_PHASE_1",
+          "name": "Phase 1 (rrrGGgGgg)",
+          "approaches": [
+            "-32576066#1",
+            "32576066#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576066#1",
+              "to_edge": "606543102",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32576066#1",
+              "to_edge": "-32576066#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32576066#1",
+              "to_edge": "32576066#1",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32576066#0",
+              "to_edge": "32576066#1",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32576066#0",
+              "to_edge": "606543102",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576066#0",
+              "to_edge": "-32576066#0",
+              "link_index": 8
+            }
+          ]
+        },
+        {
+          "phase_id": "5750599983_PHASE_2",
+          "name": "Phase 2 (rrrGyyyyy)",
+          "approaches": [
+            "-32576066#1"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32576066#1",
+              "to_edge": "606543102",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "5750599983_PHASE_3",
+          "name": "Phase 3 (GGgGrrrrr)",
           "approaches": [
             "-606543102",
             "-32576066#1"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-606543102",
+              "to_edge": "-32576066#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-606543102",
+              "to_edge": "32576066#1",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-606543102",
+              "to_edge": "606543102",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576066#1",
+              "to_edge": "606543102",
+              "link_index": 3
+            }
           ]
         },
         {
-          "phase_id": "5750599983_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "5750599983_PHASE_4",
+          "name": "Phase 4 (yyyGrrrrr)",
           "approaches": [
-            "32576066#0"
+            "-32576066#1"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32576066#1",
+              "to_edge": "606543102",
+              "link_index": 3
+            }
           ]
         }
       ]
+    },
+    {
+      "node_id": "5750599984",
+      "name": "SUMO Junction 5750599984",
+      "type": "priority",
+      "approaches": [
+        "606543131"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "5750600014",
+      "name": "SUMO Junction 5750600014",
+      "type": "priority",
+      "approaches": [
+        "211849413#2"
+      ],
+      "phases": []
     },
     {
       "node_id": "5750600545",
-      "name": "Junction 5750600545",
+      "name": "SUMO Junction 5750600545",
+      "type": "traffic_light",
       "approaches": [
         "-32576061#2",
-        "606543117",
-        "32576061#1"
+        "32576061#1",
+        "606543117"
       ],
       "phases": [
         {
-          "phase_id": "5750600545_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "5750600545_PHASE_1",
+          "name": "Phase 1 (GggrrrGGg)",
           "approaches": [
             "-32576061#2",
-            "606543117"
+            "32576061#1"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576061#2",
+              "to_edge": "-32576061#1",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576061#2",
+              "to_edge": "-606543117",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576061#2",
+              "to_edge": "32576061#2",
+              "link_index": 2
+            },
+            {
+              "from_approach": "32576061#1",
+              "to_edge": "-606543117",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32576061#1",
+              "to_edge": "32576061#2",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576061#1",
+              "to_edge": "-32576061#1",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "5750600545_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "5750600545_PHASE_2",
+          "name": "Phase 2 (yyyrrrGyy)",
           "approaches": [
             "32576061#1"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "32576061#1",
+              "to_edge": "-606543117",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "5750600545_PHASE_3",
+          "name": "Phase 3 (rrrGGgGrr)",
+          "approaches": [
+            "606543117",
+            "32576061#1"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "606543117",
+              "to_edge": "32576061#2",
+              "link_index": 3
+            },
+            {
+              "from_approach": "606543117",
+              "to_edge": "-32576061#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "606543117",
+              "to_edge": "-606543117",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32576061#1",
+              "to_edge": "-606543117",
+              "link_index": 6
+            }
+          ]
+        },
+        {
+          "phase_id": "5750600545_PHASE_4",
+          "name": "Phase 4 (rrryyyGrr)",
+          "approaches": [
+            "32576061#1"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "32576061#1",
+              "to_edge": "-606543117",
+              "link_index": 6
+            }
           ]
         }
       ]
     },
     {
-      "node_id": "5750600562",
-      "name": "Junction 5750600562",
+      "node_id": "5750600546",
+      "name": "SUMO Junction 5750600546",
+      "type": "priority",
       "approaches": [
-        "-606543121",
+        "-606543117"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "5750600551",
+      "name": "SUMO Junction 5750600551",
+      "type": "priority",
+      "approaches": [
+        "-606543119"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "5750600561",
+      "name": "SUMO Junction 5750600561",
+      "type": "priority",
+      "approaches": [
+        "606543121"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "5750600562",
+      "name": "SUMO Junction 5750600562",
+      "type": "traffic_light",
+      "approaches": [
         "-32577015#8",
+        "-606543121",
         "32577015#7"
       ],
       "phases": [
         {
-          "phase_id": "5750600562_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "5750600562_PHASE_1",
+          "name": "Phase 1 (rrrGGgGgg)",
           "approaches": [
-            "-606543121",
-            "-32577015#8"
+            "-32577015#8",
+            "32577015#7"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32577015#8",
+              "to_edge": "606543121",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32577015#8",
+              "to_edge": "-32577015#7",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32577015#8",
+              "to_edge": "32577015#8",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32577015#7",
+              "to_edge": "32577015#8",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32577015#7",
+              "to_edge": "606543121",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32577015#7",
+              "to_edge": "-32577015#7",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "5750600562_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "5750600562_PHASE_2",
+          "name": "Phase 2 (rrrGyyyyy)",
           "approaches": [
-            "32577015#7"
+            "-32577015#8"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32577015#8",
+              "to_edge": "606543121",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "5750600562_PHASE_3",
+          "name": "Phase 3 (GGgGrrrrr)",
+          "approaches": [
+            "-606543121",
+            "-32577015#8"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-606543121",
+              "to_edge": "-32577015#7",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-606543121",
+              "to_edge": "32577015#8",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-606543121",
+              "to_edge": "606543121",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32577015#8",
+              "to_edge": "606543121",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "5750600562_PHASE_4",
+          "name": "Phase 4 (yyyGrrrrr)",
+          "approaches": [
+            "-32577015#8"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32577015#8",
+              "to_edge": "606543121",
+              "link_index": 3
+            }
           ]
         }
       ]
     },
     {
+      "node_id": "5750600583",
+      "name": "SUMO Junction 5750600583",
+      "type": "priority",
+      "approaches": [
+        "-606543132"
+      ],
+      "phases": []
+    },
+    {
       "node_id": "5750600584",
-      "name": "Junction 5750600584",
+      "name": "SUMO Junction 5750600584",
+      "type": "traffic_light",
       "approaches": [
         "-32577015#2",
         "32577015#1",
@@ -496,300 +2281,1425 @@
       ],
       "phases": [
         {
-          "phase_id": "5750600584_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "5750600584_PHASE_1",
+          "name": "Phase 1 (GGgGggrrr)",
           "approaches": [
             "-32577015#2",
             "32577015#1"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32577015#2",
+              "to_edge": "-606543133",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32577015#2",
+              "to_edge": "-32577015#1",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32577015#2",
+              "to_edge": "32577015#2",
+              "link_index": 2
+            },
+            {
+              "from_approach": "32577015#1",
+              "to_edge": "32577015#2",
+              "link_index": 3
+            },
+            {
+              "from_approach": "32577015#1",
+              "to_edge": "-606543133",
+              "link_index": 4
+            },
+            {
+              "from_approach": "32577015#1",
+              "to_edge": "-32577015#1",
+              "link_index": 5
+            }
           ]
         },
         {
-          "phase_id": "5750600584_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "5750600584_PHASE_2",
+          "name": "Phase 2 (Gyyyyyrrr)",
           "approaches": [
+            "-32577015#2"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-32577015#2",
+              "to_edge": "-606543133",
+              "link_index": 0
+            }
+          ]
+        },
+        {
+          "phase_id": "5750600584_PHASE_3",
+          "name": "Phase 3 (GrrrrrGGg)",
+          "approaches": [
+            "-32577015#2",
             "606543133"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-32577015#2",
+              "to_edge": "-606543133",
+              "link_index": 0
+            },
+            {
+              "from_approach": "606543133",
+              "to_edge": "-32577015#1",
+              "link_index": 6
+            },
+            {
+              "from_approach": "606543133",
+              "to_edge": "32577015#2",
+              "link_index": 7
+            },
+            {
+              "from_approach": "606543133",
+              "to_edge": "-606543133",
+              "link_index": 8
+            }
+          ]
+        },
+        {
+          "phase_id": "5750600584_PHASE_4",
+          "name": "Phase 4 (Grrrrryyy)",
+          "approaches": [
+            "-32577015#2"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32577015#2",
+              "to_edge": "-606543133",
+              "link_index": 0
+            }
           ]
         }
       ]
+    },
+    {
+      "node_id": "5750600585",
+      "name": "SUMO Junction 5750600585",
+      "type": "priority",
+      "approaches": [
+        "-606543133"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "7819046262",
+      "name": "SUMO Junction 7819046262",
+      "type": "priority",
+      "approaches": [
+        "837745310"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "7819058827",
+      "name": "SUMO Junction 7819058827",
+      "type": "priority",
+      "approaches": [
+        "837746353"
+      ],
+      "phases": []
     },
     {
       "node_id": "7819058842",
-      "name": "Junction 7819058842",
+      "name": "SUMO Junction 7819058842",
+      "type": "traffic_light",
       "approaches": [
-        "290729095#1",
         "-290729094#1",
         "-837746353",
-        "290729094#0"
+        "290729094#0",
+        "290729095#1"
       ],
       "phases": [
         {
-          "phase_id": "7819058842_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "7819058842_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "290729095#1",
-            "-290729094#1"
+            "-290729094#1",
+            "290729094#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-290729094#1",
+              "to_edge": "-290729095#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-290729094#1",
+              "to_edge": "-290729094#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-290729094#1",
+              "to_edge": "837746353",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-290729094#1",
+              "to_edge": "290729094#1",
+              "link_index": 7
+            },
+            {
+              "from_approach": "290729094#0",
+              "to_edge": "837746353",
+              "link_index": 12
+            },
+            {
+              "from_approach": "290729094#0",
+              "to_edge": "290729094#1",
+              "link_index": 13
+            },
+            {
+              "from_approach": "290729094#0",
+              "to_edge": "-290729095#1",
+              "link_index": 14
+            },
+            {
+              "from_approach": "290729094#0",
+              "to_edge": "-290729094#0",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "7819058842_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "7819058842_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "-837746353",
-            "290729094#0"
+            "290729095#1",
+            "-837746353"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "290729095#1",
+              "to_edge": "-290729094#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "290729095#1",
+              "to_edge": "837746353",
+              "link_index": 1
+            },
+            {
+              "from_approach": "290729095#1",
+              "to_edge": "290729094#1",
+              "link_index": 2
+            },
+            {
+              "from_approach": "290729095#1",
+              "to_edge": "-290729095#1",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-837746353",
+              "to_edge": "290729094#1",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-837746353",
+              "to_edge": "-290729095#1",
+              "link_index": 9
+            },
+            {
+              "from_approach": "-837746353",
+              "to_edge": "-290729094#0",
+              "link_index": 10
+            },
+            {
+              "from_approach": "-837746353",
+              "to_edge": "837746353",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
-      "node_id": "cluster_11553495261_366408179",
-      "name": "Junction cluster_11553495261_366408179",
+      "node_id": "8348405137",
+      "name": "SUMO Junction 8348405137",
+      "type": "priority",
       "approaches": [
-        "290729089",
-        "-32576066#3",
+        "898358167"
+      ],
+      "phases": []
+    },
+    {
+      "node_id": "cluster_11553495261_366408179",
+      "name": "SUMO Junction cluster_11553495261_366408179",
+      "type": "traffic_light",
+      "approaches": [
         "-1243137731",
+        "-32576066#3",
+        "290729089",
         "32576066#1"
       ],
       "phases": [
         {
-          "phase_id": "cluster_11553495261_366408179_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_11553495261_366408179_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "290729089",
-            "-32576066#3"
+            "-32576066#3",
+            "32576066#1"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576066#3",
+              "to_edge": "-290729089",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32576066#3",
+              "to_edge": "-32576066#1",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-32576066#3",
+              "to_edge": "1243137731",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-32576066#3",
+              "to_edge": "32576066#3",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576066#1",
+              "to_edge": "1243137731",
+              "link_index": 12
+            },
+            {
+              "from_approach": "32576066#1",
+              "to_edge": "32576066#3",
+              "link_index": 13
+            },
+            {
+              "from_approach": "32576066#1",
+              "to_edge": "-290729089",
+              "link_index": 14
+            },
+            {
+              "from_approach": "32576066#1",
+              "to_edge": "-32576066#1",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "cluster_11553495261_366408179_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_11553495261_366408179_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "-1243137731",
-            "32576066#1"
+            "290729089",
+            "-1243137731"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "290729089",
+              "to_edge": "-32576066#1",
+              "link_index": 0
+            },
+            {
+              "from_approach": "290729089",
+              "to_edge": "1243137731",
+              "link_index": 1
+            },
+            {
+              "from_approach": "290729089",
+              "to_edge": "32576066#3",
+              "link_index": 2
+            },
+            {
+              "from_approach": "290729089",
+              "to_edge": "-290729089",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-1243137731",
+              "to_edge": "32576066#3",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-1243137731",
+              "to_edge": "-290729089",
+              "link_index": 9
+            },
+            {
+              "from_approach": "-1243137731",
+              "to_edge": "-32576066#1",
+              "link_index": 10
+            },
+            {
+              "from_approach": "-1243137731",
+              "to_edge": "1243137731",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_2217938303_2217938318",
-      "name": "Junction cluster_2217938303_2217938318",
+      "name": "SUMO Junction cluster_2217938303_2217938318",
+      "type": "traffic_light",
       "approaches": [
-        "-32576065#0",
         "-211849415#1",
-        "606543102",
-        "1061042908"
+        "-32576065#0",
+        "1061042908",
+        "606543102"
       ],
       "phases": [
         {
-          "phase_id": "cluster_2217938303_2217938318_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_2217938303_2217938318_PHASE_1",
+          "name": "Phase 1 (GGggrrrrGGggrrrr)",
           "approaches": [
             "-32576065#0",
-            "-211849415#1"
+            "606543102"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576065#0",
+              "to_edge": "-1061042908",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32576065#0",
+              "to_edge": "-606543102",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32576065#0",
+              "to_edge": "211849415#1",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32576065#0",
+              "to_edge": "32576065#0",
+              "link_index": 3
+            },
+            {
+              "from_approach": "606543102",
+              "to_edge": "211849415#1",
+              "link_index": 8
+            },
+            {
+              "from_approach": "606543102",
+              "to_edge": "32576065#0",
+              "link_index": 9
+            },
+            {
+              "from_approach": "606543102",
+              "to_edge": "-1061042908",
+              "link_index": 10
+            },
+            {
+              "from_approach": "606543102",
+              "to_edge": "-606543102",
+              "link_index": 11
+            }
           ]
         },
         {
-          "phase_id": "cluster_2217938303_2217938318_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_2217938303_2217938318_PHASE_2",
+          "name": "Phase 2 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "606543102",
+            "-211849415#1",
             "1061042908"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-211849415#1",
+              "to_edge": "32576065#0",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-211849415#1",
+              "to_edge": "-1061042908",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-211849415#1",
+              "to_edge": "-606543102",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-211849415#1",
+              "to_edge": "211849415#1",
+              "link_index": 7
+            },
+            {
+              "from_approach": "1061042908",
+              "to_edge": "-606543102",
+              "link_index": 12
+            },
+            {
+              "from_approach": "1061042908",
+              "to_edge": "211849415#1",
+              "link_index": 13
+            },
+            {
+              "from_approach": "1061042908",
+              "to_edge": "32576065#0",
+              "link_index": 14
+            },
+            {
+              "from_approach": "1061042908",
+              "to_edge": "-1061042908",
+              "link_index": 15
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_2938641203_366431367_5750600582",
-      "name": "Junction cluster_2938641203_366431367_5750600582",
+      "name": "SUMO Junction cluster_2938641203_366431367_5750600582",
+      "type": "traffic_light",
       "approaches": [
-        "-32577015#5",
         "-1061042908",
+        "-32577015#5",
+        "-606543131",
         "32577015#2",
-        "606543132",
-        "-606543131"
+        "606543132"
       ],
       "phases": [
         {
-          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_1",
+          "name": "Phase 1 (rrrrrGGGggrrrrrGGgggrrrrr)",
           "approaches": [
-            "-32577015#5",
-            "-1061042908"
+            "-1061042908",
+            "606543132"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-1061042908",
+              "to_edge": "32577015#5",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-1061042908",
+              "to_edge": "606543131",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-1061042908",
+              "to_edge": "-606543132",
+              "link_index": 7
+            },
+            {
+              "from_approach": "-1061042908",
+              "to_edge": "-32577015#2",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-1061042908",
+              "to_edge": "1061042908",
+              "link_index": 9
+            },
+            {
+              "from_approach": "606543132",
+              "to_edge": "-32577015#2",
+              "link_index": 15
+            },
+            {
+              "from_approach": "606543132",
+              "to_edge": "1061042908",
+              "link_index": 16
+            },
+            {
+              "from_approach": "606543132",
+              "to_edge": "32577015#5",
+              "link_index": 17
+            },
+            {
+              "from_approach": "606543132",
+              "to_edge": "606543131",
+              "link_index": 18
+            },
+            {
+              "from_approach": "606543132",
+              "to_edge": "-606543132",
+              "link_index": 19
+            }
           ]
         },
         {
-          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_2",
+          "name": "Phase 2 (GGGggrrrrrGGgggrrrrrrrrrr)",
           "approaches": [
-            "32577015#2",
-            "606543132",
+            "-32577015#5",
+            "32577015#2"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-32577015#5",
+              "to_edge": "606543131",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-32577015#5",
+              "to_edge": "-606543132",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-32577015#5",
+              "to_edge": "-32577015#2",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-32577015#5",
+              "to_edge": "1061042908",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-32577015#5",
+              "to_edge": "32577015#5",
+              "link_index": 4
+            },
+            {
+              "from_approach": "32577015#2",
+              "to_edge": "1061042908",
+              "link_index": 10
+            },
+            {
+              "from_approach": "32577015#2",
+              "to_edge": "32577015#5",
+              "link_index": 11
+            },
+            {
+              "from_approach": "32577015#2",
+              "to_edge": "606543131",
+              "link_index": 12
+            },
+            {
+              "from_approach": "32577015#2",
+              "to_edge": "-606543132",
+              "link_index": 13
+            },
+            {
+              "from_approach": "32577015#2",
+              "to_edge": "-32577015#2",
+              "link_index": 14
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_3",
+          "name": "Phase 3 (GrrrrrrrrrrrrrrrrrrrGGGGg)",
+          "approaches": [
+            "-32577015#5",
             "-606543131"
+          ],
+          "sumo_phase_index": 6,
+          "movements": [
+            {
+              "from_approach": "-32577015#5",
+              "to_edge": "606543131",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-606543131",
+              "to_edge": "-606543132",
+              "link_index": 20
+            },
+            {
+              "from_approach": "-606543131",
+              "to_edge": "-32577015#2",
+              "link_index": 21
+            },
+            {
+              "from_approach": "-606543131",
+              "to_edge": "1061042908",
+              "link_index": 22
+            },
+            {
+              "from_approach": "-606543131",
+              "to_edge": "32577015#5",
+              "link_index": 23
+            },
+            {
+              "from_approach": "-606543131",
+              "to_edge": "606543131",
+              "link_index": 24
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_2942327942_366465117",
-      "name": "Junction cluster_2942327942_366465117",
+      "name": "SUMO Junction cluster_2942327942_366465117",
+      "type": "traffic_light",
       "approaches": [
-        "32576063",
         "-1061035915#0",
         "290729090#0",
+        "32576063",
         "32576065#1"
       ],
       "phases": [
         {
-          "phase_id": "cluster_2942327942_366465117_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_2942327942_366465117_PHASE_1",
+          "name": "Phase 1 (rrrGGgGgg)",
           "approaches": [
-            "32576063",
-            "-1061035915#0"
+            "-1061035915#0",
+            "32576065#1"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-1061035915#0",
+              "to_edge": "-32576063",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-1061035915#0",
+              "to_edge": "-32576065#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-1061035915#0",
+              "to_edge": "1061035915#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "32576065#1",
+              "to_edge": "1061035915#0",
+              "link_index": 6
+            },
+            {
+              "from_approach": "32576065#1",
+              "to_edge": "-32576063",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576065#1",
+              "to_edge": "-32576065#1",
+              "link_index": 8
+            }
           ]
         },
         {
-          "phase_id": "cluster_2942327942_366465117_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_2942327942_366465117_PHASE_2",
+          "name": "Phase 2 (rrrGyyyyy)",
           "approaches": [
-            "290729090#0",
-            "32576065#1"
+            "-1061035915#0"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "-1061035915#0",
+              "to_edge": "-32576063",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327942_366465117_PHASE_3",
+          "name": "Phase 3 (GGgGrrrrr)",
+          "approaches": [
+            "32576063",
+            "-1061035915#0"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "32576063",
+              "to_edge": "-32576065#1",
+              "link_index": 0
+            },
+            {
+              "from_approach": "32576063",
+              "to_edge": "1061035915#0",
+              "link_index": 1
+            },
+            {
+              "from_approach": "32576063",
+              "to_edge": "-32576063",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-1061035915#0",
+              "to_edge": "-32576063",
+              "link_index": 3
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327942_366465117_PHASE_4",
+          "name": "Phase 4 (yyyGrrrrr)",
+          "approaches": [
+            "-1061035915#0"
+          ],
+          "sumo_phase_index": 3,
+          "movements": [
+            {
+              "from_approach": "-1061035915#0",
+              "to_edge": "-32576063",
+              "link_index": 3
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_2942327969_745747032",
-      "name": "Junction cluster_2942327969_745747032",
+      "name": "SUMO Junction cluster_2942327969_745747032",
+      "type": "traffic_light",
       "approaches": [
-        "-606549682#1",
         "-290729095#0",
+        "-606549682#1",
         "32576061#6",
         "32577015#9"
       ],
       "phases": [
         {
-          "phase_id": "cluster_2942327969_745747032_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_2942327969_745747032_PHASE_1",
+          "name": "Phase 1 (GrrrrrrrrrrrGGGg)",
           "approaches": [
             "-606549682#1",
-            "-290729095#0"
+            "32577015#9"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-606549682#1",
+              "to_edge": "-32577015#9",
+              "link_index": 0
+            },
+            {
+              "from_approach": "32577015#9",
+              "to_edge": "-32576061#6",
+              "link_index": 12
+            },
+            {
+              "from_approach": "32577015#9",
+              "to_edge": "290729095#0",
+              "link_index": 13
+            },
+            {
+              "from_approach": "32577015#9",
+              "to_edge": "606549682#1",
+              "link_index": 14
+            },
+            {
+              "from_approach": "32577015#9",
+              "to_edge": "-32577015#9",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "cluster_2942327969_745747032_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_2942327969_745747032_PHASE_2",
+          "name": "Phase 2 (yrrrrrrrrrrrGyyy)",
+          "approaches": [
+            "32577015#9"
+          ],
+          "sumo_phase_index": 1,
+          "movements": [
+            {
+              "from_approach": "32577015#9",
+              "to_edge": "-32576061#6",
+              "link_index": 12
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327969_745747032_PHASE_3",
+          "name": "Phase 3 (rrrrrrrrGGGgGrrr)",
           "approaches": [
             "32576061#6",
             "32577015#9"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "32576061#6",
+              "to_edge": "290729095#0",
+              "link_index": 8
+            },
+            {
+              "from_approach": "32576061#6",
+              "to_edge": "606549682#1",
+              "link_index": 9
+            },
+            {
+              "from_approach": "32576061#6",
+              "to_edge": "-32577015#9",
+              "link_index": 10
+            },
+            {
+              "from_approach": "32576061#6",
+              "to_edge": "-32576061#6",
+              "link_index": 11
+            },
+            {
+              "from_approach": "32577015#9",
+              "to_edge": "-32576061#6",
+              "link_index": 12
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327969_745747032_PHASE_4",
+          "name": "Phase 4 (GGGgGrrrrrrrrrrr)",
+          "approaches": [
+            "-606549682#1",
+            "-290729095#0"
+          ],
+          "sumo_phase_index": 5,
+          "movements": [
+            {
+              "from_approach": "-606549682#1",
+              "to_edge": "-32577015#9",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-606549682#1",
+              "to_edge": "-32576061#6",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-606549682#1",
+              "to_edge": "290729095#0",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-606549682#1",
+              "to_edge": "606549682#1",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-290729095#0",
+              "to_edge": "606549682#1",
+              "link_index": 4
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327969_745747032_PHASE_5",
+          "name": "Phase 5 (yyyyGrrrrrrrrrrr)",
+          "approaches": [
+            "-290729095#0"
+          ],
+          "sumo_phase_index": 6,
+          "movements": [
+            {
+              "from_approach": "-290729095#0",
+              "to_edge": "606549682#1",
+              "link_index": 4
+            }
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327969_745747032_PHASE_6",
+          "name": "Phase 6 (rrrrGGGgGrrrrrrr)",
+          "approaches": [
+            "-290729095#0",
+            "32576061#6"
+          ],
+          "sumo_phase_index": 7,
+          "movements": [
+            {
+              "from_approach": "-290729095#0",
+              "to_edge": "606549682#1",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-290729095#0",
+              "to_edge": "-32577015#9",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-290729095#0",
+              "to_edge": "-32576061#6",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-290729095#0",
+              "to_edge": "290729095#0",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576061#6",
+              "to_edge": "290729095#0",
+              "link_index": 8
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_2942327973_8348405138",
-      "name": "Junction cluster_2942327973_8348405138",
+      "name": "SUMO Junction cluster_2942327973_8348405138",
+      "type": "traffic_light",
       "approaches": [
-        "-898358167",
         "-211849413#2",
         "-837745310",
+        "-898358167",
         "211849413#0"
       ],
       "phases": [
         {
-          "phase_id": "cluster_2942327973_8348405138_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_2942327973_8348405138_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "-898358167",
-            "-211849413#2"
+            "-211849413#2",
+            "211849413#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-211849413#2",
+              "to_edge": "898358167",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-211849413#2",
+              "to_edge": "-211849413#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-211849413#2",
+              "to_edge": "837745310",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-211849413#2",
+              "to_edge": "211849413#2",
+              "link_index": 7
+            },
+            {
+              "from_approach": "211849413#0",
+              "to_edge": "837745310",
+              "link_index": 12
+            },
+            {
+              "from_approach": "211849413#0",
+              "to_edge": "211849413#2",
+              "link_index": 13
+            },
+            {
+              "from_approach": "211849413#0",
+              "to_edge": "898358167",
+              "link_index": 14
+            },
+            {
+              "from_approach": "211849413#0",
+              "to_edge": "-211849413#0",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "cluster_2942327973_8348405138_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_2942327973_8348405138_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "-837745310",
-            "211849413#0"
+            "-898358167",
+            "-837745310"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-898358167",
+              "to_edge": "-211849413#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-898358167",
+              "to_edge": "837745310",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-898358167",
+              "to_edge": "211849413#2",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-898358167",
+              "to_edge": "898358167",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-837745310",
+              "to_edge": "211849413#2",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-837745310",
+              "to_edge": "898358167",
+              "link_index": 9
+            },
+            {
+              "from_approach": "-837745310",
+              "to_edge": "-211849413#0",
+              "link_index": 10
+            },
+            {
+              "from_approach": "-837745310",
+              "to_edge": "837745310",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_5750600569_5750600570",
-      "name": "Junction cluster_5750600569_5750600570",
+      "name": "SUMO Junction cluster_5750600569_5750600570",
+      "type": "traffic_light",
       "approaches": [
-        "606543125",
         "-32576066#5",
         "-606543124",
-        "32576066#3"
+        "32576066#3",
+        "606543125"
       ],
       "phases": [
         {
-          "phase_id": "cluster_5750600569_5750600570_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_5750600569_5750600570_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "606543125",
-            "-32576066#5"
+            "-32576066#5",
+            "32576066#3"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-32576066#5",
+              "to_edge": "-606543125",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-32576066#5",
+              "to_edge": "-32576066#3",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-32576066#5",
+              "to_edge": "606543124",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-32576066#5",
+              "to_edge": "32576066#5",
+              "link_index": 7
+            },
+            {
+              "from_approach": "32576066#3",
+              "to_edge": "606543124",
+              "link_index": 12
+            },
+            {
+              "from_approach": "32576066#3",
+              "to_edge": "32576066#5",
+              "link_index": 13
+            },
+            {
+              "from_approach": "32576066#3",
+              "to_edge": "-606543125",
+              "link_index": 14
+            },
+            {
+              "from_approach": "32576066#3",
+              "to_edge": "-32576066#3",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "cluster_5750600569_5750600570_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_5750600569_5750600570_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "-606543124",
-            "32576066#3"
+            "606543125",
+            "-606543124"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "606543125",
+              "to_edge": "-32576066#3",
+              "link_index": 0
+            },
+            {
+              "from_approach": "606543125",
+              "to_edge": "606543124",
+              "link_index": 1
+            },
+            {
+              "from_approach": "606543125",
+              "to_edge": "32576066#5",
+              "link_index": 2
+            },
+            {
+              "from_approach": "606543125",
+              "to_edge": "-606543125",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-606543124",
+              "to_edge": "32576066#5",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-606543124",
+              "to_edge": "-606543125",
+              "link_index": 9
+            },
+            {
+              "from_approach": "-606543124",
+              "to_edge": "-32576066#3",
+              "link_index": 10
+            },
+            {
+              "from_approach": "-606543124",
+              "to_edge": "606543124",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_5750600571_5750600573",
-      "name": "Junction cluster_5750600571_5750600573",
+      "name": "SUMO Junction cluster_5750600571_5750600573",
+      "type": "traffic_light",
       "approaches": [
-        "-606543126",
         "-290729088#2",
         "-606543125",
+        "-606543126",
         "290729088#0"
       ],
       "phases": [
         {
-          "phase_id": "cluster_5750600571_5750600573_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_5750600571_5750600573_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "-606543126",
-            "-290729088#2"
+            "-290729088#2",
+            "290729088#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-290729088#2",
+              "to_edge": "606543126",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-290729088#2",
+              "to_edge": "-290729088#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-290729088#2",
+              "to_edge": "606543125",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-290729088#2",
+              "to_edge": "290729088#2",
+              "link_index": 7
+            },
+            {
+              "from_approach": "290729088#0",
+              "to_edge": "606543125",
+              "link_index": 12
+            },
+            {
+              "from_approach": "290729088#0",
+              "to_edge": "290729088#2",
+              "link_index": 13
+            },
+            {
+              "from_approach": "290729088#0",
+              "to_edge": "606543126",
+              "link_index": 14
+            },
+            {
+              "from_approach": "290729088#0",
+              "to_edge": "-290729088#0",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "cluster_5750600571_5750600573_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_5750600571_5750600573_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "-606543125",
-            "290729088#0"
+            "-606543126",
+            "-606543125"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-606543126",
+              "to_edge": "-290729088#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-606543126",
+              "to_edge": "606543125",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-606543126",
+              "to_edge": "290729088#2",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-606543126",
+              "to_edge": "606543126",
+              "link_index": 3
+            },
+            {
+              "from_approach": "-606543125",
+              "to_edge": "290729088#2",
+              "link_index": 8
+            },
+            {
+              "from_approach": "-606543125",
+              "to_edge": "606543126",
+              "link_index": 9
+            },
+            {
+              "from_approach": "-606543125",
+              "to_edge": "-290729088#0",
+              "link_index": 10
+            },
+            {
+              "from_approach": "-606543125",
+              "to_edge": "606543125",
+              "link_index": 11
+            }
           ]
         }
       ]
     },
     {
       "node_id": "cluster_5750600572_5750600575",
-      "name": "Junction cluster_5750600572_5750600575",
+      "name": "SUMO Junction cluster_5750600572_5750600575",
+      "type": "traffic_light",
       "approaches": [
-        "-606543127",
         "-1061035915#2",
-        "606543126",
-        "1061035915#0"
+        "-606543127",
+        "1061035915#0",
+        "606543126"
       ],
       "phases": [
         {
-          "phase_id": "cluster_5750600572_5750600575_PHASE_NS",
-          "name": "North-South Phase",
+          "phase_id": "cluster_5750600572_5750600575_PHASE_1",
+          "name": "Phase 1 (rrrrGGggrrrrGGgg)",
           "approaches": [
-            "-606543127",
-            "-1061035915#2"
+            "-1061035915#2",
+            "1061035915#0"
+          ],
+          "sumo_phase_index": 0,
+          "movements": [
+            {
+              "from_approach": "-1061035915#2",
+              "to_edge": "606543127",
+              "link_index": 4
+            },
+            {
+              "from_approach": "-1061035915#2",
+              "to_edge": "-1061035915#0",
+              "link_index": 5
+            },
+            {
+              "from_approach": "-1061035915#2",
+              "to_edge": "-606543126",
+              "link_index": 6
+            },
+            {
+              "from_approach": "-1061035915#2",
+              "to_edge": "1061035915#2",
+              "link_index": 7
+            },
+            {
+              "from_approach": "1061035915#0",
+              "to_edge": "-606543126",
+              "link_index": 12
+            },
+            {
+              "from_approach": "1061035915#0",
+              "to_edge": "1061035915#2",
+              "link_index": 13
+            },
+            {
+              "from_approach": "1061035915#0",
+              "to_edge": "606543127",
+              "link_index": 14
+            },
+            {
+              "from_approach": "1061035915#0",
+              "to_edge": "-1061035915#0",
+              "link_index": 15
+            }
           ]
         },
         {
-          "phase_id": "cluster_5750600572_5750600575_PHASE_EW",
-          "name": "East-West Phase",
+          "phase_id": "cluster_5750600572_5750600575_PHASE_2",
+          "name": "Phase 2 (GGggrrrrGGggrrrr)",
           "approaches": [
-            "606543126",
-            "1061035915#0"
+            "-606543127",
+            "606543126"
+          ],
+          "sumo_phase_index": 2,
+          "movements": [
+            {
+              "from_approach": "-606543127",
+              "to_edge": "-1061035915#0",
+              "link_index": 0
+            },
+            {
+              "from_approach": "-606543127",
+              "to_edge": "-606543126",
+              "link_index": 1
+            },
+            {
+              "from_approach": "-606543127",
+              "to_edge": "1061035915#2",
+              "link_index": 2
+            },
+            {
+              "from_approach": "-606543127",
+              "to_edge": "606543127",
+              "link_index": 3
+            },
+            {
+              "from_approach": "606543126",
+              "to_edge": "1061035915#2",
+              "link_index": 8
+            },
+            {
+              "from_approach": "606543126",
+              "to_edge": "606543127",
+              "link_index": 9
+            },
+            {
+              "from_approach": "606543126",
+              "to_edge": "-1061035915#0",
+              "link_index": 10
+            },
+            {
+              "from_approach": "606543126",
+              "to_edge": "-606543126",
+              "link_index": 11
+            }
           ]
         }
       ]
@@ -798,1011 +3708,633 @@
   "edges": [
     {
       "edge_id": "-1060982830",
-      "from_node": "2217939289",
-      "to_node": "366459280",
-      "length_m": 40.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939289",
+      "target": "366459280"
     },
     {
       "edge_id": "-1061035915#0",
-      "from_node": "cluster_5750600572_5750600575",
-      "to_node": "cluster_2942327942_366465117",
-      "length_m": 34.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600572_5750600575",
+      "target": "cluster_2942327942_366465117"
     },
     {
       "edge_id": "-1061035915#2",
-      "from_node": "2217938309",
-      "to_node": "cluster_5750600572_5750600575",
-      "length_m": 32.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938309",
+      "target": "cluster_5750600572_5750600575"
     },
     {
       "edge_id": "-1061042908",
-      "from_node": "cluster_2217938303_2217938318",
-      "to_node": "cluster_2938641203_366431367_5750600582",
-      "length_m": 59.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2217938303_2217938318",
+      "target": "cluster_2938641203_366431367_5750600582"
     },
     {
       "edge_id": "-1243137731",
-      "from_node": "11553495260",
-      "to_node": "cluster_11553495261_366408179",
-      "length_m": 16.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "11553495260",
+      "target": "cluster_11553495261_366408179"
     },
     {
       "edge_id": "-211849412",
-      "from_node": "2217938313",
-      "to_node": "2217938301",
-      "length_m": 44.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938313",
+      "target": "2217938301"
     },
     {
       "edge_id": "-211849413#0",
-      "from_node": "cluster_2942327973_8348405138",
-      "to_node": "2217938309",
-      "length_m": 42.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327973_8348405138",
+      "target": "2217938309"
     },
     {
       "edge_id": "-211849413#2",
-      "from_node": "5750600014",
-      "to_node": "cluster_2942327973_8348405138",
-      "length_m": 44.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600014",
+      "target": "cluster_2942327973_8348405138"
     },
     {
       "edge_id": "-211849415#1",
-      "from_node": "2217938311",
-      "to_node": "cluster_2217938303_2217938318",
-      "length_m": 34.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938311",
+      "target": "cluster_2217938303_2217938318"
     },
     {
       "edge_id": "-211849499",
-      "from_node": "2217939291",
-      "to_node": "366415782",
-      "length_m": 41.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939291",
+      "target": "366415782"
     },
     {
       "edge_id": "-211849500#0",
-      "from_node": "2217939291",
-      "to_node": "2217939289",
-      "length_m": 9.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939291",
+      "target": "2217939289"
     },
     {
       "edge_id": "-211849500#1",
-      "from_node": "366384741",
-      "to_node": "2217939291",
-      "length_m": 13.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366384741",
+      "target": "2217939291"
     },
     {
       "edge_id": "-290307095",
-      "from_node": "2938641215",
-      "to_node": "2938641204",
-      "length_m": 211.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "2938641215",
+      "target": "2938641204"
     },
     {
       "edge_id": "-290729088#0",
-      "from_node": "cluster_5750600571_5750600573",
-      "to_node": "2217938311",
-      "length_m": 36.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600571_5750600573",
+      "target": "2217938311"
     },
     {
       "edge_id": "-290729088#2",
-      "from_node": "2217938327",
-      "to_node": "cluster_5750600571_5750600573",
-      "length_m": 30.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938327",
+      "target": "cluster_5750600571_5750600573"
     },
     {
       "edge_id": "-290729088#3",
-      "from_node": "2942327975",
-      "to_node": "2217938327",
-      "length_m": 35.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327975",
+      "target": "2217938327"
     },
     {
       "edge_id": "-290729089",
-      "from_node": "cluster_11553495261_366408179",
-      "to_node": "2217938311",
-      "length_m": 32.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_11553495261_366408179",
+      "target": "2217938311"
     },
     {
       "edge_id": "-290729094#0",
-      "from_node": "7819058842",
-      "to_node": "366415782",
-      "length_m": 36.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "7819058842",
+      "target": "366415782"
     },
     {
       "edge_id": "-290729094#1",
-      "from_node": "2942327967",
-      "to_node": "7819058842",
-      "length_m": 84.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327967",
+      "target": "7819058842"
     },
     {
       "edge_id": "-290729095#0",
-      "from_node": "2942327970",
-      "to_node": "cluster_2942327969_745747032",
-      "length_m": 32.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327970",
+      "target": "cluster_2942327969_745747032"
     },
     {
       "edge_id": "-290729095#1",
-      "from_node": "7819058842",
-      "to_node": "2942327970",
-      "length_m": 26.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "7819058842",
+      "target": "2942327970"
     },
     {
       "edge_id": "-290729098",
-      "from_node": "2942327993",
-      "to_node": "2942327991",
-      "length_m": 80.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "2942327993",
+      "target": "2942327991"
     },
     {
       "edge_id": "-32576061#0",
-      "from_node": "366426721",
-      "to_node": "11082694019",
-      "length_m": 60.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366426721",
+      "target": "11082694019"
     },
     {
       "edge_id": "-32576061#1",
-      "from_node": "5750600545",
-      "to_node": "366426721",
-      "length_m": 0.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600545",
+      "target": "366426721"
     },
     {
       "edge_id": "-32576061#2",
-      "from_node": "2217938327",
-      "to_node": "5750600545",
-      "length_m": 20.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938327",
+      "target": "5750600545"
     },
     {
       "edge_id": "-32576061#3",
-      "from_node": "2217938309",
-      "to_node": "2217938327",
-      "length_m": 26.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938309",
+      "target": "2217938327"
     },
     {
       "edge_id": "-32576061#4",
-      "from_node": "366459280",
-      "to_node": "2217938309",
-      "length_m": 30.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366459280",
+      "target": "2217938309"
     },
     {
       "edge_id": "-32576061#5",
-      "from_node": "366415782",
-      "to_node": "366459280",
-      "length_m": 10.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366415782",
+      "target": "366459280"
     },
     {
       "edge_id": "-32576061#6",
-      "from_node": "cluster_2942327969_745747032",
-      "to_node": "366415782",
-      "length_m": 45.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327969_745747032",
+      "target": "366415782"
     },
     {
       "edge_id": "-32576063",
-      "from_node": "cluster_2942327942_366465117",
-      "to_node": "2217939289",
-      "length_m": 76.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327942_366465117",
+      "target": "2217939289"
     },
     {
       "edge_id": "-32576064#0",
-      "from_node": "2942327970",
-      "to_node": "366415782",
-      "length_m": 37.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327970",
+      "target": "366415782"
     },
     {
       "edge_id": "-32576064#1",
-      "from_node": "2217939290",
-      "to_node": "2942327970",
-      "length_m": 120.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939290",
+      "target": "2942327970"
     },
     {
       "edge_id": "-32576065#0",
-      "from_node": "2217938301",
-      "to_node": "cluster_2217938303_2217938318",
-      "length_m": 8.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938301",
+      "target": "cluster_2217938303_2217938318"
     },
     {
       "edge_id": "-32576065#1",
-      "from_node": "cluster_2942327942_366465117",
-      "to_node": "2217938301",
-      "length_m": 27.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327942_366465117",
+      "target": "2217938301"
     },
     {
       "edge_id": "-32576066#0",
-      "from_node": "5750599983",
-      "to_node": "366400259",
-      "length_m": 76.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750599983",
+      "target": "366400259"
     },
     {
       "edge_id": "-32576066#1",
-      "from_node": "cluster_11553495261_366408179",
-      "to_node": "5750599983",
-      "length_m": 36.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_11553495261_366408179",
+      "target": "5750599983"
     },
     {
       "edge_id": "-32576066#3",
-      "from_node": "cluster_5750600569_5750600570",
-      "to_node": "cluster_11553495261_366408179",
-      "length_m": 36.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600569_5750600570",
+      "target": "cluster_11553495261_366408179"
     },
     {
       "edge_id": "-32576066#5",
-      "from_node": "366426721",
-      "to_node": "cluster_5750600569_5750600570",
-      "length_m": 31.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366426721",
+      "target": "cluster_5750600569_5750600570"
     },
     {
       "edge_id": "-32577015#0",
-      "from_node": "366400259",
-      "to_node": "2942327993",
-      "length_m": 225.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366400259",
+      "target": "2942327993"
     },
     {
       "edge_id": "-32577015#1",
-      "from_node": "5750600584",
-      "to_node": "366400259",
-      "length_m": 20.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600584",
+      "target": "366400259"
     },
     {
       "edge_id": "-32577015#2",
-      "from_node": "cluster_2938641203_366431367_5750600582",
-      "to_node": "5750600584",
-      "length_m": 21.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2938641203_366431367_5750600582",
+      "target": "5750600584"
     },
     {
       "edge_id": "-32577015#5",
-      "from_node": "2938641215",
-      "to_node": "cluster_2938641203_366431367_5750600582",
-      "length_m": 55.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2938641215",
+      "target": "cluster_2938641203_366431367_5750600582"
     },
     {
       "edge_id": "-32577015#6",
-      "from_node": "2217938313",
-      "to_node": "2938641215",
-      "length_m": 11.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938313",
+      "target": "2938641215"
     },
     {
       "edge_id": "-32577015#7",
-      "from_node": "5750600562",
-      "to_node": "2217938313",
-      "length_m": 23.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600562",
+      "target": "2217938313"
     },
     {
       "edge_id": "-32577015#8",
-      "from_node": "366384741",
-      "to_node": "5750600562",
-      "length_m": 55.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366384741",
+      "target": "5750600562"
     },
     {
       "edge_id": "-32577015#9",
-      "from_node": "cluster_2942327969_745747032",
-      "to_node": "366384741",
-      "length_m": 52.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327969_745747032",
+      "target": "366384741"
     },
     {
       "edge_id": "-32585157#0",
-      "from_node": "2942327993",
-      "to_node": "366400259",
-      "length_m": 218.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327993",
+      "target": "366400259"
     },
     {
       "edge_id": "-32585157#1",
-      "from_node": "366377391",
-      "to_node": "2942327993",
-      "length_m": 265.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366377391",
+      "target": "2942327993"
     },
     {
       "edge_id": "-606543102",
-      "from_node": "cluster_2217938303_2217938318",
-      "to_node": "5750599983",
-      "length_m": 32.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2217938303_2217938318",
+      "target": "5750599983"
     },
     {
       "edge_id": "-606543117",
-      "from_node": "5750600545",
-      "to_node": "5750600546",
-      "length_m": 13.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600545",
+      "target": "5750600546"
     },
     {
       "edge_id": "-606543119",
-      "from_node": "366426721",
-      "to_node": "5750600551",
-      "length_m": 11.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366426721",
+      "target": "5750600551"
     },
     {
       "edge_id": "-606543121",
-      "from_node": "5750600561",
-      "to_node": "5750600562",
-      "length_m": 22.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600561",
+      "target": "5750600562"
     },
     {
       "edge_id": "-606543124",
-      "from_node": "11082694020",
-      "to_node": "cluster_5750600569_5750600570",
-      "length_m": 50.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "11082694020",
+      "target": "cluster_5750600569_5750600570"
     },
     {
       "edge_id": "-606543125",
-      "from_node": "cluster_5750600569_5750600570",
-      "to_node": "cluster_5750600571_5750600573",
-      "length_m": 32.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600569_5750600570",
+      "target": "cluster_5750600571_5750600573"
     },
     {
       "edge_id": "-606543126",
-      "from_node": "cluster_5750600572_5750600575",
-      "to_node": "cluster_5750600571_5750600573",
-      "length_m": 25.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600572_5750600575",
+      "target": "cluster_5750600571_5750600573"
     },
     {
       "edge_id": "-606543127",
-      "from_node": "2217939289",
-      "to_node": "cluster_5750600572_5750600575",
-      "length_m": 32.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939289",
+      "target": "cluster_5750600572_5750600575"
     },
     {
       "edge_id": "-606543131",
-      "from_node": "5750599984",
-      "to_node": "cluster_2938641203_366431367_5750600582",
-      "length_m": 179.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750599984",
+      "target": "cluster_2938641203_366431367_5750600582"
     },
     {
       "edge_id": "-606543132",
-      "from_node": "cluster_2938641203_366431367_5750600582",
-      "to_node": "5750600583",
-      "length_m": 53.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2938641203_366431367_5750600582",
+      "target": "5750600583"
     },
     {
       "edge_id": "-606543133",
-      "from_node": "5750600584",
-      "to_node": "5750600585",
-      "length_m": 34.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600584",
+      "target": "5750600585"
     },
     {
       "edge_id": "-606549682#1",
-      "from_node": "366475559",
-      "to_node": "cluster_2942327969_745747032",
-      "length_m": 117.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366475559",
+      "target": "cluster_2942327969_745747032"
     },
     {
       "edge_id": "-837745310",
-      "from_node": "7819046262",
-      "to_node": "cluster_2942327973_8348405138",
-      "length_m": 15.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "7819046262",
+      "target": "cluster_2942327973_8348405138"
     },
     {
       "edge_id": "-837746353",
-      "from_node": "7819058827",
-      "to_node": "7819058842",
-      "length_m": 115.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "7819058827",
+      "target": "7819058842"
     },
     {
       "edge_id": "-898358167",
-      "from_node": "8348405137",
-      "to_node": "cluster_2942327973_8348405138",
-      "length_m": 30.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "8348405137",
+      "target": "cluster_2942327973_8348405138"
     },
     {
       "edge_id": "1060982830",
-      "from_node": "366459280",
-      "to_node": "2217939289",
-      "length_m": 40.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366459280",
+      "target": "2217939289"
     },
     {
       "edge_id": "1061035915#0",
-      "from_node": "cluster_2942327942_366465117",
-      "to_node": "cluster_5750600572_5750600575",
-      "length_m": 34.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327942_366465117",
+      "target": "cluster_5750600572_5750600575"
     },
     {
       "edge_id": "1061035915#2",
-      "from_node": "cluster_5750600572_5750600575",
-      "to_node": "2217938309",
-      "length_m": 32.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600572_5750600575",
+      "target": "2217938309"
     },
     {
       "edge_id": "1061042908",
-      "from_node": "cluster_2938641203_366431367_5750600582",
-      "to_node": "cluster_2217938303_2217938318",
-      "length_m": 59.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2938641203_366431367_5750600582",
+      "target": "cluster_2217938303_2217938318"
     },
     {
       "edge_id": "1243137731",
-      "from_node": "cluster_11553495261_366408179",
-      "to_node": "11553495260",
-      "length_m": 16.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "cluster_11553495261_366408179",
+      "target": "11553495260"
     },
     {
       "edge_id": "211849412",
-      "from_node": "2217938301",
-      "to_node": "2217938313",
-      "length_m": 44.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938301",
+      "target": "2217938313"
     },
     {
       "edge_id": "211849413#0",
-      "from_node": "2217938309",
-      "to_node": "cluster_2942327973_8348405138",
-      "length_m": 41.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938309",
+      "target": "cluster_2942327973_8348405138"
     },
     {
       "edge_id": "211849413#2",
-      "from_node": "cluster_2942327973_8348405138",
-      "to_node": "5750600014",
-      "length_m": 44.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327973_8348405138",
+      "target": "5750600014"
     },
     {
       "edge_id": "211849415#1",
-      "from_node": "cluster_2217938303_2217938318",
-      "to_node": "2217938311",
-      "length_m": 34.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2217938303_2217938318",
+      "target": "2217938311"
     },
     {
       "edge_id": "211849499",
-      "from_node": "366415782",
-      "to_node": "2217939291",
-      "length_m": 41.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366415782",
+      "target": "2217939291"
     },
     {
       "edge_id": "211849500#0",
-      "from_node": "2217939289",
-      "to_node": "2217939291",
-      "length_m": 9.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939289",
+      "target": "2217939291"
     },
     {
       "edge_id": "211849500#1",
-      "from_node": "2217939291",
-      "to_node": "366384741",
-      "length_m": 13.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939291",
+      "target": "366384741"
     },
     {
       "edge_id": "290307095",
-      "from_node": "2938641204",
-      "to_node": "2938641215",
-      "length_m": 211.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "2938641204",
+      "target": "2938641215"
     },
     {
       "edge_id": "290729088#0",
-      "from_node": "2217938311",
-      "to_node": "cluster_5750600571_5750600573",
-      "length_m": 36.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938311",
+      "target": "cluster_5750600571_5750600573"
     },
     {
       "edge_id": "290729088#2",
-      "from_node": "cluster_5750600571_5750600573",
-      "to_node": "2217938327",
-      "length_m": 30.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600571_5750600573",
+      "target": "2217938327"
     },
     {
       "edge_id": "290729088#3",
-      "from_node": "2217938327",
-      "to_node": "2942327975",
-      "length_m": 35.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938327",
+      "target": "2942327975"
     },
     {
       "edge_id": "290729089",
-      "from_node": "2217938311",
-      "to_node": "cluster_11553495261_366408179",
-      "length_m": 32.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938311",
+      "target": "cluster_11553495261_366408179"
     },
     {
       "edge_id": "290729090#0",
-      "from_node": "2942327937",
-      "to_node": "cluster_2942327942_366465117",
-      "length_m": 33.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 2.78
+      "source": "2942327937",
+      "target": "cluster_2942327942_366465117"
     },
     {
       "edge_id": "290729090#1",
-      "from_node": "cluster_2942327942_366465117",
-      "to_node": "2942327937",
-      "length_m": 72.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 2.78
+      "source": "cluster_2942327942_366465117",
+      "target": "2942327937"
     },
     {
       "edge_id": "290729094#0",
-      "from_node": "366415782",
-      "to_node": "7819058842",
-      "length_m": 36.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366415782",
+      "target": "7819058842"
     },
     {
       "edge_id": "290729094#1",
-      "from_node": "7819058842",
-      "to_node": "2942327967",
-      "length_m": 86.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "7819058842",
+      "target": "2942327967"
     },
     {
       "edge_id": "290729095#0",
-      "from_node": "cluster_2942327969_745747032",
-      "to_node": "2942327970",
-      "length_m": 32.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327969_745747032",
+      "target": "2942327970"
     },
     {
       "edge_id": "290729095#1",
-      "from_node": "2942327970",
-      "to_node": "7819058842",
-      "length_m": 25.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327970",
+      "target": "7819058842"
     },
     {
       "edge_id": "290729098",
-      "from_node": "2942327991",
-      "to_node": "2942327993",
-      "length_m": 80.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "2942327991",
+      "target": "2942327993"
     },
     {
       "edge_id": "32576061#0",
-      "from_node": "11082694019",
-      "to_node": "366426721",
-      "length_m": 60.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "11082694019",
+      "target": "366426721"
     },
     {
       "edge_id": "32576061#1",
-      "from_node": "366426721",
-      "to_node": "5750600545",
-      "length_m": 0.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366426721",
+      "target": "5750600545"
     },
     {
       "edge_id": "32576061#2",
-      "from_node": "5750600545",
-      "to_node": "2217938327",
-      "length_m": 20.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600545",
+      "target": "2217938327"
     },
     {
       "edge_id": "32576061#3",
-      "from_node": "2217938327",
-      "to_node": "2217938309",
-      "length_m": 26.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938327",
+      "target": "2217938309"
     },
     {
       "edge_id": "32576061#4",
-      "from_node": "2217938309",
-      "to_node": "366459280",
-      "length_m": 30.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938309",
+      "target": "366459280"
     },
     {
       "edge_id": "32576061#5",
-      "from_node": "366459280",
-      "to_node": "366415782",
-      "length_m": 10.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366459280",
+      "target": "366415782"
     },
     {
       "edge_id": "32576061#6",
-      "from_node": "366415782",
-      "to_node": "cluster_2942327969_745747032",
-      "length_m": 45.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366415782",
+      "target": "cluster_2942327969_745747032"
     },
     {
       "edge_id": "32576063",
-      "from_node": "2217939289",
-      "to_node": "cluster_2942327942_366465117",
-      "length_m": 81.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217939289",
+      "target": "cluster_2942327942_366465117"
     },
     {
       "edge_id": "32576064#0",
-      "from_node": "366415782",
-      "to_node": "2942327970",
-      "length_m": 37.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366415782",
+      "target": "2942327970"
     },
     {
       "edge_id": "32576064#1",
-      "from_node": "2942327970",
-      "to_node": "2217939290",
-      "length_m": 120.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327970",
+      "target": "2217939290"
     },
     {
       "edge_id": "32576065#0",
-      "from_node": "cluster_2217938303_2217938318",
-      "to_node": "2217938301",
-      "length_m": 8.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2217938303_2217938318",
+      "target": "2217938301"
     },
     {
       "edge_id": "32576065#1",
-      "from_node": "2217938301",
-      "to_node": "cluster_2942327942_366465117",
-      "length_m": 27.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938301",
+      "target": "cluster_2942327942_366465117"
     },
     {
       "edge_id": "32576066#0",
-      "from_node": "366400259",
-      "to_node": "5750599983",
-      "length_m": 76.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366400259",
+      "target": "5750599983"
     },
     {
       "edge_id": "32576066#1",
-      "from_node": "5750599983",
-      "to_node": "cluster_11553495261_366408179",
-      "length_m": 36.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750599983",
+      "target": "cluster_11553495261_366408179"
     },
     {
       "edge_id": "32576066#3",
-      "from_node": "cluster_11553495261_366408179",
-      "to_node": "cluster_5750600569_5750600570",
-      "length_m": 36.0,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_11553495261_366408179",
+      "target": "cluster_5750600569_5750600570"
     },
     {
       "edge_id": "32576066#5",
-      "from_node": "cluster_5750600569_5750600570",
-      "to_node": "366426721",
-      "length_m": 31.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600569_5750600570",
+      "target": "366426721"
     },
     {
       "edge_id": "32577015#1",
-      "from_node": "366400259",
-      "to_node": "5750600584",
-      "length_m": 20.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366400259",
+      "target": "5750600584"
     },
     {
       "edge_id": "32577015#2",
-      "from_node": "5750600584",
-      "to_node": "cluster_2938641203_366431367_5750600582",
-      "length_m": 21.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600584",
+      "target": "cluster_2938641203_366431367_5750600582"
     },
     {
       "edge_id": "32577015#5",
-      "from_node": "cluster_2938641203_366431367_5750600582",
-      "to_node": "2938641215",
-      "length_m": 52.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2938641203_366431367_5750600582",
+      "target": "2938641215"
     },
     {
       "edge_id": "32577015#6",
-      "from_node": "2938641215",
-      "to_node": "2217938313",
-      "length_m": 11.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2938641215",
+      "target": "2217938313"
     },
     {
       "edge_id": "32577015#7",
-      "from_node": "2217938313",
-      "to_node": "5750600562",
-      "length_m": 23.9,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2217938313",
+      "target": "5750600562"
     },
     {
       "edge_id": "32577015#8",
-      "from_node": "5750600562",
-      "to_node": "366384741",
-      "length_m": 56.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600562",
+      "target": "366384741"
     },
     {
       "edge_id": "32577015#9",
-      "from_node": "366384741",
-      "to_node": "cluster_2942327969_745747032",
-      "length_m": 52.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "366384741",
+      "target": "cluster_2942327969_745747032"
     },
     {
       "edge_id": "32585157#1",
-      "from_node": "2942327993",
-      "to_node": "366377391",
-      "length_m": 258.5,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "2942327993",
+      "target": "366377391"
     },
     {
       "edge_id": "606543102",
-      "from_node": "5750599983",
-      "to_node": "cluster_2217938303_2217938318",
-      "length_m": 32.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750599983",
+      "target": "cluster_2217938303_2217938318"
     },
     {
       "edge_id": "606543117",
-      "from_node": "5750600546",
-      "to_node": "5750600545",
-      "length_m": 13.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600546",
+      "target": "5750600545"
     },
     {
       "edge_id": "606543119",
-      "from_node": "5750600551",
-      "to_node": "366426721",
-      "length_m": 11.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600551",
+      "target": "366426721"
     },
     {
       "edge_id": "606543121",
-      "from_node": "5750600562",
-      "to_node": "5750600561",
-      "length_m": 22.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600562",
+      "target": "5750600561"
     },
     {
       "edge_id": "606543124",
-      "from_node": "cluster_5750600569_5750600570",
-      "to_node": "11082694020",
-      "length_m": 50.4,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600569_5750600570",
+      "target": "11082694020"
     },
     {
       "edge_id": "606543125",
-      "from_node": "cluster_5750600571_5750600573",
-      "to_node": "cluster_5750600569_5750600570",
-      "length_m": 32.7,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600571_5750600573",
+      "target": "cluster_5750600569_5750600570"
     },
     {
       "edge_id": "606543126",
-      "from_node": "cluster_5750600571_5750600573",
-      "to_node": "cluster_5750600572_5750600575",
-      "length_m": 25.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600571_5750600573",
+      "target": "cluster_5750600572_5750600575"
     },
     {
       "edge_id": "606543127",
-      "from_node": "cluster_5750600572_5750600575",
-      "to_node": "2217939289",
-      "length_m": 32.3,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_5750600572_5750600575",
+      "target": "2217939289"
     },
     {
       "edge_id": "606543131",
-      "from_node": "cluster_2938641203_366431367_5750600582",
-      "to_node": "5750599984",
-      "length_m": 179.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2938641203_366431367_5750600582",
+      "target": "5750599984"
     },
     {
       "edge_id": "606543132",
-      "from_node": "5750600583",
-      "to_node": "cluster_2938641203_366431367_5750600582",
-      "length_m": 53.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600583",
+      "target": "cluster_2938641203_366431367_5750600582"
     },
     {
       "edge_id": "606543133",
-      "from_node": "5750600585",
-      "to_node": "5750600584",
-      "length_m": 34.6,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "5750600585",
+      "target": "5750600584"
     },
     {
       "edge_id": "606549682#1",
-      "from_node": "cluster_2942327969_745747032",
-      "to_node": "366475559",
-      "length_m": 117.2,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327969_745747032",
+      "target": "366475559"
     },
     {
       "edge_id": "837745310",
-      "from_node": "cluster_2942327973_8348405138",
-      "to_node": "7819046262",
-      "length_m": 15.1,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327973_8348405138",
+      "target": "7819046262"
     },
     {
       "edge_id": "837746353",
-      "from_node": "7819058842",
-      "to_node": "7819058827",
-      "length_m": 114.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 5.56
+      "source": "7819058842",
+      "target": "7819058827"
     },
     {
       "edge_id": "898358167",
-      "from_node": "cluster_2942327973_8348405138",
-      "to_node": "8348405137",
-      "length_m": 30.8,
-      "lanes_count": 1,
-      "speed_limit_mps": 13.89
+      "source": "cluster_2942327973_8348405138",
+      "target": "8348405137"
     }
   ]
 }
