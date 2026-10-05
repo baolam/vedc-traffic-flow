@@ -761,15 +761,23 @@ class PressLightRLController(BaseController):
 class FlowTheoryController(BaseController):
     """
     Traffic Flow Theory Controller based on Cell Transmission Model (CTM).
-    Calculates effective flow throughput F(p) = sum(min(Sending_Capacity, Receiving_Capacity)) for each phase.
-    Sending Capacity S_a = min(Q_max, Queue / dt + FlowIn)
-    Receiving Capacity R_d = Q_max * (1.0 - occupancy)
-    Prevents gridlock by cutting green when downstream occupancy is saturated (> 0.9).
+    Calculates effective flow throughput F(p) = sum(min(Sending_Capacity, Receiving_Capacity)) for each movement/phase.
+    
+    Sending Capacity S_a = min(Q_max, Queue / 10.0 + FlowIn)  (Demand from upstream)
+    Receiving Capacity R_d = Q_max * max(0.0, 1.0 - Downstream_Occupancy) (Supply at downstream)
+    
+    Enforces min_green_s and max_green_s to prevent rapid signal flickering.
+    Gates green phases when downstream exit link is saturated (> 0.85) to prevent gridlock.
     """
+
     def __init__(self, min_green_s: float = 10.0, max_green_s: float = 60.0, saturation_flow_vps: float = 0.5):
         self.min_green_s = min_green_s
         self.max_green_s = max_green_s
         self.saturation_flow_vps = saturation_flow_vps
+        self._node_state: Dict[str, Dict[str, Any]] = {}
+
+    def reset(self):
+        self._node_state.clear()
 
     def compute_command(
         self,
@@ -784,39 +792,108 @@ class FlowTheoryController(BaseController):
         if not phases:
             return None
 
+        # Authoritative timestamp
+        if current_time_s is not None:
+            now = float(current_time_s)
+        elif telemetry.get("timestamp") is not None:
+            now = float(telemetry["timestamp"])
+        else:
+            now = time.time()
+
+        # Init node state
+        if node_id not in self._node_state:
+            default_phase = phases[0]["phase_id"]
+            self._node_state[node_id] = {
+                "current_phase_id": telemetry.get("current_phase_id", default_phase),
+                "phase_start_time": now - self.min_green_s - 1.0,
+            }
+
+        ns = self._node_state[node_id]
+        current_phase_id = telemetry.get("current_phase_id", ns["current_phase_id"])
+        if current_phase_id != ns["current_phase_id"]:
+            ns["current_phase_id"] = current_phase_id
+            ns["phase_start_time"] = now
+
+        elapsed_green = max(0.0, now - ns["phase_start_time"])
+
+        # 1. Enforce minimum green
+        if elapsed_green < self.min_green_s:
+            return {
+                "command_id": str(uuid.uuid4()),
+                "node_id": node_id,
+                "target_phase_id": current_phase_id,
+                "min_green_s": self.min_green_s,
+                "max_green_s": self.max_green_s,
+                "controller": "flow_theory",
+            }
+
+        # Build telemetry lookups
         approaches = telemetry.get("approaches", [])
-        approach_map: Dict[str, Dict[str, Any]] = {app["approach_id"]: app for app in approaches}
+        queue_map: Dict[str, float] = {}
+        flow_map: Dict[str, float] = {}
+        occ_map: Dict[str, float] = {}
+
+        for app in approaches:
+            aid = app["approach_id"]
+            queue_map[aid] = float(app.get("queue_vehicles", app.get("queue_length_veh", 0.0)))
+            flow_map[aid] = float(app.get("flow_rate", 0.0)) / 3600.0
+            occ_map[aid] = float(app.get("occupancy_ratio", app.get("occupancy", 0.0)))
 
         phase_flows: Dict[str, float] = {}
 
         for phase in phases:
             phase_id = phase["phase_id"]
-            phase_apps = phase.get("approaches", [])
+            movements = phase.get("movements", [])
             total_effective_flow = 0.0
 
-            for app_id in phase_apps:
-                app_data = approach_map.get(app_id, {})
-                queue = float(app_data.get("queue_vehicles", 0.0))
-                flow_in = float(app_data.get("flow_rate", 0.0)) / 3600.0  # veh/sec
-                occupancy = float(app_data.get("occupancy", 0.0))       # 0.0 to 1.0
+            if movements:
+                for m in movements:
+                    from_app = m.get("from_approach", "")
+                    to_node = m.get("to_node")
+                    
+                    q_in = queue_map.get(from_app, 0.0)
+                    f_in = flow_map.get(from_app, 0.0)
 
-                # Sending capacity (demand from upstream)
-                sending_capacity = min(self.saturation_flow_vps, queue / 10.0 + flow_in)
+                    # Upstream Sending Capacity (Demand)
+                    sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + f_in)
 
-                # Receiving capacity (supply at downstream / link capacity)
-                # If occupancy is high (>0.9), receiving capacity drops toward 0 to prevent gridlock
-                receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - occupancy)
+                    # Downstream Receiving Capacity (Supply)
+                    occ_down = 0.0
+                    if to_node and network_state and to_node in network_state:
+                        to_apps = network_state[to_node].get("approaches", [])
+                        if to_apps:
+                            occ_down = sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) / len(to_apps)
+                    else:
+                        occ_down = occ_map.get(from_app, 0.0)
 
-                # Bottleneck flow
-                effective_flow = min(sending_capacity, receiving_capacity)
-                total_effective_flow += effective_flow
+                    if occ_down >= 0.85:
+                        receiving_capacity = 0.0  # Cut flow if downstream is jammed to prevent gridlock
+                    else:
+                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - occ_down)
+
+                    effective_flow = min(sending_capacity, receiving_capacity)
+                    total_effective_flow += effective_flow
+            else:
+                phase_apps = phase.get("approaches", [])
+                for app_id in phase_apps:
+                    q_in = queue_map.get(app_id, 0.0)
+                    f_in = flow_map.get(app_id, 0.0)
+                    occ_in = occ_map.get(app_id, 0.0)
+                    sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + f_in)
+                    receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - occ_in) if occ_in < 0.85 else 0.0
+                    effective_flow = min(sending_capacity, receiving_capacity)
+                    total_effective_flow += effective_flow
 
             phase_flows[phase_id] = total_effective_flow
 
         if phase_flows:
             target_phase = max(phase_flows.items(), key=lambda x: x[1])[0]
         else:
-            target_phase = telemetry.get("current_phase_id", "J1_PHASE_NS")
+            target_phase = current_phase_id
+
+        if target_phase != current_phase_id:
+            ns["current_phase_id"] = target_phase
+            ns["phase_start_time"] = now
 
         return {
             "command_id": str(uuid.uuid4()),
@@ -824,6 +901,6 @@ class FlowTheoryController(BaseController):
             "target_phase_id": target_phase,
             "min_green_s": self.min_green_s,
             "max_green_s": self.max_green_s,
-            "controller": "flow_theory"
+            "controller": "flow_theory",
         }
 
