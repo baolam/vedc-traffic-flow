@@ -771,7 +771,14 @@ class FlowTheoryController(BaseController):
         self.max_green_s = max_green_s
         self.saturation_flow_vps = saturation_flow_vps
 
-    def compute_command(self, node_id: str, telemetry: Dict[str, Any], topology: Dict[str, Any]) -> Dict[str, Any]:
+    def compute_command(
+        self,
+        node_id: str,
+        telemetry: Dict[str, Any],
+        topology: Dict[str, Any],
+        network_state: Optional[Dict[str, Any]] = None,
+        current_time_s: Optional[float] = None,
+    ) -> Optional[Dict[str, Any]]:
         node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
         phases = node_info.get("phases", []) if node_info else []
         if not phases:

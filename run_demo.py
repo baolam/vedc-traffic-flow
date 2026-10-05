@@ -54,7 +54,7 @@ import contracts_sdk
 from sumo_runner import generate_sumo_routes
 from controller import (
     FixedTimeController, ActuatedController, MaxQueueController,
-    MaxPressureController, EdgeFlowController,
+    MaxPressureController, EdgeFlowController, PressLightRLController, FlowTheoryController,
 )
 from state_machine import ActuatorStateMachine
 
@@ -230,6 +230,10 @@ def run_demo_simulation(
         "max_queue": lambda: MaxQueueController(),
         "max_pressure": lambda: MaxPressureController(),
         "edgeflow": lambda: EdgeFlowController(),
+        "presslight_rl": lambda: PressLightRLController(),
+        "rl": lambda: PressLightRLController(),
+        "flow_theory": lambda: FlowTheoryController(),
+        "ctm": lambda: FlowTheoryController(),
     }
     ctrl_key = controller_name.lower()
     controller = CONTROLLERS.get(ctrl_key, CONTROLLERS["edgeflow"])()

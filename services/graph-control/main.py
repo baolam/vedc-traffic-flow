@@ -26,17 +26,16 @@ def create_controller():
     elif controller_type == "max_pressure":
         logger.info("Initializing MaxPressureController (Movement-based)")
         return MaxPressureController()
-    elif controller_type in ("flow_theory", "ctm"):
-        logger.info("Initializing FlowTheoryController (CTM)")
+    elif controller_type in ("flow", "flow_theory", "ctm"):
+        logger.info("Initializing FlowTheoryController (CTM Flow Model)")
         return FlowTheoryController()
     elif controller_type == "max_queue":
         logger.info("Initializing MaxQueueController (Baseline queue-sum)")
         return MaxQueueController()
-    elif controller_type in ["presslight_rl", "rl", "presslight", "rl_ppo"]:
-        logger.info("Initializing PressLightRLController (Deep Q-Network Agent)")
-        if not settings.rl_model_path:
-            raise ValueError("RL_MODEL_PATH is required for a learned RL controller")
-        return PressLightRLController(model_path=settings.rl_model_path)
+    elif controller_type in ["presslight_rl", "rl", "flow_rl", "presslight", "rl_ppo"]:
+        logger.info("Initializing PressLightRLController (Deep Q-Network Agent / Pressure Heuristic)")
+        model_path = settings.rl_model_path if settings.rl_model_path else None
+        return PressLightRLController(model_path=model_path)
     else:
         logger.info("Initializing FixedTimeController")
         return FixedTimeController()
