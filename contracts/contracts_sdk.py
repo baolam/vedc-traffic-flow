@@ -97,6 +97,9 @@ TOPOLOGY_ALIASES = {
     "crossroad": "junction",
     "cologne8": "cologne",
     "grid4x4": "grid16",
+    "example": "hcm_corridor",
+    "hcm": "hcm_corridor",
+    "hcm_demo": "hcm_corridor",
 }
 
 

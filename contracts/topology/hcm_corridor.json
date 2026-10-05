@@ -1,0 +1,1808 @@
+{
+  "topology_id": "hcm_corridor",
+  "version": "1.0",
+  "name": "TP.HCM Urban Corridor Graph (29 Traffic Light Junctions)",
+  "description": "Canonical TP.HCM urban corridor network with 29 traffic light intersections, polygon map layer, and raster vehicle fleet icons.",
+  "nodes": [
+    {
+      "node_id": "2217938301",
+      "name": "Junction 2217938301",
+      "approaches": [
+        "-211849412",
+        "-32576065#1",
+        "32576065#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217938301_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-211849412",
+            "-32576065#1"
+          ]
+        },
+        {
+          "phase_id": "2217938301_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576065#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2217938309",
+      "name": "Junction 2217938309",
+      "approaches": [
+        "-32576061#4",
+        "-211849413#0",
+        "32576061#3",
+        "1061035915#2"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217938309_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576061#4",
+            "-211849413#0"
+          ]
+        },
+        {
+          "phase_id": "2217938309_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576061#3",
+            "1061035915#2"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2217938311",
+      "name": "Junction 2217938311",
+      "approaches": [
+        "-290729088#0",
+        "-290729089",
+        "211849415#1"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217938311_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-290729088#0",
+            "-290729089"
+          ]
+        },
+        {
+          "phase_id": "2217938311_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "211849415#1"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2217938313",
+      "name": "Junction 2217938313",
+      "approaches": [
+        "-32577015#7",
+        "211849412",
+        "32577015#6"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217938313_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32577015#7",
+            "211849412"
+          ]
+        },
+        {
+          "phase_id": "2217938313_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32577015#6"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2217938327",
+      "name": "Junction 2217938327",
+      "approaches": [
+        "-32576061#3",
+        "-290729088#3",
+        "32576061#2",
+        "290729088#2"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217938327_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576061#3",
+            "-290729088#3"
+          ]
+        },
+        {
+          "phase_id": "2217938327_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576061#2",
+            "290729088#2"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2217939289",
+      "name": "Junction 2217939289",
+      "approaches": [
+        "-211849500#0",
+        "1060982830",
+        "606543127",
+        "-32576063"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217939289_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-211849500#0",
+            "1060982830"
+          ]
+        },
+        {
+          "phase_id": "2217939289_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "606543127",
+            "-32576063"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2217939291",
+      "name": "Junction 2217939291",
+      "approaches": [
+        "-211849500#1",
+        "211849499",
+        "211849500#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "2217939291_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-211849500#1",
+            "211849499"
+          ]
+        },
+        {
+          "phase_id": "2217939291_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "211849500#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2938641215",
+      "name": "Junction 2938641215",
+      "approaches": [
+        "290307095",
+        "-32577015#6",
+        "32577015#5"
+      ],
+      "phases": [
+        {
+          "phase_id": "2938641215_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "290307095",
+            "-32577015#6"
+          ]
+        },
+        {
+          "phase_id": "2938641215_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32577015#5"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2942327970",
+      "name": "Junction 2942327970",
+      "approaches": [
+        "-32576064#1",
+        "-290729095#1",
+        "32576064#0",
+        "290729095#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "2942327970_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576064#1",
+            "-290729095#1"
+          ]
+        },
+        {
+          "phase_id": "2942327970_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576064#0",
+            "290729095#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "2942327993",
+      "name": "Junction 2942327993",
+      "approaches": [
+        "290729098",
+        "-32585157#1",
+        "-32577015#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "2942327993_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "290729098",
+            "-32585157#1"
+          ]
+        },
+        {
+          "phase_id": "2942327993_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-32577015#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "366384741",
+      "name": "Junction 366384741",
+      "approaches": [
+        "-32577015#9",
+        "211849500#1",
+        "32577015#8"
+      ],
+      "phases": [
+        {
+          "phase_id": "366384741_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32577015#9",
+            "211849500#1"
+          ]
+        },
+        {
+          "phase_id": "366384741_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32577015#8"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "366400259",
+      "name": "Junction 366400259",
+      "approaches": [
+        "-32577015#1",
+        "-32576066#0",
+        "-32585157#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "366400259_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32577015#1",
+            "-32576066#0"
+          ]
+        },
+        {
+          "phase_id": "366400259_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-32585157#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "366415782",
+      "name": "Junction 366415782",
+      "approaches": [
+        "-32576061#6",
+        "-32576064#0",
+        "-290729094#0",
+        "32576061#5",
+        "-211849499"
+      ],
+      "phases": [
+        {
+          "phase_id": "366415782_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576061#6",
+            "-32576064#0"
+          ]
+        },
+        {
+          "phase_id": "366415782_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-290729094#0",
+            "32576061#5",
+            "-211849499"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "366426721",
+      "name": "Junction 366426721",
+      "approaches": [
+        "-32576061#1",
+        "606543119",
+        "32576061#0",
+        "32576066#5"
+      ],
+      "phases": [
+        {
+          "phase_id": "366426721_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576061#1",
+            "606543119"
+          ]
+        },
+        {
+          "phase_id": "366426721_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576061#0",
+            "32576066#5"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "366459280",
+      "name": "Junction 366459280",
+      "approaches": [
+        "-32576061#5",
+        "32576061#4",
+        "-1060982830"
+      ],
+      "phases": [
+        {
+          "phase_id": "366459280_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576061#5",
+            "32576061#4"
+          ]
+        },
+        {
+          "phase_id": "366459280_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-1060982830"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "5750599983",
+      "name": "Junction 5750599983",
+      "approaches": [
+        "-606543102",
+        "-32576066#1",
+        "32576066#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "5750599983_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-606543102",
+            "-32576066#1"
+          ]
+        },
+        {
+          "phase_id": "5750599983_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576066#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "5750600545",
+      "name": "Junction 5750600545",
+      "approaches": [
+        "-32576061#2",
+        "606543117",
+        "32576061#1"
+      ],
+      "phases": [
+        {
+          "phase_id": "5750600545_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576061#2",
+            "606543117"
+          ]
+        },
+        {
+          "phase_id": "5750600545_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576061#1"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "5750600562",
+      "name": "Junction 5750600562",
+      "approaches": [
+        "-606543121",
+        "-32577015#8",
+        "32577015#7"
+      ],
+      "phases": [
+        {
+          "phase_id": "5750600562_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-606543121",
+            "-32577015#8"
+          ]
+        },
+        {
+          "phase_id": "5750600562_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32577015#7"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "5750600584",
+      "name": "Junction 5750600584",
+      "approaches": [
+        "-32577015#2",
+        "32577015#1",
+        "606543133"
+      ],
+      "phases": [
+        {
+          "phase_id": "5750600584_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32577015#2",
+            "32577015#1"
+          ]
+        },
+        {
+          "phase_id": "5750600584_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "606543133"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "7819058842",
+      "name": "Junction 7819058842",
+      "approaches": [
+        "290729095#1",
+        "-290729094#1",
+        "-837746353",
+        "290729094#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "7819058842_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "290729095#1",
+            "-290729094#1"
+          ]
+        },
+        {
+          "phase_id": "7819058842_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-837746353",
+            "290729094#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_11553495261_366408179",
+      "name": "Junction cluster_11553495261_366408179",
+      "approaches": [
+        "290729089",
+        "-32576066#3",
+        "-1243137731",
+        "32576066#1"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_11553495261_366408179_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "290729089",
+            "-32576066#3"
+          ]
+        },
+        {
+          "phase_id": "cluster_11553495261_366408179_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-1243137731",
+            "32576066#1"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_2217938303_2217938318",
+      "name": "Junction cluster_2217938303_2217938318",
+      "approaches": [
+        "-32576065#0",
+        "-211849415#1",
+        "606543102",
+        "1061042908"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_2217938303_2217938318_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32576065#0",
+            "-211849415#1"
+          ]
+        },
+        {
+          "phase_id": "cluster_2217938303_2217938318_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "606543102",
+            "1061042908"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_2938641203_366431367_5750600582",
+      "name": "Junction cluster_2938641203_366431367_5750600582",
+      "approaches": [
+        "-32577015#5",
+        "-1061042908",
+        "32577015#2",
+        "606543132",
+        "-606543131"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-32577015#5",
+            "-1061042908"
+          ]
+        },
+        {
+          "phase_id": "cluster_2938641203_366431367_5750600582_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32577015#2",
+            "606543132",
+            "-606543131"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_2942327942_366465117",
+      "name": "Junction cluster_2942327942_366465117",
+      "approaches": [
+        "32576063",
+        "-1061035915#0",
+        "290729090#0",
+        "32576065#1"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_2942327942_366465117_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "32576063",
+            "-1061035915#0"
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327942_366465117_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "290729090#0",
+            "32576065#1"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_2942327969_745747032",
+      "name": "Junction cluster_2942327969_745747032",
+      "approaches": [
+        "-606549682#1",
+        "-290729095#0",
+        "32576061#6",
+        "32577015#9"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_2942327969_745747032_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-606549682#1",
+            "-290729095#0"
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327969_745747032_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "32576061#6",
+            "32577015#9"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_2942327973_8348405138",
+      "name": "Junction cluster_2942327973_8348405138",
+      "approaches": [
+        "-898358167",
+        "-211849413#2",
+        "-837745310",
+        "211849413#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_2942327973_8348405138_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-898358167",
+            "-211849413#2"
+          ]
+        },
+        {
+          "phase_id": "cluster_2942327973_8348405138_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-837745310",
+            "211849413#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_5750600569_5750600570",
+      "name": "Junction cluster_5750600569_5750600570",
+      "approaches": [
+        "606543125",
+        "-32576066#5",
+        "-606543124",
+        "32576066#3"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_5750600569_5750600570_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "606543125",
+            "-32576066#5"
+          ]
+        },
+        {
+          "phase_id": "cluster_5750600569_5750600570_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-606543124",
+            "32576066#3"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_5750600571_5750600573",
+      "name": "Junction cluster_5750600571_5750600573",
+      "approaches": [
+        "-606543126",
+        "-290729088#2",
+        "-606543125",
+        "290729088#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_5750600571_5750600573_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-606543126",
+            "-290729088#2"
+          ]
+        },
+        {
+          "phase_id": "cluster_5750600571_5750600573_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "-606543125",
+            "290729088#0"
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "cluster_5750600572_5750600575",
+      "name": "Junction cluster_5750600572_5750600575",
+      "approaches": [
+        "-606543127",
+        "-1061035915#2",
+        "606543126",
+        "1061035915#0"
+      ],
+      "phases": [
+        {
+          "phase_id": "cluster_5750600572_5750600575_PHASE_NS",
+          "name": "North-South Phase",
+          "approaches": [
+            "-606543127",
+            "-1061035915#2"
+          ]
+        },
+        {
+          "phase_id": "cluster_5750600572_5750600575_PHASE_EW",
+          "name": "East-West Phase",
+          "approaches": [
+            "606543126",
+            "1061035915#0"
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "-1060982830",
+      "from_node": "2217939289",
+      "to_node": "366459280",
+      "length_m": 40.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-1061035915#0",
+      "from_node": "cluster_5750600572_5750600575",
+      "to_node": "cluster_2942327942_366465117",
+      "length_m": 34.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-1061035915#2",
+      "from_node": "2217938309",
+      "to_node": "cluster_5750600572_5750600575",
+      "length_m": 32.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-1061042908",
+      "from_node": "cluster_2217938303_2217938318",
+      "to_node": "cluster_2938641203_366431367_5750600582",
+      "length_m": 59.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-1243137731",
+      "from_node": "11553495260",
+      "to_node": "cluster_11553495261_366408179",
+      "length_m": 16.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "-211849412",
+      "from_node": "2217938313",
+      "to_node": "2217938301",
+      "length_m": 44.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-211849413#0",
+      "from_node": "cluster_2942327973_8348405138",
+      "to_node": "2217938309",
+      "length_m": 42.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-211849413#2",
+      "from_node": "5750600014",
+      "to_node": "cluster_2942327973_8348405138",
+      "length_m": 44.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-211849415#1",
+      "from_node": "2217938311",
+      "to_node": "cluster_2217938303_2217938318",
+      "length_m": 34.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-211849499",
+      "from_node": "2217939291",
+      "to_node": "366415782",
+      "length_m": 41.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-211849500#0",
+      "from_node": "2217939291",
+      "to_node": "2217939289",
+      "length_m": 9.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-211849500#1",
+      "from_node": "366384741",
+      "to_node": "2217939291",
+      "length_m": 13.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290307095",
+      "from_node": "2938641215",
+      "to_node": "2938641204",
+      "length_m": 211.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "-290729088#0",
+      "from_node": "cluster_5750600571_5750600573",
+      "to_node": "2217938311",
+      "length_m": 36.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729088#2",
+      "from_node": "2217938327",
+      "to_node": "cluster_5750600571_5750600573",
+      "length_m": 30.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729088#3",
+      "from_node": "2942327975",
+      "to_node": "2217938327",
+      "length_m": 35.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729089",
+      "from_node": "cluster_11553495261_366408179",
+      "to_node": "2217938311",
+      "length_m": 32.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729094#0",
+      "from_node": "7819058842",
+      "to_node": "366415782",
+      "length_m": 36.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729094#1",
+      "from_node": "2942327967",
+      "to_node": "7819058842",
+      "length_m": 84.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729095#0",
+      "from_node": "2942327970",
+      "to_node": "cluster_2942327969_745747032",
+      "length_m": 32.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729095#1",
+      "from_node": "7819058842",
+      "to_node": "2942327970",
+      "length_m": 26.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-290729098",
+      "from_node": "2942327993",
+      "to_node": "2942327991",
+      "length_m": 80.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "-32576061#0",
+      "from_node": "366426721",
+      "to_node": "11082694019",
+      "length_m": 60.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576061#1",
+      "from_node": "5750600545",
+      "to_node": "366426721",
+      "length_m": 0.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576061#2",
+      "from_node": "2217938327",
+      "to_node": "5750600545",
+      "length_m": 20.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576061#3",
+      "from_node": "2217938309",
+      "to_node": "2217938327",
+      "length_m": 26.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576061#4",
+      "from_node": "366459280",
+      "to_node": "2217938309",
+      "length_m": 30.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576061#5",
+      "from_node": "366415782",
+      "to_node": "366459280",
+      "length_m": 10.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576061#6",
+      "from_node": "cluster_2942327969_745747032",
+      "to_node": "366415782",
+      "length_m": 45.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576063",
+      "from_node": "cluster_2942327942_366465117",
+      "to_node": "2217939289",
+      "length_m": 76.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576064#0",
+      "from_node": "2942327970",
+      "to_node": "366415782",
+      "length_m": 37.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576064#1",
+      "from_node": "2217939290",
+      "to_node": "2942327970",
+      "length_m": 120.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576065#0",
+      "from_node": "2217938301",
+      "to_node": "cluster_2217938303_2217938318",
+      "length_m": 8.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576065#1",
+      "from_node": "cluster_2942327942_366465117",
+      "to_node": "2217938301",
+      "length_m": 27.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576066#0",
+      "from_node": "5750599983",
+      "to_node": "366400259",
+      "length_m": 76.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576066#1",
+      "from_node": "cluster_11553495261_366408179",
+      "to_node": "5750599983",
+      "length_m": 36.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576066#3",
+      "from_node": "cluster_5750600569_5750600570",
+      "to_node": "cluster_11553495261_366408179",
+      "length_m": 36.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32576066#5",
+      "from_node": "366426721",
+      "to_node": "cluster_5750600569_5750600570",
+      "length_m": 31.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#0",
+      "from_node": "366400259",
+      "to_node": "2942327993",
+      "length_m": 225.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#1",
+      "from_node": "5750600584",
+      "to_node": "366400259",
+      "length_m": 20.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#2",
+      "from_node": "cluster_2938641203_366431367_5750600582",
+      "to_node": "5750600584",
+      "length_m": 21.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#5",
+      "from_node": "2938641215",
+      "to_node": "cluster_2938641203_366431367_5750600582",
+      "length_m": 55.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#6",
+      "from_node": "2217938313",
+      "to_node": "2938641215",
+      "length_m": 11.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#7",
+      "from_node": "5750600562",
+      "to_node": "2217938313",
+      "length_m": 23.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#8",
+      "from_node": "366384741",
+      "to_node": "5750600562",
+      "length_m": 55.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32577015#9",
+      "from_node": "cluster_2942327969_745747032",
+      "to_node": "366384741",
+      "length_m": 52.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32585157#0",
+      "from_node": "2942327993",
+      "to_node": "366400259",
+      "length_m": 218.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-32585157#1",
+      "from_node": "366377391",
+      "to_node": "2942327993",
+      "length_m": 265.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543102",
+      "from_node": "cluster_2217938303_2217938318",
+      "to_node": "5750599983",
+      "length_m": 32.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543117",
+      "from_node": "5750600545",
+      "to_node": "5750600546",
+      "length_m": 13.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543119",
+      "from_node": "366426721",
+      "to_node": "5750600551",
+      "length_m": 11.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543121",
+      "from_node": "5750600561",
+      "to_node": "5750600562",
+      "length_m": 22.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543124",
+      "from_node": "11082694020",
+      "to_node": "cluster_5750600569_5750600570",
+      "length_m": 50.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543125",
+      "from_node": "cluster_5750600569_5750600570",
+      "to_node": "cluster_5750600571_5750600573",
+      "length_m": 32.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543126",
+      "from_node": "cluster_5750600572_5750600575",
+      "to_node": "cluster_5750600571_5750600573",
+      "length_m": 25.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543127",
+      "from_node": "2217939289",
+      "to_node": "cluster_5750600572_5750600575",
+      "length_m": 32.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543131",
+      "from_node": "5750599984",
+      "to_node": "cluster_2938641203_366431367_5750600582",
+      "length_m": 179.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543132",
+      "from_node": "cluster_2938641203_366431367_5750600582",
+      "to_node": "5750600583",
+      "length_m": 53.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606543133",
+      "from_node": "5750600584",
+      "to_node": "5750600585",
+      "length_m": 34.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-606549682#1",
+      "from_node": "366475559",
+      "to_node": "cluster_2942327969_745747032",
+      "length_m": 117.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-837745310",
+      "from_node": "7819046262",
+      "to_node": "cluster_2942327973_8348405138",
+      "length_m": 15.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "-837746353",
+      "from_node": "7819058827",
+      "to_node": "7819058842",
+      "length_m": 115.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "-898358167",
+      "from_node": "8348405137",
+      "to_node": "cluster_2942327973_8348405138",
+      "length_m": 30.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "1060982830",
+      "from_node": "366459280",
+      "to_node": "2217939289",
+      "length_m": 40.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "1061035915#0",
+      "from_node": "cluster_2942327942_366465117",
+      "to_node": "cluster_5750600572_5750600575",
+      "length_m": 34.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "1061035915#2",
+      "from_node": "cluster_5750600572_5750600575",
+      "to_node": "2217938309",
+      "length_m": 32.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "1061042908",
+      "from_node": "cluster_2938641203_366431367_5750600582",
+      "to_node": "cluster_2217938303_2217938318",
+      "length_m": 59.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "1243137731",
+      "from_node": "cluster_11553495261_366408179",
+      "to_node": "11553495260",
+      "length_m": 16.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "211849412",
+      "from_node": "2217938301",
+      "to_node": "2217938313",
+      "length_m": 44.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "211849413#0",
+      "from_node": "2217938309",
+      "to_node": "cluster_2942327973_8348405138",
+      "length_m": 41.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "211849413#2",
+      "from_node": "cluster_2942327973_8348405138",
+      "to_node": "5750600014",
+      "length_m": 44.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "211849415#1",
+      "from_node": "cluster_2217938303_2217938318",
+      "to_node": "2217938311",
+      "length_m": 34.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "211849499",
+      "from_node": "366415782",
+      "to_node": "2217939291",
+      "length_m": 41.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "211849500#0",
+      "from_node": "2217939289",
+      "to_node": "2217939291",
+      "length_m": 9.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "211849500#1",
+      "from_node": "2217939291",
+      "to_node": "366384741",
+      "length_m": 13.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290307095",
+      "from_node": "2938641204",
+      "to_node": "2938641215",
+      "length_m": 211.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "290729088#0",
+      "from_node": "2217938311",
+      "to_node": "cluster_5750600571_5750600573",
+      "length_m": 36.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729088#2",
+      "from_node": "cluster_5750600571_5750600573",
+      "to_node": "2217938327",
+      "length_m": 30.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729088#3",
+      "from_node": "2217938327",
+      "to_node": "2942327975",
+      "length_m": 35.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729089",
+      "from_node": "2217938311",
+      "to_node": "cluster_11553495261_366408179",
+      "length_m": 32.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729090#0",
+      "from_node": "2942327937",
+      "to_node": "cluster_2942327942_366465117",
+      "length_m": 33.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 2.78
+    },
+    {
+      "edge_id": "290729090#1",
+      "from_node": "cluster_2942327942_366465117",
+      "to_node": "2942327937",
+      "length_m": 72.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 2.78
+    },
+    {
+      "edge_id": "290729094#0",
+      "from_node": "366415782",
+      "to_node": "7819058842",
+      "length_m": 36.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729094#1",
+      "from_node": "7819058842",
+      "to_node": "2942327967",
+      "length_m": 86.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729095#0",
+      "from_node": "cluster_2942327969_745747032",
+      "to_node": "2942327970",
+      "length_m": 32.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729095#1",
+      "from_node": "2942327970",
+      "to_node": "7819058842",
+      "length_m": 25.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "290729098",
+      "from_node": "2942327991",
+      "to_node": "2942327993",
+      "length_m": 80.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "32576061#0",
+      "from_node": "11082694019",
+      "to_node": "366426721",
+      "length_m": 60.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576061#1",
+      "from_node": "366426721",
+      "to_node": "5750600545",
+      "length_m": 0.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576061#2",
+      "from_node": "5750600545",
+      "to_node": "2217938327",
+      "length_m": 20.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576061#3",
+      "from_node": "2217938327",
+      "to_node": "2217938309",
+      "length_m": 26.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576061#4",
+      "from_node": "2217938309",
+      "to_node": "366459280",
+      "length_m": 30.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576061#5",
+      "from_node": "366459280",
+      "to_node": "366415782",
+      "length_m": 10.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576061#6",
+      "from_node": "366415782",
+      "to_node": "cluster_2942327969_745747032",
+      "length_m": 45.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576063",
+      "from_node": "2217939289",
+      "to_node": "cluster_2942327942_366465117",
+      "length_m": 81.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576064#0",
+      "from_node": "366415782",
+      "to_node": "2942327970",
+      "length_m": 37.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576064#1",
+      "from_node": "2942327970",
+      "to_node": "2217939290",
+      "length_m": 120.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576065#0",
+      "from_node": "cluster_2217938303_2217938318",
+      "to_node": "2217938301",
+      "length_m": 8.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576065#1",
+      "from_node": "2217938301",
+      "to_node": "cluster_2942327942_366465117",
+      "length_m": 27.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576066#0",
+      "from_node": "366400259",
+      "to_node": "5750599983",
+      "length_m": 76.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576066#1",
+      "from_node": "5750599983",
+      "to_node": "cluster_11553495261_366408179",
+      "length_m": 36.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576066#3",
+      "from_node": "cluster_11553495261_366408179",
+      "to_node": "cluster_5750600569_5750600570",
+      "length_m": 36.0,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32576066#5",
+      "from_node": "cluster_5750600569_5750600570",
+      "to_node": "366426721",
+      "length_m": 31.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#1",
+      "from_node": "366400259",
+      "to_node": "5750600584",
+      "length_m": 20.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#2",
+      "from_node": "5750600584",
+      "to_node": "cluster_2938641203_366431367_5750600582",
+      "length_m": 21.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#5",
+      "from_node": "cluster_2938641203_366431367_5750600582",
+      "to_node": "2938641215",
+      "length_m": 52.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#6",
+      "from_node": "2938641215",
+      "to_node": "2217938313",
+      "length_m": 11.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#7",
+      "from_node": "2217938313",
+      "to_node": "5750600562",
+      "length_m": 23.9,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#8",
+      "from_node": "5750600562",
+      "to_node": "366384741",
+      "length_m": 56.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32577015#9",
+      "from_node": "366384741",
+      "to_node": "cluster_2942327969_745747032",
+      "length_m": 52.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "32585157#1",
+      "from_node": "2942327993",
+      "to_node": "366377391",
+      "length_m": 258.5,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543102",
+      "from_node": "5750599983",
+      "to_node": "cluster_2217938303_2217938318",
+      "length_m": 32.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543117",
+      "from_node": "5750600546",
+      "to_node": "5750600545",
+      "length_m": 13.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543119",
+      "from_node": "5750600551",
+      "to_node": "366426721",
+      "length_m": 11.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543121",
+      "from_node": "5750600562",
+      "to_node": "5750600561",
+      "length_m": 22.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543124",
+      "from_node": "cluster_5750600569_5750600570",
+      "to_node": "11082694020",
+      "length_m": 50.4,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543125",
+      "from_node": "cluster_5750600571_5750600573",
+      "to_node": "cluster_5750600569_5750600570",
+      "length_m": 32.7,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543126",
+      "from_node": "cluster_5750600571_5750600573",
+      "to_node": "cluster_5750600572_5750600575",
+      "length_m": 25.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543127",
+      "from_node": "cluster_5750600572_5750600575",
+      "to_node": "2217939289",
+      "length_m": 32.3,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543131",
+      "from_node": "cluster_2938641203_366431367_5750600582",
+      "to_node": "5750599984",
+      "length_m": 179.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543132",
+      "from_node": "5750600583",
+      "to_node": "cluster_2938641203_366431367_5750600582",
+      "length_m": 53.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606543133",
+      "from_node": "5750600585",
+      "to_node": "5750600584",
+      "length_m": 34.6,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "606549682#1",
+      "from_node": "cluster_2942327969_745747032",
+      "to_node": "366475559",
+      "length_m": 117.2,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "837745310",
+      "from_node": "cluster_2942327973_8348405138",
+      "to_node": "7819046262",
+      "length_m": 15.1,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    },
+    {
+      "edge_id": "837746353",
+      "from_node": "7819058842",
+      "to_node": "7819058827",
+      "length_m": 114.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 5.56
+    },
+    {
+      "edge_id": "898358167",
+      "from_node": "cluster_2942327973_8348405138",
+      "to_node": "8348405137",
+      "length_m": 30.8,
+      "lanes_count": 1,
+      "speed_limit_mps": 13.89
+    }
+  ]
+}

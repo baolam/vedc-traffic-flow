@@ -94,6 +94,15 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         category="realworld",
         supported_topologies=["cologne", "cologne8"],
     ),
+    "hcm_corridor": ScenarioProfile(
+        scenario_id="hcm_corridor",
+        name="TP.HCM Urban Corridor (29 Junction Network)",
+        description="29-intersection TP.HCM urban corridor map with raster vehicle icons, map polygons, and emission telemetry.",
+        flow_rates={},
+        default_duration_s=3600,
+        category="realworld",
+        supported_topologies=["hcm_corridor", "hcm", "example"],
+    ),
 }
 
 

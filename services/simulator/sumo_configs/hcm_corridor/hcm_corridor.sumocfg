@@ -1,0 +1,12 @@
+<configuration>
+    <input>
+    	<net-file value="hcm_corridor.net.xml"/>
+    	<route-files value="vehicles.rou.xml,hcm_corridor.rou.xml"/>
+    	<additional-files value="map.poly.xml"/>
+    </input>
+
+    <time>
+        <begin value="0"/>
+        <end value="3600"/>
+    </time>
+</configuration>
