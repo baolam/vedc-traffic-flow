@@ -857,12 +857,29 @@ class FlowTheoryController(BaseController):
                     # Upstream Sending Capacity (Demand)
                     sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + f_in)
 
-                    # Downstream Receiving Capacity (Supply)
+                    # Downstream Receiving Capacity (Supply via Graph Topology G=(V,E))
                     occ_down = 0.0
                     if to_node and network_state and to_node in network_state:
-                        to_apps = network_state[to_node].get("approaches", [])
+                        to_node_data = network_state[to_node]
+                        to_apps = to_node_data.get("approaches", [])
                         if to_apps:
                             occ_down = sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) / len(to_apps)
+
+                        # Graph Theory Multi-hop Path Bottleneck (2-hop graph reachability):
+                        # Inspect 2-hop downstream neighbors in graph topology G
+                        to_node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == to_node), None)
+                        if to_node_info and to_node_info.get("phases"):
+                            hop2_occs = []
+                            for p2 in to_node_info["phases"]:
+                                for m2 in p2.get("movements", []):
+                                    to2_node = m2.get("to_node")
+                                    if to2_node and network_state and to2_node in network_state:
+                                        to2_apps = network_state[to2_node].get("approaches", [])
+                                        if to2_apps:
+                                            hop2_occs.append(sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to2_apps) / len(to2_apps))
+                            if hop2_occs:
+                                hop2_avg_occ = sum(hop2_occs) / len(hop2_occs)
+                                occ_down = max(occ_down, 0.7 * hop2_avg_occ)
                     else:
                         occ_down = occ_map.get(from_app, 0.0)
 
