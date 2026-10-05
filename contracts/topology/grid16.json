@@ -1,0 +1,2760 @@
+{
+  "topology_id": "grid16",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "A0",
+      "name": "SUMO Junction A0",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A1A0",
+        "B0A0",
+        "bottom0A0",
+        "left0A0"
+      ],
+      "phases": [
+        {
+          "phase_id": "A0_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A1A0",
+            "B0A0",
+            "bottom0A0",
+            "left0A0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "A0_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "bottom0A0",
+            "left0A0",
+            "A1A0",
+            "B0A0"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "A0_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "bottom0A0",
+            "left0A0",
+            "A1A0"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "A0_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A1A0",
+            "B0A0",
+            "bottom0A0",
+            "left0A0"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "A0_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "bottom0A0",
+            "left0A0",
+            "A1A0",
+            "B0A0"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "A0_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "B0A0",
+            "bottom0A0",
+            "left0A0",
+            "A1A0"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "A0_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "left0A0",
+            "A1A0",
+            "B0A0",
+            "bottom0A0"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "A0_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "B0A0",
+            "bottom0A0",
+            "left0A0"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "A0_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "left0A0",
+            "A1A0",
+            "B0A0",
+            "bottom0A0"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "A0_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B0A0",
+            "bottom0A0",
+            "left0A0",
+            "A1A0"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "A1",
+      "name": "SUMO Junction A1",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A0A1",
+        "A2A1",
+        "B1A1",
+        "left1A1"
+      ],
+      "phases": [
+        {
+          "phase_id": "A1_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A0A1",
+            "A2A1",
+            "B1A1",
+            "left1A1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "A1_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "B1A1",
+            "left1A1",
+            "A0A1",
+            "A2A1"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "A1_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "B1A1",
+            "left1A1",
+            "A0A1"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "A1_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A0A1",
+            "A2A1",
+            "B1A1",
+            "left1A1"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "A1_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "B1A1",
+            "left1A1",
+            "A0A1",
+            "A2A1"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "A1_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "A2A1",
+            "B1A1",
+            "left1A1",
+            "A0A1"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "A1_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "left1A1",
+            "A0A1",
+            "A2A1",
+            "B1A1"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "A1_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "A2A1",
+            "B1A1",
+            "left1A1"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "A1_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "left1A1",
+            "A0A1",
+            "A2A1",
+            "B1A1"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "A1_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A2A1",
+            "B1A1",
+            "left1A1",
+            "A0A1"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "A2",
+      "name": "SUMO Junction A2",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A1A2",
+        "A3A2",
+        "B2A2",
+        "left2A2"
+      ],
+      "phases": [
+        {
+          "phase_id": "A2_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A1A2",
+            "A3A2",
+            "B2A2",
+            "left2A2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "A2_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "B2A2",
+            "left2A2",
+            "A1A2",
+            "A3A2"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "A2_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "B2A2",
+            "left2A2",
+            "A1A2"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "A2_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A1A2",
+            "A3A2",
+            "B2A2",
+            "left2A2"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "A2_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "B2A2",
+            "left2A2",
+            "A1A2",
+            "A3A2"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "A2_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "A3A2",
+            "B2A2",
+            "left2A2",
+            "A1A2"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "A2_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "left2A2",
+            "A1A2",
+            "A3A2",
+            "B2A2"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "A2_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "A3A2",
+            "B2A2",
+            "left2A2"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "A2_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "left2A2",
+            "A1A2",
+            "A3A2",
+            "B2A2"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "A2_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A3A2",
+            "B2A2",
+            "left2A2",
+            "A1A2"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "A3",
+      "name": "SUMO Junction A3",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A2A3",
+        "B3A3",
+        "left3A3",
+        "top0A3"
+      ],
+      "phases": [
+        {
+          "phase_id": "A3_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A2A3",
+            "B3A3",
+            "left3A3",
+            "top0A3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "A3_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "left3A3",
+            "top0A3",
+            "A2A3",
+            "B3A3"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "A3_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "left3A3",
+            "top0A3",
+            "A2A3"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "A3_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A2A3",
+            "B3A3",
+            "left3A3",
+            "top0A3"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "A3_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "left3A3",
+            "top0A3",
+            "A2A3",
+            "B3A3"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "A3_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "B3A3",
+            "left3A3",
+            "top0A3",
+            "A2A3"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "A3_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "top0A3",
+            "A2A3",
+            "B3A3",
+            "left3A3"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "A3_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "B3A3",
+            "left3A3",
+            "top0A3"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "A3_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "top0A3",
+            "A2A3",
+            "B3A3",
+            "left3A3"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "A3_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B3A3",
+            "left3A3",
+            "top0A3",
+            "A2A3"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "B0",
+      "name": "SUMO Junction B0",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A0B0",
+        "B1B0",
+        "C0B0",
+        "bottom1B0"
+      ],
+      "phases": [
+        {
+          "phase_id": "B0_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A0B0",
+            "B1B0",
+            "C0B0",
+            "bottom1B0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "B0_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "C0B0",
+            "bottom1B0",
+            "A0B0",
+            "B1B0"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "B0_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "C0B0",
+            "bottom1B0",
+            "A0B0"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "B0_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A0B0",
+            "B1B0",
+            "C0B0",
+            "bottom1B0"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "B0_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "C0B0",
+            "bottom1B0",
+            "A0B0",
+            "B1B0"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "B0_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "B1B0",
+            "C0B0",
+            "bottom1B0",
+            "A0B0"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "B0_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "bottom1B0",
+            "A0B0",
+            "B1B0",
+            "C0B0"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "B0_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "B1B0",
+            "C0B0",
+            "bottom1B0"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "B0_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "bottom1B0",
+            "A0B0",
+            "B1B0",
+            "C0B0"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "B0_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B1B0",
+            "C0B0",
+            "bottom1B0",
+            "A0B0"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "B1",
+      "name": "SUMO Junction B1",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A1B1",
+        "B0B1",
+        "B2B1",
+        "C1B1"
+      ],
+      "phases": [
+        {
+          "phase_id": "B1_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A1B1",
+            "B0B1",
+            "B2B1",
+            "C1B1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "B1_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "B2B1",
+            "C1B1",
+            "A1B1",
+            "B0B1"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "B1_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "B2B1",
+            "C1B1",
+            "A1B1"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "B1_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A1B1",
+            "B0B1",
+            "B2B1",
+            "C1B1"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "B1_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "B2B1",
+            "C1B1",
+            "A1B1",
+            "B0B1"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "B1_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "B0B1",
+            "B2B1",
+            "C1B1",
+            "A1B1"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "B1_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "C1B1",
+            "A1B1",
+            "B0B1",
+            "B2B1"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "B1_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "B0B1",
+            "B2B1",
+            "C1B1"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "B1_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "C1B1",
+            "A1B1",
+            "B0B1",
+            "B2B1"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "B1_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B0B1",
+            "B2B1",
+            "C1B1",
+            "A1B1"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "B2",
+      "name": "SUMO Junction B2",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A2B2",
+        "B1B2",
+        "B3B2",
+        "C2B2"
+      ],
+      "phases": [
+        {
+          "phase_id": "B2_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A2B2",
+            "B1B2",
+            "B3B2",
+            "C2B2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "B2_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "B3B2",
+            "C2B2",
+            "A2B2",
+            "B1B2"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "B2_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "B3B2",
+            "C2B2",
+            "A2B2"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "B2_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A2B2",
+            "B1B2",
+            "B3B2",
+            "C2B2"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "B2_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "B3B2",
+            "C2B2",
+            "A2B2",
+            "B1B2"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "B2_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "B1B2",
+            "B3B2",
+            "C2B2",
+            "A2B2"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "B2_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "C2B2",
+            "A2B2",
+            "B1B2",
+            "B3B2"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "B2_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "B1B2",
+            "B3B2",
+            "C2B2"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "B2_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "C2B2",
+            "A2B2",
+            "B1B2",
+            "B3B2"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "B2_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B1B2",
+            "B3B2",
+            "C2B2",
+            "A2B2"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "B3",
+      "name": "SUMO Junction B3",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "A3B3",
+        "B2B3",
+        "C3B3",
+        "top1B3"
+      ],
+      "phases": [
+        {
+          "phase_id": "B3_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "A3B3",
+            "B2B3",
+            "C3B3",
+            "top1B3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "B3_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "C3B3",
+            "top1B3",
+            "A3B3",
+            "B2B3"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "B3_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "C3B3",
+            "top1B3",
+            "A3B3"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "B3_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "A3B3",
+            "B2B3",
+            "C3B3",
+            "top1B3"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "B3_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "C3B3",
+            "top1B3",
+            "A3B3",
+            "B2B3"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "B3_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "B2B3",
+            "C3B3",
+            "top1B3",
+            "A3B3"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "B3_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "top1B3",
+            "A3B3",
+            "B2B3",
+            "C3B3"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "B3_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "B2B3",
+            "C3B3",
+            "top1B3"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "B3_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "top1B3",
+            "A3B3",
+            "B2B3",
+            "C3B3"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "B3_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B2B3",
+            "C3B3",
+            "top1B3",
+            "A3B3"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "C0",
+      "name": "SUMO Junction C0",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "B0C0",
+        "C1C0",
+        "D0C0",
+        "bottom2C0"
+      ],
+      "phases": [
+        {
+          "phase_id": "C0_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "B0C0",
+            "C1C0",
+            "D0C0",
+            "bottom2C0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "C0_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "D0C0",
+            "bottom2C0",
+            "B0C0",
+            "C1C0"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "C0_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "D0C0",
+            "bottom2C0",
+            "B0C0"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "C0_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B0C0",
+            "C1C0",
+            "D0C0",
+            "bottom2C0"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "C0_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "D0C0",
+            "bottom2C0",
+            "B0C0",
+            "C1C0"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "C0_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "C1C0",
+            "D0C0",
+            "bottom2C0",
+            "B0C0"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "C0_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "bottom2C0",
+            "B0C0",
+            "C1C0",
+            "D0C0"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "C0_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "C1C0",
+            "D0C0",
+            "bottom2C0"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "C0_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "bottom2C0",
+            "B0C0",
+            "C1C0",
+            "D0C0"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "C0_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C1C0",
+            "D0C0",
+            "bottom2C0",
+            "B0C0"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "C1",
+      "name": "SUMO Junction C1",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "B1C1",
+        "C0C1",
+        "C2C1",
+        "D1C1"
+      ],
+      "phases": [
+        {
+          "phase_id": "C1_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "B1C1",
+            "C0C1",
+            "C2C1",
+            "D1C1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "C1_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "C2C1",
+            "D1C1",
+            "B1C1",
+            "C0C1"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "C1_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "C2C1",
+            "D1C1",
+            "B1C1"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "C1_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B1C1",
+            "C0C1",
+            "C2C1",
+            "D1C1"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "C1_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "C2C1",
+            "D1C1",
+            "B1C1",
+            "C0C1"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "C1_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "C0C1",
+            "C2C1",
+            "D1C1",
+            "B1C1"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "C1_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "D1C1",
+            "B1C1",
+            "C0C1",
+            "C2C1"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "C1_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "C0C1",
+            "C2C1",
+            "D1C1"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "C1_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "D1C1",
+            "B1C1",
+            "C0C1",
+            "C2C1"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "C1_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C0C1",
+            "C2C1",
+            "D1C1",
+            "B1C1"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "C2",
+      "name": "SUMO Junction C2",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "B2C2",
+        "C1C2",
+        "C3C2",
+        "D2C2"
+      ],
+      "phases": [
+        {
+          "phase_id": "C2_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "B2C2",
+            "C1C2",
+            "C3C2",
+            "D2C2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "C2_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "C3C2",
+            "D2C2",
+            "B2C2",
+            "C1C2"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "C2_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "C3C2",
+            "D2C2",
+            "B2C2"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "C2_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B2C2",
+            "C1C2",
+            "C3C2",
+            "D2C2"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "C2_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "C3C2",
+            "D2C2",
+            "B2C2",
+            "C1C2"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "C2_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "C1C2",
+            "C3C2",
+            "D2C2",
+            "B2C2"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "C2_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "D2C2",
+            "B2C2",
+            "C1C2",
+            "C3C2"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "C2_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "C1C2",
+            "C3C2",
+            "D2C2"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "C2_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "D2C2",
+            "B2C2",
+            "C1C2",
+            "C3C2"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "C2_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C1C2",
+            "C3C2",
+            "D2C2",
+            "B2C2"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "C3",
+      "name": "SUMO Junction C3",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "B3C3",
+        "C2C3",
+        "D3C3",
+        "top2C3"
+      ],
+      "phases": [
+        {
+          "phase_id": "C3_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "B3C3",
+            "C2C3",
+            "D3C3",
+            "top2C3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "C3_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "D3C3",
+            "top2C3",
+            "B3C3",
+            "C2C3"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "C3_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "D3C3",
+            "top2C3",
+            "B3C3"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "C3_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "B3C3",
+            "C2C3",
+            "D3C3",
+            "top2C3"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "C3_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "D3C3",
+            "top2C3",
+            "B3C3",
+            "C2C3"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "C3_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "C2C3",
+            "D3C3",
+            "top2C3",
+            "B3C3"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "C3_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "top2C3",
+            "B3C3",
+            "C2C3",
+            "D3C3"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "C3_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "C2C3",
+            "D3C3",
+            "top2C3"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "C3_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "top2C3",
+            "B3C3",
+            "C2C3",
+            "D3C3"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "C3_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C2C3",
+            "D3C3",
+            "top2C3",
+            "B3C3"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "D0",
+      "name": "SUMO Junction D0",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "C0D0",
+        "D1D0",
+        "bottom3D0",
+        "right0D0"
+      ],
+      "phases": [
+        {
+          "phase_id": "D0_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "C0D0",
+            "D1D0",
+            "bottom3D0",
+            "right0D0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "D0_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "bottom3D0",
+            "right0D0",
+            "C0D0",
+            "D1D0"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "D0_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "bottom3D0",
+            "right0D0",
+            "C0D0"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "D0_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C0D0",
+            "D1D0",
+            "bottom3D0",
+            "right0D0"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "D0_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "bottom3D0",
+            "right0D0",
+            "C0D0",
+            "D1D0"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "D0_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "D1D0",
+            "bottom3D0",
+            "right0D0",
+            "C0D0"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "D0_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "right0D0",
+            "C0D0",
+            "D1D0",
+            "bottom3D0"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "D0_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "D1D0",
+            "bottom3D0",
+            "right0D0"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "D0_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "right0D0",
+            "C0D0",
+            "D1D0",
+            "bottom3D0"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "D0_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "D1D0",
+            "bottom3D0",
+            "right0D0",
+            "C0D0"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "D1",
+      "name": "SUMO Junction D1",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "C1D1",
+        "D0D1",
+        "D2D1",
+        "right1D1"
+      ],
+      "phases": [
+        {
+          "phase_id": "D1_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "C1D1",
+            "D0D1",
+            "D2D1",
+            "right1D1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "D1_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "D2D1",
+            "right1D1",
+            "C1D1",
+            "D0D1"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "D1_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "D2D1",
+            "right1D1",
+            "C1D1"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "D1_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C1D1",
+            "D0D1",
+            "D2D1",
+            "right1D1"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "D1_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "D2D1",
+            "right1D1",
+            "C1D1",
+            "D0D1"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "D1_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "D0D1",
+            "D2D1",
+            "right1D1",
+            "C1D1"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "D1_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "right1D1",
+            "C1D1",
+            "D0D1",
+            "D2D1"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "D1_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "D0D1",
+            "D2D1",
+            "right1D1"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "D1_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "right1D1",
+            "C1D1",
+            "D0D1",
+            "D2D1"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "D1_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "D0D1",
+            "D2D1",
+            "right1D1",
+            "C1D1"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "D2",
+      "name": "SUMO Junction D2",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "C2D2",
+        "D1D2",
+        "D3D2",
+        "right2D2"
+      ],
+      "phases": [
+        {
+          "phase_id": "D2_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "C2D2",
+            "D1D2",
+            "D3D2",
+            "right2D2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "D2_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "D3D2",
+            "right2D2",
+            "C2D2",
+            "D1D2"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "D2_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "D3D2",
+            "right2D2",
+            "C2D2"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "D2_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C2D2",
+            "D1D2",
+            "D3D2",
+            "right2D2"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "D2_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "D3D2",
+            "right2D2",
+            "C2D2",
+            "D1D2"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "D2_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "D1D2",
+            "D3D2",
+            "right2D2",
+            "C2D2"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "D2_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "right2D2",
+            "C2D2",
+            "D1D2",
+            "D3D2"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "D2_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "D1D2",
+            "D3D2",
+            "right2D2"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "D2_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "right2D2",
+            "C2D2",
+            "D1D2",
+            "D3D2"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "D2_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "D1D2",
+            "D3D2",
+            "right2D2",
+            "C2D2"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "D3",
+      "name": "SUMO Junction D3",
+      "type": "traffic_light_right_on_red",
+      "approaches": [
+        "C3D3",
+        "D2D3",
+        "right3D3",
+        "top3D3"
+      ],
+      "phases": [
+        {
+          "phase_id": "D3_PHASE_1",
+          "name": "Phase 1 (GGGGGGrrrsssrrrrrrGGGGGGrrrsssrrrrrr)",
+          "approaches": [
+            "C3D3",
+            "D2D3",
+            "right3D3",
+            "top3D3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "D3_PHASE_2",
+          "name": "Phase 2 (sssrrrGGGsssrrrrrrsssrrrGGGsssrrrrrr)",
+          "approaches": [
+            "right3D3",
+            "top3D3",
+            "C3D3",
+            "D2D3"
+          ],
+          "sumo_phase_index": 2
+        },
+        {
+          "phase_id": "D3_PHASE_3",
+          "name": "Phase 3 (sssrrrGGGsssrrrrrrsssrrryyysssrrrrrr)",
+          "approaches": [
+            "right3D3",
+            "top3D3",
+            "C3D3"
+          ],
+          "sumo_phase_index": 3
+        },
+        {
+          "phase_id": "D3_PHASE_4",
+          "name": "Phase 4 (GGGGGGGGGsssrrrrrrsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "C3D3",
+            "D2D3",
+            "right3D3",
+            "top3D3"
+          ],
+          "sumo_phase_index": 4
+        },
+        {
+          "phase_id": "D3_PHASE_5",
+          "name": "Phase 5 (sssrrrrrrsssrrrrrrGGGGGGGGGsssrrrrrr)",
+          "approaches": [
+            "right3D3",
+            "top3D3",
+            "C3D3",
+            "D2D3"
+          ],
+          "sumo_phase_index": 6
+        },
+        {
+          "phase_id": "D3_PHASE_6",
+          "name": "Phase 6 (sssrrrrrrGGGGGGrrrsssrrrrrrGGGGGGrrr)",
+          "approaches": [
+            "D2D3",
+            "right3D3",
+            "top3D3",
+            "C3D3"
+          ],
+          "sumo_phase_index": 8
+        },
+        {
+          "phase_id": "D3_PHASE_7",
+          "name": "Phase 7 (sssrrrrrrsssrrrGGGsssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "top3D3",
+            "C3D3",
+            "D2D3",
+            "right3D3"
+          ],
+          "sumo_phase_index": 10
+        },
+        {
+          "phase_id": "D3_PHASE_8",
+          "name": "Phase 8 (sssrrrrrrsssrrryyysssrrrrrrsssrrrGGG)",
+          "approaches": [
+            "D2D3",
+            "right3D3",
+            "top3D3"
+          ],
+          "sumo_phase_index": 11
+        },
+        {
+          "phase_id": "D3_PHASE_9",
+          "name": "Phase 9 (sssrrrrrrsssrrrrrrsssrrrrrrGGGGGGGGG)",
+          "approaches": [
+            "top3D3",
+            "C3D3",
+            "D2D3",
+            "right3D3"
+          ],
+          "sumo_phase_index": 12
+        },
+        {
+          "phase_id": "D3_PHASE_10",
+          "name": "Phase 10 (sssrrrrrrGGGGGGGGGsssrrrrrrsssrrrrrr)",
+          "approaches": [
+            "D2D3",
+            "right3D3",
+            "top3D3",
+            "C3D3"
+          ],
+          "sumo_phase_index": 14
+        }
+      ]
+    },
+    {
+      "node_id": "bottom0",
+      "name": "SUMO Junction bottom0",
+      "type": "dead_end",
+      "approaches": [
+        "A0bottom0"
+      ],
+      "phases": [
+        {
+          "phase_id": "bottom0_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "A0bottom0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "bottom0_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "A0bottom0"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "bottom1",
+      "name": "SUMO Junction bottom1",
+      "type": "dead_end",
+      "approaches": [
+        "B0bottom1"
+      ],
+      "phases": [
+        {
+          "phase_id": "bottom1_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "B0bottom1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "bottom1_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "B0bottom1"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "bottom2",
+      "name": "SUMO Junction bottom2",
+      "type": "dead_end",
+      "approaches": [
+        "C0bottom2"
+      ],
+      "phases": [
+        {
+          "phase_id": "bottom2_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "C0bottom2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "bottom2_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "C0bottom2"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "bottom3",
+      "name": "SUMO Junction bottom3",
+      "type": "dead_end",
+      "approaches": [
+        "D0bottom3"
+      ],
+      "phases": [
+        {
+          "phase_id": "bottom3_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "D0bottom3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "bottom3_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "D0bottom3"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "left0",
+      "name": "SUMO Junction left0",
+      "type": "dead_end",
+      "approaches": [
+        "A0left0"
+      ],
+      "phases": [
+        {
+          "phase_id": "left0_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "A0left0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "left0_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "A0left0"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "left1",
+      "name": "SUMO Junction left1",
+      "type": "dead_end",
+      "approaches": [
+        "A1left1"
+      ],
+      "phases": [
+        {
+          "phase_id": "left1_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "A1left1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "left1_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "A1left1"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "left2",
+      "name": "SUMO Junction left2",
+      "type": "dead_end",
+      "approaches": [
+        "A2left2"
+      ],
+      "phases": [
+        {
+          "phase_id": "left2_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "A2left2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "left2_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "A2left2"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "left3",
+      "name": "SUMO Junction left3",
+      "type": "dead_end",
+      "approaches": [
+        "A3left3"
+      ],
+      "phases": [
+        {
+          "phase_id": "left3_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "A3left3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "left3_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "A3left3"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "right0",
+      "name": "SUMO Junction right0",
+      "type": "dead_end",
+      "approaches": [
+        "D0right0"
+      ],
+      "phases": [
+        {
+          "phase_id": "right0_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "D0right0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "right0_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "D0right0"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "right1",
+      "name": "SUMO Junction right1",
+      "type": "dead_end",
+      "approaches": [
+        "D1right1"
+      ],
+      "phases": [
+        {
+          "phase_id": "right1_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "D1right1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "right1_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "D1right1"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "right2",
+      "name": "SUMO Junction right2",
+      "type": "dead_end",
+      "approaches": [
+        "D2right2"
+      ],
+      "phases": [
+        {
+          "phase_id": "right2_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "D2right2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "right2_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "D2right2"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "right3",
+      "name": "SUMO Junction right3",
+      "type": "dead_end",
+      "approaches": [
+        "D3right3"
+      ],
+      "phases": [
+        {
+          "phase_id": "right3_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "D3right3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "right3_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "D3right3"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "top0",
+      "name": "SUMO Junction top0",
+      "type": "dead_end",
+      "approaches": [
+        "A3top0"
+      ],
+      "phases": [
+        {
+          "phase_id": "top0_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "A3top0"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "top0_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "A3top0"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "top1",
+      "name": "SUMO Junction top1",
+      "type": "dead_end",
+      "approaches": [
+        "B3top1"
+      ],
+      "phases": [
+        {
+          "phase_id": "top1_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "B3top1"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "top1_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "B3top1"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "top2",
+      "name": "SUMO Junction top2",
+      "type": "dead_end",
+      "approaches": [
+        "C3top2"
+      ],
+      "phases": [
+        {
+          "phase_id": "top2_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "C3top2"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "top2_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "C3top2"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    },
+    {
+      "node_id": "top3",
+      "name": "SUMO Junction top3",
+      "type": "dead_end",
+      "approaches": [
+        "D3top3"
+      ],
+      "phases": [
+        {
+          "phase_id": "top3_PHASE_1",
+          "name": "Phase 1 Green",
+          "approaches": [
+            "D3top3"
+          ],
+          "sumo_phase_index": 0
+        },
+        {
+          "phase_id": "top3_PHASE_2",
+          "name": "Phase 2 Green",
+          "approaches": [
+            "D3top3"
+          ],
+          "sumo_phase_index": 1
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "A0A1",
+      "source": "A0",
+      "target": "A1"
+    },
+    {
+      "edge_id": "A0B0",
+      "source": "A0",
+      "target": "B0"
+    },
+    {
+      "edge_id": "A0bottom0",
+      "source": "A0",
+      "target": "bottom0"
+    },
+    {
+      "edge_id": "A0left0",
+      "source": "A0",
+      "target": "left0"
+    },
+    {
+      "edge_id": "A1A0",
+      "source": "A1",
+      "target": "A0"
+    },
+    {
+      "edge_id": "A1A2",
+      "source": "A1",
+      "target": "A2"
+    },
+    {
+      "edge_id": "A1B1",
+      "source": "A1",
+      "target": "B1"
+    },
+    {
+      "edge_id": "A1left1",
+      "source": "A1",
+      "target": "left1"
+    },
+    {
+      "edge_id": "A2A1",
+      "source": "A2",
+      "target": "A1"
+    },
+    {
+      "edge_id": "A2A3",
+      "source": "A2",
+      "target": "A3"
+    },
+    {
+      "edge_id": "A2B2",
+      "source": "A2",
+      "target": "B2"
+    },
+    {
+      "edge_id": "A2left2",
+      "source": "A2",
+      "target": "left2"
+    },
+    {
+      "edge_id": "A3A2",
+      "source": "A3",
+      "target": "A2"
+    },
+    {
+      "edge_id": "A3B3",
+      "source": "A3",
+      "target": "B3"
+    },
+    {
+      "edge_id": "A3left3",
+      "source": "A3",
+      "target": "left3"
+    },
+    {
+      "edge_id": "A3top0",
+      "source": "A3",
+      "target": "top0"
+    },
+    {
+      "edge_id": "B0A0",
+      "source": "B0",
+      "target": "A0"
+    },
+    {
+      "edge_id": "B0B1",
+      "source": "B0",
+      "target": "B1"
+    },
+    {
+      "edge_id": "B0C0",
+      "source": "B0",
+      "target": "C0"
+    },
+    {
+      "edge_id": "B0bottom1",
+      "source": "B0",
+      "target": "bottom1"
+    },
+    {
+      "edge_id": "B1A1",
+      "source": "B1",
+      "target": "A1"
+    },
+    {
+      "edge_id": "B1B0",
+      "source": "B1",
+      "target": "B0"
+    },
+    {
+      "edge_id": "B1B2",
+      "source": "B1",
+      "target": "B2"
+    },
+    {
+      "edge_id": "B1C1",
+      "source": "B1",
+      "target": "C1"
+    },
+    {
+      "edge_id": "B2A2",
+      "source": "B2",
+      "target": "A2"
+    },
+    {
+      "edge_id": "B2B1",
+      "source": "B2",
+      "target": "B1"
+    },
+    {
+      "edge_id": "B2B3",
+      "source": "B2",
+      "target": "B3"
+    },
+    {
+      "edge_id": "B2C2",
+      "source": "B2",
+      "target": "C2"
+    },
+    {
+      "edge_id": "B3A3",
+      "source": "B3",
+      "target": "A3"
+    },
+    {
+      "edge_id": "B3B2",
+      "source": "B3",
+      "target": "B2"
+    },
+    {
+      "edge_id": "B3C3",
+      "source": "B3",
+      "target": "C3"
+    },
+    {
+      "edge_id": "B3top1",
+      "source": "B3",
+      "target": "top1"
+    },
+    {
+      "edge_id": "C0B0",
+      "source": "C0",
+      "target": "B0"
+    },
+    {
+      "edge_id": "C0C1",
+      "source": "C0",
+      "target": "C1"
+    },
+    {
+      "edge_id": "C0D0",
+      "source": "C0",
+      "target": "D0"
+    },
+    {
+      "edge_id": "C0bottom2",
+      "source": "C0",
+      "target": "bottom2"
+    },
+    {
+      "edge_id": "C1B1",
+      "source": "C1",
+      "target": "B1"
+    },
+    {
+      "edge_id": "C1C0",
+      "source": "C1",
+      "target": "C0"
+    },
+    {
+      "edge_id": "C1C2",
+      "source": "C1",
+      "target": "C2"
+    },
+    {
+      "edge_id": "C1D1",
+      "source": "C1",
+      "target": "D1"
+    },
+    {
+      "edge_id": "C2B2",
+      "source": "C2",
+      "target": "B2"
+    },
+    {
+      "edge_id": "C2C1",
+      "source": "C2",
+      "target": "C1"
+    },
+    {
+      "edge_id": "C2C3",
+      "source": "C2",
+      "target": "C3"
+    },
+    {
+      "edge_id": "C2D2",
+      "source": "C2",
+      "target": "D2"
+    },
+    {
+      "edge_id": "C3B3",
+      "source": "C3",
+      "target": "B3"
+    },
+    {
+      "edge_id": "C3C2",
+      "source": "C3",
+      "target": "C2"
+    },
+    {
+      "edge_id": "C3D3",
+      "source": "C3",
+      "target": "D3"
+    },
+    {
+      "edge_id": "C3top2",
+      "source": "C3",
+      "target": "top2"
+    },
+    {
+      "edge_id": "D0C0",
+      "source": "D0",
+      "target": "C0"
+    },
+    {
+      "edge_id": "D0D1",
+      "source": "D0",
+      "target": "D1"
+    },
+    {
+      "edge_id": "D0bottom3",
+      "source": "D0",
+      "target": "bottom3"
+    },
+    {
+      "edge_id": "D0right0",
+      "source": "D0",
+      "target": "right0"
+    },
+    {
+      "edge_id": "D1C1",
+      "source": "D1",
+      "target": "C1"
+    },
+    {
+      "edge_id": "D1D0",
+      "source": "D1",
+      "target": "D0"
+    },
+    {
+      "edge_id": "D1D2",
+      "source": "D1",
+      "target": "D2"
+    },
+    {
+      "edge_id": "D1right1",
+      "source": "D1",
+      "target": "right1"
+    },
+    {
+      "edge_id": "D2C2",
+      "source": "D2",
+      "target": "C2"
+    },
+    {
+      "edge_id": "D2D1",
+      "source": "D2",
+      "target": "D1"
+    },
+    {
+      "edge_id": "D2D3",
+      "source": "D2",
+      "target": "D3"
+    },
+    {
+      "edge_id": "D2right2",
+      "source": "D2",
+      "target": "right2"
+    },
+    {
+      "edge_id": "D3C3",
+      "source": "D3",
+      "target": "C3"
+    },
+    {
+      "edge_id": "D3D2",
+      "source": "D3",
+      "target": "D2"
+    },
+    {
+      "edge_id": "D3right3",
+      "source": "D3",
+      "target": "right3"
+    },
+    {
+      "edge_id": "D3top3",
+      "source": "D3",
+      "target": "top3"
+    },
+    {
+      "edge_id": "bottom0A0",
+      "source": "bottom0",
+      "target": "A0"
+    },
+    {
+      "edge_id": "bottom1B0",
+      "source": "bottom1",
+      "target": "B0"
+    },
+    {
+      "edge_id": "bottom2C0",
+      "source": "bottom2",
+      "target": "C0"
+    },
+    {
+      "edge_id": "bottom3D0",
+      "source": "bottom3",
+      "target": "D0"
+    },
+    {
+      "edge_id": "left0A0",
+      "source": "left0",
+      "target": "A0"
+    },
+    {
+      "edge_id": "left1A1",
+      "source": "left1",
+      "target": "A1"
+    },
+    {
+      "edge_id": "left2A2",
+      "source": "left2",
+      "target": "A2"
+    },
+    {
+      "edge_id": "left3A3",
+      "source": "left3",
+      "target": "A3"
+    },
+    {
+      "edge_id": "right0D0",
+      "source": "right0",
+      "target": "D0"
+    },
+    {
+      "edge_id": "right1D1",
+      "source": "right1",
+      "target": "D1"
+    },
+    {
+      "edge_id": "right2D2",
+      "source": "right2",
+      "target": "D2"
+    },
+    {
+      "edge_id": "right3D3",
+      "source": "right3",
+      "target": "D3"
+    },
+    {
+      "edge_id": "top0A3",
+      "source": "top0",
+      "target": "A3"
+    },
+    {
+      "edge_id": "top1B3",
+      "source": "top1",
+      "target": "B3"
+    },
+    {
+      "edge_id": "top2C3",
+      "source": "top2",
+      "target": "C3"
+    },
+    {
+      "edge_id": "top3D3",
+      "source": "top3",
+      "target": "D3"
+    }
+  ]
+}

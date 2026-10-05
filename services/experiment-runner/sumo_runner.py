@@ -32,6 +32,8 @@ for p in [repo_root / "contracts", repo_root / "services" / "graph-control",
     if str(p) not in sys.path and p.exists():
         sys.path.insert(0, str(p))
 
+import contracts_sdk
+
 
 def check_sumo_available() -> Dict[str, Any]:
     """Check SUMO and TraCI availability. Returns status dict."""
@@ -116,29 +118,14 @@ def generate_sumo_routes(
 
     sc = scenario.lower()
 
-    # Define flow parameters per scenario
-    if "directional_surge" in sc:
-        # Heavy NS, light EW
-        flows = {
-            "f_J1_NS": 0.75, "f_J1_EW": 0.15,
-            "f_J2_NS": 0.70, "f_J2_EW": 0.15,
-            "f_J3_NS": 0.70, "f_J3_EW": 0.15,
-            "f_J4_NS": 0.65, "f_J4_EW": 0.15,
-        }
-    elif "downstream_congestion" in sc:
-        flows = {
-            "f_J1_NS": 0.50, "f_J1_EW": 0.40,
-            "f_J2_NS": 0.45, "f_J2_EW": 0.40,
-            "f_J3_NS": 0.50, "f_J3_EW": 0.35,
-            "f_J4_NS": 0.45, "f_J4_EW": 0.40,
-        }
-    else:  # balanced
-        flows = {
-            "f_J1_NS": 0.35, "f_J1_EW": 0.35,
-            "f_J2_NS": 0.35, "f_J2_EW": 0.35,
-            "f_J3_NS": 0.35, "f_J3_EW": 0.35,
-            "f_J4_NS": 0.35, "f_J4_EW": 0.35,
-        }
+    # Get flow parameters from canonical ScenarioRegistry via contracts_sdk
+    sc_profile = contracts_sdk.get_scenario(scenario)
+    flows = sc_profile.flow_rates if sc_profile.flow_rates else {
+        "f_J1_NS": 0.35, "f_J1_EW": 0.35,
+        "f_J2_NS": 0.35, "f_J2_EW": 0.35,
+        "f_J3_NS": 0.35, "f_J3_EW": 0.35,
+        "f_J4_NS": 0.35, "f_J4_EW": 0.35,
+    }
 
     # Route definitions matching the network
     route_defs = {
@@ -340,12 +327,14 @@ def run_sumo_experiment(
     demand_hash = generate_sumo_routes(scenario, seed, duration_s, route_path, topology_id)
 
     # Generate SUMO config with tripinfo output
-    tripinfo_path = str(exp_dir / "tripinfo.xml")
-    net_file = str(sumo_configs_dir / f"{topology_id}.net.xml")
+    cand1 = sumo_configs_dir / topology_id / f"{topology_id}.net.xml"
+    cand2 = sumo_configs_dir / f"{topology_id}.net.xml"
+    net_file = str(cand1 if cand1.exists() else cand2)
 
     if not os.path.exists(net_file):
         return {"valid": False, "error": f"Net file not found: {net_file}", "experiment_id": exp_id}
 
+    tripinfo_path = str(exp_dir / "tripinfo.xml")
     sumocfg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <input>

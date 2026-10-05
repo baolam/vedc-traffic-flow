@@ -83,3 +83,35 @@ def test_get_topology_summary():
     assert summary["total_edges"] >= 0
     assert summary["total_phases"] > 0
 
+def test_oo_topology_contract():
+    contract = contracts_sdk.load_topology_contract("four_intersection_v1")
+    assert contract.topology_id == "four_intersection_v1"
+    assert len(contract.nodes) == 4
+    
+    node_j1 = contract.get_node("J1")
+    assert node_j1 is not None
+    assert node_j1.node_id == "J1"
+    assert len(node_j1.phases) > 0
+    
+    phase_ns = node_j1.get_phase("J1_PHASE_NS")
+    assert phase_ns is not None
+    assert "J1_N_IN" in phase_ns.approaches
+    
+    dict_back = contract.to_dict()
+    assert dict_back["topology_id"] == "four_intersection_v1"
+
+def test_one_word_topology_names_and_aliases():
+    # 1-word topology names
+    for name in ["corridor", "junction", "grid16", "cologne"]:
+        topo = contracts_sdk.load_topology(name)
+        assert topo["topology_id"] == name
+        assert len(topo["nodes"]) > 0
+
+    # Aliases
+    assert contracts_sdk.resolve_topology_id("four_intersection_v1") == "corridor"
+    assert contracts_sdk.resolve_topology_id("three_way_junction_v1") == "junction"
+    assert contracts_sdk.resolve_topology_id("grid4x4") == "grid16"
+    assert contracts_sdk.resolve_topology_id("cologne8") == "cologne"
+
+
+

@@ -36,7 +36,9 @@ class SumoTrafficEngine:
         if config_path is None:
             base_dir = os.path.dirname(os.path.abspath(__file__))
             topology_id = topology.get("topology_id", "four_intersection_v1")
-            config_path = os.path.join(base_dir, "sumo_configs", f"{topology_id}.sumocfg")
+            candidate1 = os.path.join(base_dir, "sumo_configs", topology_id, f"{topology_id}.sumocfg")
+            candidate2 = os.path.join(base_dir, "sumo_configs", f"{topology_id}.sumocfg")
+            config_path = candidate1 if os.path.exists(candidate1) else candidate2
 
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"SUMO config file not found: {config_path}")
