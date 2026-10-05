@@ -1,7 +1,7 @@
 <configuration>
     <input>
     	<net-file value="hcm_corridor.net.xml"/>
-    	<route-files value="vehicles.rou.xml,hcm_corridor.rou.xml"/>
+    	<route-files value="vehicles.rou.xml,routes.rou.xml"/>
     	<additional-files value="map.poly.xml"/>
     </input>
 
