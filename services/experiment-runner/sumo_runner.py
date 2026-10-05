@@ -349,6 +349,8 @@ def run_sumo_experiment(
         return {"valid": False, "error": f"Net file not found for topology '{topology_id}'", "experiment_id": exp_id}
 
     tripinfo_path = str(exp_dir / "tripinfo.xml")
+    summary_path = str(exp_dir / "summary.xml")
+    emission_path = str(exp_dir / "emission.xml")
     sumocfg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <input>
@@ -362,6 +364,8 @@ def run_sumo_experiment(
     </time>
     <output>
         <tripinfo-output value="{tripinfo_path}"/>
+        <summary-output value="{summary_path}"/>
+        <emission-output value="{emission_path}"/>
         <tripinfo-output.write-unfinished value="true"/>
     </output>
     <processing>
@@ -568,8 +572,34 @@ def run_sumo_experiment(
             "error": str(e),
         }
 
-    # Parse trip info
+    # Parse trip info, summary teleports, and emissions
     trip_data = parse_tripinfo(tripinfo_path)
+
+    # Teleports from summary.xml
+    teleports = 0
+    summary_xml_path = exp_dir / "summary.xml"
+    if summary_xml_path.exists():
+        try:
+            for s in ET.parse(summary_xml_path).getroot().iter("step"):
+                try: teleports = int(float(s.get("teleports", 0)))
+                except Exception: pass
+        except Exception:
+            pass
+
+    # Emissions from emission.xml
+    co2 = fuel = 0.0
+    emission_steps = 0
+    emission_xml_path = exp_dir / "emission.xml"
+    if emission_xml_path.exists():
+        try:
+            for e in ET.parse(emission_xml_path).getroot().iter("vehicle"):
+                try: co2 += float(e.get("CO2", 0))
+                except Exception: pass
+                try: fuel += float(e.get("fuel", 0))
+                except Exception: pass
+                emission_steps += 1
+        except Exception:
+            pass
 
     # Save signal events
     with open(exp_dir / "signal_events.jsonl", "w") as f:
@@ -588,6 +618,35 @@ def run_sumo_experiment(
     sorted_q = sorted(queues) if queues else [0]
     n = len(sorted_q)
 
+    # Build full metrics suite (matching example/metrics.py)
+    arrived = trip_data["summary"].get("completed", 0)
+    avg_travel = trip_data["summary"].get("mean_trip_duration_s", 0.0)
+    avg_wait = trip_data["summary"].get("mean_waiting_time_s", 0.0)
+    avg_timeloss = trip_data["summary"].get("mean_time_loss_s", 0.0)
+    avg_spd_kmh = (sum(speeds) / max(len(speeds), 1)) * 3.6
+
+    full_metrics = {
+        "vehicles_arrived": arrived,
+        "average_travel_time_s": avg_travel,
+        "average_waiting_time_s": avg_wait,
+        "average_speed_kmh": round(avg_spd_kmh, 3),
+        "average_time_loss_s": avg_timeloss,
+        "throughput_vehicles": arrived,
+        "teleports": teleports,
+        "total_co2_mg": round(co2, 3),
+        "total_fuel_ml": round(fuel, 3),
+        "emission_vehicle_steps": emission_steps,
+    }
+
+    # Write metrics.csv
+    csv_fields = list(full_metrics.keys())
+    csv_values = list(full_metrics.values())
+    import csv
+    with (exp_dir / "metrics.csv").open("w", newline="", encoding="utf-8-sig") as fp:
+        w = csv.writer(fp)
+        w.writerow(csv_fields)
+        w.writerow(csv_values)
+
     result = {
         "experiment_id": exp_id,
         "valid": True,
@@ -605,6 +664,9 @@ def run_sumo_experiment(
         "total_samples": len(telemetry_samples),
         "signal_events_count": len(signal_events),
 
+        # Metrics catalog
+        "full_metrics": full_metrics,
+
         # Queue-based metrics
         "mean_queue_veh": round(sum(queues) / max(n, 1), 2),
         "p95_queue_veh": round(sorted_q[min(int(0.95 * n), n - 1)], 2),
@@ -616,14 +678,17 @@ def run_sumo_experiment(
 
         # Vehicle accounting
         "total_departed": trip_data["summary"].get("total_vehicles", 0),
-        "total_arrived": trip_data["summary"].get("completed", 0),
+        "total_arrived": arrived,
         "total_unfinished": trip_data["summary"].get("unfinished", 0),
         "completion_coverage": trip_data["summary"].get("completion_coverage", 0),
-        "mean_waiting_time_s": trip_data["summary"].get("mean_waiting_time_s", 0),
+        "mean_waiting_time_s": avg_wait,
         "p50_waiting_time_s": trip_data["summary"].get("p50_waiting_time_s", 0),
         "p95_waiting_time_s": trip_data["summary"].get("p95_waiting_time_s", 0),
-        "mean_time_loss_s": trip_data["summary"].get("mean_time_loss_s", 0),
+        "mean_time_loss_s": avg_timeloss,
         "p95_time_loss_s": trip_data["summary"].get("p95_time_loss_s", 0),
+        "teleports": teleports,
+        "total_co2_mg": round(co2, 3),
+        "total_fuel_ml": round(fuel, 3),
     }
 
     # Save summary
