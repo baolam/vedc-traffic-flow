@@ -5,6 +5,10 @@
     	<additional-files value="map.poly.xml"/>
     </input>
 
+    <gui_only>
+        <gui-settings-file value="gui-settings.xml"/>
+    </gui_only>
+
     <time>
         <begin value="0"/>
         <end value="3600"/>

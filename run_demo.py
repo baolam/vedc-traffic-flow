@@ -161,11 +161,13 @@ def run_demo_simulation(
     emission_out = output_dir / "emission.xml"
     csv_out = output_dir / "metrics.csv"
 
-    # Ensure raster vehicles folder (car, motorcycle, taxi, bus, truck PNGs) is present in output_dir
-    src_vehicles_dir = sumo_configs_dir / "vehicles"
-    dst_vehicles_dir = output_dir / "vehicles"
-    if src_vehicles_dir.exists() and not dst_vehicles_dir.exists():
-        shutil.copytree(src_vehicles_dir, dst_vehicles_dir, dirs_exist_ok=True)
+    # Ensure gui-settings.xml is copied/present in output_dir
+    src_gui_settings = topo_config_dir / "gui-settings.xml" if topo_config_dir.exists() else (sumo_configs_dir / "gui-settings.xml")
+    gui_settings_path = output_dir / "gui-settings.xml"
+    if src_gui_settings.exists():
+        shutil.copy(src_gui_settings, gui_settings_path)
+    else:
+        gui_settings_path = sumo_configs_dir / "gui-settings.xml"
 
     # Handle hcm_corridor real-world topology natively
     if resolved_topo == "hcm_corridor" and topo_config_dir.exists():
@@ -195,7 +197,11 @@ def run_demo_simulation(
     <input>
         <net-file value="{net_file}"/>
         <route-files value="{route_path}"/>
+        <gui-settings-file value="{gui_settings_path}"/>
     </input>
+    <gui_only>
+        <gui-settings-file value="{gui_settings_path}"/>
+    </gui_only>
     <time>
         <begin value="0"/>
         <end value="{duration_s}"/>
@@ -229,12 +235,14 @@ def run_demo_simulation(
     controller = CONTROLLERS.get(ctrl_key, CONTROLLERS["edgeflow"])()
     actuator = ActuatorStateMachine(yellow_duration_s=3.0, all_red_duration_s=2.0)
 
-    # SUMO GUI Command
+    # SUMO GUI Command with gui-settings & visual delay (100ms)
     sumo_cmd = [
         sumo_gui_bin,
         "-c", str(sumocfg_path),
+        "--gui-settings-file", str(gui_settings_path),
         "--start", "true",
         "--quit-on-end", "true",
+        "--delay", "100",
         "--tripinfo-output", str(trip_out),
         "--summary-output", str(summary_out),
         "--emission-output", str(emission_out),

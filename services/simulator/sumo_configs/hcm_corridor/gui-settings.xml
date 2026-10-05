@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viewsettings>
+    <scheme name="real_world">
+        <opengl perspective="0" antialiasing="1"/>
+        <background backgroundColor="240,240,240"/>
+        <edges laneEdgeSelection="0" laneShowBorders="1" showLinkDecals="1" showRails="1"/>
+        <vehicles vehicleMode="0" vehicleScale="3.0" vehicleQuality="2" showBikes="1"/>
+        <junctions drawLinkTLIndex="1" drawLinkJunctionIndex="1"/>
+    </scheme>
+    <delay value="100"/>
+    <viewport zoom="800" x="255.0" y="333.0"/>
+</viewsettings>
