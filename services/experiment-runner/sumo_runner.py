@@ -327,12 +327,20 @@ def run_sumo_experiment(
     demand_hash = generate_sumo_routes(scenario, seed, duration_s, route_path, topology_id)
 
     # Generate SUMO config with tripinfo output
-    cand1 = sumo_configs_dir / topology_id / f"{topology_id}.net.xml"
-    cand2 = sumo_configs_dir / f"{topology_id}.net.xml"
-    net_file = str(cand1 if cand1.exists() else cand2)
+    candidates = [
+        sumo_configs_dir / topology_id / f"{topology_id}.net.xml",
+        sumo_configs_dir / f"{topology_id}.net.xml",
+        sumo_configs_dir / "four_intersection_v1" / "four_intersection_v1.net.xml",
+        sumo_configs_dir / "four_intersection_v1.net.xml",
+    ]
+    net_file = None
+    for cand in candidates:
+        if cand.exists():
+            net_file = str(cand)
+            break
 
-    if not os.path.exists(net_file):
-        return {"valid": False, "error": f"Net file not found: {net_file}", "experiment_id": exp_id}
+    if not net_file or not os.path.exists(net_file):
+        return {"valid": False, "error": f"Net file not found for topology '{topology_id}'", "experiment_id": exp_id}
 
     tripinfo_path = str(exp_dir / "tripinfo.xml")
     sumocfg_content = f"""<?xml version="1.0" encoding="UTF-8"?>

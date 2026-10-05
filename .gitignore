@@ -94,6 +94,8 @@ output/*
 !output/.gitkeep
 experiments/*
 !experiments/.gitkeep
+!experiments/run_project_scenario.py
+!experiments/run_experiment_pipeline.py
 artifacts/*
 !artifacts/.gitkeep
 !artifacts/benchmark_summary.md
