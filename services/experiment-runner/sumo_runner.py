@@ -142,22 +142,24 @@ def generate_sumo_routes(
     # Generate individual vehicle departures (deterministic from seed)
     vehicles = []
     veh_id = 0
+    # Fleet weights: 65% motorcycle, 25% car, 4% taxi, 3% bus, 3% truck
+    fleet_weights = ["motorcycle"] * 65 + ["car"] * 25 + ["taxi"] * 4 + ["bus"] * 3 + ["truck"] * 3
+
     for flow_id, rate in flows.items():
         route_id, edges = route_defs[flow_id]
         t = 0.0
         while t < duration_s:
-            # Exponential inter-arrival: -ln(U) / rate
             u = rng.random()
             if u < 1e-10:
                 u = 1e-10
-            gap = -1.0 * (1.0 / rate) * (u if u > 0 else 0.001)
-            # Actually: inter-arrival = -ln(U) / lambda
             import math
             gap = -math.log(u) / rate
             t += gap
             if t < duration_s:
+                vtype = rng.choice(fleet_weights)
                 vehicles.append({
                     "id": f"v_{veh_id}",
+                    "type": vtype,
                     "depart": round(t, 2),
                     "route_id": route_id,
                     "edges": edges,
@@ -171,8 +173,12 @@ def generate_sumo_routes(
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<routes>',
-        '    <vType id="passenger" accel="2.6" decel="4.5" sigma="0.5" '
-        'length="5.0" minGap="2.5" maxSpeed="13.89" vClass="passenger"/>',
+        '    <vType id="motorcycle" vClass="motorcycle" guiShape="motorcycle" imgFile="vehicles/motorcycle.png" length="2.2" minGap="1.5" accel="3.0" decel="5.0" maxSpeed="50" color="1,0.2,0.2"/>',
+        '    <vType id="car" vClass="passenger" guiShape="passenger" imgFile="vehicles/car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,1"/>',
+        '    <vType id="passenger" vClass="passenger" guiShape="passenger" imgFile="vehicles/car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,1"/>',
+        '    <vType id="taxi" vClass="taxi" guiShape="passenger" imgFile="vehicles/taxi.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,0"/>',
+        '    <vType id="bus" vClass="bus" guiShape="bus" imgFile="vehicles/bus.png" length="12" minGap="3" accel="1.2" decel="4" maxSpeed="40" color="0.2,0.5,1"/>',
+        '    <vType id="truck" vClass="truck" guiShape="truck" imgFile="vehicles/truck.png" length="8" minGap="3" accel="1.5" decel="4" maxSpeed="40" color="0.4,0.4,0.4"/>',
         '',
     ]
 
@@ -188,7 +194,7 @@ def generate_sumo_routes(
     # Vehicle definitions
     for v in vehicles:
         lines.append(
-            f'    <vehicle id="{v["id"]}" type="passenger" '
+            f'    <vehicle id="{v["id"]}" type="{v["type"]}" '
             f'route="{v["route_id"]}" depart="{v["depart"]}" '
             f'departLane="best" departSpeed="max"/>'
         )
