@@ -30,19 +30,19 @@
     <vehicle id="9" type="motorcycle" depart="9.00">
         <route edges="32576065#1 -32576063 -1060982830" />
     </vehicle>
-    <vehicle id="10" type="car" depart="10.00">
+    <vehicle id="10" type="blue_car" depart="10.00">
         <route edges="32576065#1 1061035915#0 -606543126 290729088#2 32576061#3" />
     </vehicle>
     <vehicle id="11" type="bus" depart="11.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849499 290729094#0 -290729095#1" />
     </vehicle>
-    <vehicle id="12" type="car" depart="12.00">
+    <vehicle id="12" type="blue_car" depart="12.00">
         <route edges="606543125 -32576066#3 -290729089 -211849415#1 -1061042908 -32577015#2" />
     </vehicle>
     <vehicle id="13" type="motorcycle" depart="13.00">
         <route edges="-211849500#0 211849500#0 211849500#1 -211849500#1" />
     </vehicle>
-    <vehicle id="14" type="car" depart="14.00">
+    <vehicle id="14" type="blue_car" depart="14.00">
         <route edges="32576066#5 -606543119 606543119 -32576066#5 -606543125 290729088#2" />
     </vehicle>
     <vehicle id="15" type="motorcycle" depart="15.00">
@@ -84,7 +84,7 @@
     <vehicle id="27" type="car" depart="27.00">
         <route edges="290729088#0 290729088#2" />
     </vehicle>
-    <vehicle id="28" type="car" depart="28.00">
+    <vehicle id="28" type="blue_car" depart="28.00">
         <route edges="-290729095#0 -32576061#6 32576061#6" />
     </vehicle>
     <vehicle id="29" type="car" depart="29.00">
@@ -99,7 +99,7 @@
     <vehicle id="32" type="motorcycle" depart="32.00">
         <route edges="32576066#5 32576061#1 32576061#2 -290729088#2 -290729088#0 -211849415#1 32576065#0 32576065#1" />
     </vehicle>
-    <vehicle id="33" type="car" depart="33.00">
+    <vehicle id="33" type="blue_car" depart="33.00">
         <route edges="-32576061#4 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -1061042908" />
     </vehicle>
     <vehicle id="34" type="motorcycle" depart="34.00">
@@ -114,7 +114,7 @@
     <vehicle id="37" type="motorcycle" depart="37.00">
         <route edges="290729088#2 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 -32577015#0 32585157#1 -32585157#1 -32585157#0" />
     </vehicle>
-    <vehicle id="38" type="car" depart="38.00">
+    <vehicle id="38" type="blue_car" depart="38.00">
         <route edges="32577015#9 -32576061#6 211849499 -211849500#0 -606543127" />
     </vehicle>
     <vehicle id="39" type="motorcycle" depart="39.00">
@@ -171,7 +171,7 @@
     <vehicle id="56" type="motorcycle" depart="56.00">
         <route edges="-606543131 1061042908 211849415#1 290729088#0 290729088#2 -32576061#2 -32576061#1" />
     </vehicle>
-    <vehicle id="57" type="car" depart="57.00">
+    <vehicle id="57" type="blue_car" depart="57.00">
         <route edges="32577015#9 -32577015#9 -32577015#8 32577015#8" />
     </vehicle>
     <vehicle id="58" type="motorcycle" depart="58.00">
@@ -183,7 +183,7 @@
     <vehicle id="60" type="motorcycle" depart="60.00">
         <route edges="32576061#6 -32576061#6 -32576061#5 -32576061#4 211849413#0" />
     </vehicle>
-    <vehicle id="61" type="car" depart="61.00">
+    <vehicle id="61" type="blue_car" depart="61.00">
         <route edges="32576063 1061035915#0 1061035915#2 211849413#0" />
     </vehicle>
     <vehicle id="62" type="motorcycle" depart="62.00">
@@ -198,7 +198,7 @@
     <vehicle id="65" type="motorcycle" depart="65.00">
         <route edges="-32576066#0 32577015#1 32577015#2 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 -211849413#0" />
     </vehicle>
-    <vehicle id="66" type="car" depart="66.00">
+    <vehicle id="66" type="blue_car" depart="66.00">
         <route edges="32577015#5 32577015#6 -211849412 -32576065#0 211849415#1 290729088#0 606543126" />
     </vehicle>
     <vehicle id="67" type="motorcycle" depart="67.00">
@@ -261,7 +261,7 @@
     <vehicle id="86" type="motorcycle" depart="86.00">
         <route edges="-606543125 -290729088#0 -211849415#1 -606543102 -32576066#0 32576066#0" />
     </vehicle>
-    <vehicle id="87" type="car" depart="87.00">
+    <vehicle id="87" type="blue_car" depart="87.00">
         <route edges="32576065#1 1061035915#0 1061035915#2 -32576061#3" />
     </vehicle>
     <vehicle id="88" type="motorcycle" depart="88.00">
@@ -273,13 +273,13 @@
     <vehicle id="90" type="car" depart="90.00">
         <route edges="32576061#2 -32576061#2 -32576061#1 32576061#1" />
     </vehicle>
-    <vehicle id="91" type="car" depart="91.00">
+    <vehicle id="91" type="blue_car" depart="91.00">
         <route edges="606543132 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1" />
     </vehicle>
     <vehicle id="92" type="motorcycle" depart="92.00">
         <route edges="-32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2" />
     </vehicle>
-    <vehicle id="93" type="car" depart="93.00">
+    <vehicle id="93" type="blue_car" depart="93.00">
         <route edges="32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 290729095#0 -32576064#0" />
     </vehicle>
     <vehicle id="94" type="car" depart="94.00">
@@ -288,7 +288,7 @@
     <vehicle id="95" type="motorcycle" depart="95.00">
         <route edges="-32585157#0 32576066#0 -32576066#0" />
     </vehicle>
-    <vehicle id="96" type="car" depart="96.00">
+    <vehicle id="96" type="blue_car" depart="96.00">
         <route edges="-32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 606543124" />
     </vehicle>
     <vehicle id="97" type="taxi" depart="97.00">
@@ -309,10 +309,10 @@
     <vehicle id="102" type="motorcycle" depart="102.00">
         <route edges="-606543126 606543126 606543127 211849500#0 -211849499 -32576061#5" />
     </vehicle>
-    <vehicle id="103" type="car" depart="103.00">
+    <vehicle id="103" type="blue_car" depart="103.00">
         <route edges="-32577015#8 -32577015#7 -211849412 32576065#1 1061035915#0 1061035915#2 211849413#0 -211849413#0" />
     </vehicle>
-    <vehicle id="104" type="car" depart="104.00">
+    <vehicle id="104" type="blue_car" depart="104.00">
         <route edges="-32577015#5 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 837745310" />
     </vehicle>
     <vehicle id="105" type="car" depart="105.00">
@@ -477,25 +477,25 @@
     <vehicle id="158" type="motorcycle" depart="158.00">
         <route edges="-32577015#8 -32577015#7 -211849412 -32576065#0 211849415#1 290729089" />
     </vehicle>
-    <vehicle id="159" type="car" depart="159.00">
+    <vehicle id="159" type="blue_car" depart="159.00">
         <route edges="-290729094#0 211849499 -211849500#0 -606543127 -606543126 606543125 606543124" />
     </vehicle>
     <vehicle id="160" type="motorcycle" depart="160.00">
         <route edges="32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 606549682#1" />
     </vehicle>
-    <vehicle id="161" type="car" depart="161.00">
+    <vehicle id="161" type="blue_car" depart="161.00">
         <route edges="32576066#0 606543102 32576065#0 211849412 32577015#7 32577015#8 32577015#9" />
     </vehicle>
     <vehicle id="162" type="motorcycle" depart="162.00">
         <route edges="-1061035915#2 606543127 32576063" />
     </vehicle>
-    <vehicle id="163" type="car" depart="163.00">
+    <vehicle id="163" type="blue_car" depart="163.00">
         <route edges="-32576066#5 -606543125 606543125" />
     </vehicle>
     <vehicle id="164" type="motorcycle" depart="164.00">
         <route edges="32576065#1 -32576065#1 211849412 32577015#7" />
     </vehicle>
-    <vehicle id="165" type="car" depart="165.00">
+    <vehicle id="165" type="blue_car" depart="165.00">
         <route edges="32576066#0 606543102 32576065#0 32576065#1 -32576065#1" />
     </vehicle>
     <vehicle id="166" type="taxi" depart="166.00">
@@ -504,10 +504,10 @@
     <vehicle id="167" type="motorcycle" depart="167.00">
         <route edges="32577015#5 32577015#6" />
     </vehicle>
-    <vehicle id="168" type="car" depart="168.00">
+    <vehicle id="168" type="blue_car" depart="168.00">
         <route edges="-32576061#4 -32576061#3 -290729088#2 606543125 32576066#5" />
     </vehicle>
-    <vehicle id="169" type="car" depart="169.00">
+    <vehicle id="169" type="blue_car" depart="169.00">
         <route edges="-606543124 32576066#5 -606543119 606543119 -32576066#5" />
     </vehicle>
     <vehicle id="170" type="bus" depart="170.00">
@@ -519,7 +519,7 @@
     <vehicle id="172" type="truck" depart="172.00">
         <route edges="-32576066#3 -32576066#1 606543102 32576065#0 211849412 32577015#7" />
     </vehicle>
-    <vehicle id="173" type="car" depart="173.00">
+    <vehicle id="173" type="blue_car" depart="173.00">
         <route edges="606543126 -1061035915#0 -32576065#1 -32576065#0 -606543102 -32576066#0" />
     </vehicle>
     <vehicle id="174" type="motorcycle" depart="174.00">
@@ -597,13 +597,13 @@
     <vehicle id="198" type="motorcycle" depart="198.00">
         <route edges="-32585157#0 32577015#1 32577015#2 1061042908 32576065#0 32576065#1 1061035915#0 606543127 211849500#0" />
     </vehicle>
-    <vehicle id="199" type="car" depart="199.00">
+    <vehicle id="199" type="blue_car" depart="199.00">
         <route edges="290729088#2 -290729088#2 -290729088#0 -211849415#1 -1061042908 -606543132" />
     </vehicle>
     <vehicle id="200" type="truck" depart="200.00">
         <route edges="-606543102 606543102 32576065#0 32576065#1 1061035915#0 606543127 211849500#0 -211849499 -32576061#5" />
     </vehicle>
-    <vehicle id="201" type="car" depart="201.00">
+    <vehicle id="201" type="blue_car" depart="201.00">
         <route edges="-606543125 606543125 -32576066#3 -32576066#1 606543102" />
     </vehicle>
     <vehicle id="202" type="motorcycle" depart="202.00">
@@ -672,7 +672,7 @@
     <vehicle id="223" type="motorcycle" depart="223.00">
         <route edges="32576061#1 32576061#2 -290729088#2 606543126 1061035915#2" />
     </vehicle>
-    <vehicle id="224" type="car" depart="224.00">
+    <vehicle id="224" type="blue_car" depart="224.00">
         <route edges="32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 211849413#0 211849413#2" />
     </vehicle>
     <vehicle id="225" type="motorcycle" depart="225.00">
@@ -687,7 +687,7 @@
     <vehicle id="228" type="motorcycle" depart="228.00">
         <route edges="32576061#6 -32577015#9 -211849500#1 -211849500#0 -606543127 -1061035915#0 -32576065#1 211849412" />
     </vehicle>
-    <vehicle id="229" type="car" depart="229.00">
+    <vehicle id="229" type="blue_car" depart="229.00">
         <route edges="211849500#0 211849500#1 -32577015#8 -32577015#7 -211849412 -32576065#0 -606543102 -32576066#0" />
     </vehicle>
     <vehicle id="230" type="car" depart="230.00">
@@ -762,13 +762,13 @@
     <vehicle id="253" type="car" depart="253.00">
         <route edges="-290729088#3 -290729088#2 -290729088#0 -211849415#1 -1061042908 -606543132" />
     </vehicle>
-    <vehicle id="254" type="car" depart="254.00">
+    <vehicle id="254" type="blue_car" depart="254.00">
         <route edges="-211849413#0 -1061035915#2 606543127 211849500#0 211849500#1 -32577015#8" />
     </vehicle>
     <vehicle id="255" type="motorcycle" depart="255.00">
         <route edges="-32576061#3 -290729088#2 -290729088#0 -211849415#1 -1061042908 -32577015#2 -32577015#1" />
     </vehicle>
-    <vehicle id="256" type="car" depart="256.00">
+    <vehicle id="256" type="blue_car" depart="256.00">
         <route edges="32576061#6 -32577015#9 -32577015#8" />
     </vehicle>
     <vehicle id="257" type="motorcycle" depart="257.00">
@@ -783,7 +783,7 @@
     <vehicle id="260" type="taxi" depart="260.00">
         <route edges="606543133 32577015#2 1061042908 32576065#0 211849412 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="261" type="car" depart="261.00">
+    <vehicle id="261" type="blue_car" depart="261.00">
         <route edges="290729088#2 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 32576066#0" />
     </vehicle>
     <vehicle id="262" type="motorcycle" depart="262.00">
@@ -804,7 +804,7 @@
     <vehicle id="267" type="motorcycle" depart="267.00">
         <route edges="290729095#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 -211849415#1 32576065#0" />
     </vehicle>
-    <vehicle id="268" type="car" depart="268.00">
+    <vehicle id="268" type="blue_car" depart="268.00">
         <route edges="-290729094#1 -290729094#0 211849499 -211849500#0 -606543127 -606543126 290729088#2" />
     </vehicle>
     <vehicle id="269" type="motorcycle" depart="269.00">
@@ -813,7 +813,7 @@
     <vehicle id="270" type="motorcycle" depart="270.00">
         <route edges="32576066#0 606543102 -1061042908 606543131" />
     </vehicle>
-    <vehicle id="271" type="car" depart="271.00">
+    <vehicle id="271" type="blue_car" depart="271.00">
         <route edges="-211849500#1 -211849500#0 -1060982830 -32576061#4 -1061035915#2" />
     </vehicle>
     <vehicle id="272" type="motorcycle" depart="272.00">
@@ -834,7 +834,7 @@
     <vehicle id="277" type="car" depart="277.00">
         <route edges="32577015#1 32577015#2 1061042908 211849415#1 290729088#0 290729088#2" />
     </vehicle>
-    <vehicle id="278" type="car" depart="278.00">
+    <vehicle id="278" type="blue_car" depart="278.00">
         <route edges="-290729088#2 606543126 1061035915#2 211849413#0 837745310" />
     </vehicle>
     <vehicle id="279" type="motorcycle" depart="279.00">
@@ -918,7 +918,7 @@
     <vehicle id="305" type="motorcycle" depart="305.00">
         <route edges="290729095#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5" />
     </vehicle>
-    <vehicle id="306" type="car" depart="306.00">
+    <vehicle id="306" type="blue_car" depart="306.00">
         <route edges="211849412 -32577015#6 -32577015#5 -32577015#2 -606543133" />
     </vehicle>
     <vehicle id="307" type="motorcycle" depart="307.00">
@@ -948,7 +948,7 @@
     <vehicle id="315" type="motorcycle" depart="315.00">
         <route edges="606543127 32576063 -32576065#1 211849412" />
     </vehicle>
-    <vehicle id="316" type="car" depart="316.00">
+    <vehicle id="316" type="blue_car" depart="316.00">
         <route edges="-32576065#0 211849415#1 290729088#0 -290729088#0" />
     </vehicle>
     <vehicle id="317" type="motorcycle" depart="317.00">
@@ -960,7 +960,7 @@
     <vehicle id="319" type="car" depart="319.00">
         <route edges="-898358167 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -606543102 -32576066#0" />
     </vehicle>
-    <vehicle id="320" type="car" depart="320.00">
+    <vehicle id="320" type="blue_car" depart="320.00">
         <route edges="606543127 32576063 -32576065#1 -32576065#0 211849415#1" />
     </vehicle>
     <vehicle id="321" type="motorcycle" depart="321.00">
@@ -1053,7 +1053,7 @@
     <vehicle id="350" type="motorcycle" depart="350.00">
         <route edges="290729088#0 606543125 -32576066#3 -32576066#1 606543102" />
     </vehicle>
-    <vehicle id="351" type="car" depart="351.00">
+    <vehicle id="351" type="blue_car" depart="351.00">
         <route edges="32576066#1 32576066#3 -606543125 606543126 606543127 211849500#0 -211849499" />
     </vehicle>
     <vehicle id="352" type="bus" depart="352.00">
@@ -1086,7 +1086,7 @@
     <vehicle id="361" type="motorcycle" depart="361.00">
         <route edges="32576066#3 -606543125 606543126 606543127 211849500#0" />
     </vehicle>
-    <vehicle id="362" type="car" depart="362.00">
+    <vehicle id="362" type="blue_car" depart="362.00">
         <route edges="606543125 32576066#5 32576061#1 32576061#2 32576061#3 211849413#0 898358167" />
     </vehicle>
     <vehicle id="363" type="motorcycle" depart="363.00">
@@ -1095,7 +1095,7 @@
     <vehicle id="364" type="motorcycle" depart="364.00">
         <route edges="-211849412 32576065#1 1061035915#0 1061035915#2 32576061#4 32576061#5 32576064#0 32576064#1" />
     </vehicle>
-    <vehicle id="365" type="car" depart="365.00">
+    <vehicle id="365" type="blue_car" depart="365.00">
         <route edges="-606543125 606543126 606543127 211849500#0 211849500#1 32577015#9 290729095#0" />
     </vehicle>
     <vehicle id="366" type="motorcycle" depart="366.00">
@@ -1107,7 +1107,7 @@
     <vehicle id="368" type="motorcycle" depart="368.00">
         <route edges="-606543127 606543127 211849500#0 211849500#1 -211849500#1" />
     </vehicle>
-    <vehicle id="369" type="car" depart="369.00">
+    <vehicle id="369" type="blue_car" depart="369.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32577015#1 32577015#2 -32577015#2" />
     </vehicle>
     <vehicle id="370" type="motorcycle" depart="370.00">
@@ -1134,7 +1134,7 @@
     <vehicle id="377" type="car" depart="377.00">
         <route edges="606543132 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 290729095#0" />
     </vehicle>
-    <vehicle id="378" type="car" depart="378.00">
+    <vehicle id="378" type="blue_car" depart="378.00">
         <route edges="1060982830 211849500#0 -211849499 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -606543117" />
     </vehicle>
     <vehicle id="379" type="motorcycle" depart="379.00">
@@ -1170,7 +1170,7 @@
     <vehicle id="389" type="motorcycle" depart="389.00">
         <route edges="-606543124 -606543125 290729088#2 -290729088#2" />
     </vehicle>
-    <vehicle id="390" type="car" depart="390.00">
+    <vehicle id="390" type="blue_car" depart="390.00">
         <route edges="32576066#3 -606543125 -290729088#0 -211849415#1 32576065#0 32576065#1 1061035915#0" />
     </vehicle>
     <vehicle id="391" type="taxi" depart="391.00">
@@ -1221,7 +1221,7 @@
     <vehicle id="406" type="car" depart="406.00">
         <route edges="-290729095#1 -32576064#0 -32576061#5 -32576061#4 -32576061#3 32576061#3" />
     </vehicle>
-    <vehicle id="407" type="car" depart="407.00">
+    <vehicle id="407" type="blue_car" depart="407.00">
         <route edges="1061042908 32576065#0 32576065#1 -32576063" />
     </vehicle>
     <vehicle id="408" type="motorcycle" depart="408.00">
@@ -1266,7 +1266,7 @@
     <vehicle id="421" type="motorcycle" depart="421.00">
         <route edges="290729088#0 -290729088#0 -211849415#1 -1061042908 32577015#5 32577015#6" />
     </vehicle>
-    <vehicle id="422" type="car" depart="422.00">
+    <vehicle id="422" type="blue_car" depart="422.00">
         <route edges="32577015#1 32577015#2 32577015#5 32577015#6" />
     </vehicle>
     <vehicle id="423" type="taxi" depart="423.00">
@@ -1290,7 +1290,7 @@
     <vehicle id="429" type="car" depart="429.00">
         <route edges="-211849500#0 211849500#0 -211849499 290729094#0" />
     </vehicle>
-    <vehicle id="430" type="car" depart="430.00">
+    <vehicle id="430" type="blue_car" depart="430.00">
         <route edges="32577015#5 32577015#6 -211849412 32576065#1 1061035915#0 -606543126" />
     </vehicle>
     <vehicle id="431" type="motorcycle" depart="431.00">
@@ -1317,7 +1317,7 @@
     <vehicle id="438" type="bus" depart="438.00">
         <route edges="-32576061#6 211849499 211849500#1 -32577015#8 606543121" />
     </vehicle>
-    <vehicle id="439" type="car" depart="439.00">
+    <vehicle id="439" type="blue_car" depart="439.00">
         <route edges="-290729089 -211849415#1 -1061042908 -606543132" />
     </vehicle>
     <vehicle id="440" type="motorcycle" depart="440.00">
@@ -1347,7 +1347,7 @@
     <vehicle id="448" type="car" depart="448.00">
         <route edges="-606543126 606543126 -1061035915#0 -32576063" />
     </vehicle>
-    <vehicle id="449" type="car" depart="449.00">
+    <vehicle id="449" type="blue_car" depart="449.00">
         <route edges="1061042908 32576065#0 32576065#1 1061035915#0 606543127 211849500#0" />
     </vehicle>
     <vehicle id="450" type="motorcycle" depart="450.00">
@@ -1407,7 +1407,7 @@
     <vehicle id="468" type="motorcycle" depart="468.00">
         <route edges="-898358167 -211849413#0 -1061035915#2 606543127 211849500#0 211849500#1 -32577015#8 606543121" />
     </vehicle>
-    <vehicle id="469" type="car" depart="469.00">
+    <vehicle id="469" type="blue_car" depart="469.00">
         <route edges="32576066#3 -606543125 606543126 -1061035915#0 -32576065#1 -32576065#0" />
     </vehicle>
     <vehicle id="470" type="taxi" depart="470.00">
@@ -1446,7 +1446,7 @@
     <vehicle id="481" type="car" depart="481.00">
         <route edges="32576066#1 32576066#3 -606543125 606543126" />
     </vehicle>
-    <vehicle id="482" type="car" depart="482.00">
+    <vehicle id="482" type="blue_car" depart="482.00">
         <route edges="-211849500#1 -211849500#0 -606543127 -1061035915#0 -32576063" />
     </vehicle>
     <vehicle id="483" type="motorcycle" depart="483.00">
@@ -1476,13 +1476,13 @@
     <vehicle id="491" type="motorcycle" depart="491.00">
         <route edges="-290729088#3 -290729088#2 606543126 606543127 -606543127" />
     </vehicle>
-    <vehicle id="492" type="car" depart="492.00">
+    <vehicle id="492" type="blue_car" depart="492.00">
         <route edges="290729094#0 -290729094#0 32576064#0" />
     </vehicle>
     <vehicle id="493" type="motorcycle" depart="493.00">
         <route edges="606543119 32576061#1 -606543117" />
     </vehicle>
-    <vehicle id="494" type="car" depart="494.00">
+    <vehicle id="494" type="blue_car" depart="494.00">
         <route edges="32576061#4 32576061#5 290729094#0 -290729095#1" />
     </vehicle>
     <vehicle id="495" type="motorcycle" depart="495.00">
@@ -1551,7 +1551,7 @@
     <vehicle id="516" type="motorcycle" depart="516.00">
         <route edges="290729089 32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 -1061035915#2" />
     </vehicle>
-    <vehicle id="517" type="car" depart="517.00">
+    <vehicle id="517" type="blue_car" depart="517.00">
         <route edges="-1061035915#0 -32576065#1 -32576065#0 -606543102 -32576066#0 32576066#0" />
     </vehicle>
     <vehicle id="518" type="motorcycle" depart="518.00">
@@ -1590,7 +1590,7 @@
     <vehicle id="529" type="motorcycle" depart="529.00">
         <route edges="290729095#0 -32576064#0 -32576061#5 1060982830 32576063 1061035915#0" />
     </vehicle>
-    <vehicle id="530" type="car" depart="530.00">
+    <vehicle id="530" type="blue_car" depart="530.00">
         <route edges="32577015#8 -211849500#1 -211849499" />
     </vehicle>
     <vehicle id="531" type="motorcycle" depart="531.00">
@@ -1626,7 +1626,7 @@
     <vehicle id="541" type="motorcycle" depart="541.00">
         <route edges="-32576066#5 -606543125 606543126 606543127 -606543127" />
     </vehicle>
-    <vehicle id="542" type="car" depart="542.00">
+    <vehicle id="542" type="blue_car" depart="542.00">
         <route edges="-32577015#9 -211849500#1" />
     </vehicle>
     <vehicle id="543" type="car" depart="543.00">
@@ -1647,7 +1647,7 @@
     <vehicle id="548" type="motorcycle" depart="548.00">
         <route edges="32576066#0 606543102 211849415#1" />
     </vehicle>
-    <vehicle id="549" type="car" depart="549.00">
+    <vehicle id="549" type="blue_car" depart="549.00">
         <route edges="211849412 32577015#7 32577015#8 32577015#9 -32576061#6 211849499" />
     </vehicle>
     <vehicle id="550" type="motorcycle" depart="550.00">
@@ -1680,7 +1680,7 @@
     <vehicle id="559" type="car" depart="559.00">
         <route edges="1061042908 211849415#1 290729089 32576066#3" />
     </vehicle>
-    <vehicle id="560" type="car" depart="560.00">
+    <vehicle id="560" type="blue_car" depart="560.00">
         <route edges="32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 32576061#6 606549682#1" />
     </vehicle>
     <vehicle id="561" type="motorcycle" depart="561.00">
@@ -1713,7 +1713,7 @@
     <vehicle id="570" type="car" depart="570.00">
         <route edges="32576061#4 32576061#5 -32576061#5" />
     </vehicle>
-    <vehicle id="571" type="car" depart="571.00">
+    <vehicle id="571" type="blue_car" depart="571.00">
         <route edges="-32577015#9 -32577015#8 -32577015#7 -32577015#6 -32577015#5" />
     </vehicle>
     <vehicle id="572" type="car" depart="572.00">
@@ -1743,7 +1743,7 @@
     <vehicle id="580" type="motorcycle" depart="580.00">
         <route edges="-32585157#0 32576066#0 32576066#1 -32576066#1" />
     </vehicle>
-    <vehicle id="581" type="car" depart="581.00">
+    <vehicle id="581" type="blue_car" depart="581.00">
         <route edges="290729094#0 -290729095#1 -32576064#0 -32576061#5 1060982830" />
     </vehicle>
     <vehicle id="582" type="motorcycle" depart="582.00">
@@ -1773,7 +1773,7 @@
     <vehicle id="590" type="motorcycle" depart="590.00">
         <route edges="32576066#3" />
     </vehicle>
-    <vehicle id="591" type="car" depart="591.00">
+    <vehicle id="591" type="blue_car" depart="591.00">
         <route edges="-211849415#1 32576065#0 211849412 32577015#7" />
     </vehicle>
     <vehicle id="592" type="motorcycle" depart="592.00">
@@ -1785,7 +1785,7 @@
     <vehicle id="594" type="motorcycle" depart="594.00">
         <route edges="1061042908 32576065#0 32576065#1 1061035915#0 606543127 211849500#0" />
     </vehicle>
-    <vehicle id="595" type="car" depart="595.00">
+    <vehicle id="595" type="blue_car" depart="595.00">
         <route edges="32576061#0 32576061#1 -606543117" />
     </vehicle>
     <vehicle id="596" type="motorcycle" depart="596.00">
@@ -1821,7 +1821,7 @@
     <vehicle id="606" type="car" depart="606.00">
         <route edges="32577015#8 -32577015#8 -32577015#7 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="607" type="car" depart="607.00">
+    <vehicle id="607" type="blue_car" depart="607.00">
         <route edges="32576061#2 -290729088#2 606543125 32576066#5" />
     </vehicle>
     <vehicle id="608" type="motorcycle" depart="608.00">
@@ -1830,7 +1830,7 @@
     <vehicle id="609" type="motorcycle" depart="609.00">
         <route edges="-290729089 290729088#0 606543126 1061035915#2 -32576061#3" />
     </vehicle>
-    <vehicle id="610" type="car" depart="610.00">
+    <vehicle id="610" type="blue_car" depart="610.00">
         <route edges="211849415#1 290729089 -32576066#1 606543102 32576065#0" />
     </vehicle>
     <vehicle id="611" type="motorcycle" depart="611.00">
@@ -1848,13 +1848,13 @@
     <vehicle id="615" type="motorcycle" depart="615.00">
         <route edges="1061035915#2 32576061#4 32576061#5 290729094#0" />
     </vehicle>
-    <vehicle id="616" type="car" depart="616.00">
+    <vehicle id="616" type="blue_car" depart="616.00">
         <route edges="211849500#0 211849500#1 -32577015#8 -32577015#7 32577015#7" />
     </vehicle>
     <vehicle id="617" type="car" depart="617.00">
         <route edges="211849500#0 -211849499 290729094#0 -290729095#1" />
     </vehicle>
-    <vehicle id="618" type="car" depart="618.00">
+    <vehicle id="618" type="blue_car" depart="618.00">
         <route edges="-211849413#2 -211849413#0 -1061035915#2 -606543126" />
     </vehicle>
     <vehicle id="619" type="motorcycle" depart="619.00">
@@ -1869,13 +1869,13 @@
     <vehicle id="622" type="motorcycle" depart="622.00">
         <route edges="-211849413#0 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -606543102 -32576066#0 32577015#1 32577015#2" />
     </vehicle>
-    <vehicle id="623" type="car" depart="623.00">
+    <vehicle id="623" type="blue_car" depart="623.00">
         <route edges="-211849415#1 32576065#0 211849412 32577015#7" />
     </vehicle>
     <vehicle id="624" type="motorcycle" depart="624.00">
         <route edges="32577015#1 32577015#2 1061042908 211849415#1 290729088#0 290729088#2 290729088#3" />
     </vehicle>
-    <vehicle id="625" type="car" depart="625.00">
+    <vehicle id="625" type="blue_car" depart="625.00">
         <route edges="-606543131 -606543132" />
     </vehicle>
     <vehicle id="626" type="motorcycle" depart="626.00">
@@ -1896,7 +1896,7 @@
     <vehicle id="631" type="motorcycle" depart="631.00">
         <route edges="-211849500#1 -211849500#0 -606543127 -1061035915#0 -32576065#1 -32576065#0 -1061042908 -32577015#2 -32577015#1 -32577015#0 32585157#1" />
     </vehicle>
-    <vehicle id="632" type="car" depart="632.00">
+    <vehicle id="632" type="blue_car" depart="632.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32576066#0 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5" />
     </vehicle>
     <vehicle id="633" type="car" depart="633.00">
@@ -1905,7 +1905,7 @@
     <vehicle id="634" type="car" depart="634.00">
         <route edges="-32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -606543125" />
     </vehicle>
-    <vehicle id="635" type="car" depart="635.00">
+    <vehicle id="635" type="blue_car" depart="635.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2 1061042908 32576065#0 211849412" />
     </vehicle>
     <vehicle id="636" type="motorcycle" depart="636.00">
@@ -1920,7 +1920,7 @@
     <vehicle id="639" type="motorcycle" depart="639.00">
         <route edges="32576064#0 290729095#1 290729094#1" />
     </vehicle>
-    <vehicle id="640" type="car" depart="640.00">
+    <vehicle id="640" type="blue_car" depart="640.00">
         <route edges="-211849413#2 -211849413#0 -1061035915#2 606543127 211849500#0 211849500#1 -211849500#1" />
     </vehicle>
     <vehicle id="641" type="motorcycle" depart="641.00">
@@ -1962,10 +1962,10 @@
     <vehicle id="653" type="motorcycle" depart="653.00">
         <route edges="290729088#0 606543125 32576066#5 -606543119" />
     </vehicle>
-    <vehicle id="654" type="car" depart="654.00">
+    <vehicle id="654" type="blue_car" depart="654.00">
         <route edges="-32577015#2 32577015#2 32577015#5 32577015#6 32577015#7 -32577015#7" />
     </vehicle>
-    <vehicle id="655" type="car" depart="655.00">
+    <vehicle id="655" type="blue_car" depart="655.00">
         <route edges="-290729095#1 -32576064#0 -32576061#5" />
     </vehicle>
     <vehicle id="656" type="motorcycle" depart="656.00">
@@ -2034,7 +2034,7 @@
     <vehicle id="677" type="motorcycle" depart="677.00">
         <route edges="32576065#1 1061035915#0 1061035915#2 32576061#4 32576061#5 32576064#0 290729095#1 -290729094#0" />
     </vehicle>
-    <vehicle id="678" type="car" depart="678.00">
+    <vehicle id="678" type="blue_car" depart="678.00">
         <route edges="-32576063 -1060982830 32576061#5 290729094#0 290729094#1" />
     </vehicle>
     <vehicle id="679" type="motorcycle" depart="679.00">
@@ -2052,7 +2052,7 @@
     <vehicle id="683" type="motorcycle" depart="683.00">
         <route edges="32577015#8 32577015#9 290729095#0 -290729095#0" />
     </vehicle>
-    <vehicle id="684" type="car" depart="684.00">
+    <vehicle id="684" type="blue_car" depart="684.00">
         <route edges="-32585157#1 -32585157#0 32576066#0 32576066#1 32576066#3 -606543125 606543126" />
     </vehicle>
     <vehicle id="685" type="car" depart="685.00">
@@ -2124,7 +2124,7 @@
     <vehicle id="707" type="truck" depart="707.00">
         <route edges="-32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -606543117" />
     </vehicle>
-    <vehicle id="708" type="car" depart="708.00">
+    <vehicle id="708" type="blue_car" depart="708.00">
         <route edges="290729089 -32576066#1 606543102 32576065#0 211849412 32577015#7 32577015#8 -211849500#1 -211849500#0" />
     </vehicle>
     <vehicle id="709" type="motorcycle" depart="709.00">
@@ -2163,7 +2163,7 @@
     <vehicle id="720" type="motorcycle" depart="720.00">
         <route edges="-290729095#0 -32577015#9 -32577015#8 -32577015#7 -211849412 32576065#1" />
     </vehicle>
-    <vehicle id="721" type="car" depart="721.00">
+    <vehicle id="721" type="blue_car" depart="721.00">
         <route edges="-606543124 32576066#5 32576061#1 32576061#2 32576061#3" />
     </vehicle>
     <vehicle id="722" type="motorcycle" depart="722.00">
@@ -2205,7 +2205,7 @@
     <vehicle id="734" type="motorcycle" depart="734.00">
         <route edges="32577015#7 32577015#8 32577015#9 -32577015#9" />
     </vehicle>
-    <vehicle id="735" type="car" depart="735.00">
+    <vehicle id="735" type="blue_car" depart="735.00">
         <route edges="606543127 32576063 1061035915#0" />
     </vehicle>
     <vehicle id="736" type="motorcycle" depart="736.00">
@@ -2229,7 +2229,7 @@
     <vehicle id="742" type="truck" depart="742.00">
         <route edges="-32576066#0 32577015#1 32577015#2 1061042908 211849415#1 290729088#0 290729088#2" />
     </vehicle>
-    <vehicle id="743" type="car" depart="743.00">
+    <vehicle id="743" type="blue_car" depart="743.00">
         <route edges="-32585157#0 32576066#0 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2" />
     </vehicle>
     <vehicle id="744" type="car" depart="744.00">
@@ -2268,7 +2268,7 @@
     <vehicle id="755" type="motorcycle" depart="755.00">
         <route edges="1061035915#2 -32576061#3 -290729088#2 290729088#2" />
     </vehicle>
-    <vehicle id="756" type="car" depart="756.00">
+    <vehicle id="756" type="blue_car" depart="756.00">
         <route edges="290729094#0 -290729095#1 -32576064#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2 606543126" />
     </vehicle>
     <vehicle id="757" type="bus" depart="757.00">
@@ -2277,7 +2277,7 @@
     <vehicle id="758" type="bus" depart="758.00">
         <route edges="1061042908 32576065#0 211849412" />
     </vehicle>
-    <vehicle id="759" type="car" depart="759.00">
+    <vehicle id="759" type="blue_car" depart="759.00">
         <route edges="-32577015#7 32577015#7 32577015#8 -211849500#1 -211849499 290729094#0 290729094#1" />
     </vehicle>
     <vehicle id="760" type="car" depart="760.00">
@@ -2334,7 +2334,7 @@
     <vehicle id="777" type="car" depart="777.00">
         <route edges="-290729088#3 -290729088#2 -290729088#0 -211849415#1 -606543102 32576066#1" />
     </vehicle>
-    <vehicle id="778" type="car" depart="778.00">
+    <vehicle id="778" type="blue_car" depart="778.00">
         <route edges="-1061035915#2 -1061035915#0 -32576065#1 -32576065#0 211849415#1" />
     </vehicle>
     <vehicle id="779" type="motorcycle" depart="779.00">
@@ -2439,7 +2439,7 @@
     <vehicle id="812" type="motorcycle" depart="812.00">
         <route edges="-211849415#1 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 -211849413#0" />
     </vehicle>
-    <vehicle id="813" type="car" depart="813.00">
+    <vehicle id="813" type="blue_car" depart="813.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849499 -32576061#5 1060982830" />
     </vehicle>
     <vehicle id="814" type="motorcycle" depart="814.00">
@@ -2469,7 +2469,7 @@
     <vehicle id="822" type="motorcycle" depart="822.00">
         <route edges="-32577015#6 -32577015#5 1061042908 211849415#1 290729088#0 290729088#2 290729088#3" />
     </vehicle>
-    <vehicle id="823" type="car" depart="823.00">
+    <vehicle id="823" type="blue_car" depart="823.00">
         <route edges="-32576061#6 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576065#1 211849412 32577015#7" />
     </vehicle>
     <vehicle id="824" type="motorcycle" depart="824.00">
@@ -2490,7 +2490,7 @@
     <vehicle id="829" type="motorcycle" depart="829.00">
         <route edges="606543119 -32576066#5 -606543125 606543126 1061035915#2" />
     </vehicle>
-    <vehicle id="830" type="car" depart="830.00">
+    <vehicle id="830" type="blue_car" depart="830.00">
         <route edges="606543126 606543127 211849500#0 -211849499 -32576061#5" />
     </vehicle>
     <vehicle id="831" type="motorcycle" depart="831.00">
@@ -2517,7 +2517,7 @@
     <vehicle id="838" type="car" depart="838.00">
         <route edges="1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 -32576061#3" />
     </vehicle>
-    <vehicle id="839" type="car" depart="839.00">
+    <vehicle id="839" type="blue_car" depart="839.00">
         <route edges="1061035915#0 606543127 211849500#0 -211849499" />
     </vehicle>
     <vehicle id="840" type="bus" depart="840.00">
@@ -2595,10 +2595,10 @@
     <vehicle id="864" type="motorcycle" depart="864.00">
         <route edges="211849412 -211849412 32576065#1 1061035915#0 1061035915#2 -32576061#3 -32576061#2 -32576061#1" />
     </vehicle>
-    <vehicle id="865" type="car" depart="865.00">
+    <vehicle id="865" type="blue_car" depart="865.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -32576061#3 290729088#3" />
     </vehicle>
-    <vehicle id="866" type="car" depart="866.00">
+    <vehicle id="866" type="blue_car" depart="866.00">
         <route edges="32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 32576064#0 -290729095#0" />
     </vehicle>
     <vehicle id="867" type="motorcycle" depart="867.00">
@@ -2655,7 +2655,7 @@
     <vehicle id="884" type="motorcycle" depart="884.00">
         <route edges="-32576065#1 -32576065#0 211849415#1 290729089 -32576066#1" />
     </vehicle>
-    <vehicle id="885" type="car" depart="885.00">
+    <vehicle id="885" type="blue_car" depart="885.00">
         <route edges="-32576061#2 -32576061#1 32576061#1 32576061#2 32576061#3 32576061#4" />
     </vehicle>
     <vehicle id="886" type="motorcycle" depart="886.00">
@@ -2688,7 +2688,7 @@
     <vehicle id="895" type="car" depart="895.00">
         <route edges="-606543125 606543126 606543127 -1060982830 -32576061#4" />
     </vehicle>
-    <vehicle id="896" type="car" depart="896.00">
+    <vehicle id="896" type="blue_car" depart="896.00">
         <route edges="-898358167 -211849413#0 -1061035915#2 -606543126 606543125" />
     </vehicle>
     <vehicle id="897" type="truck" depart="897.00">
@@ -2736,10 +2736,10 @@
     <vehicle id="911" type="motorcycle" depart="911.00">
         <route edges="32576061#2 -290729088#2 606543125" />
     </vehicle>
-    <vehicle id="912" type="car" depart="912.00">
+    <vehicle id="912" type="blue_car" depart="912.00">
         <route edges="32577015#9 -32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1" />
     </vehicle>
-    <vehicle id="913" type="car" depart="913.00">
+    <vehicle id="913" type="blue_car" depart="913.00">
         <route edges="32577015#6 -211849412 32576065#1 1061035915#0 1061035915#2 -32576061#3 -32576061#2 -32576061#1" />
     </vehicle>
     <vehicle id="914" type="car" depart="914.00">
@@ -2784,13 +2784,13 @@
     <vehicle id="927" type="car" depart="927.00">
         <route edges="32576065#0 32576065#1 1061035915#0 1061035915#2 32576061#4 32576061#5 211849499" />
     </vehicle>
-    <vehicle id="928" type="car" depart="928.00">
+    <vehicle id="928" type="blue_car" depart="928.00">
         <route edges="32576061#5 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1" />
     </vehicle>
     <vehicle id="929" type="motorcycle" depart="929.00">
         <route edges="32577015#1 -32577015#1 -32577015#0 32585157#1" />
     </vehicle>
-    <vehicle id="930" type="car" depart="930.00">
+    <vehicle id="930" type="blue_car" depart="930.00">
         <route edges="32576066#1 -32576066#1 -32576066#0 32577015#1 32577015#2 1061042908" />
     </vehicle>
     <vehicle id="931" type="motorcycle" depart="931.00">
@@ -2817,7 +2817,7 @@
     <vehicle id="938" type="motorcycle" depart="938.00">
         <route edges="290729095#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 -211849415#1" />
     </vehicle>
-    <vehicle id="939" type="car" depart="939.00">
+    <vehicle id="939" type="blue_car" depart="939.00">
         <route edges="-290729088#0 290729088#0 290729088#2 -32576061#2 -32576061#1 -32576066#5" />
     </vehicle>
     <vehicle id="940" type="truck" depart="940.00">
@@ -2883,7 +2883,7 @@
     <vehicle id="960" type="car" depart="960.00">
         <route edges="32576065#1 -32576063 -606543127" />
     </vehicle>
-    <vehicle id="961" type="car" depart="961.00">
+    <vehicle id="961" type="blue_car" depart="961.00">
         <route edges="-606549682#1 -32577015#9 -211849500#1 -211849500#0 -606543127" />
     </vehicle>
     <vehicle id="962" type="motorcycle" depart="962.00">
@@ -2904,7 +2904,7 @@
     <vehicle id="967" type="motorcycle" depart="967.00">
         <route edges="-211849413#2 898358167" />
     </vehicle>
-    <vehicle id="968" type="car" depart="968.00">
+    <vehicle id="968" type="blue_car" depart="968.00">
         <route edges="606543117 32576061#2 -290729088#2 -290729088#0 -211849415#1" />
     </vehicle>
     <vehicle id="969" type="motorcycle" depart="969.00">
@@ -2970,13 +2970,13 @@
     <vehicle id="989" type="taxi" depart="989.00">
         <route edges="-1061035915#0 -32576063 -1060982830 -32576061#4" />
     </vehicle>
-    <vehicle id="990" type="car" depart="990.00">
+    <vehicle id="990" type="blue_car" depart="990.00">
         <route edges="-211849500#1 -211849500#0 -606543127 -1061035915#0 -32576065#1 -32576065#0 -1061042908" />
     </vehicle>
     <vehicle id="991" type="truck" depart="991.00">
         <route edges="211849413#0 -211849413#0 32576061#4" />
     </vehicle>
-    <vehicle id="992" type="car" depart="992.00">
+    <vehicle id="992" type="blue_car" depart="992.00">
         <route edges="-211849412 32576065#1 1061035915#0 1061035915#2 32576061#4 32576061#5 32576064#0" />
     </vehicle>
     <vehicle id="993" type="car" depart="993.00">
@@ -3012,7 +3012,7 @@
     <vehicle id="1003" type="taxi" depart="1003.00">
         <route edges="32577015#5 32577015#6 32577015#7 606543121" />
     </vehicle>
-    <vehicle id="1004" type="car" depart="1004.00">
+    <vehicle id="1004" type="blue_car" depart="1004.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -606543119" />
     </vehicle>
     <vehicle id="1005" type="motorcycle" depart="1005.00">
@@ -3054,7 +3054,7 @@
     <vehicle id="1017" type="motorcycle" depart="1017.00">
         <route edges="32576066#5 32576061#1 32576061#2 32576061#3 -1061035915#2 606543127 211849500#0 211849500#1 -211849500#1" />
     </vehicle>
-    <vehicle id="1018" type="car" depart="1018.00">
+    <vehicle id="1018" type="blue_car" depart="1018.00">
         <route edges="32576061#2 32576061#3 -32576061#3" />
     </vehicle>
     <vehicle id="1019" type="motorcycle" depart="1019.00">
@@ -3099,10 +3099,10 @@
     <vehicle id="1032" type="motorcycle" depart="1032.00">
         <route edges="-32577015#1 32576066#0 606543102 32576065#0 32576065#1 -32576065#1" />
     </vehicle>
-    <vehicle id="1033" type="car" depart="1033.00">
+    <vehicle id="1033" type="blue_car" depart="1033.00">
         <route edges="-606549682#1 -32577015#9 -211849500#1 -211849500#0 32576063 1061035915#0" />
     </vehicle>
-    <vehicle id="1034" type="car" depart="1034.00">
+    <vehicle id="1034" type="blue_car" depart="1034.00">
         <route edges="-211849500#0 -606543127 1061035915#2 211849413#0 837745310" />
     </vehicle>
     <vehicle id="1035" type="car" depart="1035.00">
@@ -3144,7 +3144,7 @@
     <vehicle id="1047" type="car" depart="1047.00">
         <route edges="-290729094#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 -211849415#1 -606543102 32576066#1" />
     </vehicle>
-    <vehicle id="1048" type="car" depart="1048.00">
+    <vehicle id="1048" type="blue_car" depart="1048.00">
         <route edges="-290729094#1 -290729094#0 32576061#6" />
     </vehicle>
     <vehicle id="1049" type="car" depart="1049.00">
@@ -3189,7 +3189,7 @@
     <vehicle id="1062" type="motorcycle" depart="1062.00">
         <route edges="-32576064#1 -290729095#0 606549682#1" />
     </vehicle>
-    <vehicle id="1063" type="car" depart="1063.00">
+    <vehicle id="1063" type="blue_car" depart="1063.00">
         <route edges="-1061035915#0 -32576065#1 -32576065#0 -606543102 32576066#1 32576066#3 32576066#5" />
     </vehicle>
     <vehicle id="1064" type="bus" depart="1064.00">
@@ -3213,7 +3213,7 @@
     <vehicle id="1070" type="motorcycle" depart="1070.00">
         <route edges="-32577015#8 32577015#8 32577015#9 -32576061#6 211849499" />
     </vehicle>
-    <vehicle id="1071" type="car" depart="1071.00">
+    <vehicle id="1071" type="blue_car" depart="1071.00">
         <route edges="606543133 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 -32576061#6" />
     </vehicle>
     <vehicle id="1072" type="motorcycle" depart="1072.00">
@@ -3249,7 +3249,7 @@
     <vehicle id="1082" type="car" depart="1082.00">
         <route edges="32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9" />
     </vehicle>
-    <vehicle id="1083" type="car" depart="1083.00">
+    <vehicle id="1083" type="blue_car" depart="1083.00">
         <route edges="-606543125 -290729088#0 -211849415#1 32576065#0 211849412 -211849412" />
     </vehicle>
     <vehicle id="1084" type="motorcycle" depart="1084.00">
@@ -3273,7 +3273,7 @@
     <vehicle id="1090" type="motorcycle" depart="1090.00">
         <route edges="-211849415#1 -606543102 32576066#1 32576066#3 32576066#5 -32576061#0" />
     </vehicle>
-    <vehicle id="1091" type="car" depart="1091.00">
+    <vehicle id="1091" type="blue_car" depart="1091.00">
         <route edges="-32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 32577015#1 32577015#2" />
     </vehicle>
     <vehicle id="1092" type="motorcycle" depart="1092.00">
@@ -3282,7 +3282,7 @@
     <vehicle id="1093" type="motorcycle" depart="1093.00">
         <route edges="-32576066#5 -606543125 290729088#2 32576061#3 32576061#4 32576061#5 32576064#0 32576064#1" />
     </vehicle>
-    <vehicle id="1094" type="car" depart="1094.00">
+    <vehicle id="1094" type="blue_car" depart="1094.00">
         <route edges="-290729088#3 32576061#3 211849413#0 837745310" />
     </vehicle>
     <vehicle id="1095" type="motorcycle" depart="1095.00">
@@ -3294,7 +3294,7 @@
     <vehicle id="1097" type="car" depart="1097.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2" />
     </vehicle>
-    <vehicle id="1098" type="car" depart="1098.00">
+    <vehicle id="1098" type="blue_car" depart="1098.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32577015#1 32577015#2 1061042908 32576065#0" />
     </vehicle>
     <vehicle id="1099" type="car" depart="1099.00">
@@ -3315,7 +3315,7 @@
     <vehicle id="1104" type="motorcycle" depart="1104.00">
         <route edges="290729094#0 -290729095#1 290729095#1" />
     </vehicle>
-    <vehicle id="1105" type="car" depart="1105.00">
+    <vehicle id="1105" type="blue_car" depart="1105.00">
         <route edges="-211849499 -32576061#5 -32576061#4 -32576061#3 290729088#3" />
     </vehicle>
     <vehicle id="1106" type="motorcycle" depart="1106.00">
@@ -3345,7 +3345,7 @@
     <vehicle id="1114" type="bus" depart="1114.00">
         <route edges="1061035915#0 -606543126 -290729088#0 -211849415#1 -606543102" />
     </vehicle>
-    <vehicle id="1115" type="car" depart="1115.00">
+    <vehicle id="1115" type="blue_car" depart="1115.00">
         <route edges="-1061035915#2 -1061035915#0 -32576065#1 211849412 -32577015#6" />
     </vehicle>
     <vehicle id="1116" type="motorcycle" depart="1116.00">
@@ -3390,7 +3390,7 @@
     <vehicle id="1129" type="motorcycle" depart="1129.00">
         <route edges="-211849500#1 -211849500#0 -606543127 1061035915#2 -32576061#3 -32576061#2 -32576061#1 -32576066#5" />
     </vehicle>
-    <vehicle id="1130" type="car" depart="1130.00">
+    <vehicle id="1130" type="blue_car" depart="1130.00">
         <route edges="606543119 -32576066#5 -606543125 -290729088#0 -211849415#1 -1061042908 -32577015#2" />
     </vehicle>
     <vehicle id="1131" type="motorcycle" depart="1131.00">
@@ -3420,10 +3420,10 @@
     <vehicle id="1139" type="motorcycle" depart="1139.00">
         <route edges="-606543127 606543127 211849500#0" />
     </vehicle>
-    <vehicle id="1140" type="car" depart="1140.00">
+    <vehicle id="1140" type="blue_car" depart="1140.00">
         <route edges="-32576061#6 211849499 211849500#1 -32577015#8" />
     </vehicle>
-    <vehicle id="1141" type="car" depart="1141.00">
+    <vehicle id="1141" type="blue_car" depart="1141.00">
         <route edges="32576066#0 -32576066#0 -32577015#0 32585157#1 -32585157#1 -32585157#0" />
     </vehicle>
     <vehicle id="1142" type="car" depart="1142.00">
@@ -3441,7 +3441,7 @@
     <vehicle id="1146" type="motorcycle" depart="1146.00">
         <route edges="32576061#0 -32576066#5 -606543125" />
     </vehicle>
-    <vehicle id="1147" type="car" depart="1147.00">
+    <vehicle id="1147" type="blue_car" depart="1147.00">
         <route edges="-32576065#1 -32576065#0 211849415#1 290729088#0 290729088#2 32576061#3" />
     </vehicle>
     <vehicle id="1148" type="motorcycle" depart="1148.00">
@@ -3480,7 +3480,7 @@
     <vehicle id="1159" type="motorcycle" depart="1159.00">
         <route edges="-211849499 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 -211849415#1 32576065#0" />
     </vehicle>
-    <vehicle id="1160" type="car" depart="1160.00">
+    <vehicle id="1160" type="blue_car" depart="1160.00">
         <route edges="290729088#2 32576061#3 -1061035915#2 -1061035915#0 -32576065#1 211849412 -32577015#6" />
     </vehicle>
     <vehicle id="1161" type="motorcycle" depart="1161.00">
@@ -3504,7 +3504,7 @@
     <vehicle id="1167" type="motorcycle" depart="1167.00">
         <route edges="211849412 32577015#7 32577015#8 -211849500#1 -211849500#0 211849500#0" />
     </vehicle>
-    <vehicle id="1168" type="car" depart="1168.00">
+    <vehicle id="1168" type="blue_car" depart="1168.00">
         <route edges="-606543102 -32576066#0 -32577015#0 32585157#1 -32585157#1 -32585157#0" />
     </vehicle>
     <vehicle id="1169" type="motorcycle" depart="1169.00">
@@ -3576,7 +3576,7 @@
     <vehicle id="1191" type="car" depart="1191.00">
         <route edges="32576061#5 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 290729089 32576066#3" />
     </vehicle>
-    <vehicle id="1192" type="car" depart="1192.00">
+    <vehicle id="1192" type="blue_car" depart="1192.00">
         <route edges="-211849413#2 -211849413#0 -32576061#3 -290729088#2 -290729088#0" />
     </vehicle>
     <vehicle id="1193" type="motorcycle" depart="1193.00">
@@ -3591,13 +3591,13 @@
     <vehicle id="1196" type="motorcycle" depart="1196.00">
         <route edges="-837745310 -211849413#0 32576061#4 32576061#5 290729094#0" />
     </vehicle>
-    <vehicle id="1197" type="car" depart="1197.00">
+    <vehicle id="1197" type="blue_car" depart="1197.00">
         <route edges="211849413#0 -211849413#0 -32576061#3 290729088#3" />
     </vehicle>
     <vehicle id="1198" type="motorcycle" depart="1198.00">
         <route edges="211849412 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="1199" type="car" depart="1199.00">
+    <vehicle id="1199" type="blue_car" depart="1199.00">
         <route edges="32576066#5 32576061#1 32576061#2 290729088#3" />
     </vehicle>
     <vehicle id="1200" type="bus" depart="1200.00">
@@ -3651,7 +3651,7 @@
     <vehicle id="1216" type="car" depart="1216.00">
         <route edges="290729095#0 -32576064#0 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -606543117" />
     </vehicle>
-    <vehicle id="1217" type="car" depart="1217.00">
+    <vehicle id="1217" type="blue_car" depart="1217.00">
         <route edges="32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 1060982830" />
     </vehicle>
     <vehicle id="1218" type="motorcycle" depart="1218.00">
@@ -3666,13 +3666,13 @@
     <vehicle id="1221" type="motorcycle" depart="1221.00">
         <route edges="-290729094#1 -290729094#0 211849499 -211849500#0 -606543127" />
     </vehicle>
-    <vehicle id="1222" type="car" depart="1222.00">
+    <vehicle id="1222" type="blue_car" depart="1222.00">
         <route edges="32576061#4 32576061#5 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 -211849415#1 32576065#0" />
     </vehicle>
     <vehicle id="1223" type="motorcycle" depart="1223.00">
         <route edges="1060982830 211849500#0 -211849499 -32576061#5 -32576061#4 -32576061#3 -290729088#2" />
     </vehicle>
-    <vehicle id="1224" type="car" depart="1224.00">
+    <vehicle id="1224" type="blue_car" depart="1224.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 32576065#1" />
     </vehicle>
     <vehicle id="1225" type="motorcycle" depart="1225.00">
@@ -3747,7 +3747,7 @@
     <vehicle id="1248" type="car" depart="1248.00">
         <route edges="32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 290729095#0 -32576064#0" />
     </vehicle>
-    <vehicle id="1249" type="car" depart="1249.00">
+    <vehicle id="1249" type="blue_car" depart="1249.00">
         <route edges="32576061#1 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 32577015#1" />
     </vehicle>
     <vehicle id="1250" type="bus" depart="1250.00">
@@ -3825,7 +3825,7 @@
     <vehicle id="1274" type="truck" depart="1274.00">
         <route edges="290729088#0 290729088#2 32576061#3 32576061#4 32576061#5 290729094#0 -290729095#1" />
     </vehicle>
-    <vehicle id="1275" type="car" depart="1275.00">
+    <vehicle id="1275" type="blue_car" depart="1275.00">
         <route edges="606543117 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0" />
     </vehicle>
     <vehicle id="1276" type="motorcycle" depart="1276.00">
@@ -3846,7 +3846,7 @@
     <vehicle id="1281" type="motorcycle" depart="1281.00">
         <route edges="32576061#0 32576061#1 32576061#2 32576061#3 -1061035915#2 606543127 -1060982830" />
     </vehicle>
-    <vehicle id="1282" type="car" depart="1282.00">
+    <vehicle id="1282" type="blue_car" depart="1282.00">
         <route edges="-606543125 290729088#2 32576061#3 32576061#4 32576061#5 32576064#0 290729095#1 -290729094#0" />
     </vehicle>
     <vehicle id="1283" type="motorcycle" depart="1283.00">
@@ -3936,7 +3936,7 @@
     <vehicle id="1311" type="motorcycle" depart="1311.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 32576065#1 1061035915#0" />
     </vehicle>
-    <vehicle id="1312" type="car" depart="1312.00">
+    <vehicle id="1312" type="blue_car" depart="1312.00">
         <route edges="211849413#0 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 211849412" />
     </vehicle>
     <vehicle id="1313" type="motorcycle" depart="1313.00">
@@ -3957,7 +3957,7 @@
     <vehicle id="1318" type="car" depart="1318.00">
         <route edges="32576063 1061035915#0 -1061035915#0" />
     </vehicle>
-    <vehicle id="1319" type="car" depart="1319.00">
+    <vehicle id="1319" type="blue_car" depart="1319.00">
         <route edges="-211849413#2 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1" />
     </vehicle>
     <vehicle id="1320" type="motorcycle" depart="1320.00">
@@ -3975,7 +3975,7 @@
     <vehicle id="1324" type="car" depart="1324.00">
         <route edges="-211849499 -32576061#5 -32576061#4 211849413#0" />
     </vehicle>
-    <vehicle id="1325" type="car" depart="1325.00">
+    <vehicle id="1325" type="blue_car" depart="1325.00">
         <route edges="211849499 -211849500#0 -606543127 -606543126 606543125 -32576066#3 -32576066#1 -32576066#0" />
     </vehicle>
     <vehicle id="1326" type="motorcycle" depart="1326.00">
@@ -4002,7 +4002,7 @@
     <vehicle id="1333" type="motorcycle" depart="1333.00">
         <route edges="-211849499 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -606543125" />
     </vehicle>
-    <vehicle id="1334" type="car" depart="1334.00">
+    <vehicle id="1334" type="blue_car" depart="1334.00">
         <route edges="-606543121 32577015#8 -211849500#1 -211849500#0 -606543127 -606543126 290729088#2" />
     </vehicle>
     <vehicle id="1335" type="motorcycle" depart="1335.00">
@@ -4014,7 +4014,7 @@
     <vehicle id="1337" type="car" depart="1337.00">
         <route edges="32576061#0 32576061#1 32576061#2 32576061#3 32576061#4" />
     </vehicle>
-    <vehicle id="1338" type="car" depart="1338.00">
+    <vehicle id="1338" type="blue_car" depart="1338.00">
         <route edges="-290729094#1 -290729094#0 -32576061#5 -32576061#4 -1061035915#2 606543127" />
     </vehicle>
     <vehicle id="1339" type="motorcycle" depart="1339.00">
@@ -4038,7 +4038,7 @@
     <vehicle id="1345" type="truck" depart="1345.00">
         <route edges="-211849413#2 -211849413#0 32576061#4 32576061#5" />
     </vehicle>
-    <vehicle id="1346" type="car" depart="1346.00">
+    <vehicle id="1346" type="blue_car" depart="1346.00">
         <route edges="1061042908 32576065#0 32576065#1 1061035915#0 606543127 211849500#0 -211849499" />
     </vehicle>
     <vehicle id="1347" type="taxi" depart="1347.00">
@@ -4053,7 +4053,7 @@
     <vehicle id="1350" type="motorcycle" depart="1350.00">
         <route edges="-211849500#1 -211849500#0 211849500#0" />
     </vehicle>
-    <vehicle id="1351" type="car" depart="1351.00">
+    <vehicle id="1351" type="blue_car" depart="1351.00">
         <route edges="32576061#2 32576061#3 32576061#4 32576061#5 32576061#6 -32576061#6" />
     </vehicle>
     <vehicle id="1352" type="motorcycle" depart="1352.00">
@@ -4089,7 +4089,7 @@
     <vehicle id="1362" type="motorcycle" depart="1362.00">
         <route edges="32577015#8 -211849500#1 -211849500#0 -606543127 1061035915#2 -32576061#3 -32576061#2 -32576061#1" />
     </vehicle>
-    <vehicle id="1363" type="car" depart="1363.00">
+    <vehicle id="1363" type="blue_car" depart="1363.00">
         <route edges="32576065#1 1061035915#0 1061035915#2 211849413#0 837745310" />
     </vehicle>
     <vehicle id="1364" type="motorcycle" depart="1364.00">
@@ -4113,7 +4113,7 @@
     <vehicle id="1370" type="motorcycle" depart="1370.00">
         <route edges="-606543124 -32576066#3 -290729089 290729088#0" />
     </vehicle>
-    <vehicle id="1371" type="car" depart="1371.00">
+    <vehicle id="1371" type="blue_car" depart="1371.00">
         <route edges="-606543127 -1061035915#0 -32576065#1 32576065#1" />
     </vehicle>
     <vehicle id="1372" type="motorcycle" depart="1372.00">
@@ -4167,7 +4167,7 @@
     <vehicle id="1388" type="motorcycle" depart="1388.00">
         <route edges="32576066#0 32576066#1 32576066#3 -606543125 606543126 606543127 211849500#0 -211849499" />
     </vehicle>
-    <vehicle id="1389" type="car" depart="1389.00">
+    <vehicle id="1389" type="blue_car" depart="1389.00">
         <route edges="1061035915#2 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -606543125" />
     </vehicle>
     <vehicle id="1390" type="car" depart="1390.00">
@@ -4185,7 +4185,7 @@
     <vehicle id="1394" type="motorcycle" depart="1394.00">
         <route edges="-32576064#1 -32576064#0 -32576061#5 1060982830 211849500#0 -211849499" />
     </vehicle>
-    <vehicle id="1395" type="car" depart="1395.00">
+    <vehicle id="1395" type="blue_car" depart="1395.00">
         <route edges="-32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 606543102 32576065#0 32576065#1" />
     </vehicle>
     <vehicle id="1396" type="motorcycle" depart="1396.00">
@@ -4197,7 +4197,7 @@
     <vehicle id="1398" type="motorcycle" depart="1398.00">
         <route edges="-32577015#8 -32577015#7 -211849412 32576065#1 1061035915#0 1061035915#2 211849413#0" />
     </vehicle>
-    <vehicle id="1399" type="car" depart="1399.00">
+    <vehicle id="1399" type="blue_car" depart="1399.00">
         <route edges="606543126 606543127 -1060982830 -32576061#4" />
     </vehicle>
     <vehicle id="1400" type="motorcycle" depart="1400.00">
@@ -4227,7 +4227,7 @@
     <vehicle id="1408" type="motorcycle" depart="1408.00">
         <route edges="606543133 32577015#2 1061042908 -1061042908" />
     </vehicle>
-    <vehicle id="1409" type="car" depart="1409.00">
+    <vehicle id="1409" type="blue_car" depart="1409.00">
         <route edges="-32577015#8 32577015#8 -211849500#1 -211849500#0 -606543127" />
     </vehicle>
     <vehicle id="1410" type="motorcycle" depart="1410.00">
@@ -4248,7 +4248,7 @@
     <vehicle id="1415" type="motorcycle" depart="1415.00">
         <route edges="-32577015#5 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849499 290729094#0" />
     </vehicle>
-    <vehicle id="1416" type="car" depart="1416.00">
+    <vehicle id="1416" type="blue_car" depart="1416.00">
         <route edges="290729088#0 606543126 606543127 211849500#0 211849500#1" />
     </vehicle>
     <vehicle id="1417" type="motorcycle" depart="1417.00">
@@ -4302,7 +4302,7 @@
     <vehicle id="1433" type="motorcycle" depart="1433.00">
         <route edges="-32576061#1 -32576066#5 -606543125 606543126 606543127 211849500#0 211849500#1 32577015#9" />
     </vehicle>
-    <vehicle id="1434" type="car" depart="1434.00">
+    <vehicle id="1434" type="blue_car" depart="1434.00">
         <route edges="-837745310 -211849413#0 32576061#4 32576061#5 290729094#0" />
     </vehicle>
     <vehicle id="1435" type="motorcycle" depart="1435.00">
@@ -4314,7 +4314,7 @@
     <vehicle id="1437" type="motorcycle" depart="1437.00">
         <route edges="-32577015#1 32576066#0 606543102 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 211849413#2" />
     </vehicle>
-    <vehicle id="1438" type="car" depart="1438.00">
+    <vehicle id="1438" type="blue_car" depart="1438.00">
         <route edges="-606543126 -290729088#0 -211849415#1 32576065#0 211849412 32577015#7 606543121" />
     </vehicle>
     <vehicle id="1439" type="bus" depart="1439.00">
@@ -4395,7 +4395,7 @@
     <vehicle id="1464" type="motorcycle" depart="1464.00">
         <route edges="32576061#1 32576061#2 32576061#3 -1061035915#2 606543127 211849500#0 211849500#1 -32577015#8 606543121" />
     </vehicle>
-    <vehicle id="1465" type="car" depart="1465.00">
+    <vehicle id="1465" type="blue_car" depart="1465.00">
         <route edges="32576066#5 32576061#1 32576061#2 -290729088#2 -290729088#0 -211849415#1 -1061042908 -32577015#2 -32577015#1" />
     </vehicle>
     <vehicle id="1466" type="motorcycle" depart="1466.00">
@@ -4446,13 +4446,13 @@
     <vehicle id="1481" type="motorcycle" depart="1481.00">
         <route edges="606543119 -32576066#5 -606543125 606543126" />
     </vehicle>
-    <vehicle id="1482" type="car" depart="1482.00">
+    <vehicle id="1482" type="blue_car" depart="1482.00">
         <route edges="-32577015#7 -211849412 32576065#1 1061035915#0 1061035915#2 211849413#0 898358167" />
     </vehicle>
     <vehicle id="1483" type="taxi" depart="1483.00">
         <route edges="606543126 -1061035915#0 -32576065#1 -32576065#0 -1061042908" />
     </vehicle>
-    <vehicle id="1484" type="car" depart="1484.00">
+    <vehicle id="1484" type="blue_car" depart="1484.00">
         <route edges="211849415#1 290729088#0 606543125 606543124" />
     </vehicle>
     <vehicle id="1485" type="motorcycle" depart="1485.00">
@@ -4488,13 +4488,13 @@
     <vehicle id="1495" type="motorcycle" depart="1495.00">
         <route edges="-1060982830 32576061#5 32576061#6 -32577015#9" />
     </vehicle>
-    <vehicle id="1496" type="car" depart="1496.00">
+    <vehicle id="1496" type="blue_car" depart="1496.00">
         <route edges="32576061#3 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -1061042908 606543131" />
     </vehicle>
     <vehicle id="1497" type="bus" depart="1497.00">
         <route edges="32577015#6 -211849412 32576065#1 1061035915#0" />
     </vehicle>
-    <vehicle id="1498" type="car" depart="1498.00">
+    <vehicle id="1498" type="blue_car" depart="1498.00">
         <route edges="-32577015#5 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 211849413#2" />
     </vehicle>
     <vehicle id="1499" type="motorcycle" depart="1499.00">
@@ -4515,7 +4515,7 @@
     <vehicle id="1504" type="motorcycle" depart="1504.00">
         <route edges="606543125 -606543125 606543126 606543127 211849500#0 -211849499" />
     </vehicle>
-    <vehicle id="1505" type="car" depart="1505.00">
+    <vehicle id="1505" type="blue_car" depart="1505.00">
         <route edges="-290729095#0 -32577015#9 -32577015#8" />
     </vehicle>
     <vehicle id="1506" type="motorcycle" depart="1506.00">
@@ -4527,7 +4527,7 @@
     <vehicle id="1508" type="motorcycle" depart="1508.00">
         <route edges="211849413#0 -211849413#0 -32576061#3 290729088#3" />
     </vehicle>
-    <vehicle id="1509" type="car" depart="1509.00">
+    <vehicle id="1509" type="blue_car" depart="1509.00">
         <route edges="-606543126 -290729088#0 -211849415#1 -1061042908" />
     </vehicle>
     <vehicle id="1510" type="car" depart="1510.00">
@@ -4560,7 +4560,7 @@
     <vehicle id="1519" type="motorcycle" depart="1519.00">
         <route edges="-32585157#0 32576066#0 32576066#1 32576066#3 -32576066#3" />
     </vehicle>
-    <vehicle id="1520" type="car" depart="1520.00">
+    <vehicle id="1520" type="blue_car" depart="1520.00">
         <route edges="290729089 -290729089 290729088#0 290729088#2" />
     </vehicle>
     <vehicle id="1521" type="motorcycle" depart="1521.00">
@@ -4608,13 +4608,13 @@
     <vehicle id="1535" type="motorcycle" depart="1535.00">
         <route edges="1061035915#0 -606543126 -290729088#0 -211849415#1 -1061042908 32577015#5" />
     </vehicle>
-    <vehicle id="1536" type="car" depart="1536.00">
+    <vehicle id="1536" type="blue_car" depart="1536.00">
         <route edges="32576066#0 32576066#1 32576066#3 32576066#5 32576061#1 -606543117" />
     </vehicle>
     <vehicle id="1537" type="bus" depart="1537.00">
         <route edges="-898358167 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 211849412 32577015#7" />
     </vehicle>
-    <vehicle id="1538" type="car" depart="1538.00">
+    <vehicle id="1538" type="blue_car" depart="1538.00">
         <route edges="-606543125 606543126 606543127 211849500#0 211849500#1 32577015#9" />
     </vehicle>
     <vehicle id="1539" type="car" depart="1539.00">
@@ -4683,7 +4683,7 @@
     <vehicle id="1560" type="motorcycle" depart="1560.00">
         <route edges="1061035915#2 -32576061#3 -290729088#2 -290729088#0" />
     </vehicle>
-    <vehicle id="1561" type="car" depart="1561.00">
+    <vehicle id="1561" type="blue_car" depart="1561.00">
         <route edges="-32576065#0 211849415#1 290729088#0 290729088#2 32576061#3 211849413#0" />
     </vehicle>
     <vehicle id="1562" type="motorcycle" depart="1562.00">
@@ -4725,10 +4725,10 @@
     <vehicle id="1574" type="motorcycle" depart="1574.00">
         <route edges="32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 290729095#0 290729095#1 -290729094#0" />
     </vehicle>
-    <vehicle id="1575" type="car" depart="1575.00">
+    <vehicle id="1575" type="blue_car" depart="1575.00">
         <route edges="606543127 -606543127 -606543126" />
     </vehicle>
-    <vehicle id="1576" type="car" depart="1576.00">
+    <vehicle id="1576" type="blue_car" depart="1576.00">
         <route edges="32576066#1 32576066#3 -606543125 606543126 -1061035915#0 -32576065#1" />
     </vehicle>
     <vehicle id="1577" type="car" depart="1577.00">
@@ -4761,7 +4761,7 @@
     <vehicle id="1586" type="truck" depart="1586.00">
         <route edges="32576066#3 -32576066#3 -32576066#1 -32576066#0 32577015#1 32577015#2" />
     </vehicle>
-    <vehicle id="1587" type="car" depart="1587.00">
+    <vehicle id="1587" type="blue_car" depart="1587.00">
         <route edges="-32576061#6 211849499 -211849500#0 -606543127" />
     </vehicle>
     <vehicle id="1588" type="motorcycle" depart="1588.00">
@@ -4812,7 +4812,7 @@
     <vehicle id="1603" type="motorcycle" depart="1603.00">
         <route edges="32576061#6 -32577015#9 -211849500#1 -211849500#0 -1060982830" />
     </vehicle>
-    <vehicle id="1604" type="car" depart="1604.00">
+    <vehicle id="1604" type="blue_car" depart="1604.00">
         <route edges="32577015#9 -32576061#6 290729094#0 290729094#1" />
     </vehicle>
     <vehicle id="1605" type="motorcycle" depart="1605.00">
@@ -4830,7 +4830,7 @@
     <vehicle id="1609" type="motorcycle" depart="1609.00">
         <route edges="-32577015#5" />
     </vehicle>
-    <vehicle id="1610" type="car" depart="1610.00">
+    <vehicle id="1610" type="blue_car" depart="1610.00">
         <route edges="-32576063 -606543127 -1061035915#0 -32576065#1 -32576065#0 -1061042908 -606543132" />
     </vehicle>
     <vehicle id="1611" type="motorcycle" depart="1611.00">
@@ -4857,7 +4857,7 @@
     <vehicle id="1618" type="motorcycle" depart="1618.00">
         <route edges="290729088#0 606543126 -1061035915#0 -32576065#1 211849412 32577015#7" />
     </vehicle>
-    <vehicle id="1619" type="car" depart="1619.00">
+    <vehicle id="1619" type="blue_car" depart="1619.00">
         <route edges="-32576064#0 -32576061#5 32576061#5" />
     </vehicle>
     <vehicle id="1620" type="motorcycle" depart="1620.00">
@@ -4881,7 +4881,7 @@
     <vehicle id="1626" type="motorcycle" depart="1626.00">
         <route edges="606543133 32577015#2 32577015#5 32577015#6 -211849412 -32576065#0" />
     </vehicle>
-    <vehicle id="1627" type="car" depart="1627.00">
+    <vehicle id="1627" type="blue_car" depart="1627.00">
         <route edges="-32577015#9" />
     </vehicle>
     <vehicle id="1628" type="car" depart="1628.00">
@@ -4908,7 +4908,7 @@
     <vehicle id="1635" type="taxi" depart="1635.00">
         <route edges="-290729095#1 -290729095#0 -32577015#9 -211849500#1" />
     </vehicle>
-    <vehicle id="1636" type="car" depart="1636.00">
+    <vehicle id="1636" type="blue_car" depart="1636.00">
         <route edges="-290729088#2 606543126 -1061035915#0 -32576065#1 -32576065#0" />
     </vehicle>
     <vehicle id="1637" type="car" depart="1637.00">
@@ -4938,7 +4938,7 @@
     <vehicle id="1645" type="motorcycle" depart="1645.00">
         <route edges="211849412 -211849412 -32576065#0 211849415#1 290729088#0 606543126" />
     </vehicle>
-    <vehicle id="1646" type="car" depart="1646.00">
+    <vehicle id="1646" type="blue_car" depart="1646.00">
         <route edges="-211849415#1 32576065#0 211849412 32577015#7 32577015#8 32577015#9" />
     </vehicle>
     <vehicle id="1647" type="motorcycle" depart="1647.00">
@@ -4980,13 +4980,13 @@
     <vehicle id="1659" type="car" depart="1659.00">
         <route edges="-606543126 -290729088#0 -211849415#1 32576065#0" />
     </vehicle>
-    <vehicle id="1660" type="car" depart="1660.00">
+    <vehicle id="1660" type="blue_car" depart="1660.00">
         <route edges="-211849499 -32576061#5 -32576061#4 -32576061#3 290729088#3" />
     </vehicle>
     <vehicle id="1661" type="car" depart="1661.00">
         <route edges="211849500#1 -32577015#8 -32577015#7 -211849412 -32576065#0 -606543102" />
     </vehicle>
-    <vehicle id="1662" type="car" depart="1662.00">
+    <vehicle id="1662" type="blue_car" depart="1662.00">
         <route edges="606543126 1061035915#2 32576061#4 32576061#5 32576061#6 -32577015#9" />
     </vehicle>
     <vehicle id="1663" type="taxi" depart="1663.00">
@@ -5013,7 +5013,7 @@
     <vehicle id="1670" type="motorcycle" depart="1670.00">
         <route edges="211849412 -211849412 -32576065#0 -606543102 32576066#1 32576066#3 32576066#5 -32576061#0" />
     </vehicle>
-    <vehicle id="1671" type="car" depart="1671.00">
+    <vehicle id="1671" type="blue_car" depart="1671.00">
         <route edges="32576066#1 32576066#3 -32576066#3" />
     </vehicle>
     <vehicle id="1672" type="motorcycle" depart="1672.00">
@@ -5028,7 +5028,7 @@
     <vehicle id="1675" type="motorcycle" depart="1675.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32576066#0 606543102" />
     </vehicle>
-    <vehicle id="1676" type="car" depart="1676.00">
+    <vehicle id="1676" type="blue_car" depart="1676.00">
         <route edges="-32577015#1 32576066#0 606543102 211849415#1 290729088#0 290729088#2 -32576061#2" />
     </vehicle>
     <vehicle id="1677" type="car" depart="1677.00">
@@ -5085,7 +5085,7 @@
     <vehicle id="1694" type="motorcycle" depart="1694.00">
         <route edges="32576066#3 -606543125 -290729088#0" />
     </vehicle>
-    <vehicle id="1695" type="car" depart="1695.00">
+    <vehicle id="1695" type="blue_car" depart="1695.00">
         <route edges="32576061#1 32576061#2 -290729088#2" />
     </vehicle>
     <vehicle id="1696" type="motorcycle" depart="1696.00">
@@ -5097,7 +5097,7 @@
     <vehicle id="1698" type="motorcycle" depart="1698.00">
         <route edges="-32576064#0 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576065#1 211849412" />
     </vehicle>
-    <vehicle id="1699" type="car" depart="1699.00">
+    <vehicle id="1699" type="blue_car" depart="1699.00">
         <route edges="-32576061#2 -32576061#1 32576061#1 32576061#2 32576061#3 32576061#4" />
     </vehicle>
     <vehicle id="1700" type="motorcycle" depart="1700.00">
@@ -5262,13 +5262,13 @@
     <vehicle id="1753" type="car" depart="1753.00">
         <route edges="-606543121 -32577015#7 -211849412 -32576065#0 -606543102 32576066#1 32576066#3" />
     </vehicle>
-    <vehicle id="1754" type="car" depart="1754.00">
+    <vehicle id="1754" type="blue_car" depart="1754.00">
         <route edges="-606543102 -32576066#0 32577015#1 32577015#2 32577015#5 32577015#6" />
     </vehicle>
     <vehicle id="1755" type="motorcycle" depart="1755.00">
         <route edges="-606543102 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2 -290729088#2" />
     </vehicle>
-    <vehicle id="1756" type="car" depart="1756.00">
+    <vehicle id="1756" type="blue_car" depart="1756.00">
         <route edges="-606543127 606543127 211849500#0 211849500#1 32577015#9 290729095#0" />
     </vehicle>
     <vehicle id="1757" type="car" depart="1757.00">
@@ -5316,7 +5316,7 @@
     <vehicle id="1771" type="car" depart="1771.00">
         <route edges="-837745310 -211849413#0 32576061#4" />
     </vehicle>
-    <vehicle id="1772" type="car" depart="1772.00">
+    <vehicle id="1772" type="blue_car" depart="1772.00">
         <route edges="-211849412 -32576065#0 -606543102 32576066#1 32576066#3 32576066#5 -32576061#0" />
     </vehicle>
     <vehicle id="1773" type="motorcycle" depart="1773.00">
@@ -5331,7 +5331,7 @@
     <vehicle id="1776" type="bus" depart="1776.00">
         <route edges="606543117 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 -32577015#0 32585157#1 -32585157#1 -32585157#0" />
     </vehicle>
-    <vehicle id="1777" type="car" depart="1777.00">
+    <vehicle id="1777" type="blue_car" depart="1777.00">
         <route edges="-606543121 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 32576066#0" />
     </vehicle>
     <vehicle id="1778" type="motorcycle" depart="1778.00">
@@ -5343,7 +5343,7 @@
     <vehicle id="1780" type="bus" depart="1780.00">
         <route edges="32576066#3 -606543125 606543126 606543127 211849500#0 211849500#1" />
     </vehicle>
-    <vehicle id="1781" type="car" depart="1781.00">
+    <vehicle id="1781" type="blue_car" depart="1781.00">
         <route edges="32576063 -32576063 -606543127" />
     </vehicle>
     <vehicle id="1782" type="motorcycle" depart="1782.00">
@@ -5379,10 +5379,10 @@
     <vehicle id="1792" type="truck" depart="1792.00">
         <route edges="606543127 211849500#0 211849500#1 -32577015#8 606543121" />
     </vehicle>
-    <vehicle id="1793" type="car" depart="1793.00">
+    <vehicle id="1793" type="blue_car" depart="1793.00">
         <route edges="32576061#6 -32577015#9 -32577015#8 -32577015#7 -211849412 -32576065#0 -606543102 -32576066#0" />
     </vehicle>
-    <vehicle id="1794" type="car" depart="1794.00">
+    <vehicle id="1794" type="blue_car" depart="1794.00">
         <route edges="606543126 606543127 211849500#0 211849500#1 32577015#9 606549682#1" />
     </vehicle>
     <vehicle id="1795" type="motorcycle" depart="1795.00">
@@ -5406,7 +5406,7 @@
     <vehicle id="1801" type="motorcycle" depart="1801.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3" />
     </vehicle>
-    <vehicle id="1802" type="car" depart="1802.00">
+    <vehicle id="1802" type="blue_car" depart="1802.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32576066#0 32576066#1 32576066#3 32576066#5 32576061#1" />
     </vehicle>
     <vehicle id="1803" type="motorcycle" depart="1803.00">
@@ -5418,7 +5418,7 @@
     <vehicle id="1805" type="motorcycle" depart="1805.00">
         <route edges="290729095#1 -290729094#0 211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1" />
     </vehicle>
-    <vehicle id="1806" type="car" depart="1806.00">
+    <vehicle id="1806" type="blue_car" depart="1806.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 211849412 -32577015#6" />
     </vehicle>
     <vehicle id="1807" type="motorcycle" depart="1807.00">
@@ -5463,7 +5463,7 @@
     <vehicle id="1820" type="motorcycle" depart="1820.00">
         <route edges="32576061#3 -1061035915#2 -1061035915#0 -32576065#1 211849412 32577015#7" />
     </vehicle>
-    <vehicle id="1821" type="car" depart="1821.00">
+    <vehicle id="1821" type="blue_car" depart="1821.00">
         <route edges="32576061#4 32576061#5 211849499" />
     </vehicle>
     <vehicle id="1822" type="car" depart="1822.00">
@@ -5478,7 +5478,7 @@
     <vehicle id="1825" type="car" depart="1825.00">
         <route edges="-32577015#6 -32577015#5 1061042908 32576065#0 32576065#1 1061035915#0 606543127" />
     </vehicle>
-    <vehicle id="1826" type="car" depart="1826.00">
+    <vehicle id="1826" type="blue_car" depart="1826.00">
         <route edges="606543127 211849500#0 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 -32577015#0" />
     </vehicle>
     <vehicle id="1827" type="motorcycle" depart="1827.00">
@@ -5640,7 +5640,7 @@
     <vehicle id="1879" type="motorcycle" depart="1879.00">
         <route edges="32576065#0 -32576065#0 211849415#1" />
     </vehicle>
-    <vehicle id="1880" type="car" depart="1880.00">
+    <vehicle id="1880" type="blue_car" depart="1880.00">
         <route edges="1061042908 32576065#0 211849412 32577015#7 32577015#8 32577015#9 -32576061#6" />
     </vehicle>
     <vehicle id="1881" type="motorcycle" depart="1881.00">
@@ -5760,7 +5760,7 @@
     <vehicle id="1919" type="motorcycle" depart="1919.00">
         <route edges="-32576066#0 32577015#1 32577015#2 1061042908 32576065#0 32576065#1 1061035915#0 606543127 211849500#0 211849500#1" />
     </vehicle>
-    <vehicle id="1920" type="car" depart="1920.00">
+    <vehicle id="1920" type="blue_car" depart="1920.00">
         <route edges="1061035915#2 32576061#4 1060982830 211849500#0 211849500#1 -32577015#8 -32577015#7" />
     </vehicle>
     <vehicle id="1921" type="motorcycle" depart="1921.00">
@@ -5772,7 +5772,7 @@
     <vehicle id="1923" type="truck" depart="1923.00">
         <route edges="-32576061#4 -1061035915#2 606543127 32576063" />
     </vehicle>
-    <vehicle id="1924" type="car" depart="1924.00">
+    <vehicle id="1924" type="blue_car" depart="1924.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2 32577015#5" />
     </vehicle>
     <vehicle id="1925" type="motorcycle" depart="1925.00">
@@ -5796,13 +5796,13 @@
     <vehicle id="1931" type="bus" depart="1931.00">
         <route edges="-898358167 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1" />
     </vehicle>
-    <vehicle id="1932" type="car" depart="1932.00">
+    <vehicle id="1932" type="blue_car" depart="1932.00">
         <route edges="32577015#6 32577015#7 32577015#8 -211849500#1 -211849499" />
     </vehicle>
     <vehicle id="1933" type="truck" depart="1933.00">
         <route edges="-211849415#1 211849415#1 290729088#0 606543126 -1061035915#0" />
     </vehicle>
-    <vehicle id="1934" type="car" depart="1934.00">
+    <vehicle id="1934" type="blue_car" depart="1934.00">
         <route edges="-606543131 1061042908 -1061042908" />
     </vehicle>
     <vehicle id="1935" type="motorcycle" depart="1935.00">
@@ -5814,13 +5814,13 @@
     <vehicle id="1937" type="car" depart="1937.00">
         <route edges="1061035915#0 1061035915#2 211849413#0 211849413#2" />
     </vehicle>
-    <vehicle id="1938" type="car" depart="1938.00">
+    <vehicle id="1938" type="blue_car" depart="1938.00">
         <route edges="606543133 -606543133" />
     </vehicle>
     <vehicle id="1939" type="car" depart="1939.00">
         <route edges="32576063 1061035915#0 606543127 211849500#0 211849500#1 -32577015#8 -32577015#7" />
     </vehicle>
-    <vehicle id="1940" type="car" depart="1940.00">
+    <vehicle id="1940" type="blue_car" depart="1940.00">
         <route edges="-32576061#4 -1061035915#2 -1061035915#0 -32576065#1 32576065#1" />
     </vehicle>
     <vehicle id="1941" type="motorcycle" depart="1941.00">
@@ -5847,7 +5847,7 @@
     <vehicle id="1948" type="motorcycle" depart="1948.00">
         <route edges="606543119 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 32576061#6 290729095#0" />
     </vehicle>
-    <vehicle id="1949" type="car" depart="1949.00">
+    <vehicle id="1949" type="blue_car" depart="1949.00">
         <route edges="606543126 606543127 32576063" />
     </vehicle>
     <vehicle id="1950" type="motorcycle" depart="1950.00">
@@ -5901,7 +5901,7 @@
     <vehicle id="1966" type="motorcycle" depart="1966.00">
         <route edges="-606543126 290729088#2 32576061#3 32576061#4 1060982830" />
     </vehicle>
-    <vehicle id="1967" type="car" depart="1967.00">
+    <vehicle id="1967" type="blue_car" depart="1967.00">
         <route edges="211849415#1 290729088#0 606543126 1061035915#2" />
     </vehicle>
     <vehicle id="1968" type="car" depart="1968.00">
@@ -5916,7 +5916,7 @@
     <vehicle id="1971" type="motorcycle" depart="1971.00">
         <route edges="-32577015#2 -32577015#1 32576066#0 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5" />
     </vehicle>
-    <vehicle id="1972" type="car" depart="1972.00">
+    <vehicle id="1972" type="blue_car" depart="1972.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 32576065#1 -32576063" />
     </vehicle>
     <vehicle id="1973" type="car" depart="1973.00">
@@ -5931,7 +5931,7 @@
     <vehicle id="1976" type="motorcycle" depart="1976.00">
         <route edges="32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 -1061035915#2" />
     </vehicle>
-    <vehicle id="1977" type="car" depart="1977.00">
+    <vehicle id="1977" type="blue_car" depart="1977.00">
         <route edges="-211849412 32576065#1 1061035915#0 606543127 211849500#0" />
     </vehicle>
     <vehicle id="1978" type="car" depart="1978.00">
@@ -5943,7 +5943,7 @@
     <vehicle id="1980" type="motorcycle" depart="1980.00">
         <route edges="-211849413#0 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0" />
     </vehicle>
-    <vehicle id="1981" type="car" depart="1981.00">
+    <vehicle id="1981" type="blue_car" depart="1981.00">
         <route edges="-290729095#1 -32576064#0 -32576061#5 -32576061#4 -1061035915#2 606543127" />
     </vehicle>
     <vehicle id="1982" type="motorcycle" depart="1982.00">
@@ -5976,7 +5976,7 @@
     <vehicle id="1991" type="motorcycle" depart="1991.00">
         <route edges="32576061#2 32576061#3 -1061035915#2 -1061035915#0 -32576065#1 211849412 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="1992" type="car" depart="1992.00">
+    <vehicle id="1992" type="blue_car" depart="1992.00">
         <route edges="-606543121 -32577015#7 -211849412 -32576065#0 211849415#1 290729088#0" />
     </vehicle>
     <vehicle id="1993" type="motorcycle" depart="1993.00">
@@ -6033,16 +6033,16 @@
     <vehicle id="2010" type="car" depart="2010.00">
         <route edges="-211849500#0 -1060982830 32576061#5 32576064#0 290729095#1 -290729094#0" />
     </vehicle>
-    <vehicle id="2011" type="car" depart="2011.00">
+    <vehicle id="2011" type="blue_car" depart="2011.00">
         <route edges="-606543125 606543126 -1061035915#0 -32576063" />
     </vehicle>
     <vehicle id="2012" type="motorcycle" depart="2012.00">
         <route edges="32577015#1 32577015#2 1061042908 211849415#1 290729089 -32576066#1" />
     </vehicle>
-    <vehicle id="2013" type="car" depart="2013.00">
+    <vehicle id="2013" type="blue_car" depart="2013.00">
         <route edges="32577015#5 32577015#6 -211849412 -32576065#0 -606543102" />
     </vehicle>
-    <vehicle id="2014" type="car" depart="2014.00">
+    <vehicle id="2014" type="blue_car" depart="2014.00">
         <route edges="-290729095#1 -32576064#0 -32576061#5 -32576061#4 32576061#4" />
     </vehicle>
     <vehicle id="2015" type="motorcycle" depart="2015.00">
@@ -6075,7 +6075,7 @@
     <vehicle id="2024" type="taxi" depart="2024.00">
         <route edges="32576064#0 290729095#1 -290729094#0 -32576061#5 1060982830" />
     </vehicle>
-    <vehicle id="2025" type="car" depart="2025.00">
+    <vehicle id="2025" type="blue_car" depart="2025.00">
         <route edges="-32577015#5 1061042908 211849415#1" />
     </vehicle>
     <vehicle id="2026" type="car" depart="2026.00">
@@ -6111,7 +6111,7 @@
     <vehicle id="2036" type="car" depart="2036.00">
         <route edges="-211849500#0 -1060982830 32576061#5 32576064#0 -290729095#0" />
     </vehicle>
-    <vehicle id="2037" type="car" depart="2037.00">
+    <vehicle id="2037" type="blue_car" depart="2037.00">
         <route edges="606543102 211849415#1 290729088#0 606543125 -606543125" />
     </vehicle>
     <vehicle id="2038" type="motorcycle" depart="2038.00">
@@ -6120,7 +6120,7 @@
     <vehicle id="2039" type="motorcycle" depart="2039.00">
         <route edges="-211849499 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -1061042908" />
     </vehicle>
-    <vehicle id="2040" type="car" depart="2040.00">
+    <vehicle id="2040" type="blue_car" depart="2040.00">
         <route edges="-32577015#6 -32577015#5 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 837745310" />
     </vehicle>
     <vehicle id="2041" type="taxi" depart="2041.00">
@@ -6132,13 +6132,13 @@
     <vehicle id="2043" type="motorcycle" depart="2043.00">
         <route edges="606543119 -32576066#5 -32576066#3 -32576066#1 -32576066#0 32577015#1" />
     </vehicle>
-    <vehicle id="2044" type="car" depart="2044.00">
+    <vehicle id="2044" type="blue_car" depart="2044.00">
         <route edges="290729088#0 606543125 -606543125" />
     </vehicle>
     <vehicle id="2045" type="motorcycle" depart="2045.00">
         <route edges="-32576061#2 -32576061#1 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 32576061#6 290729095#0" />
     </vehicle>
-    <vehicle id="2046" type="car" depart="2046.00">
+    <vehicle id="2046" type="blue_car" depart="2046.00">
         <route edges="32576065#1 1061035915#0 -606543126 606543125 -32576066#3 -32576066#1" />
     </vehicle>
     <vehicle id="2047" type="motorcycle" depart="2047.00">
@@ -6156,7 +6156,7 @@
     <vehicle id="2051" type="bus" depart="2051.00">
         <route edges="-290729094#0 -32576061#5 -32576061#4 211849413#0 898358167" />
     </vehicle>
-    <vehicle id="2052" type="car" depart="2052.00">
+    <vehicle id="2052" type="blue_car" depart="2052.00">
         <route edges="32576063 -32576065#1 211849412 -32577015#6" />
     </vehicle>
     <vehicle id="2053" type="car" depart="2053.00">
@@ -6168,7 +6168,7 @@
     <vehicle id="2055" type="car" depart="2055.00">
         <route edges="-211849413#2 -211849413#0 -1061035915#2 606543127 211849500#0 211849500#1 -211849500#1" />
     </vehicle>
-    <vehicle id="2056" type="car" depart="2056.00">
+    <vehicle id="2056" type="blue_car" depart="2056.00">
         <route edges="-32576065#0 -606543102 -32576066#0 32577015#1" />
     </vehicle>
     <vehicle id="2057" type="motorcycle" depart="2057.00">
@@ -6237,7 +6237,7 @@
     <vehicle id="2078" type="bus" depart="2078.00">
         <route edges="290729094#0 -290729095#1 -32576064#0 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 32577015#1" />
     </vehicle>
-    <vehicle id="2079" type="car" depart="2079.00">
+    <vehicle id="2079" type="blue_car" depart="2079.00">
         <route edges="-211849415#1 211849415#1 290729088#0 606543125" />
     </vehicle>
     <vehicle id="2080" type="motorcycle" depart="2080.00">
@@ -6258,7 +6258,7 @@
     <vehicle id="2085" type="motorcycle" depart="2085.00">
         <route edges="32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849500#0 -1060982830 -32576061#4" />
     </vehicle>
-    <vehicle id="2086" type="car" depart="2086.00">
+    <vehicle id="2086" type="blue_car" depart="2086.00">
         <route edges="-32576061#2 -32576061#1 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 290729094#0 -290729095#1 -32576064#0" />
     </vehicle>
     <vehicle id="2087" type="motorcycle" depart="2087.00">
@@ -6273,13 +6273,13 @@
     <vehicle id="2090" type="motorcycle" depart="2090.00">
         <route edges="211849499 -211849500#0 -606543127 -606543126 -290729088#0 -211849415#1 32576065#0" />
     </vehicle>
-    <vehicle id="2091" type="car" depart="2091.00">
+    <vehicle id="2091" type="blue_car" depart="2091.00">
         <route edges="1060982830 211849500#0 211849500#1 -32577015#8 -32577015#7 -211849412" />
     </vehicle>
     <vehicle id="2092" type="truck" depart="2092.00">
         <route edges="-606543126 -290729088#0 290729089" />
     </vehicle>
-    <vehicle id="2093" type="car" depart="2093.00">
+    <vehicle id="2093" type="blue_car" depart="2093.00">
         <route edges="-606543127 1061035915#2 211849413#0 837745310" />
     </vehicle>
     <vehicle id="2094" type="motorcycle" depart="2094.00">
@@ -6351,7 +6351,7 @@
     <vehicle id="2116" type="car" depart="2116.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 -32577015#9" />
     </vehicle>
-    <vehicle id="2117" type="car" depart="2117.00">
+    <vehicle id="2117" type="blue_car" depart="2117.00">
         <route edges="-290729089 290729088#0 606543126 606543127" />
     </vehicle>
     <vehicle id="2118" type="motorcycle" depart="2118.00">
@@ -6399,7 +6399,7 @@
     <vehicle id="2132" type="motorcycle" depart="2132.00">
         <route edges="-32576061#1 -32576066#5 -606543125 606543126 606543127 211849500#0" />
     </vehicle>
-    <vehicle id="2133" type="car" depart="2133.00">
+    <vehicle id="2133" type="blue_car" depart="2133.00">
         <route edges="290729088#0 290729088#2 -32576061#2 -32576061#1" />
     </vehicle>
     <vehicle id="2134" type="motorcycle" depart="2134.00">
@@ -6507,7 +6507,7 @@
     <vehicle id="2168" type="taxi" depart="2168.00">
         <route edges="211849413#0 -211849413#0 32576061#4 32576061#5 290729094#0" />
     </vehicle>
-    <vehicle id="2169" type="car" depart="2169.00">
+    <vehicle id="2169" type="blue_car" depart="2169.00">
         <route edges="211849500#1 32577015#9 -32576061#6 211849499" />
     </vehicle>
     <vehicle id="2170" type="motorcycle" depart="2170.00">
@@ -6567,7 +6567,7 @@
     <vehicle id="2188" type="motorcycle" depart="2188.00">
         <route edges="32577015#8 -211849500#1 -211849500#0 -606543127 -606543126 -290729088#0 290729089 32576066#3" />
     </vehicle>
-    <vehicle id="2189" type="car" depart="2189.00">
+    <vehicle id="2189" type="blue_car" depart="2189.00">
         <route edges="290729095#0 -32576064#0 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1" />
     </vehicle>
     <vehicle id="2190" type="taxi" depart="2190.00">
@@ -6612,7 +6612,7 @@
     <vehicle id="2203" type="car" depart="2203.00">
         <route edges="-606543124 -32576066#3 -32576066#1 32576066#1" />
     </vehicle>
-    <vehicle id="2204" type="car" depart="2204.00">
+    <vehicle id="2204" type="blue_car" depart="2204.00">
         <route edges="-32576066#5 -606543125 -290729088#0 -211849415#1 -1061042908 32577015#5" />
     </vehicle>
     <vehicle id="2205" type="motorcycle" depart="2205.00">
@@ -6636,7 +6636,7 @@
     <vehicle id="2211" type="motorcycle" depart="2211.00">
         <route edges="32576063 1061035915#0 -606543126" />
     </vehicle>
-    <vehicle id="2212" type="car" depart="2212.00">
+    <vehicle id="2212" type="blue_car" depart="2212.00">
         <route edges="32576061#3 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -1061042908" />
     </vehicle>
     <vehicle id="2213" type="car" depart="2213.00">
@@ -6699,7 +6699,7 @@
     <vehicle id="2232" type="motorcycle" depart="2232.00">
         <route edges="-211849413#0 32576061#4 32576061#5 290729094#0 290729094#1" />
     </vehicle>
-    <vehicle id="2233" type="car" depart="2233.00">
+    <vehicle id="2233" type="blue_car" depart="2233.00">
         <route edges="32576061#0 -32576066#5 -32576066#3 -32576066#1 32576066#1" />
     </vehicle>
     <vehicle id="2234" type="car" depart="2234.00">
@@ -6771,7 +6771,7 @@
     <vehicle id="2256" type="truck" depart="2256.00">
         <route edges="211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1" />
     </vehicle>
-    <vehicle id="2257" type="car" depart="2257.00">
+    <vehicle id="2257" type="blue_car" depart="2257.00">
         <route edges="290729088#0 290729088#2 -290729088#2" />
     </vehicle>
     <vehicle id="2258" type="bus" depart="2258.00">
@@ -6807,7 +6807,7 @@
     <vehicle id="2268" type="truck" depart="2268.00">
         <route edges="32577015#6 32577015#7 32577015#8 -211849500#1 -211849499" />
     </vehicle>
-    <vehicle id="2269" type="car" depart="2269.00">
+    <vehicle id="2269" type="blue_car" depart="2269.00">
         <route edges="32576065#1 1061035915#0 -606543126 -290729088#0 -211849415#1" />
     </vehicle>
     <vehicle id="2270" type="motorcycle" depart="2270.00">
@@ -6819,7 +6819,7 @@
     <vehicle id="2272" type="motorcycle" depart="2272.00">
         <route edges="32576061#0 -32576066#5 -32576066#3 -32576066#1 -32576066#0 32577015#1" />
     </vehicle>
-    <vehicle id="2273" type="car" depart="2273.00">
+    <vehicle id="2273" type="blue_car" depart="2273.00">
         <route edges="-32576064#0 211849499 211849500#1 -32577015#8 -32577015#7 -211849412" />
     </vehicle>
     <vehicle id="2274" type="motorcycle" depart="2274.00">
@@ -6903,7 +6903,7 @@
     <vehicle id="2300" type="motorcycle" depart="2300.00">
         <route edges="32577015#1 32577015#2 1061042908 211849415#1 290729088#0 290729088#2 32576061#3 -1061035915#2" />
     </vehicle>
-    <vehicle id="2301" type="car" depart="2301.00">
+    <vehicle id="2301" type="blue_car" depart="2301.00">
         <route edges="32576066#1 32576066#3 32576066#5 32576061#1 32576061#2" />
     </vehicle>
     <vehicle id="2302" type="motorcycle" depart="2302.00">
@@ -6951,7 +6951,7 @@
     <vehicle id="2316" type="motorcycle" depart="2316.00">
         <route edges="-211849413#0 -1061035915#2 -1061035915#0 -32576065#1 32576065#1" />
     </vehicle>
-    <vehicle id="2317" type="car" depart="2317.00">
+    <vehicle id="2317" type="blue_car" depart="2317.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32576066#0 32576066#1 32576066#3 32576066#5" />
     </vehicle>
     <vehicle id="2318" type="motorcycle" depart="2318.00">
@@ -6972,7 +6972,7 @@
     <vehicle id="2323" type="motorcycle" depart="2323.00">
         <route edges="-211849412 32576065#1 1061035915#0 1061035915#2 211849413#0" />
     </vehicle>
-    <vehicle id="2324" type="car" depart="2324.00">
+    <vehicle id="2324" type="blue_car" depart="2324.00">
         <route edges="-290729089 290729088#0 606543126 1061035915#2" />
     </vehicle>
     <vehicle id="2325" type="motorcycle" depart="2325.00">
@@ -6996,7 +6996,7 @@
     <vehicle id="2331" type="motorcycle" depart="2331.00">
         <route edges="1061042908 32576065#0 211849412 -211849412" />
     </vehicle>
-    <vehicle id="2332" type="car" depart="2332.00">
+    <vehicle id="2332" type="blue_car" depart="2332.00">
         <route edges="-32577015#7 32577015#7 32577015#8 -211849500#1 -211849500#0" />
     </vehicle>
     <vehicle id="2333" type="motorcycle" depart="2333.00">
@@ -7041,7 +7041,7 @@
     <vehicle id="2346" type="motorcycle" depart="2346.00">
         <route edges="-606543102 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 32576064#0 -290729095#0" />
     </vehicle>
-    <vehicle id="2347" type="car" depart="2347.00">
+    <vehicle id="2347" type="blue_car" depart="2347.00">
         <route edges="-211849412 -32576065#0 -606543102 32576066#1 32576066#3 32576066#5" />
     </vehicle>
     <vehicle id="2348" type="motorcycle" depart="2348.00">
@@ -7050,7 +7050,7 @@
     <vehicle id="2349" type="motorcycle" depart="2349.00">
         <route edges="32576061#5 211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 32577015#5 32577015#6" />
     </vehicle>
-    <vehicle id="2350" type="car" depart="2350.00">
+    <vehicle id="2350" type="blue_car" depart="2350.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 -211849413#0" />
     </vehicle>
     <vehicle id="2351" type="motorcycle" depart="2351.00">
@@ -7062,7 +7062,7 @@
     <vehicle id="2353" type="car" depart="2353.00">
         <route edges="-1061035915#0 -32576063 -606543127 -606543126 290729088#2 32576061#3" />
     </vehicle>
-    <vehicle id="2354" type="car" depart="2354.00">
+    <vehicle id="2354" type="blue_car" depart="2354.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 32576065#1 -32576063 -606543127" />
     </vehicle>
     <vehicle id="2355" type="motorcycle" depart="2355.00">
@@ -7137,7 +7137,7 @@
     <vehicle id="2378" type="motorcycle" depart="2378.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32577015#1 32577015#2 1061042908 32576065#0 211849412 -32577015#6" />
     </vehicle>
-    <vehicle id="2379" type="car" depart="2379.00">
+    <vehicle id="2379" type="blue_car" depart="2379.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576063" />
     </vehicle>
     <vehicle id="2380" type="motorcycle" depart="2380.00">
@@ -7158,7 +7158,7 @@
     <vehicle id="2385" type="motorcycle" depart="2385.00">
         <route edges="-290729094#0 211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 -32577015#0 32585157#1" />
     </vehicle>
-    <vehicle id="2386" type="car" depart="2386.00">
+    <vehicle id="2386" type="blue_car" depart="2386.00">
         <route edges="290729088#2 32576061#3 32576061#4 32576061#5 211849499 -211849500#0" />
     </vehicle>
     <vehicle id="2387" type="motorcycle" depart="2387.00">
@@ -7176,7 +7176,7 @@
     <vehicle id="2391" type="motorcycle" depart="2391.00">
         <route edges="32577015#8 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1" />
     </vehicle>
-    <vehicle id="2392" type="car" depart="2392.00">
+    <vehicle id="2392" type="blue_car" depart="2392.00">
         <route edges="1060982830 211849500#0 -211849499 -32576061#5 -32576061#4" />
     </vehicle>
     <vehicle id="2393" type="motorcycle" depart="2393.00">
@@ -7275,7 +7275,7 @@
     <vehicle id="2424" type="motorcycle" depart="2424.00">
         <route edges="-606543126 -290729088#0 -211849415#1 -1061042908 -32577015#2 -32577015#1" />
     </vehicle>
-    <vehicle id="2425" type="car" depart="2425.00">
+    <vehicle id="2425" type="blue_car" depart="2425.00">
         <route edges="-606543121 32577015#8 32577015#9 290729095#0 -32576064#0" />
     </vehicle>
     <vehicle id="2426" type="motorcycle" depart="2426.00">
@@ -7290,7 +7290,7 @@
     <vehicle id="2429" type="car" depart="2429.00">
         <route edges="32576061#4 1060982830 32576063 -32576065#1 -32576065#0 211849415#1 290729088#0" />
     </vehicle>
-    <vehicle id="2430" type="car" depart="2430.00">
+    <vehicle id="2430" type="blue_car" depart="2430.00">
         <route edges="-837745310 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 211849412 32577015#7 32577015#8" />
     </vehicle>
     <vehicle id="2431" type="motorcycle" depart="2431.00">
@@ -7308,10 +7308,10 @@
     <vehicle id="2435" type="taxi" depart="2435.00">
         <route edges="32576061#3 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 211849415#1" />
     </vehicle>
-    <vehicle id="2436" type="car" depart="2436.00">
+    <vehicle id="2436" type="blue_car" depart="2436.00">
         <route edges="-606549682#1 -32576061#6 290729094#0" />
     </vehicle>
-    <vehicle id="2437" type="car" depart="2437.00">
+    <vehicle id="2437" type="blue_car" depart="2437.00">
         <route edges="-211849412 -32576065#0 211849415#1 290729088#0 606543125 -32576066#3" />
     </vehicle>
     <vehicle id="2438" type="motorcycle" depart="2438.00">
@@ -7320,7 +7320,7 @@
     <vehicle id="2439" type="motorcycle" depart="2439.00">
         <route edges="32576066#1 -290729089 -211849415#1 -1061042908 -606543132" />
     </vehicle>
-    <vehicle id="2440" type="car" depart="2440.00">
+    <vehicle id="2440" type="blue_car" depart="2440.00">
         <route edges="-32585157#0 32576066#0 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2 290729088#3" />
     </vehicle>
     <vehicle id="2441" type="motorcycle" depart="2441.00">
@@ -7347,7 +7347,7 @@
     <vehicle id="2448" type="motorcycle" depart="2448.00">
         <route edges="211849413#0 -211849413#0 32576061#4 32576061#5" />
     </vehicle>
-    <vehicle id="2449" type="car" depart="2449.00">
+    <vehicle id="2449" type="blue_car" depart="2449.00">
         <route edges="-32576061#2 -32576061#1 -32576066#5 -606543125 606543126 606543127 -606543127" />
     </vehicle>
     <vehicle id="2450" type="car" depart="2450.00">
@@ -7365,7 +7365,7 @@
     <vehicle id="2454" type="motorcycle" depart="2454.00">
         <route edges="-32577015#2 -32577015#1 32576066#0 606543102 32576065#0 211849412" />
     </vehicle>
-    <vehicle id="2455" type="car" depart="2455.00">
+    <vehicle id="2455" type="blue_car" depart="2455.00">
         <route edges="-32577015#6 -32577015#5 1061042908 -606543102 32576066#1" />
     </vehicle>
     <vehicle id="2456" type="motorcycle" depart="2456.00">
@@ -7389,7 +7389,7 @@
     <vehicle id="2462" type="motorcycle" depart="2462.00">
         <route edges="-32577015#9 -211849500#1 -211849500#0 -606543127 1061035915#2 -32576061#3 -32576061#2 -32576061#1 -32576066#5" />
     </vehicle>
-    <vehicle id="2463" type="car" depart="2463.00">
+    <vehicle id="2463" type="blue_car" depart="2463.00">
         <route edges="32576061#6 -32577015#9 -211849500#1 -211849500#0 -606543127 -606543126" />
     </vehicle>
     <vehicle id="2464" type="motorcycle" depart="2464.00">
@@ -7440,13 +7440,13 @@
     <vehicle id="2479" type="truck" depart="2479.00">
         <route edges="606543102 32576065#0 211849412 -211849412" />
     </vehicle>
-    <vehicle id="2480" type="car" depart="2480.00">
+    <vehicle id="2480" type="blue_car" depart="2480.00">
         <route edges="-32577015#9 -211849500#1 -211849500#0 -606543127 1061035915#2 -32576061#3 -32576061#2 -32576061#1" />
     </vehicle>
-    <vehicle id="2481" type="car" depart="2481.00">
+    <vehicle id="2481" type="blue_car" depart="2481.00">
         <route edges="290729094#0 -290729095#1 -32576064#0 -32576061#5 -32576061#4 -32576061#3 290729088#3" />
     </vehicle>
-    <vehicle id="2482" type="car" depart="2482.00">
+    <vehicle id="2482" type="blue_car" depart="2482.00">
         <route edges="290729095#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0 290729088#0" />
     </vehicle>
     <vehicle id="2483" type="motorcycle" depart="2483.00">
@@ -7470,7 +7470,7 @@
     <vehicle id="2489" type="motorcycle" depart="2489.00">
         <route edges="-32576065#1 211849412 32577015#7 32577015#8 32577015#9 290729095#0 290729095#1 -290729094#0" />
     </vehicle>
-    <vehicle id="2490" type="car" depart="2490.00">
+    <vehicle id="2490" type="blue_car" depart="2490.00">
         <route edges="290729095#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0" />
     </vehicle>
     <vehicle id="2491" type="motorcycle" depart="2491.00">
@@ -7497,7 +7497,7 @@
     <vehicle id="2498" type="motorcycle" depart="2498.00">
         <route edges="-32576066#1 606543102 32576065#0 211849412" />
     </vehicle>
-    <vehicle id="2499" type="car" depart="2499.00">
+    <vehicle id="2499" type="blue_car" depart="2499.00">
         <route edges="606543133 32577015#2 1061042908 32576065#0 211849412 -32577015#6" />
     </vehicle>
     <vehicle id="2500" type="motorcycle" depart="2500.00">
@@ -7512,7 +7512,7 @@
     <vehicle id="2503" type="motorcycle" depart="2503.00">
         <route edges="211849415#1 290729088#0 290729088#2 32576061#3 32576061#4" />
     </vehicle>
-    <vehicle id="2504" type="car" depart="2504.00">
+    <vehicle id="2504" type="blue_car" depart="2504.00">
         <route edges="606543127 -1060982830" />
     </vehicle>
     <vehicle id="2505" type="car" depart="2505.00">
@@ -7524,7 +7524,7 @@
     <vehicle id="2507" type="motorcycle" depart="2507.00">
         <route edges="32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0 898358167" />
     </vehicle>
-    <vehicle id="2508" type="car" depart="2508.00">
+    <vehicle id="2508" type="blue_car" depart="2508.00">
         <route edges="-32577015#9 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2" />
     </vehicle>
     <vehicle id="2509" type="motorcycle" depart="2509.00">
@@ -7548,7 +7548,7 @@
     <vehicle id="2515" type="motorcycle" depart="2515.00">
         <route edges="32576061#2 290729088#3" />
     </vehicle>
-    <vehicle id="2516" type="car" depart="2516.00">
+    <vehicle id="2516" type="blue_car" depart="2516.00">
         <route edges="-1061035915#2 -606543126 290729088#2 -32576061#2 -32576061#1" />
     </vehicle>
     <vehicle id="2517" type="car" depart="2517.00">
@@ -7596,13 +7596,13 @@
     <vehicle id="2531" type="truck" depart="2531.00">
         <route edges="211849500#0 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 32577015#5" />
     </vehicle>
-    <vehicle id="2532" type="car" depart="2532.00">
+    <vehicle id="2532" type="blue_car" depart="2532.00">
         <route edges="1061042908 32576065#0 211849412 32577015#7 32577015#8 32577015#9 -32577015#9" />
     </vehicle>
     <vehicle id="2533" type="motorcycle" depart="2533.00">
         <route edges="211849413#0 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 211849412 32577015#7" />
     </vehicle>
-    <vehicle id="2534" type="car" depart="2534.00">
+    <vehicle id="2534" type="blue_car" depart="2534.00">
         <route edges="32576061#5 -32576061#5 -32576061#4 32576061#4" />
     </vehicle>
     <vehicle id="2535" type="motorcycle" depart="2535.00">
@@ -7632,7 +7632,7 @@
     <vehicle id="2543" type="car" depart="2543.00">
         <route edges="-606543131 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 -32576061#3" />
     </vehicle>
-    <vehicle id="2544" type="car" depart="2544.00">
+    <vehicle id="2544" type="blue_car" depart="2544.00">
         <route edges="606543102 32576065#0 32576065#1 1061035915#0 606543127 32576063" />
     </vehicle>
     <vehicle id="2545" type="motorcycle" depart="2545.00">
@@ -7650,7 +7650,7 @@
     <vehicle id="2549" type="motorcycle" depart="2549.00">
         <route edges="32576061#2 32576061#3 -1061035915#2 606543127 -606543127" />
     </vehicle>
-    <vehicle id="2550" type="car" depart="2550.00">
+    <vehicle id="2550" type="blue_car" depart="2550.00">
         <route edges="32576061#1 32576061#2 32576061#3 -1061035915#2 -1061035915#0 -32576065#1 211849412" />
     </vehicle>
     <vehicle id="2551" type="motorcycle" depart="2551.00">
@@ -7665,7 +7665,7 @@
     <vehicle id="2554" type="motorcycle" depart="2554.00">
         <route edges="-211849412 211849412" />
     </vehicle>
-    <vehicle id="2555" type="car" depart="2555.00">
+    <vehicle id="2555" type="blue_car" depart="2555.00">
         <route edges="290729088#2 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1 -32576066#0 -32577015#0" />
     </vehicle>
     <vehicle id="2556" type="motorcycle" depart="2556.00">
@@ -7725,7 +7725,7 @@
     <vehicle id="2574" type="motorcycle" depart="2574.00">
         <route edges="211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 -32577015#0" />
     </vehicle>
-    <vehicle id="2575" type="car" depart="2575.00">
+    <vehicle id="2575" type="blue_car" depart="2575.00">
         <route edges="32576066#0 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5" />
     </vehicle>
     <vehicle id="2576" type="car" depart="2576.00">
@@ -7770,7 +7770,7 @@
     <vehicle id="2589" type="motorcycle" depart="2589.00">
         <route edges="-32577015#1 32577015#1 32577015#2 -606543132" />
     </vehicle>
-    <vehicle id="2590" type="car" depart="2590.00">
+    <vehicle id="2590" type="blue_car" depart="2590.00">
         <route edges="-290729095#0 -32577015#9 -32577015#8 -32577015#7 -32577015#6 -32577015#5 1061042908 32576065#0" />
     </vehicle>
     <vehicle id="2591" type="motorcycle" depart="2591.00">
@@ -7860,7 +7860,7 @@
     <vehicle id="2619" type="motorcycle" depart="2619.00">
         <route edges="32577015#9 -32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5" />
     </vehicle>
-    <vehicle id="2620" type="car" depart="2620.00">
+    <vehicle id="2620" type="blue_car" depart="2620.00">
         <route edges="606543119 -32576066#5 -606543125" />
     </vehicle>
     <vehicle id="2621" type="car" depart="2621.00">
@@ -7929,7 +7929,7 @@
     <vehicle id="2642" type="motorcycle" depart="2642.00">
         <route edges="-606543121 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 32576066#0" />
     </vehicle>
-    <vehicle id="2643" type="car" depart="2643.00">
+    <vehicle id="2643" type="blue_car" depart="2643.00">
         <route edges="211849415#1 290729088#0 606543125 32576066#5 -606543119" />
     </vehicle>
     <vehicle id="2644" type="motorcycle" depart="2644.00">
@@ -7983,7 +7983,7 @@
     <vehicle id="2660" type="motorcycle" depart="2660.00">
         <route edges="-211849415#1 32576065#0 32576065#1 1061035915#0 1061035915#2 32576061#4 32576061#5 290729094#0" />
     </vehicle>
-    <vehicle id="2661" type="car" depart="2661.00">
+    <vehicle id="2661" type="blue_car" depart="2661.00">
         <route edges="32576065#0 211849412 -32577015#6 -32577015#5 -32577015#2 -32577015#1 -32577015#0" />
     </vehicle>
     <vehicle id="2662" type="motorcycle" depart="2662.00">
@@ -7998,7 +7998,7 @@
     <vehicle id="2665" type="motorcycle" depart="2665.00">
         <route edges="32576061#3 -32576061#3 -32576061#2 -32576061#1 -606543119" />
     </vehicle>
-    <vehicle id="2666" type="car" depart="2666.00">
+    <vehicle id="2666" type="blue_car" depart="2666.00">
         <route edges="606543126 -1061035915#0 -32576065#1 -32576065#0 -606543102 32576066#1" />
     </vehicle>
     <vehicle id="2667" type="car" depart="2667.00">
@@ -8031,7 +8031,7 @@
     <vehicle id="2676" type="motorcycle" depart="2676.00">
         <route edges="-290729088#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1" />
     </vehicle>
-    <vehicle id="2677" type="car" depart="2677.00">
+    <vehicle id="2677" type="blue_car" depart="2677.00">
         <route edges="32577015#1 32577015#2 1061042908 211849415#1 290729088#0 606543126 -1061035915#0" />
     </vehicle>
     <vehicle id="2678" type="motorcycle" depart="2678.00">
@@ -8040,10 +8040,10 @@
     <vehicle id="2679" type="motorcycle" depart="2679.00">
         <route edges="211849413#0 -211849413#0 32576061#4 32576061#5 290729094#0 -290729095#1" />
     </vehicle>
-    <vehicle id="2680" type="car" depart="2680.00">
+    <vehicle id="2680" type="blue_car" depart="2680.00">
         <route edges="-606543102 32576066#1 32576066#3" />
     </vehicle>
-    <vehicle id="2681" type="car" depart="2681.00">
+    <vehicle id="2681" type="blue_car" depart="2681.00">
         <route edges="-32576064#0 -32576061#5 -32576061#4 32576061#4" />
     </vehicle>
     <vehicle id="2682" type="motorcycle" depart="2682.00">
@@ -8052,7 +8052,7 @@
     <vehicle id="2683" type="motorcycle" depart="2683.00">
         <route edges="32577015#2 1061042908 32576065#0 211849412 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="2684" type="car" depart="2684.00">
+    <vehicle id="2684" type="blue_car" depart="2684.00">
         <route edges="-211849499 32576064#0 -290729095#0" />
     </vehicle>
     <vehicle id="2685" type="motorcycle" depart="2685.00">
@@ -8082,10 +8082,10 @@
     <vehicle id="2693" type="motorcycle" depart="2693.00">
         <route edges="-32576066#0 32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 -32576061#6 32576064#0" />
     </vehicle>
-    <vehicle id="2694" type="car" depart="2694.00">
+    <vehicle id="2694" type="blue_car" depart="2694.00">
         <route edges="32576061#5 -32576061#5 -32576061#4 211849413#0" />
     </vehicle>
-    <vehicle id="2695" type="car" depart="2695.00">
+    <vehicle id="2695" type="blue_car" depart="2695.00">
         <route edges="-32577015#5 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 32576061#4" />
     </vehicle>
     <vehicle id="2696" type="motorcycle" depart="2696.00">
@@ -8208,10 +8208,10 @@
     <vehicle id="2735" type="motorcycle" depart="2735.00">
         <route edges="-290729095#0 -32576061#6 -32576061#5 1060982830 32576063 1061035915#0" />
     </vehicle>
-    <vehicle id="2736" type="car" depart="2736.00">
+    <vehicle id="2736" type="blue_car" depart="2736.00">
         <route edges="-290729089 -211849415#1 32576065#0" />
     </vehicle>
-    <vehicle id="2737" type="car" depart="2737.00">
+    <vehicle id="2737" type="blue_car" depart="2737.00">
         <route edges="-32576061#3 -290729088#2 606543126 606543127 211849500#0 -211849499 290729094#0 290729094#1" />
     </vehicle>
     <vehicle id="2738" type="motorcycle" depart="2738.00">
@@ -8238,7 +8238,7 @@
     <vehicle id="2745" type="motorcycle" depart="2745.00">
         <route edges="32577015#8 -211849500#1 -211849500#0 211849500#0" />
     </vehicle>
-    <vehicle id="2746" type="car" depart="2746.00">
+    <vehicle id="2746" type="blue_car" depart="2746.00">
         <route edges="-606549682#1 -32577015#9 -211849500#1 -211849500#0 -606543127 -606543126 606543125" />
     </vehicle>
     <vehicle id="2747" type="motorcycle" depart="2747.00">
@@ -8280,13 +8280,13 @@
     <vehicle id="2759" type="motorcycle" depart="2759.00">
         <route edges="-290729095#0 -32577015#9 -32577015#8 -32577015#7 -211849412 -32576065#0 -1061042908" />
     </vehicle>
-    <vehicle id="2760" type="car" depart="2760.00">
+    <vehicle id="2760" type="blue_car" depart="2760.00">
         <route edges="-32577015#6 -32577015#5 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 -32576061#3" />
     </vehicle>
     <vehicle id="2761" type="motorcycle" depart="2761.00">
         <route edges="290729095#1 -290729094#0 211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 -32577015#0 32585157#1" />
     </vehicle>
-    <vehicle id="2762" type="car" depart="2762.00">
+    <vehicle id="2762" type="blue_car" depart="2762.00">
         <route edges="211849500#1 -32577015#8 -32577015#7 -32577015#6" />
     </vehicle>
     <vehicle id="2763" type="motorcycle" depart="2763.00">
@@ -8331,10 +8331,10 @@
     <vehicle id="2776" type="car" depart="2776.00">
         <route edges="1061042908 211849415#1 290729088#0 606543125 606543124" />
     </vehicle>
-    <vehicle id="2777" type="car" depart="2777.00">
+    <vehicle id="2777" type="blue_car" depart="2777.00">
         <route edges="-1061042908 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 290729095#0 -290729095#0" />
     </vehicle>
-    <vehicle id="2778" type="car" depart="2778.00">
+    <vehicle id="2778" type="blue_car" depart="2778.00">
         <route edges="290729088#2 -290729088#2 -290729088#0 -211849415#1 -1061042908 -32577015#2 -606543133" />
     </vehicle>
     <vehicle id="2779" type="motorcycle" depart="2779.00">
@@ -8355,7 +8355,7 @@
     <vehicle id="2784" type="motorcycle" depart="2784.00">
         <route edges="211849413#0 -211849413#0 -1061035915#2 -606543126 606543125 32576066#5" />
     </vehicle>
-    <vehicle id="2785" type="car" depart="2785.00">
+    <vehicle id="2785" type="blue_car" depart="2785.00">
         <route edges="-211849500#1 -211849500#0 32576063 1061035915#0" />
     </vehicle>
     <vehicle id="2786" type="motorcycle" depart="2786.00">
@@ -8379,7 +8379,7 @@
     <vehicle id="2792" type="motorcycle" depart="2792.00">
         <route edges="32576065#0" />
     </vehicle>
-    <vehicle id="2793" type="car" depart="2793.00">
+    <vehicle id="2793" type="blue_car" depart="2793.00">
         <route edges="211849413#0 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -1061042908 -32577015#2" />
     </vehicle>
     <vehicle id="2794" type="taxi" depart="2794.00">
@@ -8397,7 +8397,7 @@
     <vehicle id="2798" type="motorcycle" depart="2798.00">
         <route edges="-211849500#0 -606543127 -1061035915#0 -32576065#1 -32576065#0 -1061042908 32577015#5" />
     </vehicle>
-    <vehicle id="2799" type="car" depart="2799.00">
+    <vehicle id="2799" type="blue_car" depart="2799.00">
         <route edges="211849499 -211849500#0 -606543127 -1061035915#0 -32576065#1 32576065#1" />
     </vehicle>
     <vehicle id="2800" type="taxi" depart="2800.00">
@@ -8484,7 +8484,7 @@
     <vehicle id="2827" type="car" depart="2827.00">
         <route edges="32576064#0 290729095#1 -290729094#0 -32576061#5 1060982830" />
     </vehicle>
-    <vehicle id="2828" type="car" depart="2828.00">
+    <vehicle id="2828" type="blue_car" depart="2828.00">
         <route edges="-290729088#0 -211849415#1 -606543102 -32576066#0 -32577015#0 32585157#1" />
     </vehicle>
     <vehicle id="2829" type="motorcycle" depart="2829.00">
@@ -8496,7 +8496,7 @@
     <vehicle id="2831" type="motorcycle" depart="2831.00">
         <route edges="290729094#0 -290729095#1 -290729095#0 -32577015#9 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1" />
     </vehicle>
-    <vehicle id="2832" type="car" depart="2832.00">
+    <vehicle id="2832" type="blue_car" depart="2832.00">
         <route edges="32576063 -32576065#1 -32576065#0 -1061042908 -32577015#2 -32577015#1" />
     </vehicle>
     <vehicle id="2833" type="bus" depart="2833.00">
@@ -8550,7 +8550,7 @@
     <vehicle id="2849" type="motorcycle" depart="2849.00">
         <route edges="32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849500#0" />
     </vehicle>
-    <vehicle id="2850" type="car" depart="2850.00">
+    <vehicle id="2850" type="blue_car" depart="2850.00">
         <route edges="32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849499 -32576061#5 1060982830" />
     </vehicle>
     <vehicle id="2851" type="truck" depart="2851.00">
@@ -8598,7 +8598,7 @@
     <vehicle id="2865" type="motorcycle" depart="2865.00">
         <route edges="606543119 32576061#1 32576061#2 32576061#3 32576061#4 32576061#5 32576064#0 290729095#1 -290729094#0" />
     </vehicle>
-    <vehicle id="2866" type="car" depart="2866.00">
+    <vehicle id="2866" type="blue_car" depart="2866.00">
         <route edges="-32576065#1 211849412 32577015#7 32577015#8 -211849500#1 -211849499 290729094#0 290729094#1" />
     </vehicle>
     <vehicle id="2867" type="motorcycle" depart="2867.00">
@@ -8610,10 +8610,10 @@
     <vehicle id="2869" type="motorcycle" depart="2869.00">
         <route edges="32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 -32576061#6 32576064#0" />
     </vehicle>
-    <vehicle id="2870" type="car" depart="2870.00">
+    <vehicle id="2870" type="blue_car" depart="2870.00">
         <route edges="-1061035915#2 606543127 -606543127" />
     </vehicle>
-    <vehicle id="2871" type="car" depart="2871.00">
+    <vehicle id="2871" type="blue_car" depart="2871.00">
         <route edges="32576063 -32576065#1 211849412 32577015#7 32577015#8" />
     </vehicle>
     <vehicle id="2872" type="motorcycle" depart="2872.00">
@@ -8670,7 +8670,7 @@
     <vehicle id="2889" type="car" depart="2889.00">
         <route edges="-290729088#0 -211849415#1 -1061042908 -32577015#2 -606543133" />
     </vehicle>
-    <vehicle id="2890" type="car" depart="2890.00">
+    <vehicle id="2890" type="blue_car" depart="2890.00">
         <route edges="606543117 32576061#2 32576061#3 -1061035915#2 606543127 211849500#0 211849500#1" />
     </vehicle>
     <vehicle id="2891" type="motorcycle" depart="2891.00">
@@ -8688,7 +8688,7 @@
     <vehicle id="2895" type="car" depart="2895.00">
         <route edges="-211849413#2 -211849413#0 -1061035915#2 -1061035915#0 -32576065#1 211849412 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="2896" type="car" depart="2896.00">
+    <vehicle id="2896" type="blue_car" depart="2896.00">
         <route edges="-606543126 -290729088#0 -211849415#1 32576065#0 211849412" />
     </vehicle>
     <vehicle id="2897" type="car" depart="2897.00">
@@ -8766,10 +8766,10 @@
     <vehicle id="2921" type="motorcycle" depart="2921.00">
         <route edges="-290729095#0 -32576061#6 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576065#1" />
     </vehicle>
-    <vehicle id="2922" type="car" depart="2922.00">
+    <vehicle id="2922" type="blue_car" depart="2922.00">
         <route edges="-606543126 290729088#2 32576061#3 32576061#4 32576061#5 32576061#6 606549682#1" />
     </vehicle>
-    <vehicle id="2923" type="car" depart="2923.00">
+    <vehicle id="2923" type="blue_car" depart="2923.00">
         <route edges="32576061#6 -32577015#9 -32577015#8 -32577015#7 -211849412" />
     </vehicle>
     <vehicle id="2924" type="motorcycle" depart="2924.00">
@@ -8886,7 +8886,7 @@
     <vehicle id="2961" type="motorcycle" depart="2961.00">
         <route edges="32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 -32577015#7" />
     </vehicle>
-    <vehicle id="2962" type="car" depart="2962.00">
+    <vehicle id="2962" type="blue_car" depart="2962.00">
         <route edges="-32577015#5 1061042908 211849415#1 290729089 -32576066#1" />
     </vehicle>
     <vehicle id="2963" type="motorcycle" depart="2963.00">
@@ -8949,7 +8949,7 @@
     <vehicle id="2982" type="motorcycle" depart="2982.00">
         <route edges="1061035915#0 -606543126 -290729088#0 -211849415#1 -1061042908 -606543132" />
     </vehicle>
-    <vehicle id="2983" type="car" depart="2983.00">
+    <vehicle id="2983" type="blue_car" depart="2983.00">
         <route edges="-1061035915#2 606543127 -1060982830" />
     </vehicle>
     <vehicle id="2984" type="car" depart="2984.00">
@@ -8982,7 +8982,7 @@
     <vehicle id="2993" type="bus" depart="2993.00">
         <route edges="211849500#0 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -606543133" />
     </vehicle>
-    <vehicle id="2994" type="car" depart="2994.00">
+    <vehicle id="2994" type="blue_car" depart="2994.00">
         <route edges="290729095#1 -290729094#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2" />
     </vehicle>
     <vehicle id="2995" type="motorcycle" depart="2995.00">
@@ -9006,7 +9006,7 @@
     <vehicle id="3001" type="motorcycle" depart="3001.00">
         <route edges="-32577015#1 32576066#0 32576066#1 -32576066#1" />
     </vehicle>
-    <vehicle id="3002" type="car" depart="3002.00">
+    <vehicle id="3002" type="blue_car" depart="3002.00">
         <route edges="-837745310 -211849413#0 -1061035915#2 -606543126 606543125" />
     </vehicle>
     <vehicle id="3003" type="motorcycle" depart="3003.00">
@@ -9015,7 +9015,7 @@
     <vehicle id="3004" type="motorcycle" depart="3004.00">
         <route edges="-290729095#1 -290729095#0 -32577015#9 -211849500#1" />
     </vehicle>
-    <vehicle id="3005" type="car" depart="3005.00">
+    <vehicle id="3005" type="blue_car" depart="3005.00">
         <route edges="32576061#5 -32576061#5 -32576061#4 211849413#0 211849413#2" />
     </vehicle>
     <vehicle id="3006" type="motorcycle" depart="3006.00">
@@ -9039,7 +9039,7 @@
     <vehicle id="3012" type="motorcycle" depart="3012.00">
         <route edges="-606543126 -290729088#0 -211849415#1 32576065#0 211849412 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="3013" type="car" depart="3013.00">
+    <vehicle id="3013" type="blue_car" depart="3013.00">
         <route edges="32577015#9 -32576061#6 -32576061#5 -32576061#4 -32576061#3 -290729088#2 -290729088#0" />
     </vehicle>
     <vehicle id="3014" type="motorcycle" depart="3014.00">
@@ -9081,7 +9081,7 @@
     <vehicle id="3026" type="motorcycle" depart="3026.00">
         <route edges="-1061035915#2 -606543126 606543125 32576066#5" />
     </vehicle>
-    <vehicle id="3027" type="car" depart="3027.00">
+    <vehicle id="3027" type="blue_car" depart="3027.00">
         <route edges="-32576061#4 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 -1061042908 32577015#5 32577015#6" />
     </vehicle>
     <vehicle id="3028" type="motorcycle" depart="3028.00">
@@ -9144,7 +9144,7 @@
     <vehicle id="3047" type="motorcycle" depart="3047.00">
         <route edges="-1061035915#0 -32576063 211849500#0 -211849499 -32576061#5" />
     </vehicle>
-    <vehicle id="3048" type="car" depart="3048.00">
+    <vehicle id="3048" type="blue_car" depart="3048.00">
         <route edges="-32576061#1 -32576066#5 -32576066#3 -32576066#1" />
     </vehicle>
     <vehicle id="3049" type="motorcycle" depart="3049.00">
@@ -9189,7 +9189,7 @@
     <vehicle id="3062" type="taxi" depart="3062.00">
         <route edges="-290729088#0 290729089 -32576066#1" />
     </vehicle>
-    <vehicle id="3063" type="car" depart="3063.00">
+    <vehicle id="3063" type="blue_car" depart="3063.00">
         <route edges="211849415#1 290729089 -32576066#1 -32576066#0 -32577015#0" />
     </vehicle>
     <vehicle id="3064" type="motorcycle" depart="3064.00">
@@ -9270,7 +9270,7 @@
     <vehicle id="3089" type="motorcycle" depart="3089.00">
         <route edges="-211849413#0 -32576061#3 -290729088#2 -290729088#0 -211849415#1" />
     </vehicle>
-    <vehicle id="3090" type="car" depart="3090.00">
+    <vehicle id="3090" type="blue_car" depart="3090.00">
         <route edges="290729094#0 -290729095#1 -290729095#0 606549682#1" />
     </vehicle>
     <vehicle id="3091" type="taxi" depart="3091.00">
@@ -9357,10 +9357,10 @@
     <vehicle id="3118" type="motorcycle" depart="3118.00">
         <route edges="32577015#7 -32577015#7 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="3119" type="car" depart="3119.00">
+    <vehicle id="3119" type="blue_car" depart="3119.00">
         <route edges="-211849500#0 211849500#0 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5" />
     </vehicle>
-    <vehicle id="3120" type="car" depart="3120.00">
+    <vehicle id="3120" type="blue_car" depart="3120.00">
         <route edges="-32577015#1 32576066#0 606543102 32576065#0 211849412 -32577015#6" />
     </vehicle>
     <vehicle id="3121" type="taxi" depart="3121.00">
@@ -9426,7 +9426,7 @@
     <vehicle id="3141" type="car" depart="3141.00">
         <route edges="-32576061#4 32576061#4 32576061#5 32576064#0" />
     </vehicle>
-    <vehicle id="3142" type="car" depart="3142.00">
+    <vehicle id="3142" type="blue_car" depart="3142.00">
         <route edges="-211849500#0 -606543127 -1061035915#0 -32576065#1 -32576065#0 -1061042908 32577015#5" />
     </vehicle>
     <vehicle id="3143" type="truck" depart="3143.00">
@@ -9447,7 +9447,7 @@
     <vehicle id="3148" type="motorcycle" depart="3148.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2 1061042908 32576065#0 32576065#1 1061035915#0 1061035915#2 211849413#0" />
     </vehicle>
-    <vehicle id="3149" type="car" depart="3149.00">
+    <vehicle id="3149" type="blue_car" depart="3149.00">
         <route edges="-32576061#2 -32576061#1 -32576066#5 -606543125 -290729088#0 -211849415#1 -606543102" />
     </vehicle>
     <vehicle id="3150" type="car" depart="3150.00">
@@ -9480,10 +9480,10 @@
     <vehicle id="3159" type="motorcycle" depart="3159.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576065#1 211849412" />
     </vehicle>
-    <vehicle id="3160" type="car" depart="3160.00">
+    <vehicle id="3160" type="blue_car" depart="3160.00">
         <route edges="-32577015#2 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 32577015#9 290729095#0 -290729095#0" />
     </vehicle>
-    <vehicle id="3161" type="car" depart="3161.00">
+    <vehicle id="3161" type="blue_car" depart="3161.00">
         <route edges="-290729094#0 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 32576061#1 32576061#2" />
     </vehicle>
     <vehicle id="3162" type="motorcycle" depart="3162.00">
@@ -9504,7 +9504,7 @@
     <vehicle id="3167" type="car" depart="3167.00">
         <route edges="211849415#1 -211849415#1 -606543102" />
     </vehicle>
-    <vehicle id="3168" type="car" depart="3168.00">
+    <vehicle id="3168" type="blue_car" depart="3168.00">
         <route edges="-290729088#0 -211849415#1 32576065#0 32576065#1 1061035915#0 1061035915#2 -32576061#3" />
     </vehicle>
     <vehicle id="3169" type="motorcycle" depart="3169.00">
@@ -9516,7 +9516,7 @@
     <vehicle id="3171" type="motorcycle" depart="3171.00">
         <route edges="-32585157#1 -32585157#0 32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849499 290729094#0 290729094#1" />
     </vehicle>
-    <vehicle id="3172" type="car" depart="3172.00">
+    <vehicle id="3172" type="blue_car" depart="3172.00">
         <route edges="-1061042908 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849499 290729094#0 -290729095#1" />
     </vehicle>
     <vehicle id="3173" type="motorcycle" depart="3173.00">
@@ -9639,7 +9639,7 @@
     <vehicle id="3212" type="car" depart="3212.00">
         <route edges="-32576063 211849500#0 211849500#1 -211849500#1" />
     </vehicle>
-    <vehicle id="3213" type="car" depart="3213.00">
+    <vehicle id="3213" type="blue_car" depart="3213.00">
         <route edges="32576066#1 32576066#3 -606543125 606543126 -1061035915#0 -32576063" />
     </vehicle>
     <vehicle id="3214" type="motorcycle" depart="3214.00">
@@ -9819,7 +9819,7 @@
     <vehicle id="3272" type="motorcycle" depart="3272.00">
         <route edges="606543117 32576061#2 -290729088#2 -290729088#0 -211849415#1 -1061042908 606543131" />
     </vehicle>
-    <vehicle id="3273" type="car" depart="3273.00">
+    <vehicle id="3273" type="blue_car" depart="3273.00">
         <route edges="211849413#0 -211849413#0 32576061#4 32576061#5 32576064#0" />
     </vehicle>
     <vehicle id="3274" type="car" depart="3274.00">
@@ -9852,7 +9852,7 @@
     <vehicle id="3283" type="motorcycle" depart="3283.00">
         <route edges="-211849412 -32576065#0 -606543102 32576066#1 -290729089" />
     </vehicle>
-    <vehicle id="3284" type="car" depart="3284.00">
+    <vehicle id="3284" type="blue_car" depart="3284.00">
         <route edges="32577015#5 32577015#6 -211849412 -32576065#0 -606543102 -32576066#0 32577015#1 32577015#2" />
     </vehicle>
     <vehicle id="3285" type="motorcycle" depart="3285.00">
@@ -9927,7 +9927,7 @@
     <vehicle id="3308" type="car" depart="3308.00">
         <route edges="-211849415#1 32576065#0" />
     </vehicle>
-    <vehicle id="3309" type="car" depart="3309.00">
+    <vehicle id="3309" type="blue_car" depart="3309.00">
         <route edges="290729094#0 -290729094#0 211849499 211849500#1 32577015#9" />
     </vehicle>
     <vehicle id="3310" type="motorcycle" depart="3310.00">
@@ -9993,10 +9993,10 @@
     <vehicle id="3330" type="motorcycle" depart="3330.00">
         <route edges="32576061#5 32576061#6 290729095#0" />
     </vehicle>
-    <vehicle id="3331" type="car" depart="3331.00">
+    <vehicle id="3331" type="blue_car" depart="3331.00">
         <route edges="-290729088#2 -290729088#0 -211849415#1 32576065#0 32576065#1 1061035915#0" />
     </vehicle>
-    <vehicle id="3332" type="car" depart="3332.00">
+    <vehicle id="3332" type="blue_car" depart="3332.00">
         <route edges="-32585157#1 -32585157#0 32576066#0 32576066#1 32576066#3" />
     </vehicle>
     <vehicle id="3333" type="car" depart="3333.00">
@@ -10035,7 +10035,7 @@
     <vehicle id="3344" type="motorcycle" depart="3344.00">
         <route edges="-606543127 -606543126 -290729088#0 290729089" />
     </vehicle>
-    <vehicle id="3345" type="car" depart="3345.00">
+    <vehicle id="3345" type="blue_car" depart="3345.00">
         <route edges="-837745310 -211849413#0 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3" />
     </vehicle>
     <vehicle id="3346" type="taxi" depart="3346.00">
@@ -10089,7 +10089,7 @@
     <vehicle id="3362" type="car" depart="3362.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -1061035915#2 -1061035915#0 -32576065#1" />
     </vehicle>
-    <vehicle id="3363" type="car" depart="3363.00">
+    <vehicle id="3363" type="blue_car" depart="3363.00">
         <route edges="606543126 -1061035915#0 -32576065#1 211849412 32577015#7 32577015#8" />
     </vehicle>
     <vehicle id="3364" type="motorcycle" depart="3364.00">
@@ -10122,7 +10122,7 @@
     <vehicle id="3373" type="motorcycle" depart="3373.00">
         <route edges="-32577015#2 -32577015#1 32576066#0 32576066#1 32576066#3 32576066#5 32576061#1" />
     </vehicle>
-    <vehicle id="3374" type="car" depart="3374.00">
+    <vehicle id="3374" type="blue_car" depart="3374.00">
         <route edges="290729095#1 -290729094#0 211849499 211849500#1 -32577015#8 -32577015#7 -32577015#6 -32577015#5 -32577015#2 -32577015#1 -32577015#0 32585157#1 -32585157#1 -32585157#0" />
     </vehicle>
     <vehicle id="3375" type="motorcycle" depart="3375.00">
@@ -10137,7 +10137,7 @@
     <vehicle id="3378" type="motorcycle" depart="3378.00">
         <route edges="32577015#1 32577015#2 32577015#5 32577015#6 32577015#7 32577015#8 -211849500#1 -211849500#0 -1060982830 -32576061#4" />
     </vehicle>
-    <vehicle id="3379" type="car" depart="3379.00">
+    <vehicle id="3379" type="blue_car" depart="3379.00">
         <route edges="290729088#0 290729088#2 32576061#3 32576061#4 32576061#5 290729094#0 290729094#1" />
     </vehicle>
     <vehicle id="3380" type="car" depart="3380.00">
@@ -10176,7 +10176,7 @@
     <vehicle id="3391" type="motorcycle" depart="3391.00">
         <route edges="606543127 32576063 -32576065#1 -32576065#0 -1061042908 32577015#5" />
     </vehicle>
-    <vehicle id="3392" type="car" depart="3392.00">
+    <vehicle id="3392" type="blue_car" depart="3392.00">
         <route edges="32576061#3 -1061035915#2 -1061035915#0 -32576065#1 -32576065#0 211849415#1 290729088#0" />
     </vehicle>
     <vehicle id="3393" type="motorcycle" depart="3393.00">
@@ -10191,7 +10191,7 @@
     <vehicle id="3396" type="motorcycle" depart="3396.00">
         <route edges="290729094#0 -290729095#1 -32576064#0 -32576061#5 -32576061#4 -32576061#3 -290729088#2 606543125 32576066#5" />
     </vehicle>
-    <vehicle id="3397" type="car" depart="3397.00">
+    <vehicle id="3397" type="blue_car" depart="3397.00">
         <route edges="-606543126 290729088#2 32576061#3 32576061#4 32576061#5" />
     </vehicle>
     <vehicle id="3398" type="motorcycle" depart="3398.00">
@@ -10215,7 +10215,7 @@
     <vehicle id="3404" type="motorcycle" depart="3404.00">
         <route edges="-32576065#0 32576065#0 32576065#1 1061035915#0 1061035915#2 -32576061#3" />
     </vehicle>
-    <vehicle id="3405" type="car" depart="3405.00">
+    <vehicle id="3405" type="blue_car" depart="3405.00">
         <route edges="-32577015#0 32585157#1 -32585157#1 -32585157#0 32577015#1 32577015#2 1061042908 32576065#0 32576065#1 -32576063" />
     </vehicle>
     <vehicle id="3406" type="car" depart="3406.00">
@@ -10233,7 +10233,7 @@
     <vehicle id="3410" type="motorcycle" depart="3410.00">
         <route edges="32576061#1 32576061#2 32576061#3 -1061035915#2 606543127" />
     </vehicle>
-    <vehicle id="3411" type="car" depart="3411.00">
+    <vehicle id="3411" type="blue_car" depart="3411.00">
         <route edges="32576066#3 32576066#5 32576061#1" />
     </vehicle>
     <vehicle id="3412" type="motorcycle" depart="3412.00">
@@ -10242,10 +10242,10 @@
     <vehicle id="3413" type="car" depart="3413.00">
         <route edges="32576065#0 211849412 -32577015#6 -32577015#5 32577015#5" />
     </vehicle>
-    <vehicle id="3414" type="car" depart="3414.00">
+    <vehicle id="3414" type="blue_car" depart="3414.00">
         <route edges="211849500#0 -211849499 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3 -32576066#1" />
     </vehicle>
-    <vehicle id="3415" type="car" depart="3415.00">
+    <vehicle id="3415" type="blue_car" depart="3415.00">
         <route edges="32576061#4 32576061#5 32576064#0 290729095#1" />
     </vehicle>
     <vehicle id="3416" type="motorcycle" depart="3416.00">
@@ -10263,7 +10263,7 @@
     <vehicle id="3420" type="motorcycle" depart="3420.00">
         <route edges="-211849412 32576065#1 1061035915#0 -1061035915#0" />
     </vehicle>
-    <vehicle id="3421" type="car" depart="3421.00">
+    <vehicle id="3421" type="blue_car" depart="3421.00">
         <route edges="32577015#6 -32577015#6" />
     </vehicle>
     <vehicle id="3422" type="motorcycle" depart="3422.00">
@@ -10302,7 +10302,7 @@
     <vehicle id="3433" type="car" depart="3433.00">
         <route edges="-606543121 -32577015#7 -32577015#6 -32577015#5 32577015#5" />
     </vehicle>
-    <vehicle id="3434" type="car" depart="3434.00">
+    <vehicle id="3434" type="blue_car" depart="3434.00">
         <route edges="-290729088#0" />
     </vehicle>
     <vehicle id="3435" type="motorcycle" depart="3435.00">
@@ -10356,7 +10356,7 @@
     <vehicle id="3451" type="motorcycle" depart="3451.00">
         <route edges="32576061#5 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -606543119" />
     </vehicle>
-    <vehicle id="3452" type="car" depart="3452.00">
+    <vehicle id="3452" type="blue_car" depart="3452.00">
         <route edges="-32576061#4 -32576061#3 -290729088#2 -290729088#0 290729089 32576066#3" />
     </vehicle>
     <vehicle id="3453" type="truck" depart="3453.00">
@@ -10398,7 +10398,7 @@
     <vehicle id="3465" type="motorcycle" depart="3465.00">
         <route edges="-606549682#1 -32576061#6 -32576061#5 -32576061#4 -32576061#3 -32576061#2 -32576061#1 -32576066#5 -32576066#3" />
     </vehicle>
-    <vehicle id="3466" type="car" depart="3466.00">
+    <vehicle id="3466" type="blue_car" depart="3466.00">
         <route edges="-32577015#8 -32577015#7 -211849412 -32576065#0 -606543102 32576066#1 32576066#3 32576066#5 32576061#1 32576061#2" />
     </vehicle>
     <vehicle id="3467" type="motorcycle" depart="3467.00">
@@ -10413,7 +10413,7 @@
     <vehicle id="3470" type="car" depart="3470.00">
         <route edges="-837745310 -211849413#0 -1061035915#2 -606543126 606543125 606543124" />
     </vehicle>
-    <vehicle id="3471" type="car" depart="3471.00">
+    <vehicle id="3471" type="blue_car" depart="3471.00">
         <route edges="32576061#0 32576061#1 32576061#2 32576061#3 -1061035915#2 -606543126" />
     </vehicle>
     <vehicle id="3472" type="car" depart="3472.00">
@@ -10458,7 +10458,7 @@
     <vehicle id="3485" type="taxi" depart="3485.00">
         <route edges="32576063 1061035915#0 1061035915#2 32576061#4 32576061#5 32576061#6" />
     </vehicle>
-    <vehicle id="3486" type="car" depart="3486.00">
+    <vehicle id="3486" type="blue_car" depart="3486.00">
         <route edges="606543132 1061042908 211849415#1 290729088#0 290729088#2 -290729088#2" />
     </vehicle>
     <vehicle id="3487" type="motorcycle" depart="3487.00">
@@ -10542,7 +10542,7 @@
     <vehicle id="3513" type="motorcycle" depart="3513.00">
         <route edges="-290729088#2 606543126 1061035915#2 32576061#4 32576061#5" />
     </vehicle>
-    <vehicle id="3514" type="car" depart="3514.00">
+    <vehicle id="3514" type="blue_car" depart="3514.00">
         <route edges="-290729088#2 606543126 1061035915#2 32576061#4" />
     </vehicle>
     <vehicle id="3515" type="motorcycle" depart="3515.00">
@@ -10581,7 +10581,7 @@
     <vehicle id="3526" type="taxi" depart="3526.00">
         <route edges="32577015#7 32577015#8 32577015#9" />
     </vehicle>
-    <vehicle id="3527" type="car" depart="3527.00">
+    <vehicle id="3527" type="blue_car" depart="3527.00">
         <route edges="-32576061#3 -290729088#2 606543125 32576066#5" />
     </vehicle>
     <vehicle id="3528" type="motorcycle" depart="3528.00">
@@ -10659,7 +10659,7 @@
     <vehicle id="3552" type="taxi" depart="3552.00">
         <route edges="-1061035915#0 -32576065#1 -32576065#0 -606543102 -32576066#0 32576066#0" />
     </vehicle>
-    <vehicle id="3553" type="car" depart="3553.00">
+    <vehicle id="3553" type="blue_car" depart="3553.00">
         <route edges="-32576061#6 -32576061#5 -32576061#4 32576061#4" />
     </vehicle>
     <vehicle id="3554" type="motorcycle" depart="3554.00">
@@ -10713,7 +10713,7 @@
     <vehicle id="3570" type="motorcycle" depart="3570.00">
         <route edges="-290729088#2 606543126 606543127 -1060982830 -32576061#4" />
     </vehicle>
-    <vehicle id="3571" type="car" depart="3571.00">
+    <vehicle id="3571" type="blue_car" depart="3571.00">
         <route edges="32576061#5 211849499 211849500#1" />
     </vehicle>
     <vehicle id="3572" type="car" depart="3572.00">

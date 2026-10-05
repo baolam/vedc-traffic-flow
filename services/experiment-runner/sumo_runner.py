@@ -142,8 +142,8 @@ def generate_sumo_routes(
     # Generate individual vehicle departures (deterministic from seed)
     vehicles = []
     veh_id = 0
-    # Fleet weights: 65% motorcycle, 25% car, 4% taxi, 3% bus, 3% truck
-    fleet_weights = ["motorcycle"] * 65 + ["car"] * 25 + ["taxi"] * 4 + ["bus"] * 3 + ["truck"] * 3
+    # Fleet weights: 50% motorcycle, 20% car, 15% blue_car (EV), 6% taxi, 5% bus, 4% truck
+    fleet_weights = ["motorcycle"] * 50 + ["car"] * 20 + ["blue_car"] * 15 + ["taxi"] * 6 + ["bus"] * 5 + ["truck"] * 4
 
     for flow_id, rate in flows.items():
         route_id, edges = route_defs[flow_id]
@@ -175,6 +175,7 @@ def generate_sumo_routes(
         '<routes>',
         '    <vType id="motorcycle" vClass="motorcycle" guiShape="motorcycle" imgFile="vehicles/motorcycle.png" length="2.2" minGap="1.5" accel="3.0" decel="5.0" maxSpeed="50" color="1,0.2,0.2"/>',
         '    <vType id="car" vClass="passenger" guiShape="passenger" imgFile="vehicles/car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,1"/>',
+        '    <vType id="blue_car" vClass="passenger" guiShape="passenger" imgFile="vehicles/blue_car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="0.1,0.5,1.0"/>',
         '    <vType id="passenger" vClass="passenger" guiShape="passenger" imgFile="vehicles/car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,1"/>',
         '    <vType id="taxi" vClass="taxi" guiShape="passenger" imgFile="vehicles/taxi.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,0"/>',
         '    <vType id="bus" vClass="bus" guiShape="bus" imgFile="vehicles/bus.png" length="12" minGap="3" accel="1.2" decel="4" maxSpeed="40" color="0.2,0.5,1"/>',
