@@ -85,7 +85,7 @@ Hai board vi điều khiển ESP32 đóng vai trò là **Bộ Chấp Hành Tín 
   - **Board 1 (Ngã tư J1)**: `#define NODE_ID "J1"`
   - **Board 2 (Ngã tư J2)**: `#define NODE_ID "J2"`
 - Đặt `MQTT_BROKER` trỏ về IP của Laptop Server (ví dụ: `192.168.1.100`).
-- Nạp code vào ESP32 qua cổng USB Type-C.
+- Nạp code vào ESP32 qua cổng micro-USB (NodeMCU-32S CH340). Khuyến nghị dùng PlatformIO: `cd src/hardware && pio run -e J1 -t upload` (xem `src/hardware/schematic_and_pinout.md`).
 
 ---
 

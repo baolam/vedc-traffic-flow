@@ -58,6 +58,8 @@ yarn-error.log*
 # ------------------------------------------
 .env
 .env.local
+.env.rpi
+.venv-pi/
 .env.development.local
 .env.test.local
 .env.production.local
@@ -140,3 +142,7 @@ ehthumbs.db
 scratch/
 tmp/
 .tmp/
+
+# PlatformIO build output & local firmware network secrets
+.pio/
+src/hardware/secrets.ini

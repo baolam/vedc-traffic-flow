@@ -52,6 +52,26 @@ Mỗi nút giao ngã tư gồm 4 hướng tiếp cận (**Bắc - N, Nam - S, Đ
 
 ## 🛡️ 3. Quy Chuẩn Đấu Dây & An Toàn Thiết Bị
 
-1. **Bảo vệ chống dòng ngược & quá áp**: Sử dụng diode chỉnh lưu 1N4007 trên đường nguồn 5V vào board ESP32 để chống cắm ngược cực.
+1. **Bảo vệ chống dòng ngược & quá áp**: Dùng diode Schottky 1N5819 (sụt áp ~0,3 V) trên đường nguồn 5V vào chân 5V/VIN của ESP32 để chống cắm ngược cực, kèm cầu chì tự phục hồi (PTC) 0,5–1 A. Không dùng 1N4007: sụt ~0,8 V làm VIN chỉ còn ~4,2 V. Rút nguồn 5V ngoài khi cắm cáp micro-USB để nạp firmware.
 2. **Điện trở hạn dòng cho LED**: Toàn bộ các ngõ ra điều khiển LED đều được nối qua điện trở hạn dòng $220\ \Omega$ (giới hạn dòng điện dưới $15\text{mA}$ cho mỗi chân GPIO).
 3. **Cơ chế kéo chân (Pull-Up)**: Chân Safe-Stop (`GPIO 4`) sử dụng điện trở kéo lên nội bộ `INPUT_PULLUP` để chống nhiễu trường điện từ xung quanh mô hình.
+4. **Module đèn mắc song song**: Module hướng Bắc và Nam dùng chung 3 chân (GPIO 23/22/21), Đông và Tây dùng chung 3 chân (GPIO 19/18/5). Module đèn có sẵn điện trở hạn dòng, dòng ~5–6 mA/LED ở 3,3 V, nên mỗi chân GPIO kéo ~12 mA. Không cần thêm trở 220 Ω hay ULN2803 khi dùng module.
+5. **Nút Safe-Stop**: Dùng nút nhấn tự giữ. Firmware đọc theo mức (có chống dội 50 ms): giữ ở LOW thì vàng nhấp nháy và từ chối lệnh; thả ra thì ALL_RED 2 s rồi mới xanh lại.
+
+---
+
+## 📈 4. Bằng Chứng Thời Gian Tín Hiệu (Output Trace)
+
+- **Serial trace từ MCU**: Mỗi lần đầu ra đổi, firmware in một dòng `TRACE,<millis>,<node>,<ns>,<ew>,<label>` (`ns`/`ew` ∈ `R`,`Y`,`G`,`-`). Ghi lại bằng: `pio device monitor -e J1 | tee trace_J1.csv`.
+- **Logic analyzer 8 kênh (PulseView)**: CH0–CH5 → GPIO 23, 22, 21, 19, 18, 5; CH6 → GPIO 4 (safe-stop); GND chung. Dùng để chứng minh độc lập: không có lúc nào hai hướng cùng xanh, vàng ≥ 3 s, all-red ≥ 2 s.
+
+## 🔧 5. Build & Nạp Firmware (PlatformIO)
+
+```bash
+cd src/hardware
+cp secrets.example.ini secrets.ini        # sửa WIFI_SSID / WIFI_PASS / MQTT_BROKER (git-ignored)
+pio run -e J1 -t upload                   # board NodeMCU-32S (CH340, cổng micro-USB) cho nút J1
+pio run -e J2 -t upload                   # board cho nút J2
+pio device monitor -e J1                  # log 115200 baud
+```
+Không cài PlatformIO thì dùng `uvx --from platformio pio ...`. Nếu không nạp được, giữ nút BOOT khi log hiện `Connecting...`.

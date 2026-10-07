@@ -60,6 +60,71 @@ class PiCameraVideoSource(BaseVideoSource):
             logger.info(f"Released PiCamera source on device {self.device_index}")
 
 
+class Picamera2VideoSource(BaseVideoSource):
+    """
+    Raspberry Pi Camera Module 3 (CSI) through libcamera/Picamera2.
+
+    On Raspberry Pi 5 the CSI camera is only reachable through libcamera; OpenCV's
+    V4L2 backend cannot read it via cv2.VideoCapture(0). Requires the Raspberry Pi OS
+    package python3-picamera2 (use a venv created with --system-site-packages).
+
+    lens_position: fixed focus in dioptres (1/metres); None keeps continuous autofocus.
+    The camera hangs ~0.5 m above the tabletop, so ~2.0 is a sane starting point.
+    flicker_period_us: 10000 cancels 50 Hz mains flicker (Vietnam); 0 disables.
+    """
+    def __init__(self, width: int = 640, height: int = 480, fps: float = 30.0,
+                 lens_position: Optional[float] = None, flicker_period_us: int = 10000):
+        from picamera2 import Picamera2  # Raises ImportError off-Pi: no silent fallback.
+
+        self.width = width
+        self.height = height
+        self.camera = Picamera2()
+        # "RGB888" in Picamera2 is BGR byte order in memory, i.e. what OpenCV expects.
+        config = self.camera.create_video_configuration(
+            main={"size": (width, height), "format": "RGB888"},
+            controls={"FrameRate": fps},
+            buffer_count=2,
+        )
+        self.camera.configure(config)
+        self.camera.start()
+        self._apply_controls(lens_position, flicker_period_us)
+        logger.info(f"Initialized Picamera2 CSI source ({width}x{height} @ {fps}fps, "
+                    f"lens_position={lens_position}, flicker_period_us={flicker_period_us})")
+
+    def _apply_controls(self, lens_position: Optional[float], flicker_period_us: int) -> None:
+        available = self.camera.camera_controls
+        controls = {}
+        if lens_position is not None and "LensPosition" in available:
+            from libcamera import controls as lc
+            controls["AfMode"] = lc.AfModeEnum.Manual
+            controls["LensPosition"] = float(lens_position)
+        if flicker_period_us > 0 and "AeFlickerPeriod" in available:
+            from libcamera import controls as lc
+            controls["AeFlickerMode"] = lc.AeFlickerModeEnum.Manual
+            controls["AeFlickerPeriod"] = int(flicker_period_us)
+        if controls:
+            self.camera.set_controls(controls)
+
+    def read_frame(self) -> Tuple[bool, Optional[np.ndarray]]:
+        try:
+            frame = self.camera.capture_array("main")
+        except Exception as e:
+            logger.error(f"Picamera2 capture failed: {e}")
+            return False, None
+        if frame is None:
+            return False, None
+        if frame.ndim == 3 and frame.shape[2] == 4:
+            frame = frame[:, :, :3]
+        return True, frame
+
+    def release(self) -> None:
+        try:
+            self.camera.stop()
+            self.camera.close()
+        except Exception as e:
+            logger.warning(f"Picamera2 release failed: {e}")
+
+
 class WebcamVideoSource(BaseVideoSource):
     """Video source for standard USB webcam or capture device."""
     def __init__(self, device_id: int = 0):
@@ -149,10 +214,13 @@ class SyntheticVideoSource(BaseVideoSource):
         pass
 
 
-def create_video_source(source_str: str, width: int = 640, height: int = 480) -> BaseVideoSource:
+def create_video_source(source_str: str, width: int = 640, height: int = 480,
+                        lens_position: Optional[float] = None,
+                        flicker_period_us: int = 10000) -> BaseVideoSource:
     """
     Factory function creating appropriate VideoSource implementation based on source string.
-    Supports integer indexes (0, 1), /dev/video* paths, 'picamera', 'synthetic', or video files.
+    Supports integer indexes (0, 1) and /dev/video* paths (USB/V4L2 cameras), 'picamera'
+    (CSI Camera Module 3 via Picamera2), 'synthetic', or video files.
     """
     source_clean = str(source_str).strip()
     if source_clean.isdigit():
@@ -163,8 +231,9 @@ def create_video_source(source_str: str, width: int = 640, height: int = 480) ->
             return PiCameraVideoSource(dev_idx, width=width, height=height)
         except ValueError:
             return PiCameraVideoSource(0, width=width, height=height)
-    elif source_clean.lower() in ("picamera", "rpi_camera", "camera_module3", "csi"):
-        return PiCameraVideoSource(0, width=width, height=height)
+    elif source_clean.lower() in ("picamera", "picamera2", "rpi_camera", "camera_module3", "csi"):
+        return Picamera2VideoSource(width=width, height=height, lens_position=lens_position,
+                                    flicker_period_us=flicker_period_us)
     elif source_clean.startswith("webcam"):
         return WebcamVideoSource(0)
     elif source_clean.lower() in ["synthetic", "mock", "sim"]:

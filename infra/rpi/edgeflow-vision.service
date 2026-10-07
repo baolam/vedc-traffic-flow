@@ -1,0 +1,21 @@
+# EdgeFlow AI - vision perception service on Raspberry Pi 5 (native, Picamera2).
+# Installed by infra/rpi/setup_pi.sh, which replaces the @...@ placeholders.
+[Unit]
+Description=EdgeFlow AI vision perception (Camera Module 3 -> MQTT telemetry)
+After=network-online.target
+Wants=network-online.target
+# Give up after 10 failed starts in 2 minutes instead of crash-looping and filling the log.
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory=@REPO_DIR@
+EnvironmentFile=@REPO_DIR@/.env.rpi
+ExecStart=@VENV_DIR@/bin/python services/vision/main.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -40,6 +40,19 @@ class ROIManager:
             },
         }
 
+    def set_node_rois(self, node_id: str, polygons: Dict[str, Any]) -> None:
+        """Adds calibrated approach polygons for one node (several nodes may share one camera)."""
+        for approach_id, points in polygons.items():
+            self.rois[approach_id] = {
+                "node_id": node_id,
+                "polygon": np.array(points, np.int32),
+            }
+
+    def approaches_for_node(self, node_id: str) -> List[str]:
+        """Approach IDs belonging to a node, in insertion order."""
+        return [app_id for app_id, info in self.rois.items()
+                if info.get("node_id", node_id) == node_id and app_id.startswith(f"{node_id}_")]
+
     def assign_detections(self, detections: List[Tuple[int, int, int, int]]) -> Dict[str, List[Tuple[int, int, int, int]]]:
         """
         Assigns a list of bounding boxes (x, y, w, h) to approach IDs based on center point containment.
