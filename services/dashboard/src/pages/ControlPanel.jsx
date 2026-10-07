@@ -206,6 +206,7 @@ const ControlPanel = () => {
                   borderRadius: '6px',
                   fontSize: '0.9rem'
                 }}
+              >
                 <option value="edgeflow">EdgeFlow Candidate (Downstream & Quality Aware)</option>
                 <option value="max_pressure">Max-Pressure Controller (Movement Reference)</option>
                 <option value="max_queue">Max-Queue Controller (Queue-Sum Baseline)</option>

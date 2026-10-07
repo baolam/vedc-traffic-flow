@@ -133,14 +133,22 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
 
   // Dynamic node sizing based on total count
   const totalCount = rawNodes.length;
-  const nodeRadius = totalCount > 20 ? 17 : totalCount > 8 ? 22 : 28;
-  const outerRadius = totalCount > 20 ? 23 : totalCount > 8 ? 30 : 38;
+  const nodeRadius = totalCount > 40 ? 14 : totalCount > 20 ? 17 : totalCount > 8 ? 22 : 28;
+  const outerRadius = totalCount > 40 ? 18 : totalCount > 20 ? 22 : totalCount > 8 ? 29 : 37;
+
+  const formatNodeLabel = (id) => {
+    if (!id) return '';
+    const str = String(id);
+    if (str.length <= 5) return str;
+    return `..${str.slice(-4)}`;
+  };
 
   const getFontSize = (text) => {
-    const len = text.length;
-    if (totalCount > 20) return len > 6 ? "7.5" : len > 4 ? "8.5" : "10";
-    if (totalCount > 8) return len > 6 ? "9" : len > 4 ? "10" : "11.5";
-    return len > 6 ? "10" : "13";
+    const len = formatNodeLabel(text).length;
+    if (totalCount > 40) return "6.5";
+    if (totalCount > 20) return len > 5 ? "7.5" : "8.5";
+    if (totalCount > 8) return len > 5 ? "9" : "10.5";
+    return len > 5 ? "10" : "13";
   };
 
   return (
@@ -206,8 +214,8 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
             </pattern>
 
             {/* Directional Edge Arrowhead */}
-            <marker id="arrow" viewBox="0 0 10 10" refX={nodeRadius + 6} refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284c7" opacity="0.85" />
+            <marker id="arrow" viewBox="0 0 10 10" refX={nodeRadius + 5} refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284c7" opacity="0.8" />
             </marker>
           </defs>
 
@@ -229,8 +237,8 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
                   x2={p2.x}
                   y2={p2.y}
                   stroke={isHovered ? "#38bdf8" : "#cbd5e1"}
-                  strokeWidth={isHovered ? "3.5" : "2"}
-                  opacity={isHovered ? 0.9 : 0.45}
+                  strokeWidth={isHovered ? "2.5" : totalCount > 30 ? "1" : "1.5"}
+                  opacity={isHovered ? 0.9 : totalCount > 30 ? 0.3 : 0.45}
                 />
                 {/* Directional traffic flow line with arrowhead */}
                 <line
@@ -239,9 +247,9 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
                   x2={p2.x}
                   y2={p2.y}
                   stroke={isHovered ? "#0284c7" : "#0284c7"}
-                  strokeWidth={isHovered ? "2.5" : "1.5"}
+                  strokeWidth={isHovered ? "2" : totalCount > 30 ? "1" : "1.2"}
                   strokeDasharray={totalCount > 20 ? "none" : "4,2"}
-                  opacity={isHovered ? 1.0 : 0.65}
+                  opacity={isHovered ? 1.0 : totalCount > 30 ? 0.45 : 0.65}
                   markerEnd="url(#arrow)"
                 />
               </g>
@@ -258,11 +266,12 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
             const isHovered = hoveredNode === nodeId;
             const badgeColor = totalQueue >= 13 ? "#dc2626" : totalQueue >= 6 ? "#ca8a04" : "#16a34a";
             const fontSz = getFontSize(nodeId);
+            const labelText = formatNodeLabel(nodeId);
 
             // Badge coordinates offset neatly on top-right border
-            const badgeX = pos.x + nodeRadius * 0.7;
-            const badgeY = pos.y - nodeRadius * 0.7;
-            const badgeR = totalCount > 20 ? 8.5 : 10;
+            const badgeX = pos.x + nodeRadius * 0.75;
+            const badgeY = pos.y - nodeRadius * 0.75;
+            const badgeR = totalCount > 30 ? 7 : totalCount > 20 ? 8.5 : 10;
 
             return (
               <g
@@ -280,9 +289,9 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
                   cx={pos.x}
                   cy={pos.y}
                   r={isHovered ? outerRadius + 3 : outerRadius}
-                  fill={isNS ? "rgba(22, 163, 74, 0.14)" : "rgba(2, 132, 199, 0.14)"}
+                  fill={isNS ? "rgba(22, 163, 74, 0.12)" : "rgba(2, 132, 199, 0.12)"}
                   stroke={isNS ? "#16a34a" : "#0284c7"}
-                  strokeWidth={isHovered ? "2.5" : "1.8"}
+                  strokeWidth={isHovered ? "2.5" : "1.5"}
                 />
 
                 {/* Node Core Circle */}
@@ -292,7 +301,7 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
                   r={isHovered ? nodeRadius + 2 : nodeRadius}
                   fill="#ffffff"
                   stroke={isHovered ? "#0284c7" : "#cbd5e1"}
-                  strokeWidth="2"
+                  strokeWidth="1.8"
                   filter={isHovered ? "drop-shadow(0 2px 4px rgba(2, 132, 199, 0.3))" : "none"}
                 />
 
@@ -306,7 +315,7 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
                   textAnchor="middle"
                   dominantBaseline="central"
                 >
-                  {nodeId}
+                  {labelText}
                 </text>
 
                 {/* Queue Severity Badge */}
@@ -316,13 +325,13 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
                   r={badgeR}
                   fill={badgeColor}
                   stroke="#ffffff"
-                  strokeWidth="1.5"
+                  strokeWidth="1.2"
                 />
                 <text
                   x={badgeX}
                   y={badgeY}
                   fill="#ffffff"
-                  fontSize={totalCount > 20 ? "7.5" : "8.5"}
+                  fontSize={totalCount > 30 ? "6.5" : totalCount > 20 ? "7.5" : "8.5"}
                   fontWeight="800"
                   textAnchor="middle"
                   dominantBaseline="central"
@@ -338,27 +347,27 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
         {hoveredNode && nodePositions[hoveredNode] && (
           <div style={{
             position: 'absolute',
-            left: Math.min(Math.max(nodePositions[hoveredNode].x - 90, 10), 520),
-            top: nodePositions[hoveredNode].y > 240 ? nodePositions[hoveredNode].y - 95 : nodePositions[hoveredNode].y + 35,
+            left: Math.min(Math.max(nodePositions[hoveredNode].x - 95, 10), 510),
+            top: nodePositions[hoveredNode].y > 240 ? nodePositions[hoveredNode].y - 100 : nodePositions[hoveredNode].y + 30,
             backgroundColor: '#0f172a',
             color: '#f8fafc',
             borderRadius: '8px',
             padding: '10px 14px',
             fontSize: '0.8rem',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.3)',
             pointerEvents: 'none',
             zIndex: 10,
-            minWidth: '180px',
+            minWidth: '190px',
             border: '1px solid #334155'
           }}>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#38bdf8', marginBottom: '4px' }}>
-              {hoveredNode} Intersection
+            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#38bdf8', marginBottom: '4px' }}>
+              Junction {hoveredNode}
             </div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '3px' }}>
               <span>Total Queue: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.total_queue || 0} vehicles</strong></span>
               <span>Avg Speed: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.speed || 2.5} m/s</strong></span>
               <span>Active Phase: <strong style={{ color: '#4ade80' }}>{nodesData[hoveredNode]?.current_phase_id || `${hoveredNode}_PHASE_1`}</strong></span>
-              <span style={{ color: '#38bdf8', marginTop: '2px', fontSize: '0.7rem' }}>👉 Click to open detailed analytics</span>
+              <span style={{ color: '#38bdf8', marginTop: '2px', fontSize: '0.7rem' }}>👉 Click for detailed analytics</span>
             </div>
           </div>
         )}

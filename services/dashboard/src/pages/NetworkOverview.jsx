@@ -24,6 +24,22 @@ const NetworkOverview = () => {
 
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
+  const [activeController, setActiveController] = useState('max_pressure');
+
+  // Helper to format controller display names
+  const formatControllerName = (ctrl) => {
+    if (!ctrl) return 'Max-Pressure';
+    const mapping = {
+      'fixed_time': 'Fixed-Time',
+      'max_pressure': 'Max-Pressure',
+      'max_queue': 'Max-Queue',
+      'edgeflow': 'EdgeFlow AI',
+      'presslight_rl': 'PressLight RL',
+      'rl': 'RL Agent'
+    };
+    return mapping[ctrl.toLowerCase()] || ctrl.replace('_', ' ').toUpperCase();
+  };
+
   // 1. Fetch available scenarios from API
   useEffect(() => {
     fetch(`${apiBase}/api/v1/scenarios`)
@@ -53,8 +69,8 @@ const NetworkOverview = () => {
             const firstPhaseId = phases.length ? phases[0].phase_id : `${nodeId}_PHASE_1`;
             initialNodes[nodeId] = {
               current_phase_id: firstPhaseId,
-              total_queue: Math.floor(Math.random() * 12) + 2,
-              speed: +(Math.random() * 4 + 1.5).toFixed(1)
+              total_queue: 0,
+              speed: 13.9
             };
           });
           setNodes(initialNodes);
@@ -81,24 +97,29 @@ const NetworkOverview = () => {
       fetch(`${apiBase}/api/v1/network/state`)
         .then(res => res.json())
         .then(data => {
-          if (data && data.nodes && data.nodes.length > 0) {
-            const updated = {};
-            data.nodes.forEach(n => {
-              const approaches = n.approaches || [];
-              const totalQ = approaches.reduce((acc, a) => acc + (a.queue_vehicles || 0), 0);
-              const avgSpd = approaches.length 
-                ? (approaches.reduce((acc, a) => acc + (a.mean_speed_mps || 0), 0) / approaches.length)
-                : 13.89;
-              
-              updated[n.node_id] = {
-                current_phase_id: n.current_phase_id || `${n.node_id}_PHASE_NS`,
-                total_queue: Math.round(totalQ * 10) / 10,
-                speed: Math.round(avgSpd * 10) / 10,
-                source_type: n.source_type || 'simulation',
-                status: n.status || 'ONLINE'
-              };
-            });
-            setNodes(updated);
+          if (data) {
+            if (data.controller) {
+              setActiveController(data.controller);
+            }
+            if (data.nodes && data.nodes.length > 0) {
+              const updated = {};
+              data.nodes.forEach(n => {
+                const approaches = n.approaches || [];
+                const totalQ = approaches.reduce((acc, a) => acc + (a.queue_vehicles || 0), 0);
+                const avgSpd = approaches.length 
+                  ? (approaches.reduce((acc, a) => acc + (a.mean_speed_mps || 0), 0) / approaches.length)
+                  : 13.89;
+                
+                updated[n.node_id] = {
+                  current_phase_id: n.current_phase_id || `${n.node_id}_PHASE_NS`,
+                  total_queue: Math.round(totalQ * 10) / 10,
+                  speed: Math.round(avgSpd * 10) / 10,
+                  source_type: n.source_type || 'simulation',
+                  status: n.status || 'ONLINE'
+                };
+              });
+              setNodes(updated);
+            }
           }
         })
         .catch(() => {
@@ -147,7 +168,7 @@ const NetworkOverview = () => {
             Network Topology & Live Traffic State
           </h2>
           <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
-            Real-time Graph State $G_t=(V,E,X_t)$ across <strong style={{ color: '#0284c7' }}>{totalNodesCount}</strong> nodes in scenario <code style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '2px 6px', borderRadius: '4px' }}>{activeScenarioId}</code>.
+            Real-time Graph State <code style={{ backgroundColor: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '4px' }}>G_t = (V, E, X_t)</code> across <strong style={{ color: '#0284c7' }}>{totalNodesCount}</strong> nodes in scenario <code style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '2px 6px', borderRadius: '4px' }}>{activeScenarioId}</code>.
           </p>
         </div>
 
@@ -207,7 +228,7 @@ const NetworkOverview = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Controller Mode</span>
-            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>Max-Pressure</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{formatControllerName(activeController)}</div>
           </div>
         </div>
 
@@ -255,21 +276,24 @@ const NetworkOverview = () => {
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', paddingRight: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
             {filteredNodes.slice(0, 30).map(([nodeId, data]) => (
               <div key={nodeId} style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 borderRadius: '8px',
-                padding: '10px 14px',
+                padding: '8px 12px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                transition: 'all 0.15s ease'
               }}>
-                <div>
-                  <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0284c7' }}>{nodeId}</span>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '10px' }}>
-                    Queue: <strong>{data.total_queue}</strong> veh | Speed: <strong>{data.speed}</strong> m/s
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0284c7', fontFamily: 'JetBrains Mono, monospace' }}>
+                    {nodeId.length > 8 ? `#${nodeId}` : nodeId}
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    Queue: <strong style={{ color: data.total_queue > 10 ? '#dc2626' : '#0f172a' }}>{data.total_queue}</strong> veh | Speed: <strong>{data.speed}</strong> m/s
                   </span>
                 </div>
                 <PhaseIndicator activePhase={data.current_phase_id} state="GREEN" />

@@ -3,7 +3,9 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Camera, Network, BarChart3, Sliders, Cpu } from 'lucide-react';
 
 const Sidebar = () => {
-  const activeScenarioId = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
+  const [activeScenarioId, setActiveScenarioId] = useState(
+    localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
+  );
   
   const [topologyStats, setTopologyStats] = useState({
     total_nodes: 4,
@@ -12,6 +14,16 @@ const Sidebar = () => {
   });
 
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
+      if (current !== activeScenarioId) {
+        setActiveScenarioId(current);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [activeScenarioId]);
 
   useEffect(() => {
     fetch(`${apiBase}/api/v1/topologies/${activeScenarioId}`)
@@ -83,7 +95,7 @@ const Sidebar = () => {
       <div style={{ marginTop: 'auto', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
           <Cpu size={16} color="#0284c7" />
-          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>Graph Twin $G=(V,E)$</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>Graph Twin G = (V, E)</span>
         </div>
         <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: '1.5' }}>
           Scenario: <strong style={{ color: '#0284c7' }}>{topologyStats.topology_id}</strong><br />

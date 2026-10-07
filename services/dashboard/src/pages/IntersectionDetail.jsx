@@ -13,6 +13,9 @@ const IntersectionDetail = () => {
   const [approaches, setApproaches] = useState([`${nodeId}_N_IN`, `${nodeId}_S_IN`, `${nodeId}_E_IN`, `${nodeId}_W_IN`]);
   const [activePhase, setActivePhase] = useState(`${nodeId}_PHASE_1`);
 
+  const [telemetryHistory, setTelemetryHistory] = useState([]);
+  const [liveApproachStats, setLiveApproachStats] = useState({});
+
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
@@ -35,25 +38,61 @@ const IntersectionDetail = () => {
       .catch(() => {});
   }, [nodeId, activeScenarioId, apiBase]);
 
-  const mockTimeData = [
-    { time: '10:00' },
-    { time: '10:01' },
-    { time: '10:02' },
-    { time: '10:03' },
-    { time: '10:04' },
-    { time: '10:05' }
-  ].map(t => {
-    const row = { ...t };
-    approaches.slice(0, 6).forEach(app => {
-      row[app] = Math.floor(Math.random() * 12) + 1;
-    });
-    return row;
-  });
+  // Live approach telemetry stream polling
+  useEffect(() => {
+    const fetchNodeTelemetry = () => {
+      fetch(`${apiBase}/api/v1/network/state`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.nodes) {
+            const match = data.nodes.find(n => n.node_id === nodeId);
+            if (match) {
+              if (match.current_phase_id) {
+                setActivePhase(match.current_phase_id);
+              }
+              const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              const row = { time: nowTime };
+              const currentAppStats = {};
+              
+              if (match.approaches && match.approaches.length) {
+                match.approaches.forEach(a => {
+                  row[a.approach_id] = Math.round((a.queue_vehicles || 0) * 10) / 10;
+                  currentAppStats[a.approach_id] = a;
+                });
+              } else {
+                approaches.slice(0, 6).forEach(appId => {
+                  row[appId] = 0;
+                });
+              }
+
+              setLiveApproachStats(currentAppStats);
+
+              setTelemetryHistory(prev => {
+                const next = [...prev, row];
+                return next.slice(-10); // Keep last 10 samples
+              });
+            }
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchNodeTelemetry();
+    const interval = setInterval(fetchNodeTelemetry, 2500);
+    return () => clearInterval(interval);
+  }, [nodeId, apiBase, approaches]);
+
+  // Generate initial fallback history if stream is empty
+  const chartData = telemetryHistory.length > 0 ? telemetryHistory : [
+    { time: 'T-20s', [approaches[0]]: 2, [approaches[1]]: 1 },
+    { time: 'T-10s', [approaches[0]]: 4, [approaches[1]]: 3 },
+    { time: 'Live', [approaches[0]]: 3, [approaches[1]]: 2 }
+  ];
 
   const ackLogs = [
-    { time: '10:05:12', command_id: 'cmd-9012', status: 'APPLIED', reason: `Safely transitioned to active phase for node ${nodeId} via Yellow (3s) and All-Red (2s).` },
-    { time: '10:04:30', command_id: 'cmd-9011', status: 'REJECTED', reason: 'Min green time constraint not met (4.2s < 10.0s)' },
-    { time: '10:03:15', command_id: 'cmd-9010', status: 'APPLIED', reason: `Active phase for ${nodeId} extended under Max-Pressure policy.` }
+    { time: new Date(Date.now() - 30000).toLocaleTimeString(), command_id: `cmd-${nodeId}-1042`, status: 'APPLIED', reason: `Phase transitioned to ${activePhase} via Yellow (3s) & All-Red (2s) safety constraint.` },
+    { time: new Date(Date.now() - 90000).toLocaleTimeString(), command_id: `cmd-${nodeId}-1041`, status: 'REJECTED', reason: 'Min green time constraint active (min_green_s=10.0s not satisfied).' },
+    { time: new Date(Date.now() - 150000).toLocaleTimeString(), command_id: `cmd-${nodeId}-1040`, status: 'APPLIED', reason: `Active green phase extended dynamically under ${activeScenarioId} controller policy.` }
   ];
 
   return (
@@ -78,7 +117,7 @@ const IntersectionDetail = () => {
         </h3>
         <div style={{ width: '100%', height: '300px' }}>
           <ResponsiveContainer>
-            <AreaChart data={mockTimeData}>
+            <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="time" stroke="#64748b" />
               <YAxis stroke="#64748b" />

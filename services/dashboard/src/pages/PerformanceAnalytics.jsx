@@ -6,9 +6,16 @@ const PerformanceAnalytics = () => {
   const [experiments, setExperiments] = useState([]);
   const [benchmarkData, setBenchmarkData] = useState([
     { metric: 'Avg Wait Time (s)', FixedTime: 42.5, MaxPressure: 21.8 },
-    { metric: 'Max Queue Length', FixedTime: 28.0, MaxPressure: 14.2 },
+    { metric: 'Avg Queue (veh)', FixedTime: 28.0, MaxPressure: 14.2 },
     { metric: 'Throughput (veh/s)', FixedTime: 0.28, MaxPressure: 0.42 }
   ]);
+
+  const [computedMetrics, setComputedMetrics] = useState({
+    delayReduction: '-48.7%',
+    throughputGain: '+50.0%',
+    avgDelayMP: '21.8 s',
+    optimalController: 'Max-Pressure'
+  });
 
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -38,6 +45,16 @@ const PerformanceAnalytics = () => {
               { metric: 'Avg Queue (veh)', FixedTime: Math.round(avgFtQ * 10) / 10, MaxPressure: Math.round(avgMpQ * 10) / 10 },
               { metric: 'Throughput (veh/s)', FixedTime: Math.round(avgFtTh * 100) / 100, MaxPressure: Math.round(avgMpTh * 100) / 100 }
             ]);
+
+            const delayRed = avgFtWait > 0 ? (((avgFtWait - avgMpWait) / avgFtWait) * 100).toFixed(1) : '0.0';
+            const tpGain = avgFtTh > 0 ? (((avgMpTh - avgFtTh) / avgFtTh) * 100).toFixed(1) : '0.0';
+
+            setComputedMetrics({
+              delayReduction: `${delayRed >= 0 ? '-' : '+'}${Math.abs(delayRed)}%`,
+              throughputGain: `${tpGain >= 0 ? '+' : '-'}${Math.abs(tpGain)}%`,
+              avgDelayMP: `${(Math.round(avgMpWait * 10) / 10).toFixed(1)} s`,
+              optimalController: avgMpWait < avgFtWait ? 'Max-Pressure' : 'Fixed-Time'
+            });
           }
         }
       })
@@ -72,7 +89,7 @@ const PerformanceAnalytics = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Delay Reduction</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4ade80' }}>-48.7%</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4ade80' }}>{computedMetrics.delayReduction}</div>
           </div>
         </div>
 
@@ -82,7 +99,7 @@ const PerformanceAnalytics = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Throughput Gain</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#7dd3fc' }}>+50.0%</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#7dd3fc' }}>{computedMetrics.throughputGain}</div>
           </div>
         </div>
 
@@ -92,7 +109,7 @@ const PerformanceAnalytics = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Avg Delay (MP)</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>21.8 s</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>{computedMetrics.avgDelayMP}</div>
           </div>
         </div>
 
@@ -102,7 +119,7 @@ const PerformanceAnalytics = () => {
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Optimal Controller</span>
-            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#c084fc' }}>Max-Pressure</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#c084fc' }}>{computedMetrics.optimalController}</div>
           </div>
         </div>
       </div>

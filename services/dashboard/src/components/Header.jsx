@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, ShieldCheck, Clock, Server, Layers } from 'lucide-react';
 
-const Header = ({ systemStatus = "ONLINE", activeController = "Max-Pressure" }) => {
+const Header = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [activeScenario, setActiveScenario] = useState(
     localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
   );
+  const [activeController, setActiveController] = useState('max_pressure');
+  const [systemStatus, setSystemStatus] = useState('ONLINE');
+
+  const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
@@ -13,14 +17,46 @@ const Header = ({ systemStatus = "ONLINE", activeController = "Max-Pressure" }) 
   }, []);
 
   useEffect(() => {
-    const scenarioTimer = setInterval(() => {
-      const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
-      if (current !== activeScenario) {
-        setActiveScenario(current);
-      }
-    }, 1000);
-    return () => clearInterval(scenarioTimer);
-  }, [activeScenario]);
+    const fetchStatus = () => {
+      fetch(`${apiBase}/health`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            if (data.active_controller) {
+              setActiveController(data.active_controller);
+            }
+            if (data.active_topology) {
+              setActiveScenario(data.active_topology);
+              localStorage.setItem('edgeflow_active_scenario', data.active_topology);
+            }
+            if (data.status) {
+              setSystemStatus(data.status.toUpperCase());
+            }
+          }
+        })
+        .catch(() => {
+          const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
+          setActiveScenario(current);
+        });
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+    return () => clearInterval(interval);
+  }, [apiBase]);
+
+  const formatControllerName = (ctrl) => {
+    if (!ctrl) return 'Max-Pressure';
+    const mapping = {
+      'fixed_time': 'Fixed-Time',
+      'max_pressure': 'Max-Pressure',
+      'max_queue': 'Max-Queue',
+      'edgeflow': 'EdgeFlow AI',
+      'presslight_rl': 'PressLight RL',
+      'rl': 'RL Agent'
+    };
+    return mapping[ctrl.toLowerCase()] || ctrl.replace('_', ' ').toUpperCase();
+  };
 
   return (
     <header style={{
@@ -63,7 +99,7 @@ const Header = ({ systemStatus = "ONLINE", activeController = "Max-Pressure" }) 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
           <Server size={16} color="#0284c7" />
           <span style={{ color: '#64748b' }}>Controller:</span>
-          <span style={{ fontWeight: 600, color: '#0f172a' }}>{activeController}</span>
+          <span style={{ fontWeight: 600, color: '#0f172a' }}>{formatControllerName(activeController)}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
