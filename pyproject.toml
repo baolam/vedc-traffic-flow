@@ -2,6 +2,23 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "edgeflow-control"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26,<2.3", "jsonschema>=4.21,<5"]
+
+[project.optional-dependencies]
+research = ["torch>=2.6,<3", "gymnasium==1.2.3", "eclipse-sumo==1.25.0",
+            "traci==1.25.0", "sumolib==1.25.0", "PyYAML>=6,<7"]
+
+[tool.setuptools.packages.find]
+include = ["contracts*", "src.control*", "src.simulation*", "src.rl*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+contracts = ["schemas/*.json", "topology/*.json"]
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q"

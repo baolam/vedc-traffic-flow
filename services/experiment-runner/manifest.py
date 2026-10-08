@@ -16,6 +16,8 @@ class ScenarioConfig(BaseModel):
 class ControllerConfig(BaseModel):
     type: str = "max_pressure"  # 'max_pressure', 'flow_theory', or 'fixed_time'
     decision_interval_s: float = 1.0
+    model_path: Optional[str] = None
+    parameters: Dict[str, Any] = Field(default_factory=dict)
 
 class ExperimentManifest(BaseModel):
     experiment_id: str

@@ -1,0 +1,86 @@
+{
+  "selection_split": "validation",
+  "candidate": "shared_dqn_seed43",
+  "model_hashes": {
+    "artifacts\\rl_training_run1\\seed-17\\policy-episode-20.json": "bbb384f3fc1f3f098af969b05900d00197028c5d6ee124c467f488c958871bcd",
+    "artifacts\\rl_training_run1\\seed-29\\policy-episode-20.json": "d8e26f67dca4b7706449a2fcfc6ada32a7ed8ce3a640625c47beea1fe57081ef",
+    "artifacts\\rl_training_run1\\seed-43\\policy-episode-20.json": "a44cc510d10b245314376053592bfce8759fa5c667f6e09da4ecb4f512fed580"
+  },
+  "controllers": {
+    "fixed_time": {
+      "type": "fixed_time",
+      "parameters": {
+        "cycle_time_s": 70,
+        "phase_splits": {
+          "J1": [
+            45.0,
+            15.0
+          ],
+          "J2": [
+            45.0,
+            15.0
+          ],
+          "J3": [
+            45.0,
+            15.0
+          ],
+          "J4": [
+            45.0,
+            15.0
+          ]
+        }
+      }
+    },
+    "actuated": {
+      "type": "actuated"
+    },
+    "max_queue": {
+      "type": "max_queue"
+    },
+    "max_pressure": {
+      "type": "max_pressure"
+    },
+    "edgeflow": {
+      "type": "edgeflow",
+      "parameters": {
+        "max_green_s": 45.0,
+        "max_occupancy_threshold": 0.85,
+        "min_green_s": 10.0,
+        "service_age_weight": 0.0,
+        "spillback_penalty": -5.0,
+        "switching_margin": 2.0
+      }
+    },
+    "shared_dqn_seed17": {
+      "type": "shared_dqn",
+      "model_path": "artifacts\\rl_training_run1\\seed-17\\policy-episode-20.json"
+    },
+    "shared_dqn_seed29": {
+      "type": "shared_dqn",
+      "model_path": "artifacts\\rl_training_run1\\seed-29\\policy-episode-20.json"
+    },
+    "shared_dqn_seed43": {
+      "type": "shared_dqn",
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-20.json"
+    }
+  },
+  "validation_scores": {
+    "shared_dqn_seed17": 716.7910655539457,
+    "shared_dqn_seed29": 714.1545538703103,
+    "shared_dqn_seed43": 710.1417521672748
+  },
+  "fixed_training_scores": {
+    "cycle30-ns0.5": 926.3116975035372,
+    "cycle50-ns0.25": 844.2005173563981,
+    "cycle50-ns0.5": 769.5171989212678,
+    "cycle50-ns0.75": 754.1017828950547,
+    "cycle70-ns0.25": 800.3949899200983,
+    "cycle70-ns0.5": 719.6281785795342,
+    "cycle70-ns0.75": 694.9778637861615
+  },
+  "edgeflow_validation_scores": {
+    "edgeflow_default": 907.154689133342,
+    "edgeflow_archived": 863.6034490828675
+  },
+  "config_sha256": "3cacd70223fd556727c759f1ebb40e6b56060da235fc6b15442c6f3606c88156"
+}

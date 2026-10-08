@@ -1,0 +1,28 @@
+{
+  "environment": {
+    "topology_path": "contracts/topology/four_intersection_rl_v1.json",
+    "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+    "demand_s": 1800,
+    "drain_s": 600,
+    "trace": false,
+    "mode": "fair_cycle_dqn",
+    "wait_penalty_lambda": 0.5
+  },
+  "training": {
+    "algorithm": "fair_cycle_dqn",
+    "device": "cuda",
+    "learning_rate": 0.0003,
+    "discount": 0.99,
+    "replay_capacity": 200000,
+    "batch_size": 256,
+    "learning_starts": 1024,
+    "target_sync_updates": 200,
+    "epsilon_decisions": 1786,
+    "update_interval": 1,
+    "validation_interval": 20,
+    "max_joint_decisions": 100000,
+    "max_seconds": 7200,
+    "cycle_time_s": 70,
+    "min_green_share": 0.3333333333333333
+  }
+}

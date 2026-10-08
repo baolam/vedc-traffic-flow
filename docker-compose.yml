@@ -129,8 +129,8 @@ services:
 
   actuator:
     build:
-      context: ./services/actuator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/actuator/Dockerfile
     container_name: edgeflow-actuator
     restart: unless-stopped
     env_file:
@@ -171,8 +171,8 @@ services:
 
   experiment-runner:
     build:
-      context: ./services/experiment-runner
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/experiment-runner/Dockerfile
     container_name: edgeflow-experiment-runner
     env_file:
       - .env

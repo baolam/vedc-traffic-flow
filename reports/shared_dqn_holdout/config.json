@@ -1,0 +1,21 @@
+{
+  "environment": {
+    "topology_path": "contracts/topology/four_intersection_rl_v1.json",
+    "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+    "demand_s": 1800,
+    "drain_s": 600,
+    "trace": true
+  },
+  "training": {
+    "device": "cuda",
+    "learning_rate": 0.0003,
+    "discount": 0.99,
+    "replay_capacity": 200000,
+    "batch_size": 256,
+    "learning_starts": 5000,
+    "target_sync_updates": 1000,
+    "epsilon_decisions": 25000,
+    "max_joint_decisions": 100000,
+    "max_seconds": 7200
+  }
+}

@@ -23,12 +23,11 @@ logger = logging.getLogger("sumo-runner")
 
 # Path setup
 curr_dir = Path(__file__).resolve().parent
-repo_root = curr_dir.parents[1]
+repo_root = next(p for p in [curr_dir, *curr_dir.parents] if (p / "src" / "control").is_dir())
 sim_dir = repo_root / "services" / "simulator"
 sumo_configs_dir = sim_dir / "sumo_configs"
 
-for p in [repo_root / "contracts", repo_root / "services" / "graph-control",
-          repo_root / "services" / "actuator"]:
+for p in [repo_root / "contracts", repo_root]:
     if str(p) not in sys.path and p.exists():
         sys.path.insert(0, str(p))
 
@@ -307,19 +306,35 @@ def run_sumo_experiment(
     controller_name: str,
     duration_s: int = 300,
     artifacts_dir: str = "artifacts",
+    model_path: Optional[str] = None,
+    parameters: Optional[Dict[str, Any]] = None,
+    topology_path: Optional[str] = None,
+    network_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Run a single SUMO experiment with real TraCI control.
 
     Returns a result dict with all metrics and validity info.
     """
+    from contracts.research import TOPOLOGY_ID
+    if topology_id == TOPOLOGY_ID:
+        from src.rl.benchmark import run_case
+        import uuid
+        if not topology_path or not network_path:
+            raise ValueError("Research runs require explicit topology_path and network_path")
+        return run_case({"environment": {"topology_path": topology_path, "network_path": network_path,
+                                         "demand_s": duration_s, "drain_s": 600, "trace": True}},
+                        {"type": controller_name, "model_path": model_path, "parameters": parameters or {}},
+                        scenario, seed, Path(artifacts_dir) / uuid.uuid4().hex)
+    if controller_name == "shared_dqn":
+        raise ValueError("shared_dqn research requires four_intersection_rl_v1")
     import traci
 
-    from controller import (
+    from src.control.controllers import (
         FixedTimeController, ActuatedController, MaxQueueController,
         MaxPressureController, EdgeFlowController,
     )
-    from state_machine import ActuatorStateMachine
+    from src.control.actuator import ActuatorStateMachine
     import contracts_sdk
 
     exp_id = f"{topology_id}_{scenario}_{controller_name}_seed{seed}"
