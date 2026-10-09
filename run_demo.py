@@ -293,21 +293,47 @@ def run_demo_simulation(
                 node_state = actuator.get_or_create_node(nid)
                 active_phase = node_state.current_phase_id
 
-                approaches_data = []
+                canonical_approaches = []
                 for app_id in node.get("approaches", []):
                     q = 0.0
+                    spd = 13.89
                     if app_id in edge_ids:
-                        q = float(traci.edge.getLastStepHaltingNumber(app_id))
-                    approaches_data.append({"approach_id": app_id, "queue_length_veh": q})
+                        try:
+                            q = float(traci.edge.getLastStepHaltingNumber(app_id))
+                            spd = max(0.1, float(traci.edge.getLastStepMeanSpeed(app_id)))
+                        except Exception:
+                            pass
+                    canonical_approaches.append({
+                        "approach_id": app_id,
+                        "queue_vehicles": round(q, 1),
+                        "flow_veh_per_s": round(0.15 * q, 2),
+                        "mean_speed_mps": round(spd, 2),
+                        "occupancy_ratio": round(min(q / 20.0, 1.0), 2),
+                        "confidence": 1.0
+                    })
                     node_queues.append(q)
 
                 telemetry = {
                     "node_id": nid,
-                    "timestamp": t,
+                    "source_type": "simulation",
+                    "simulation_time_s": t,
+                    "timestamp_ms": int(time.time() * 1000),
                     "current_phase_id": active_phase,
-                    "state": node_state.state,
-                    "approaches": approaches_data,
+                    "status": "ONLINE",
+                    "approaches": canonical_approaches,
                 }
+
+                # Push live telemetry stream to FastAPI backend API
+                try:
+                    import urllib.request
+                    req = urllib.request.Request(
+                        "http://localhost:8000/api/v1/telemetry",
+                        data=json.dumps(telemetry).encode("utf-8"),
+                        headers={"Content-Type": "application/json"}
+                    )
+                    urllib.request.urlopen(req, timeout=0.1)
+                except Exception:
+                    pass
 
                 cmd = controller.compute_command(
                     node_id=nid,
@@ -316,7 +342,25 @@ def run_demo_simulation(
                     current_time_s=t,
                 )
                 if cmd:
-                    actuator.process_command(cmd, now=t)
+                    ack = actuator.process_command(cmd, now=t)
+                    if ack:
+                        try:
+                            import urllib.request
+                            ack_payload = ack.to_dict() if hasattr(ack, "to_dict") else {
+                                "command_id": getattr(ack, "command_id", f"cmd-{nid}-{t}"),
+                                "node_id": nid,
+                                "status": getattr(ack, "status", "APPLIED"),
+                                "reason": getattr(ack, "reason", "Phase command executed."),
+                                "timestamp_ms": int(time.time() * 1000)
+                            }
+                            req_ack = urllib.request.Request(
+                                "http://localhost:8000/api/v1/control_ack",
+                                data=json.dumps(ack_payload).encode("utf-8"),
+                                headers={"Content-Type": "application/json"}
+                            )
+                            urllib.request.urlopen(req_ack, timeout=0.1)
+                        except Exception:
+                            pass
 
                 if node_state.state == "GREEN" and nid in tl_ids:
                     phase_list = node.get("phases", [])

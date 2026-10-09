@@ -6,8 +6,9 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, HTTPException, Body
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 curr_dir = Path(__file__).resolve().parent
@@ -105,22 +106,93 @@ LIVE_STATE: Dict[str, Any] = {
     "active_topology_id": "four_intersection_v1",
     "active_controller": "edgeflow",
     "last_updated_ms": int(time.time() * 1000),
-    "source_mode": "simulation",
-    "nodes": {}
+    "source_mode": "system",
+    "nodes": {},
+    "control_acks": {}
 }
+
+class TelemetryPayload(BaseModel):
+    node_id: str
+    source_type: Optional[str] = "system"
+    simulation_time_s: Optional[float] = None
+    timestamp_ms: Optional[int] = None
+    current_phase_id: Optional[str] = None
+    approaches: Optional[List[Dict[str, Any]]] = None
+
+class ControlAckPayload(BaseModel):
+    command_id: str
+    node_id: str
+    status: str
+    reason: Optional[str] = ""
+    target_phase_id: Optional[str] = None
+    applied_at_s: Optional[float] = None
+    timestamp_ms: Optional[int] = None
 
 class PolicyChangeRequest(BaseModel):
     controller: str
     topology_id: Optional[str] = None
 
+# Background MQTT Telemetry Subscriber (Optional automatic ingestion)
+def _start_mqtt_listener():
+    try:
+        import paho.mqtt.client as mqtt
+        mqtt_host = os.getenv("MQTT_HOST", getattr(settings, "mqtt_host", "localhost"))
+        mqtt_port = int(os.getenv("MQTT_PORT", getattr(settings, "mqtt_port", 1883)))
+
+        client = mqtt.Client(client_id="api-telemetry-ingest")
+
+        def on_connect(c, userdata, flags, rc):
+            if rc == 0:
+                logger.info(f"API MQTT Telemetry Subscriber connected to {mqtt_host}:{mqtt_port}")
+                c.subscribe("edgeflow/v1/telemetry/+")
+                c.subscribe("edgeflow/v1/control_ack/+")
+
+        def on_message(c, userdata, msg):
+            try:
+                payload = json.loads(msg.payload.decode("utf-8"))
+                topic = msg.topic
+                if topic.startswith("edgeflow/v1/telemetry/"):
+                    node_id = payload.get("node_id") or topic.split("/")[-1]
+                    LIVE_STATE["nodes"][node_id] = payload
+                    LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
+                elif topic.startswith("edgeflow/v1/control_ack/"):
+                    node_id = payload.get("node_id")
+                    if node_id:
+                        if node_id not in LIVE_STATE["control_acks"]:
+                            LIVE_STATE["control_acks"][node_id] = []
+                        LIVE_STATE["control_acks"][node_id].insert(0, payload)
+                        LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
+            except Exception as ex:
+                logger.debug(f"Error parsing MQTT telemetry payload: {ex}")
+
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.connect_async(mqtt_host, mqtt_port, keepalive=60)
+        client.loop_start()
+    except Exception as e:
+        logger.warning(f"Could not start background MQTT subscriber in API service: {e}")
+
+try:
+    import threading
+    threading.Thread(target=_start_mqtt_listener, daemon=True).start()
+except Exception:
+    pass
+
 DASHBOARD_HTML_FILE = Path(__file__).resolve().parent / "templates" / "dashboard.html"
+REACT_BUILD_DIR = Path(__file__).resolve().parent.parent / "dashboard" / "build"
+
+if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(REACT_BUILD_DIR / "static")), name="react_static")
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/dashboard", response_class=HTMLResponse)
 def get_dashboard():
     """
-    Serves the standalone, rich Web Dashboard (Zero React / Zero Docker required).
+    Serves the React Web Dashboard if built, or falls back to standalone dashboard.html.
     """
+    if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / "index.html").exists():
+        with open(REACT_BUILD_DIR / "index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
     if DASHBOARD_HTML_FILE.exists():
         with open(DASHBOARD_HTML_FILE, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read(), status_code=200)
@@ -136,14 +208,15 @@ def api_root():
         "endpoints": [
             "/health",
             "/api/v1/network/state",
+            "/api/v1/network/state/{node_id}",
+            "/api/v1/telemetry",
+            "/api/v1/control_ack",
             "/api/v1/control/policy",
             "/api/v1/experiments",
             "/api/v1/scenarios",
             "/api/v1/topologies",
             "/api/v1/topologies/{topology_id}",
-            "/api/v1/topologies/convert-sumo",
-            "/api/v1/cameras",
-            "/api/v1/map/hcm-cameras"
+            "/api/v1/topologies/convert-sumo"
         ]
     }
 
@@ -156,11 +229,36 @@ def health():
         "active_topology": LIVE_STATE["active_topology_id"]
     }
 
+@app.post("/api/v1/telemetry")
+def ingest_telemetry(payload: Dict[str, Any]):
+    """
+    Ingests live station telemetry payload sent from system services (vision, sensors, actuators).
+    """
+    node_id = payload.get("node_id")
+    if not node_id:
+        raise HTTPException(status_code=400, detail="Missing required 'node_id' in telemetry payload.")
+    LIVE_STATE["nodes"][node_id] = payload
+    LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
+    return {"status": "SUCCESS", "node_id": node_id, "timestamp_ms": LIVE_STATE["last_updated_ms"]}
+
+@app.post("/api/v1/control_ack")
+def ingest_control_ack(payload: Dict[str, Any]):
+    """
+    Ingests actuator command execution ACK log payload.
+    """
+    node_id = payload.get("node_id")
+    if not node_id:
+        raise HTTPException(status_code=400, detail="Missing required 'node_id' in control ACK payload.")
+    if node_id not in LIVE_STATE["control_acks"]:
+        LIVE_STATE["control_acks"][node_id] = []
+    LIVE_STATE["control_acks"][node_id].insert(0, payload)
+    LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
+    return {"status": "SUCCESS", "node_id": node_id}
+
 @app.get("/api/v1/network/state")
 def get_network_state():
     """
-    Returns the real-time live traffic network telemetry and phase states.
-    If no live nodes are registered yet, loads topology structure with zero queues.
+    Returns the real-time live traffic network telemetry and phase states for the active topology.
     """
     try:
         topo = contracts_sdk.load_topology(LIVE_STATE["active_topology_id"])
@@ -169,16 +267,18 @@ def get_network_state():
             nid = n["node_id"]
             node_live = LIVE_STATE["nodes"].get(nid)
             if node_live:
-                nodes_info.append(node_live)
+                node_data = dict(node_live)
+                node_data["name"] = n.get("name", nid)
+                node_data["status"] = node_data.get("status", "ONLINE")
+                nodes_info.append(node_data)
             else:
-                # Default clean state reflecting topology without fake data
                 phases = n.get("phases", [])
                 nodes_info.append({
                     "node_id": nid,
                     "name": n.get("name", nid),
                     "current_phase_id": phases[0]["phase_id"] if phases else f"{nid}_PHASE_NS",
                     "source_type": LIVE_STATE["source_mode"],
-                    "status": "ONLINE",
+                    "status": "WAITING_FOR_TELEMETRY",
                     "approaches": [
                         {
                             "approach_id": app_id,
@@ -202,6 +302,56 @@ def get_network_state():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed retrieving network state: {str(e)}")
+
+@app.get("/api/v1/network/state/{node_id}")
+def get_node_network_state(node_id: str):
+    """
+    Returns full real-time telemetry parameters, approach breakdown, phase state, and control ACK logs for a specific node.
+    """
+    try:
+        topo = contracts_sdk.load_topology(LIVE_STATE["active_topology_id"])
+        node_spec = next((n for n in topo.get("nodes", []) if n["node_id"] == node_id), None)
+        if not node_spec:
+            raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found in topology '{LIVE_STATE['active_topology_id']}'.")
+
+        live_data = LIVE_STATE["nodes"].get(node_id)
+        acks = LIVE_STATE["control_acks"].get(node_id, [])
+
+        if live_data:
+            response_node = dict(live_data)
+            response_node["name"] = node_spec.get("name", node_id)
+            response_node["status"] = live_data.get("status", "ONLINE")
+        else:
+            phases = node_spec.get("phases", [])
+            response_node = {
+                "node_id": node_id,
+                "name": node_spec.get("name", node_id),
+                "current_phase_id": phases[0]["phase_id"] if phases else f"{node_id}_PHASE_NS",
+                "source_type": LIVE_STATE["source_mode"],
+                "status": "WAITING_FOR_TELEMETRY",
+                "approaches": [
+                    {
+                        "approach_id": app_id,
+                        "queue_vehicles": 0.0,
+                        "flow_veh_per_s": 0.0,
+                        "mean_speed_mps": 13.89,
+                        "occupancy_ratio": 0.0,
+                        "confidence": 1.0
+                    }
+                    for app_id in node_spec.get("approaches", [])
+                ]
+            }
+
+        return {
+            "topology_id": LIVE_STATE["active_topology_id"],
+            "node_spec": node_spec,
+            "telemetry": response_node,
+            "control_acks": acks
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed retrieving node state: {str(e)}")
 
 @app.post("/api/v1/control/policy")
 def set_control_policy(req: PolicyChangeRequest):

@@ -258,7 +258,7 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
 
           {/* Draw Nodes */}
           {Object.entries(nodePositions).map(([nodeId, pos]) => {
-            const data = nodesData[nodeId] || { current_phase_id: `${nodeId}_PHASE_1`, total_queue: 5, speed: 3.0 };
+            const data = nodesData[nodeId] || { current_phase_id: `${nodeId}_PHASE_1`, total_queue: 0, speed: 13.9, status: 'WAITING_FOR_TELEMETRY' };
             const phaseStr = String(data.current_phase_id || "").toUpperCase();
             const isNS = phaseStr.includes("NS") || phaseStr.includes("1") || phaseStr.includes("GREEN");
             const totalQueue = data.total_queue || 0;
@@ -357,17 +357,22 @@ const TopologyMap = ({ nodesData = {}, topology = null, onSelectNode }) => {
             boxShadow: '0 4px 14px rgba(0, 0, 0, 0.3)',
             pointerEvents: 'none',
             zIndex: 10,
-            minWidth: '190px',
+            minWidth: '200px',
             border: '1px solid #334155'
           }}>
-            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#38bdf8', marginBottom: '4px' }}>
-              Junction {hoveredNode}
+            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#38bdf8', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Station {hoveredNode}</span>
+              <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: '4px', backgroundColor: '#1e293b', color: '#94a3b8' }}>
+                {nodesData[hoveredNode]?.source_type || 'SYSTEM'}
+              </span>
             </div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <span>Total Queue: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.total_queue || 0} vehicles</strong></span>
-              <span>Avg Speed: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.speed || 2.5} m/s</strong></span>
+              <span>Queue Length: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.total_queue || 0} veh</strong></span>
+              <span>Avg Speed: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.speed != null ? nodesData[hoveredNode].speed : 13.9} m/s</strong></span>
+              <span>Traffic Flow: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.flow || 0.0} veh/s</strong></span>
+              <span>Occupancy: <strong style={{ color: '#f8fafc' }}>{nodesData[hoveredNode]?.occupancy || 0.0}%</strong></span>
               <span>Active Phase: <strong style={{ color: '#4ade80' }}>{nodesData[hoveredNode]?.current_phase_id || `${hoveredNode}_PHASE_1`}</strong></span>
-              <span style={{ color: '#38bdf8', marginTop: '2px', fontSize: '0.7rem' }}>👉 Click for detailed analytics</span>
+              <span style={{ color: '#38bdf8', marginTop: '2px', fontSize: '0.7rem' }}>👉 Click station for detailed analytics</span>
             </div>
           </div>
         )}
