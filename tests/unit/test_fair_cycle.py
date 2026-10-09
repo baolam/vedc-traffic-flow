@@ -64,6 +64,7 @@ def test_fair_feature_extractor_has_contract_order_and_finite_values():
 
 
 def test_fair_controller_artifact_has_three_bounded_actions(tmp_path):
+    torch = pytest.importorskip("torch")
     from src.rl.shared_dqn import Learner
     from src.control.research import FairCycleRLController
     learner = Learner({"algorithm": "fair_cycle_dqn", "device": "cpu", "replay_capacity": 4,
@@ -87,8 +88,8 @@ def test_east_west_surge_is_registered_and_mirrors_the_north_south_profile():
 
 
 def test_fair_dqn_uses_three_masked_actions_and_elapsed_discount():
+    torch = pytest.importorskip("torch")
     import numpy as np
-    import torch
     from src.rl.shared_dqn import Learner
 
     learner = Learner({"algorithm": "fair_cycle_dqn", "device": "cpu", "replay_capacity": 2,
