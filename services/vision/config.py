@@ -4,6 +4,8 @@ Controls video ingestion, YOLO model weights, target node ID, and Raspberry Pi h
 """
 
 import os
+from typing import Optional
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -21,11 +23,21 @@ class Settings(BaseSettings):
 
     # Target Intersection Node ID on the Graph
     vision_node_id: str = Field(default_factory=lambda: os.getenv("VISION_NODE_ID", "J1"))
+    # Several nodes seen by the same camera (e.g. "J1,J2"); overrides VISION_NODE_ID when set.
+    # Requires ROI_CONFIG_PATH: a calibrated polygon file (services/vision/roi_calibrate.py).
+    vision_node_ids: str = Field(default_factory=lambda: os.getenv("VISION_NODE_IDS", ""))
+    roi_config_path: str = Field(default_factory=lambda: os.getenv("ROI_CONFIG_PATH", ""))
 
     # Video Source (0 for /dev/video0, 'picamera', 'synthetic', or video path)
     video_source: str = Field(default_factory=lambda: os.getenv("VIDEO_SOURCE", "synthetic"))
     vision_fps: float = Field(default_factory=lambda: float(os.getenv("VISION_FPS", "10.0")))
     telemetry_period_s: float = Field(default_factory=lambda: float(os.getenv("TELEMETRY_PERIOD_S", "1.0")))
+
+    # Picamera2 (Camera Module 3) controls: fixed focus in dioptres (empty = autofocus)
+    # and anti-flicker period in microseconds (10000 = 50 Hz mains, 0 = off)
+    camera_lens_position: Optional[float] = Field(
+        default_factory=lambda: float(os.environ["CAMERA_LENS_POSITION"]) if os.getenv("CAMERA_LENS_POSITION") else None)
+    camera_flicker_period_us: int = Field(default_factory=lambda: int(os.getenv("CAMERA_FLICKER_PERIOD_US", "10000")))
 
     # AI Detection Model Configs (YOLOv8 / YOLOv5 / ONNX / OpenCV DNN)
     detection_model_path: str = Field(default_factory=lambda: os.getenv("DETECTION_MODEL_PATH", ""))

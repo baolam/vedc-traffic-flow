@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 import jsonschema
 
-from models import (
-    TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec
-)
-from scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
+try:
+    from .models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec
+    from .scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
+except ImportError:  # legacy top-level imports
+    from models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec
+    from scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
 
 
 def get_contracts_dir() -> Path:

@@ -46,7 +46,7 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         },
         default_duration_s=300,
         category="synthetic",
-        supported_topologies=["corridor", "junction", "four_intersection_v1", "three_way_junction_v1"],
+        supported_topologies=["corridor", "junction", "four_intersection_v1", "four_intersection_rl_v1", "three_way_junction_v1"],
     ),
     "directional_surge": ScenarioProfile(
         scenario_id="directional_surge",
@@ -60,7 +60,21 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         },
         default_duration_s=300,
         category="synthetic",
-        supported_topologies=["corridor", "four_intersection_v1"],
+        supported_topologies=["corridor", "four_intersection_v1", "four_intersection_rl_v1"],
+    ),
+    "directional_surge_ew": ScenarioProfile(
+        scenario_id="directional_surge_ew",
+        name="East-West Directional Surge (Mirrored Peak Hour)",
+        description="The directional surge profile with the heavy and light axes exchanged.",
+        flow_rates={
+            "f_J1_NS": 0.15, "f_J1_EW": 0.75,
+            "f_J2_NS": 0.15, "f_J2_EW": 0.70,
+            "f_J3_NS": 0.15, "f_J3_EW": 0.70,
+            "f_J4_NS": 0.15, "f_J4_EW": 0.65,
+        },
+        default_duration_s=300,
+        category="synthetic",
+        supported_topologies=["four_intersection_rl_v1"],
     ),
     "downstream_congestion": ScenarioProfile(
         scenario_id="downstream_congestion",
@@ -74,7 +88,7 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         },
         default_duration_s=300,
         category="synthetic",
-        supported_topologies=["corridor", "four_intersection_v1"],
+        supported_topologies=["corridor", "four_intersection_v1", "four_intersection_rl_v1"],
     ),
     "grid4x4": ScenarioProfile(
         scenario_id="grid4x4",
@@ -104,6 +118,17 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         supported_topologies=["hcm_corridor", "hcm", "example"],
     ),
 }
+
+# Research-only name for the deterministic J3 exit bottleneck experiment.
+CANONICAL_SCENARIOS["downstream_bottleneck"] = ScenarioProfile(
+    scenario_id="downstream_bottleneck",
+    name="J3 Southern Exit Bottleneck",
+    description="Four-intersection research scenario with the J3 southern exit limited during seconds 600–1200.",
+    flow_rates=dict(CANONICAL_SCENARIOS["downstream_congestion"].flow_rates),
+    default_duration_s=2400,
+    category="benchmark",
+    supported_topologies=["four_intersection_rl_v1"],
+)
 
 
 class ScenarioRegistry:

@@ -1,0 +1,42 @@
+{
+  "status": "complete",
+  "promoted": false,
+  "reasons": [
+    "actuated/balanced: delay regression >5%",
+    "actuated/balanced: throughput <98%",
+    "actuated/downstream_bottleneck: throughput <98%",
+    "fixed_time/directional_surge: throughput <98%",
+    "fixed_time/downstream_bottleneck: throughput <98%",
+    "fixed_time: overall delay regression exceeds 2%"
+  ],
+  "comparisons": {
+    "edgeflow": {
+      "relative_delay_improvement": 0.17622285287969433,
+      "paired_delay_improvement_ci95_s": [
+        146.68020571228996,
+        158.01956402627937
+      ]
+    },
+    "max_pressure": {
+      "relative_delay_improvement": 0.2115469777780771,
+      "paired_delay_improvement_ci95_s": [
+        187.5295451773963,
+        194.8723711837523
+      ]
+    },
+    "actuated": {
+      "relative_delay_improvement": -0.016569738107482832,
+      "paired_delay_improvement_ci95_s": [
+        -15.543347807574388,
+        -7.53383242277761
+      ]
+    },
+    "fixed_time": {
+      "relative_delay_improvement": -0.02065667621616537,
+      "paired_delay_improvement_ci95_s": [
+        -17.8110192648891,
+        -10.59640256037767
+      ]
+    }
+  }
+}

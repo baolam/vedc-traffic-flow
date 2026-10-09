@@ -139,3 +139,10 @@ pytest tests/unit/test_contracts.py
 # Chạy toàn bộ Unit Tests
 pytest tests/unit
 ```
+
+
+## Shared Double DQN research track
+
+For the isolated four-intersection SUMO benchmark, training, validation, reproducibility limits, and promotion gate, see [the shared DQN research guide](docs/SHARED_DQN_RESEARCH.md).
+
+---

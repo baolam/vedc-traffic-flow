@@ -16,29 +16,12 @@ logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.I
 logger = logging.getLogger("graph-control")
 
 def create_controller():
-    controller_type = settings.edgeflow_controller.lower()
-    if controller_type == "edgeflow":
-        logger.info("Initializing EdgeFlowController (Downstream-aware)")
-        return EdgeFlowController()
-    elif controller_type == "actuated":
-        logger.info("Initializing ActuatedController (Demand-responsive gap-out)")
-        return ActuatedController()
-    elif controller_type == "max_pressure":
-        logger.info("Initializing MaxPressureController (Movement-based)")
-        return MaxPressureController()
-    elif controller_type in ("flow", "flow_theory", "ctm"):
-        logger.info("Initializing FlowTheoryController (CTM Flow Model)")
-        return FlowTheoryController()
-    elif controller_type == "max_queue":
-        logger.info("Initializing MaxQueueController (Baseline queue-sum)")
-        return MaxQueueController()
-    elif controller_type in ["presslight_rl", "rl", "flow_rl", "presslight", "rl_ppo"]:
-        logger.info("Initializing PressLightRLController (Deep Q-Network Agent / Pressure Heuristic)")
-        model_path = settings.rl_model_path if settings.rl_model_path else None
-        return PressLightRLController(model_path=model_path)
-    else:
-        logger.info("Initializing FixedTimeController")
-        return FixedTimeController()
+    from src.control.factory import create_controller as build_controller
+    name = settings.edgeflow_controller.lower()
+    aliases = {"flow": "flow_theory", "ctm": "flow_theory", "flow_rl": "presslight_rl",
+               "presslight": "presslight_rl", "rl_ppo": "presslight_rl"}
+    return build_controller(aliases.get(name, name), model_path=settings.rl_model_path or None)
+
 
 def main():
     logger.info("Starting EdgeFlow Graph-Control Service...")

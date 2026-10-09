@@ -1,0 +1,550 @@
+{
+  "topology_id": "four_intersection_rl_v1",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "J1",
+      "approaches": [
+        "J1_N_IN",
+        "J1_S_IN",
+        "J1_E_IN",
+        "J1_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J1_PHASE_NS",
+          "approaches": [
+            "J1_N_IN",
+            "J1_S_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J1_N_IN",
+              "to_edge": "J3_N_IN",
+              "to_node": "J3",
+              "to_approach": "J3_N_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_edge": "J1_N_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "GrGr"
+        },
+        {
+          "phase_id": "J1_PHASE_EW",
+          "approaches": [
+            "J1_E_IN",
+            "J1_W_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J1_E_IN",
+              "to_edge": "J1_W_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J1_W_IN",
+              "to_edge": "J2_W_IN",
+              "to_node": "J2",
+              "to_approach": "J2_W_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "rGrG"
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 1,
+          "from": "J1_E_IN",
+          "to": "J1_W_OUT"
+        },
+        {
+          "index": 0,
+          "from": "J1_N_IN",
+          "to": "J3_N_IN"
+        },
+        {
+          "index": 2,
+          "from": "J1_S_IN",
+          "to": "J1_N_OUT"
+        },
+        {
+          "index": 3,
+          "from": "J1_W_IN",
+          "to": "J2_W_IN"
+        }
+      ]
+    },
+    {
+      "node_id": "J2",
+      "approaches": [
+        "J2_N_IN",
+        "J2_S_IN",
+        "J2_E_IN",
+        "J2_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J2_PHASE_NS",
+          "approaches": [
+            "J2_N_IN",
+            "J2_S_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J2_N_IN",
+              "to_edge": "J4_N_IN",
+              "to_node": "J4",
+              "to_approach": "J4_N_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J2_S_IN",
+              "to_edge": "J2_N_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "GrGr"
+        },
+        {
+          "phase_id": "J2_PHASE_EW",
+          "approaches": [
+            "J2_E_IN",
+            "J2_W_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J2_E_IN",
+              "to_edge": "J1_E_IN",
+              "to_node": "J1",
+              "to_approach": "J1_E_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J2_W_IN",
+              "to_edge": "J2_E_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "rGrG"
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 1,
+          "from": "J2_E_IN",
+          "to": "J1_E_IN"
+        },
+        {
+          "index": 0,
+          "from": "J2_N_IN",
+          "to": "J4_N_IN"
+        },
+        {
+          "index": 2,
+          "from": "J2_S_IN",
+          "to": "J2_N_OUT"
+        },
+        {
+          "index": 3,
+          "from": "J2_W_IN",
+          "to": "J2_E_OUT"
+        }
+      ]
+    },
+    {
+      "node_id": "J3",
+      "approaches": [
+        "J3_N_IN",
+        "J3_S_IN",
+        "J3_E_IN",
+        "J3_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J3_PHASE_NS",
+          "approaches": [
+            "J3_N_IN",
+            "J3_S_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J3_N_IN",
+              "to_edge": "J3_S_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J3_S_IN",
+              "to_edge": "J1_S_IN",
+              "to_node": "J1",
+              "to_approach": "J1_S_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "GrGr"
+        },
+        {
+          "phase_id": "J3_PHASE_EW",
+          "approaches": [
+            "J3_E_IN",
+            "J3_W_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J3_E_IN",
+              "to_edge": "J3_W_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J3_W_IN",
+              "to_edge": "J4_W_IN",
+              "to_node": "J4",
+              "to_approach": "J4_W_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "rGrG"
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 1,
+          "from": "J3_E_IN",
+          "to": "J3_W_OUT"
+        },
+        {
+          "index": 0,
+          "from": "J3_N_IN",
+          "to": "J3_S_OUT"
+        },
+        {
+          "index": 2,
+          "from": "J3_S_IN",
+          "to": "J1_S_IN"
+        },
+        {
+          "index": 3,
+          "from": "J3_W_IN",
+          "to": "J4_W_IN"
+        }
+      ]
+    },
+    {
+      "node_id": "J4",
+      "approaches": [
+        "J4_N_IN",
+        "J4_S_IN",
+        "J4_E_IN",
+        "J4_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J4_PHASE_NS",
+          "approaches": [
+            "J4_N_IN",
+            "J4_S_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J4_N_IN",
+              "to_edge": "J4_S_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J4_S_IN",
+              "to_edge": "J2_S_IN",
+              "to_node": "J2",
+              "to_approach": "J2_S_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "GrGr"
+        },
+        {
+          "phase_id": "J4_PHASE_EW",
+          "approaches": [
+            "J4_E_IN",
+            "J4_W_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J4_E_IN",
+              "to_edge": "J3_E_IN",
+              "to_node": "J3",
+              "to_approach": "J3_E_IN",
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            },
+            {
+              "from_approach": "J4_W_IN",
+              "to_edge": "J4_E_OUT",
+              "to_node": null,
+              "to_approach": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 20
+            }
+          ],
+          "sumo_state": "rGrG"
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 1,
+          "from": "J4_E_IN",
+          "to": "J3_E_IN"
+        },
+        {
+          "index": 0,
+          "from": "J4_N_IN",
+          "to": "J4_S_OUT"
+        },
+        {
+          "index": 2,
+          "from": "J4_S_IN",
+          "to": "J2_S_IN"
+        },
+        {
+          "index": 3,
+          "from": "J4_W_IN",
+          "to": "J4_E_OUT"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "J1_N_OUT",
+      "from_node": "J1",
+      "to_node": "J1_N_BOUNDARY"
+    },
+    {
+      "edge_id": "J1_N_IN",
+      "from_node": "J1_N_BOUNDARY",
+      "to_node": "J1"
+    },
+    {
+      "edge_id": "J1_S_IN",
+      "from_node": "J3",
+      "to_node": "J1"
+    },
+    {
+      "edge_id": "J1_E_IN",
+      "from_node": "J2",
+      "to_node": "J1"
+    },
+    {
+      "edge_id": "J1_W_OUT",
+      "from_node": "J1",
+      "to_node": "J1_W_BOUNDARY"
+    },
+    {
+      "edge_id": "J1_W_IN",
+      "from_node": "J1_W_BOUNDARY",
+      "to_node": "J1"
+    },
+    {
+      "edge_id": "J2_N_OUT",
+      "from_node": "J2",
+      "to_node": "J2_N_BOUNDARY"
+    },
+    {
+      "edge_id": "J2_N_IN",
+      "from_node": "J2_N_BOUNDARY",
+      "to_node": "J2"
+    },
+    {
+      "edge_id": "J2_S_IN",
+      "from_node": "J4",
+      "to_node": "J2"
+    },
+    {
+      "edge_id": "J2_E_OUT",
+      "from_node": "J2",
+      "to_node": "J2_E_BOUNDARY"
+    },
+    {
+      "edge_id": "J2_E_IN",
+      "from_node": "J2_E_BOUNDARY",
+      "to_node": "J2"
+    },
+    {
+      "edge_id": "J2_W_IN",
+      "from_node": "J1",
+      "to_node": "J2"
+    },
+    {
+      "edge_id": "J3_N_IN",
+      "from_node": "J1",
+      "to_node": "J3"
+    },
+    {
+      "edge_id": "J3_S_OUT",
+      "from_node": "J3",
+      "to_node": "J3_S_BOUNDARY"
+    },
+    {
+      "edge_id": "J3_S_IN",
+      "from_node": "J3_S_BOUNDARY",
+      "to_node": "J3"
+    },
+    {
+      "edge_id": "J3_E_IN",
+      "from_node": "J4",
+      "to_node": "J3"
+    },
+    {
+      "edge_id": "J3_W_OUT",
+      "from_node": "J3",
+      "to_node": "J3_W_BOUNDARY"
+    },
+    {
+      "edge_id": "J3_W_IN",
+      "from_node": "J3_W_BOUNDARY",
+      "to_node": "J3"
+    },
+    {
+      "edge_id": "J4_N_IN",
+      "from_node": "J2",
+      "to_node": "J4"
+    },
+    {
+      "edge_id": "J4_S_OUT",
+      "from_node": "J4",
+      "to_node": "J4_S_BOUNDARY"
+    },
+    {
+      "edge_id": "J4_S_IN",
+      "from_node": "J4_S_BOUNDARY",
+      "to_node": "J4"
+    },
+    {
+      "edge_id": "J4_E_OUT",
+      "from_node": "J4",
+      "to_node": "J4_E_BOUNDARY"
+    },
+    {
+      "edge_id": "J4_E_IN",
+      "from_node": "J4_E_BOUNDARY",
+      "to_node": "J4"
+    },
+    {
+      "edge_id": "J4_W_IN",
+      "from_node": "J3",
+      "to_node": "J4"
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "J1_N_IN",
+      "origin": "J1",
+      "axis": "NS",
+      "edges": [
+        "J1_N_IN",
+        "J3_N_IN",
+        "J3_S_OUT"
+      ]
+    },
+    {
+      "route_id": "J1_W_IN",
+      "origin": "J1",
+      "axis": "EW",
+      "edges": [
+        "J1_W_IN",
+        "J2_W_IN",
+        "J2_E_OUT"
+      ]
+    },
+    {
+      "route_id": "J2_N_IN",
+      "origin": "J2",
+      "axis": "NS",
+      "edges": [
+        "J2_N_IN",
+        "J4_N_IN",
+        "J4_S_OUT"
+      ]
+    },
+    {
+      "route_id": "J2_E_IN",
+      "origin": "J2",
+      "axis": "EW",
+      "edges": [
+        "J2_E_IN",
+        "J1_E_IN",
+        "J1_W_OUT"
+      ]
+    },
+    {
+      "route_id": "J3_S_IN",
+      "origin": "J3",
+      "axis": "NS",
+      "edges": [
+        "J3_S_IN",
+        "J1_S_IN",
+        "J1_N_OUT"
+      ]
+    },
+    {
+      "route_id": "J3_W_IN",
+      "origin": "J3",
+      "axis": "EW",
+      "edges": [
+        "J3_W_IN",
+        "J4_W_IN",
+        "J4_E_OUT"
+      ]
+    },
+    {
+      "route_id": "J4_S_IN",
+      "origin": "J4",
+      "axis": "NS",
+      "edges": [
+        "J4_S_IN",
+        "J2_S_IN",
+        "J2_N_OUT"
+      ]
+    },
+    {
+      "route_id": "J4_E_IN",
+      "origin": "J4",
+      "axis": "EW",
+      "edges": [
+        "J4_E_IN",
+        "J3_E_IN",
+        "J3_W_OUT"
+      ]
+    }
+  ]
+}

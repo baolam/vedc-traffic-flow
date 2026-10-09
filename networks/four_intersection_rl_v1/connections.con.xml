@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<connections>
+  <connection from="J1_N_IN" to="J3_N_IN" fromLane="0" toLane="0" />
+  <connection from="J1_S_IN" to="J1_N_OUT" fromLane="0" toLane="0" />
+  <connection from="J1_E_IN" to="J1_W_OUT" fromLane="0" toLane="0" />
+  <connection from="J1_W_IN" to="J2_W_IN" fromLane="0" toLane="0" />
+  <connection from="J2_N_IN" to="J4_N_IN" fromLane="0" toLane="0" />
+  <connection from="J2_S_IN" to="J2_N_OUT" fromLane="0" toLane="0" />
+  <connection from="J2_E_IN" to="J1_E_IN" fromLane="0" toLane="0" />
+  <connection from="J2_W_IN" to="J2_E_OUT" fromLane="0" toLane="0" />
+  <connection from="J3_N_IN" to="J3_S_OUT" fromLane="0" toLane="0" />
+  <connection from="J3_S_IN" to="J1_S_IN" fromLane="0" toLane="0" />
+  <connection from="J3_E_IN" to="J3_W_OUT" fromLane="0" toLane="0" />
+  <connection from="J3_W_IN" to="J4_W_IN" fromLane="0" toLane="0" />
+  <connection from="J4_N_IN" to="J4_S_OUT" fromLane="0" toLane="0" />
+  <connection from="J4_S_IN" to="J2_S_IN" fromLane="0" toLane="0" />
+  <connection from="J4_E_IN" to="J3_E_IN" fromLane="0" toLane="0" />
+  <connection from="J4_W_IN" to="J4_E_OUT" fromLane="0" toLane="0" />
+</connections>

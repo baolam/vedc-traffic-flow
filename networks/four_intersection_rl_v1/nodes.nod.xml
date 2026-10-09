@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<nodes>
+  <node id="J1" x="100" y="300" type="traffic_light" />
+  <node id="J1_N_BOUNDARY" x="100" y="500" type="priority" />
+  <node id="J1_W_BOUNDARY" x="-100" y="300" type="priority" />
+  <node id="J2" x="300" y="300" type="traffic_light" />
+  <node id="J2_N_BOUNDARY" x="300" y="500" type="priority" />
+  <node id="J2_E_BOUNDARY" x="500" y="300" type="priority" />
+  <node id="J3" x="100" y="100" type="traffic_light" />
+  <node id="J3_S_BOUNDARY" x="100" y="-100" type="priority" />
+  <node id="J3_W_BOUNDARY" x="-100" y="100" type="priority" />
+  <node id="J4" x="300" y="100" type="traffic_light" />
+  <node id="J4_S_BOUNDARY" x="300" y="-100" type="priority" />
+  <node id="J4_E_BOUNDARY" x="500" y="100" type="priority" />
+</nodes>

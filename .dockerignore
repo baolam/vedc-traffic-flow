@@ -1,0 +1,16 @@
+.git
+.codegraph
+.venv*
+venv
+node_modules
+**/node_modules
+**/__pycache__
+.pytest_cache
+artifacts
+output
+scratch
+tmp
+data
+*.log
+.env*
+!*.example

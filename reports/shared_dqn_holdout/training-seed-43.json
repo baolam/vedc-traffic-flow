@@ -1,0 +1,96 @@
+{
+  "status": "budget_exhausted_mid_episode; resume from last complete boundary",
+  "seed": 43,
+  "episodes": 208,
+  "decisions": 100000,
+  "updates": 24688,
+  "validation": [
+    {
+      "episodes": 20,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-20.json",
+      "sha256": "a44cc510d10b245314376053592bfce8759fa5c667f6e09da4ecb4f512fed580",
+      "score": 710.1417521672748
+    },
+    {
+      "episodes": 40,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-40.json",
+      "sha256": "e587391cef2b9db919eb23b2de34cdb1f7bf08021b39de8da6c4ad247b1ccf9c",
+      "score": 735.6241341010418
+    },
+    {
+      "episodes": 60,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-60.json",
+      "sha256": "02cc174b7256480fd79bf2050fbeb7110c5490d883aacbd8d30d983106bd7b8a",
+      "score": 800.1452847319989
+    },
+    {
+      "episodes": 80,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-80.json",
+      "sha256": "8a612e073878de63b975f43fbe8b45e088d85edfea3e03d1e767ec154f6d032d",
+      "score": 863.2888113514069
+    },
+    {
+      "episodes": 100,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-100.json",
+      "sha256": "c2b7a13aac16159f5a69c77610d8abeeff4a6eb7728411b433d41319b3012d3a",
+      "score": 806.7821938675057
+    },
+    {
+      "episodes": 120,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-120.json",
+      "sha256": "ab8a9a5dbea2c31ce35bd9046c309a15b3e90b19be538fb0444d48f3175bccb6",
+      "score": 823.5944714400872
+    },
+    {
+      "episodes": 140,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-140.json",
+      "sha256": "918e78fec747668d67a906116191d1d73bed476f543be236b3d65dadbf1a3d65",
+      "score": 839.3811642985414
+    },
+    {
+      "episodes": 160,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-160.json",
+      "sha256": "129a2d9bf678755dbba143aa36f549f94cb5503120faa58c0bd18cf27c6f7858",
+      "score": 913.5990126531511
+    },
+    {
+      "episodes": 180,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-180.json",
+      "sha256": "06cea66cd1c9712b3610acb6dafab04f40874181f50bf25806e0b32e58ef91bf",
+      "score": 915.6703737771362
+    },
+    {
+      "episodes": 200,
+      "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-200.json",
+      "sha256": "e57ca2c7c58bd504236477388cd0d391f9e24506cdb57187492e7abb726eb38b",
+      "score": 915.956371039767
+    }
+  ],
+  "promoted": false,
+  "selected": {
+    "episodes": 20,
+    "model_path": "artifacts\\rl_training_run1\\seed-43\\policy-episode-20.json",
+    "sha256": "a44cc510d10b245314376053592bfce8759fa5c667f6e09da4ecb4f512fed580",
+    "score": 710.1417521672748
+  },
+  "runtime": {
+    "python": "3.13.12",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.2.6",
+    "torch": "2.12.0+cu126",
+    "cuda_available": true,
+    "cuda_version": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU"
+  },
+  "last_complete_checkpoint": {
+    "episodes": 208,
+    "joint_decisions": 99840,
+    "path": "artifacts\\rl_training_run1\\seed-43\\checkpoint.pt"
+  },
+  "budget": {
+    "max_joint_decisions": 100000,
+    "max_seconds": 7200,
+    "decisions_at_stop": 100000,
+    "stop_reason": "joint_decision_cap"
+  }
+}

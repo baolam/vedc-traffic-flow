@@ -17,6 +17,7 @@ class MovementSpec:
     to_node: Optional[str] = None
     turn_ratio: float = 1.0
     capacity_vehicles: int = 100
+    to_approach: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "MovementSpec":
@@ -26,6 +27,7 @@ class MovementSpec:
             to_node=data.get("to_node"),
             turn_ratio=float(data.get("turn_ratio", 1.0)),
             capacity_vehicles=int(data.get("capacity_vehicles", 100)),
+            to_approach=data.get("to_approach"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -36,6 +38,8 @@ class MovementSpec:
             res["to_node"] = self.to_node
         res["turn_ratio"] = self.turn_ratio
         res["capacity_vehicles"] = self.capacity_vehicles
+        if self.to_approach is not None:
+            res["to_approach"] = self.to_approach
         return res
 
 
@@ -47,6 +51,7 @@ class PhaseSpec:
     approaches: List[str] = field(default_factory=list)
     movements: List[MovementSpec] = field(default_factory=list)
     sumo_phase_index: Optional[int] = None
+    sumo_state: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "PhaseSpec":
@@ -57,6 +62,7 @@ class PhaseSpec:
             approaches=list(data.get("approaches", []) or []),
             movements=movements,
             sumo_phase_index=data.get("sumo_phase_index"),
+            sumo_state=data.get("sumo_state"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,6 +74,8 @@ class PhaseSpec:
         }
         if self.sumo_phase_index is not None:
             res["sumo_phase_index"] = self.sumo_phase_index
+        if self.sumo_state is not None:
+            res["sumo_state"] = self.sumo_state
         return res
 
 
@@ -78,6 +86,7 @@ class NodeSpec:
     name: str = ""
     approaches: List[str] = field(default_factory=list)
     phases: List[PhaseSpec] = field(default_factory=list)
+    sumo_links: Optional[List[Dict[str, Any]]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NodeSpec":
@@ -87,15 +96,19 @@ class NodeSpec:
             name=data.get("name", ""),
             approaches=list(data.get("approaches", []) or []),
             phases=phases,
+            sumo_links=data.get("sumo_links"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "node_id": self.node_id,
             "name": self.name,
             "approaches": list(self.approaches),
             "phases": [p.to_dict() for p in self.phases],
         }
+        if self.sumo_links is not None:
+            result["sumo_links"] = self.sumo_links
+        return result
 
     def get_phase(self, phase_id: str) -> Optional[PhaseSpec]:
         for p in self.phases:
@@ -144,6 +157,7 @@ class TopologyContract:
     version: str = "1.0"
     nodes: List[NodeSpec] = field(default_factory=list)
     edges: List[EdgeSpec] = field(default_factory=list)
+    routes: Optional[List[Dict[str, Any]]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TopologyContract":
@@ -154,15 +168,19 @@ class TopologyContract:
             version=data.get("version", "1.0"),
             nodes=nodes,
             edges=edges,
+            routes=data.get("routes"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "topology_id": self.topology_id,
             "version": self.version,
             "nodes": [n.to_dict() for n in self.nodes],
             "edges": [e.to_dict() for e in self.edges],
         }
+        if self.routes is not None:
+            result["routes"] = self.routes
+        return result
 
     def get_node(self, node_id: str) -> Optional[NodeSpec]:
         for n in self.nodes:

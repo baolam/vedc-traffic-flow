@@ -152,8 +152,8 @@ services:
   # ----------------------------------------------------------------------------
   actuator:
     build:
-      context: ./services/actuator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/actuator/Dockerfile
     container_name: edgeflow-rpi-actuator
     restart: unless-stopped
     env_file:

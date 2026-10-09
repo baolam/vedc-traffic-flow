@@ -43,11 +43,10 @@ from metrics_collector import MetricsCollector
 # Path setup
 # ----------------------------------------------------------------
 curr_dir = Path(__file__).resolve().parent
-repo_root = curr_dir.parents[1]
+repo_root = next(p for p in [curr_dir, *curr_dir.parents] if (p / "src" / "control").is_dir())
 for path in [
     repo_root / "contracts",
-    repo_root / "services" / "graph-control",
-    repo_root / "services" / "actuator",
+    repo_root,
 ]:
     if str(path) not in sys.path and path.exists():
         sys.path.insert(0, str(path))
@@ -57,7 +56,7 @@ try:
 except ImportError:
     from contracts import contracts_sdk
 
-from controller import (
+from src.control.controllers import (
     FixedTimeController,
     ActuatedController,
     MaxQueueController,
@@ -65,7 +64,8 @@ from controller import (
     EdgeFlowController,
     PressLightRLController,
 )
-from state_machine import ActuatorStateMachine
+from src.control.actuator import ActuatorStateMachine
+from src.control.factory import CONTROLLER_REGISTRY, create_controller
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO)
@@ -75,15 +75,7 @@ logger = logging.getLogger("experiment-runner")
 # ----------------------------------------------------------------
 # Controller registry — maps name -> class
 # ----------------------------------------------------------------
-CONTROLLER_REGISTRY: Dict[str, type] = {
-    "fixed_time": FixedTimeController,
-    "actuated": ActuatedController,
-    "max_queue": MaxQueueController,
-    "max_pressure": MaxPressureController,
-    "edgeflow": EdgeFlowController,
-    "presslight_rl": PressLightRLController,
-    "rl": PressLightRLController,
-}
+
 
 
 def compute_hash(data: Any) -> str:
@@ -223,14 +215,10 @@ class SingleExperimentRunner:
     # ----------------------------------------------------------
 
     def _init_controller(self, name: str):
-        cls = CONTROLLER_REGISTRY[name]
-        if name in ("presslight_rl", "rl"):
-            weights_file = str(repo_root / "models" / "presslight_weights.json")
-            return cls(model_path=weights_file)
-        elif name == "fixed_time":
-            return cls(cycle_time_s=30.0)
-        else:
-            return cls()
+        model_path = self.manifest.controller.model_path
+        if name in ("presslight_rl", "rl") and not model_path:
+            model_path = str(repo_root / "models" / "presslight_weights.json")
+        return create_controller(name, self.manifest.controller.parameters, model_path)
 
     def _verify_controller_identity(self):
         """TASK 2: Fail if requested != active controller."""
@@ -243,6 +231,7 @@ class SingleExperimentRunner:
             "edgeflow": "EdgeFlowController",
             "presslight_rl": "PressLightRLController",
             "rl": "PressLightRLController",
+            "shared_dqn": "SharedDQNController",
         }
         expected = expected_classes.get(self.requested_controller)
         actual = self.controller.__class__.__name__
