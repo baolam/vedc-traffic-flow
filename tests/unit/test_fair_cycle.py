@@ -103,3 +103,16 @@ def test_fair_dqn_uses_three_masked_actions_and_elapsed_discount():
     learner.replay.add(state, 0, 0., state, False, [True, True, True], discount=.5)
     assert learner.update() == pytest.approx(199.5, abs=1e-4)
     assert learner.last_update_diagnostics["mean_abs_td_error"] == pytest.approx(200.)
+
+
+def test_fair_dqn_worker_timing_comes_from_the_resolved_training_config():
+    from src.rl.train_shared import resolve_fair_cycle_environment
+
+    environment = {"mode": "fair_cycle_dqn"}
+    training = {"cycle_time_s": 90, "min_green_share": .25, "discount": .99}
+    resolved = resolve_fair_cycle_environment(environment, training)
+    assert resolved["cycle_time_s"] == 90
+    assert resolved["min_green_share"] == .25
+    assert resolved["discount"] == .99
+    with pytest.raises(ValueError, match="cycle_time_s"):
+        resolve_fair_cycle_environment({**environment, "cycle_time_s": 70}, training)

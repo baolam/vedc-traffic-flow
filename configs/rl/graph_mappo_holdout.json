@@ -1,0 +1,46 @@
+{
+  "environment": {
+    "topology_path": "contracts/topology/four_intersection_rl_v1.json",
+    "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+    "demand_s": 1800,
+    "drain_s": 600,
+    "trace": false,
+    "wait_penalty_lambda": 0.0,
+    "cycle_time_s": 90,
+    "min_green_share": 0.25
+  },
+  "baselines": {
+    "fair_cycle": {
+      "type": "fair_cycle",
+      "parameters": {"cycle_time_s": 90, "min_green_share": 0.25}
+    },
+    "fair_cycle_dqn": {
+      "type": "fair_cycle_rl",
+      "model_path": "artifacts/fair-cycle-final-training/seed-43/policy-episode-300.json"
+    },
+    "fixed_time": {
+      "type": "fixed_time",
+      "parameters": {
+        "cycle_time_s": 70,
+        "phase_splits": {
+          "J1": [45.0, 15.0], "J2": [45.0, 15.0],
+          "J3": [45.0, 15.0], "J4": [45.0, 15.0]
+        }
+      }
+    },
+    "actuated": {"type": "actuated"},
+    "max_queue": {"type": "max_queue"},
+    "max_pressure": {"type": "max_pressure"},
+    "edgeflow": {
+      "type": "edgeflow",
+      "parameters": {
+        "max_green_s": 45.0,
+        "max_occupancy_threshold": 0.85,
+        "min_green_s": 10.0,
+        "service_age_weight": 0.0,
+        "spillback_penalty": -5.0,
+        "switching_margin": 2.0
+      }
+    }
+  }
+}

@@ -74,12 +74,18 @@ def extract_fair_cycle_features(node, telemetry, network_state, base_split, prev
     extra = []
     for approach in node["approaches"]:
         value = local[approach]
-        extra.extend((float(value.get("stopped_wait_sum_s", 0)) / 2400.,
-                      float(value.get("oldest_stopped_wait_s", 0)) / 1200.,
-                      float(value.get("external_due_count", 0)) / 20.,
-                      float(value.get("external_wait_sum_s", 0)) / 2400.,
-                      float(value.get("oldest_external_wait_s", 0)) / 1200.))
-    now = float(telemetry.get("simulation_time_s", 0))
+        waits = [float(value[key]) for key in ("stopped_wait_sum_s", "oldest_stopped_wait_s",
+                                               "external_due_count", "external_wait_sum_s",
+                                               "oldest_external_wait_s")]
+        if not np.isfinite(waits).all() or any(wait < 0 for wait in waits):
+            raise ValueError("Invalid required fair-cycle wait measurement")
+        extra.extend((waits[0] / 2400., waits[1] / 1200., waits[2] / 20.,
+                      waits[3] / 2400., waits[4] / 1200.))
+    now = float(telemetry["simulation_time_s"])
+    if not np.isfinite(now) or demand_s <= 0 or horizon_s <= 0 or now < 0:
+        raise ValueError("Invalid fair-cycle time horizon")
+    if len(base_split) != 2 or len(previous_split) != 2 or min(*base_split, *previous_split) <= 0:
+        raise ValueError("Invalid fair-cycle split")
     extra.extend((max(0., demand_s - now) / demand_s, max(0., horizon_s - now) / horizon_s,
                   base_split[0] / sum(base_split), previous_split[0] / sum(previous_split)))
     result = np.concatenate((base, np.asarray(extra, dtype=np.float32)))
@@ -124,13 +130,16 @@ class FairCycleRLController(FairCycleController):
 
     controller_name = "fair_cycle_rl"
 
-    def __init__(self, model_path, cycle_time_s=70, min_green_share=1 / 3):
-        super().__init__(cycle_time_s, min_green_share)
+    def __init__(self, model_path, cycle_time_s=None, min_green_share=None):
         if not model_path:
             raise ValueError("fair_cycle_rl requires an explicit model_path")
         with open(model_path, encoding="utf-8") as handle:
             self.artifact = json.load(handle)
         validate_payload(self.artifact, "fair_cycle_dqn_model")
+        artifact_timing = self.artifact.get("timing", {})
+        cycle_time_s = artifact_timing.get("cycle_time_s", 70) if cycle_time_s is None else cycle_time_s
+        min_green_share = artifact_timing.get("min_green_share", 1 / 3) if min_green_share is None else min_green_share
+        super().__init__(cycle_time_s, min_green_share)
         if (self.artifact["feature_spec"] != FAIR_CYCLE_FEATURE_SPEC
                 or self.artifact["topology_id"] != TOPOLOGY_ID
                 or self.artifact["timing"] != {**TIMING, "cycle_time_s": cycle_time_s,
