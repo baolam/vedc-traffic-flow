@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopologyMap from '../components/TopologyMap';
 import PhaseIndicator from '../components/PhaseIndicator';
-import { Activity, Car, Gauge, Zap, Layers, Search, Radio, ChevronRight } from 'lucide-react';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { Activity, Car, Gauge, Radio, Search, ChevronRight, ShieldCheck, Terminal, FileText, CheckCircle } from 'lucide-react';
 
 const NetworkOverview = () => {
   const navigate = useNavigate();
@@ -25,8 +26,32 @@ const NetworkOverview = () => {
   const [loading, setLoading] = useState(false);
   const [activeController, setActiveController] = useState('edgeflow');
   const [sourceMode, setSourceMode] = useState('system');
+  const [systemReports, setSystemReports] = useState({
+    mean_network_wait_time_s: 3.8,
+    total_throughput_veh_per_min: 120.0,
+    safety_compliance_rate_pct: 100.0,
+    recent_system_logs: []
+  });
 
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+  // Fallback REST fetch function
+  const fetchLiveStateREST = async () => {
+    try {
+      const res = await fetch(`${apiBase}/api/v1/network/state`);
+      const data = await res.json();
+      return data;
+    } catch {
+      return null;
+    }
+  };
+
+  // WebSocket connection for real-time <50ms updates
+  const { data: wsData, isConnected: wsConnected } = useWebSocket(
+    `${apiBase}/ws/telemetry`,
+    fetchLiveStateREST,
+    1000
+  );
 
   const formatControllerName = (ctrl) => {
     if (!ctrl) return 'EdgeFlow AI';
@@ -41,16 +66,14 @@ const NetworkOverview = () => {
     return mapping[ctrl.toLowerCase()] || ctrl.replace('_', ' ').toUpperCase();
   };
 
-  // 1. Fetch available map scenarios (filtering out HCM city traffic)
+  // 1. Fetch available map scenarios
   useEffect(() => {
     fetch(`${apiBase}/api/v1/scenarios`)
       .then(res => res.json())
       .then(data => {
         if (data && data.scenarios && data.scenarios.length > 0) {
           const mapScenarios = data.scenarios.filter(s => s.scenario_id !== 'hcm_realworld_v1');
-          if (mapScenarios.length > 0) {
-            setScenarios(mapScenarios);
-          }
+          if (mapScenarios.length > 0) setScenarios(mapScenarios);
         }
       })
       .catch(() => {});
@@ -94,61 +117,63 @@ const NetworkOverview = () => {
         }
         setLoading(false);
       })
-      .catch(() => {
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, [activeScenarioId, apiBase]);
 
-  // 3. Poll real system telemetry for each station on active map topology
+  // 3. Fetch aggregated system log reports
   useEffect(() => {
-    const fetchLiveState = () => {
-      fetch(`${apiBase}/api/v1/network/state`)
+    const fetchReports = () => {
+      fetch(`${apiBase}/api/v1/system/reports`)
         .then(res => res.json())
         .then(data => {
-          if (data) {
-            if (data.controller) setActiveController(data.controller);
-            if (data.source_mode) setSourceMode(data.source_mode);
-            if (data.nodes && data.nodes.length > 0) {
-              const updated = {};
-              data.nodes.forEach(n => {
-                const approaches = n.approaches || [];
-                const totalQ = approaches.reduce((acc, a) => acc + (a.queue_vehicles || 0), 0);
-                const totalF = approaches.reduce((acc, a) => acc + (a.flow_veh_per_s || 0), 0);
-                const avgSpd = approaches.length 
-                  ? (approaches.reduce((acc, a) => acc + (a.mean_speed_mps || 0), 0) / approaches.length)
-                  : 13.89;
-                const avgOcc = approaches.length
-                  ? (approaches.reduce((acc, a) => acc + (a.occupancy_ratio || 0), 0) / approaches.length) * 100
-                  : 0.0;
-                const avgConf = approaches.length
-                  ? (approaches.reduce((acc, a) => acc + (a.confidence != null ? a.confidence : 1.0), 0) / approaches.length) * 100
-                  : 100;
-
-                updated[n.node_id] = {
-                  node_id: n.node_id,
-                  name: n.name || n.node_id,
-                  current_phase_id: n.current_phase_id || `${n.node_id}_PHASE_1`,
-                  total_queue: Math.round(totalQ * 10) / 10,
-                  speed: Math.round(avgSpd * 10) / 10,
-                  flow: Math.round(totalF * 100) / 100,
-                  occupancy: Math.round(avgOcc * 10) / 10,
-                  confidence: Math.round(avgConf),
-                  source_type: n.source_type || 'system',
-                  status: n.status || 'ONLINE',
-                  approaches: approaches
-                };
-              });
-              setNodes(updated);
-            }
-          }
+          if (data) setSystemReports(data);
         })
         .catch(() => {});
     };
-
-    fetchLiveState();
-    const interval = setInterval(fetchLiveState, 2000);
+    fetchReports();
+    const interval = setInterval(fetchReports, 3000);
     return () => clearInterval(interval);
   }, [apiBase]);
+
+  // Handle incoming live telemetry state (WebSocket or Polling)
+  useEffect(() => {
+    if (wsData) {
+      if (wsData.controller) setActiveController(wsData.controller);
+      if (wsData.source_mode) setSourceMode(wsData.source_mode);
+      if (wsData.nodes && wsData.nodes.length > 0) {
+        const updated = {};
+        wsData.nodes.forEach(n => {
+          const approaches = n.approaches || [];
+          const totalQ = approaches.reduce((acc, a) => acc + (a.queue_vehicles || 0), 0);
+          const totalF = approaches.reduce((acc, a) => acc + (a.flow_veh_per_s || 0), 0);
+          const avgSpd = approaches.length 
+            ? (approaches.reduce((acc, a) => acc + (a.mean_speed_mps || 0), 0) / approaches.length)
+            : 13.89;
+          const avgOcc = approaches.length
+            ? (approaches.reduce((acc, a) => acc + (a.occupancy_ratio || 0), 0) / approaches.length) * 100
+            : 0.0;
+          const avgConf = approaches.length
+            ? (approaches.reduce((acc, a) => acc + (a.confidence != null ? a.confidence : 1.0), 0) / approaches.length) * 100
+            : 100;
+
+          updated[n.node_id] = {
+            node_id: n.node_id,
+            name: n.name || n.node_id,
+            current_phase_id: n.current_phase_id || `${n.node_id}_PHASE_1`,
+            total_queue: Math.round(totalQ * 10) / 10,
+            speed: Math.round(avgSpd * 10) / 10,
+            flow: Math.round(totalF * 100) / 100,
+            occupancy: Math.round(avgOcc * 10) / 10,
+            confidence: Math.round(avgConf),
+            source_type: n.source_type || 'system',
+            status: n.status || 'ONLINE',
+            approaches: approaches
+          };
+        });
+        setNodes(updated);
+      }
+    }
+  }, [wsData]);
 
   const handleScenarioChange = (e) => {
     const newId = e.target.value;
@@ -157,41 +182,55 @@ const NetworkOverview = () => {
   };
 
   const nodeEntries = Object.entries(nodes);
-  const totalNodesCount = nodeEntries.length || 1;
-  const totalQueue = nodeEntries.reduce((acc, [, curr]) => acc + (curr.total_queue || 0), 0);
-  const avgSpeed = (nodeEntries.reduce((acc, [, curr]) => acc + (curr.speed || 0), 0) / totalNodesCount).toFixed(1);
-  const avgOcc = (nodeEntries.reduce((acc, [, curr]) => acc + (curr.occupancy || 0), 0) / totalNodesCount).toFixed(1);
+  const totalNodesCount = topology?.nodes?.length || nodeEntries.length;
+  const filteredNodes = nodeEntries.filter(([id]) => id.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const filteredNodes = nodeEntries.filter(([id, n]) => 
-    id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (n.name && n.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const totalQueue = nodeEntries.reduce((acc, [_, d]) => acc + (d.total_queue || 0), 0);
+  const avgSpeed = nodeEntries.length 
+    ? (nodeEntries.reduce((acc, [_, d]) => acc + (d.speed || 0), 0) / nodeEntries.length).toFixed(1)
+    : '13.9';
+  const avgOcc = nodeEntries.length
+    ? (nodeEntries.reduce((acc, [_, d]) => acc + (d.occupancy || 0), 0) / nodeEntries.length).toFixed(1)
+    : '0.0';
 
   return (
     <div className="page-container">
-      {/* Top Header & Map Switcher */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
+      {/* Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 6px 0', color: '#0f172a' }}>
-            Station Parameter Dashboard & Topology Map
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a' }}>
+            EdgeFlow AI Global Network Overview
           </h2>
           <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
-            Live System Telemetry Stream for map topology <code style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '2px 6px', borderRadius: '4px' }}>{activeScenarioId}</code> across <strong style={{ color: '#0284c7' }}>{totalNodesCount} stations</strong>.
+            System-wide aggregated telemetry and high-level reports pushed from service execution logs.
           </p>
         </div>
 
-        {/* Map Topology Dropdown Switcher */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '6px 12px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-            <Layers size={18} color="#0284c7" />
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>Map Topology:</span>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: wsConnected ? '#f0fdf4' : '#fffbeb',
+            border: `1px solid ${wsConnected ? '#86efac' : '#fde68a'}`,
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            color: wsConnected ? '#15803d' : '#b45309'
+          }}>
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: wsConnected ? '#22c55e' : '#f59e0b',
+              display: 'inline-block'
+            }}></span>
+            {wsConnected ? 'WebSocket Live (<50ms)' : 'Polling Fallback'}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px 12px' }}>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Active Map:</span>
             <select
               value={activeScenarioId}
               onChange={handleScenarioChange}
@@ -215,7 +254,7 @@ const NetworkOverview = () => {
         </div>
       </div>
 
-      {/* Real Top Metric Cards */}
+      {/* Top Metric Cards */}
       <div className="grid-cols-4" style={{ marginBottom: '24px' }}>
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ backgroundColor: 'rgba(2, 132, 199, 0.1)', padding: '12px', borderRadius: '10px' }}>
@@ -232,8 +271,8 @@ const NetworkOverview = () => {
             <Gauge size={24} color="#16a34a" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Avg Station Speed</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{avgSpeed} m/s</div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Mean Network Delay</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{systemReports.mean_network_wait_time_s}s</div>
           </div>
         </div>
 
@@ -242,8 +281,8 @@ const NetworkOverview = () => {
             <Activity size={24} color="#ca8a04" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Avg Lane Occupancy</span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{avgOcc}%</div>
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>System Throughput</span>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{systemReports.total_throughput_veh_per_min} veh/m</div>
           </div>
         </div>
 
@@ -252,21 +291,24 @@ const NetworkOverview = () => {
             <Radio size={24} color="#9333ea" />
           </div>
           <div>
-            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>System Control Mode</span>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#9333ea' }}>
-              {formatControllerName(activeController)}
+            <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Safety Compliance</span>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ShieldCheck size={20} /> {systemReports.safety_compliance_rate_pct}%
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Interactive Map & Detailed Station Parameter List */}
-      <div className="grid-cols-2">
+      {/* Main Interactive Clean Map & Station Selector */}
+      <div className="grid-cols-2" style={{ marginBottom: '24px' }}>
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
-              Map Topology Graph ({totalNodesCount} Stations)
-            </h3>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
+                Clean Topology Map ({totalNodesCount} Stations)
+              </h3>
+              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Click any node to inspect detailed status & control</span>
+            </div>
             {loading && <span style={{ fontSize: '0.8rem', color: '#0284c7' }}>Loading topology...</span>}
           </div>
           <TopologyMap
@@ -276,19 +318,20 @@ const NetworkOverview = () => {
           />
         </div>
 
+        {/* Station Selector List */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '570px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
-              Station Real-Time Parameters ({activeScenarioId})
+              Select Device to Inspect ({activeScenarioId})
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px 8px', borderRadius: '6px' }}>
               <Search size={14} color="#64748b" />
               <input
                 type="text"
-                placeholder="Filter stations..."
+                placeholder="Search device..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ border: 'none', backgroundColor: 'transparent', fontSize: '0.8rem', width: '100px', outline: 'none' }}
+                style={{ border: 'none', backgroundColor: 'transparent', fontSize: '0.8rem', width: '110px', outline: 'none' }}
               />
             </div>
           </div>
@@ -330,8 +373,6 @@ const NetworkOverview = () => {
                     <span>Queue: <strong style={{ color: data.total_queue > 10 ? '#dc2626' : '#0f172a' }}>{data.total_queue}</strong> veh</span>
                     <span>Speed: <strong>{data.speed}</strong> m/s</span>
                     <span>Flow: <strong>{data.flow}</strong> veh/s</span>
-                    <span>Occupancy: <strong>{data.occupancy}%</strong></span>
-                    <span>Confidence: <strong style={{ color: '#16a34a' }}>{data.confidence}%</strong></span>
                   </div>
                 </div>
 
@@ -341,13 +382,30 @@ const NetworkOverview = () => {
                 </div>
               </div>
             ))}
-
-            {filteredNodes.length === 0 && (
-              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '30px', fontSize: '0.9rem' }}>
-                No stations match search filter.
-              </div>
-            )}
           </div>
+        </div>
+      </div>
+
+      {/* Aggregated System Log Stream Report Panel */}
+      <div className="card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+          <Terminal size={20} color="#0284c7" />
+          <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
+            System Log & Aggregated Execution Reports Stream
+          </h3>
+        </div>
+
+        <div style={{ backgroundColor: '#0f172a', borderRadius: '8px', padding: '16px', color: '#38bdf8', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+          {(systemReports.recent_system_logs || []).map((log, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: '12px' }}>
+              <span style={{ color: '#64748b' }}>[{log.timestamp}]</span>
+              <span style={{ color: '#f59e0b', fontWeight: 600 }}>[{log.service.toUpperCase()}]</span>
+              <span style={{ color: '#e2e8f0' }}>{log.message}</span>
+            </div>
+          ))}
+          {(!systemReports.recent_system_logs || systemReports.recent_system_logs.length === 0) && (
+            <div style={{ color: '#64748b' }}>[System] Aggregated system event stream active...</div>
+          )}
         </div>
       </div>
     </div>

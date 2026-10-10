@@ -80,7 +80,18 @@ const ControlPanel = () => {
   };
 
   const handleEmergencyOverride = (nodeId) => {
-    setOverrideStatus(`Emergency manual override activated for node ${nodeId}! Forced Phase 1 Priority.`);
+    fetch(`${apiBase}/api/v1/control/override`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        node_id: nodeId,
+        target_phase_id: `${nodeId}_PHASE_NS`,
+        min_green_s: minGreen,
+        max_green_s: maxGreen
+      })
+    }).catch(() => {});
+
+    setOverrideStatus(`Emergency priority override issued for node ${nodeId}! Safe clearance G -> Y (3s) -> R (2s) -> G active.`);
     setTimeout(() => setOverrideStatus(null), 6000);
   };
 

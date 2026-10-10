@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     mqtt_host: str = "mqtt"
     mqtt_port: int = 1883
+    yellow_duration_s: float = 3.0
+    all_red_duration_s: float = 2.0
 
     model_config = SettingsConfigDict(
         env_file=".env",

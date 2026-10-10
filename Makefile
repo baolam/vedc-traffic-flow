@@ -1,4 +1,4 @@
-.PHONY: help contracts test integration check-all clean smoke up-sim down experiment experiment-gui
+.PHONY: help contracts test integration check-all clean smoke up-sim down experiment experiment-gui create-scenario
 
 help:
 	@echo "EdgeFlow AI - Standard Developer Commands:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make down            Stop all Docker Compose services"
 	@echo "  make experiment EXP=<name> Run experiment manifest"
 	@echo "  make experiment-gui  Run experiment with live SUMO-GUI window"
+	@echo "  make create-scenario NET=<net.xml> SCENARIO=<id> Generate HCM-style SUMO scenario"
 
 contracts:
 	python -m pytest tests/unit/test_contracts.py
@@ -42,4 +43,8 @@ experiment:
 
 experiment-gui:
 	python src/tools/run_experiment_gui.py --duration 60 --controller max_pressure
+
+create-scenario:
+	python src/tools/generate_traffic_scenario.py --net $(NET) --scenario-id $(SCENARIO) $(if $(VEHICLES),--vehicles $(VEHICLES),) $(if $(DURATION),--duration $(DURATION),)
+
 

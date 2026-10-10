@@ -42,6 +42,9 @@ Sau khi chạy lệnh trên:
 2. File cấu hình `.sumocfg` được tạo tại `services/simulator/sumo_configs/<scenario_id>.sumocfg`.
 3. Biến môi trường `EDGEFLOW_TOPOLOGY=<scenario_id>` trong file `.env` được cập nhật tự động.
 
+> 💡 **Để tạo kịch bản giao thông đa phương tiện chuẩn TP.HCM (Modal Split 65% xe máy, icon GUI, permission-aware routing)**, tham khảo tài liệu chi tiết: [HCM_CORRIDOR_SCENARIO_GUIDE.md](file:///e:/vedc-traffic-flow/docs/HCM_CORRIDOR_SCENARIO_GUIDE.md).
+
+
 ---
 
 ## ⚙️ 3. Khởi Chạy Mô Phỏng Với Kịch Bản Mới (Running Simulation)

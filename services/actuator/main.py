@@ -27,8 +27,8 @@ def main():
     logger.info("=========================================================")
     
     state_machine = ActuatorStateMachine(
-        yellow_duration_s=settings.yellow_duration_s,
-        all_red_duration_s=settings.all_red_duration_s
+        yellow_duration_s=getattr(settings, "yellow_duration_s", 3.0),
+        all_red_duration_s=getattr(settings, "all_red_duration_s", 2.0)
     )
 
     mqtt_host = settings.mqtt_host
