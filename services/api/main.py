@@ -419,7 +419,7 @@ def set_control_policy(req: PolicyChangeRequest):
 
     logger.info(f"Control policy updated to: {req_ctrl} (Topology: {LIVE_STATE['active_topology_id']})")
     return {
-        "status": "SUCCESS",
+        "status": "policy_updated",
         "active_controller": LIVE_STATE["active_controller"],
         "active_topology_id": LIVE_STATE["active_topology_id"],
         "timestamp_ms": LIVE_STATE["last_updated_ms"]
@@ -628,7 +628,9 @@ def list_experiments():
 
     return {
         "total_experiments": len(exps),
-        "experiments": exps
+        "total_runs": len(exps),
+        "experiments": exps,
+        "runs": exps
     }
 
 @app.get("/api/v1/experiments/{experiment_id}")

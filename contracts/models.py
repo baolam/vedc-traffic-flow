@@ -191,6 +191,7 @@ class TopologyContract:
     def summary(self) -> Dict[str, Any]:
         total_phases = sum(len(n.phases) for n in self.nodes)
         return {
+            "id": self.topology_id,
             "topology_id": self.topology_id,
             "version": self.version,
             "total_nodes": len(self.nodes),
