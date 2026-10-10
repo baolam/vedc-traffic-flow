@@ -26,6 +26,7 @@ from contracts.research import (FAIR_CYCLE_FEATURE_SPEC, GRAPH_MAPPO_ACTIONS,
 from src.rl.graph_mappo import (CentralizedCritic, GraphActor, MAPPOUpdater,
                                 actor_weights, generalized_advantage_estimate,
                                 masked_distribution, seed_everything)
+from src.rl.evaluation import evaluate_cases
 from src.simulation.runtime import file_hash
 
 
@@ -101,10 +102,12 @@ def export_actor(path, actor, architecture, seed, config, provenance, progress):
 
 
 def save_training_checkpoint(path, config, seed, provenance, actor, critic, updater, progress):
-    state = {"version": 1, "config": config, "seed": seed, "provenance": provenance,
+    state = {"version": 2, "config": config, "seed": seed, "provenance": provenance,
              "actor": actor.state_dict(), "critic": critic.state_dict(),
              "actor_optimizer": updater.actor_optimizer.state_dict(),
              "critic_optimizer": updater.critic_optimizer.state_dict(), "updates": updater.updates,
+             "value_normalizer": (updater.value_normalizer.state_dict()
+                                  if updater.value_normalizer else None),
              "progress": progress, "python_rng": random.getstate(),
              "numpy_rng": np.random.get_state(), "torch_rng": torch.get_rng_state(),
              "cuda_rng": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else []}
@@ -116,8 +119,13 @@ def save_training_checkpoint(path, config, seed, provenance, actor, critic, upda
 
 def load_training_checkpoint(path, config, seed, provenance, actor, critic, updater, device):
     state = torch.load(path, map_location=device, weights_only=False)
-    if state.get("version") != 1 or state.get("seed") != seed or state.get("config") != config:
+    version = state.get("version")
+    if version not in (1, 2) or state.get("seed") != seed or state.get("config") != config:
         raise ValueError("Resume checkpoint does not match seed, config or version")
+    if version == 1 and updater.value_normalizer is not None:
+        raise ValueError("Version 1 checkpoint cannot resume with value normalization enabled")
+    if version == 2 and ((updater.value_normalizer is None) != (state.get("value_normalizer") is None)):
+        raise ValueError("Checkpoint value normalization does not match training configuration")
     if state["provenance"] != provenance:
         raise ValueError("Network, topology or implementation changed since checkpoint")
     actor.load_state_dict(state["actor"])
@@ -125,6 +133,8 @@ def load_training_checkpoint(path, config, seed, provenance, actor, critic, upda
     updater.actor_optimizer.load_state_dict(state["actor_optimizer"])
     updater.critic_optimizer.load_state_dict(state["critic_optimizer"])
     updater.updates = state["updates"]
+    if updater.value_normalizer is not None:
+        updater.value_normalizer.load_state_dict(state["value_normalizer"])
     random.setstate(state["python_rng"])
     np.random.set_state(state["numpy_rng"])
     torch.set_rng_state(state["torch_rng"].cpu())
@@ -161,7 +171,7 @@ def validation_violation(rows, baseline_rows):
 
 
 def train(config, output, seed, resume=None):
-    from src.rl.benchmark import evaluate_policy, score
+    from src.rl.benchmark import score
 
     output = Path(output)
     output.mkdir(parents=True, exist_ok=bool(resume))
@@ -227,6 +237,14 @@ def train(config, output, seed, resume=None):
     def elapsed():
         return initial_elapsed + time.monotonic() - started
 
+    evaluation = config.get("evaluation", {})
+    validation_cache = Path(evaluation.get("cache_dir", "artifacts/mappo/validation-cache"))
+    validation_workers = int(evaluation.get("workers", 2))
+    case_timeout_s = float(evaluation.get("case_timeout_s", 180.))
+    if validation_workers <= 0 or case_timeout_s <= 0:
+        raise ValueError("Evaluation workers and per-case timeout must be positive")
+    run_deadline = started + max(0., max_seconds - initial_elapsed)
+
     def save_checkpoint():
         progress["elapsed_s"] = elapsed()
         save_training_checkpoint(output / "checkpoint.pt", config, seed, provenance,
@@ -244,33 +262,50 @@ def train(config, output, seed, resume=None):
 
     def validate_latest_update():
         episode_count = progress["episodes"]
-        validation_root = output / f"validation-{episode_count}-{time.monotonic_ns()}"
+        validation_started = time.monotonic()
         actor_path = output / f"policy-episode-{episode_count}.json"
         export_actor(actor_path, actor, architecture, seed, config, provenance,
                      {**progress, "elapsed_s": elapsed()})
         controller_spec = {"type": algorithm, "model_path": str(actor_path.resolve())}
-        rows = evaluate_policy(config, controller_spec, GRAPH_MAPPO_SEED_SPLITS["validation"],
-                               validation_root / algorithm)
+        rows, candidate_diagnostics = evaluate_cases(
+            config, controller_spec, RESEARCH_SCENARIOS, GRAPH_MAPPO_SEED_SPLITS["validation"],
+            output / "validation-cases" / algorithm, cache_root=validation_cache,
+            workers=validation_workers, timeout_s=case_timeout_s, deadline=run_deadline)
         baseline_controller = {"type": "fair_cycle", "parameters": {
             "cycle_time_s": GRAPH_MAPPO_TIMING["cycle_time_s"],
             "min_green_share": GRAPH_MAPPO_TIMING["min_green_share"]}}
-        baseline_rows = evaluate_policy(config, baseline_controller,
-                                        GRAPH_MAPPO_SEED_SPLITS["validation"],
-                                        validation_root / "fair_cycle")
+        baseline_rows, baseline_diagnostics = evaluate_cases(
+            config, baseline_controller, RESEARCH_SCENARIOS, GRAPH_MAPPO_SEED_SPLITS["validation"],
+            output / "validation-cases" / "fair_cycle", cache_root=validation_cache,
+            workers=validation_workers, timeout_s=case_timeout_s, deadline=run_deadline)
         violation, metrics = validation_violation(rows, baseline_rows)
         progress["validation"].append({"episodes": episode_count,
                                         "model_path": str(actor_path.resolve()),
                                         "sha256": file_hash(actor_path), "score": score(rows),
                                         "gate_violation": violation,
-                                        "scenario_metrics": metrics})
+                                        "scenario_metrics": metrics,
+                                        "evaluation": {"elapsed_s": time.monotonic() - validation_started,
+                                                       "candidate": candidate_diagnostics,
+                                                       "fair_cycle": baseline_diagnostics}})
         save_checkpoint()
         export_actor(output / "latest.json", actor, architecture, seed, config,
                      provenance, {**progress, "elapsed_s": elapsed()})
 
     try:
+        def validate_or_stop():
+            nonlocal status
+            try:
+                validate_latest_update()
+                return True
+            except TimeoutError as error:
+                status = "time_cap_during_validation" if elapsed() >= max_seconds else "validation_case_timeout"
+                progress["validation_error"] = str(error)
+                save_checkpoint()
+                return False
+
         if progress["episodes"] // validation_interval > len(progress["validation"]):
             if elapsed() < max_seconds:
-                validate_latest_update()
+                validate_or_stop()
             else:
                 status = "time_cap_before_pending_validation"
         while status == "incomplete" and progress["episodes"] < max_episodes and elapsed() < max_seconds:
@@ -302,7 +337,7 @@ def train(config, output, seed, resume=None):
                     distribution = masked_distribution(logits, batch_masks)
                     actions = distribution.sample()
                     log_probs = distribution.log_prob(actions)
-                    values = critic(torch.as_tensor(batch_observations, device=device))
+                    values = updater.predict_values(torch.as_tensor(batch_observations, device=device))
                 for row, worker_id in enumerate(active):
                     action_map = {node_id: int(actions[row, index].item())
                                   for index, node_id in enumerate(GRAPH_MAPPO_NODE_ORDER)}
@@ -312,7 +347,8 @@ def train(config, output, seed, resume=None):
                     next_observations, reward, terminated, truncated, info = step_results[worker_id]
                     next_batch = np.stack([next_observations[node_id] for node_id in GRAPH_MAPPO_NODE_ORDER])
                     with torch.no_grad():
-                        next_values = critic(torch.as_tensor(next_batch, device=device)).cpu().numpy()
+                        next_values = updater.predict_values(
+                            torch.as_tensor(next_batch, device=device)).cpu().numpy()
                     done = bool(terminated or truncated)
                     elapsed_s = float(info["elapsed_s"])
                     episode_records[worker_id].append({
@@ -362,14 +398,19 @@ def train(config, output, seed, resume=None):
                 all_returns.extend(returns)
             all_advantages = np.asarray(all_advantages, dtype=np.float32)
             all_advantages = (all_advantages - all_advantages.mean()) / (all_advantages.std() + 1e-8)
+            return_targets = np.asarray(all_returns, dtype=np.float32)
             update_diagnostics = updater.update(
                 np.asarray(all_observations, dtype=np.float32), np.asarray(all_actions, dtype=np.int64),
                 np.asarray(all_masks, dtype=bool), np.asarray(all_log_probs, dtype=np.float32),
-                all_advantages, np.asarray(all_returns, dtype=np.float32))
+                all_advantages, return_targets)
             progress["episodes"] += 2 * episodes_per_worker
             progress["joint_decisions"] += len(all_observations)
             progress["diagnostics"].append({"episodes": progress["episodes"], "update": updater.updates,
                                             **update_diagnostics,
+                                            "return_mean": float(return_targets.mean()),
+                                            "return_std": float(return_targets.std()),
+                                            "return_min": float(return_targets.min()),
+                                            "return_max": float(return_targets.max()),
                                             "action_distribution": [count / max(1, sum(progress["action_counts"]))
                                                                     for count in progress["action_counts"]],
                                             "simulated_seconds": progress["simulated_seconds"],
@@ -386,7 +427,7 @@ def train(config, output, seed, resume=None):
 
             if progress["episodes"] // validation_interval > len(progress["validation"]):
                 if elapsed() < max_seconds:
-                    validate_latest_update()
+                    validate_or_stop()
                 else:
                     status = "time_cap_before_pending_validation"
             if progress["episodes"] >= max_episodes:

@@ -18,6 +18,17 @@ Make sure `sumo` is on `PATH` and the SUMO network contract at `networks/four_in
 
 Run 30-minute pilots with learner seed 11, then alternate graph and local runs for learner seeds 17, 29, and 43. Each main run stops at one hour or 128 completed episodes. The trainer validates every 16 episodes and saves an atomic checkpoint after each completed rollout update. An interrupted partial rollout is discarded.
 
+The critic-normalization pilot compares graph and local actors against their original unnormalized configurations:
+
+```powershell
+python -m src.rl.train_mappo --config configs/rl/graph_mappo.json --output artifacts/mappo/pilot-baseline-graph --seed 11 --max-seconds 1800
+python -m src.rl.train_mappo --config configs/rl/local_mappo.json --output artifacts/mappo/pilot-baseline-local --seed 11 --max-seconds 1800
+python -m src.rl.train_mappo --config configs/rl/graph_mappo_normalized.json --output artifacts/mappo/pilot-normalized-graph --seed 11 --max-seconds 1800
+python -m src.rl.train_mappo --config configs/rl/local_mappo_normalized.json --output artifacts/mappo/pilot-normalized-local --seed 11 --max-seconds 1800
+```
+
+These four pilots fit a two-hour budget. They are diagnostic runs; compare common validated episode counts and do not use their seed-11 results as promotion evidence.
+
 ```powershell
 python -m src.rl.train_mappo --config configs/rl/graph_mappo.json --output artifacts/mappo/pilot-graph --seed 11 --max-seconds 1800
 python -m src.rl.train_mappo --config configs/rl/local_mappo.json --output artifacts/mappo/pilot-local --seed 11 --max-seconds 1800
@@ -49,6 +60,8 @@ python -m src.rl.mappo_campaign holdout --config configs/rl/graph_mappo_holdout.
 ```
 
 The holdout command writes `status.json` and preserves completed cases. After an interruption, rerun the same command with `--resume`; it requires the same config and frozen selection. A case is reused only when protocol, implementation, environment, controller, and model hashes match. `report.md` separates policy performance, graph contribution, and each policy's promotion gate. Three learner seeds provide limited evidence about training variability. This protocol compares mapped road communication with self-only communication; it does not compare road adjacency with all-to-all attention.
+
+The original `graph_mappo.json` and `local_mappo.json` keep the unnormalized critic for compatibility. The `*_normalized.json` variants enable running return normalization, share completed fair-cycle validation cases under `artifacts/mappo/validation-cache`, and evaluate at most two cases at once. Per-case timeouts default to 180 seconds. Timed-out cases remain incomplete and are never selected; reruns use the same hash-checked cache and retry path.
 
 ## Verification before training
 

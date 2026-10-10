@@ -104,6 +104,54 @@ class CentralizedCritic(nn.Module):
         return result[0] if unbatched else result
 
 
+class RunningValueNormalizer:
+    """Welford statistics for stable critic targets, stored on the learner device."""
+
+    def __init__(self, device="cpu", epsilon=1e-5):
+        self.mean = torch.zeros((), dtype=torch.float64, device=device)
+        self.m2 = torch.zeros((), dtype=torch.float64, device=device)
+        self.count = torch.zeros((), dtype=torch.float64, device=device)
+        self.epsilon = float(epsilon)
+
+    @property
+    def variance(self):
+        return self.m2 / self.count.clamp_min(1.)
+
+    @property
+    def scale(self):
+        return torch.sqrt(self.variance).clamp_min(self.epsilon)
+
+    def normalize(self, values):
+        return (values - self.mean.to(values.dtype)) / self.scale.to(values.dtype)
+
+    def denormalize(self, values):
+        return values * self.scale.to(values.dtype) + self.mean.to(values.dtype)
+
+    @torch.no_grad()
+    def update(self, values):
+        values = torch.as_tensor(values, dtype=torch.float64, device=self.mean.device).reshape(-1)
+        if values.numel() == 0 or not torch.isfinite(values).all():
+            raise ValueError("Value normalization requires finite return targets")
+        batch_count = torch.tensor(float(values.numel()), dtype=torch.float64, device=self.mean.device)
+        batch_mean = values.mean()
+        batch_m2 = ((values - batch_mean) ** 2).sum()
+        delta = batch_mean - self.mean
+        total = self.count + batch_count
+        self.mean += delta * batch_count / total
+        self.m2 += batch_m2 + delta.square() * self.count * batch_count / total
+        self.count = total
+
+    def state_dict(self):
+        return {key: getattr(self, key).detach().cpu() for key in ("mean", "m2", "count")}
+
+    def load_state_dict(self, state):
+        for key in ("mean", "m2", "count"):
+            value = torch.as_tensor(state[key], dtype=torch.float64, device=self.mean.device)
+            if value.shape != () or not torch.isfinite(value) or (key in ("m2", "count") and value < 0):
+                raise ValueError("Invalid value normalization checkpoint statistics")
+            getattr(self, key).copy_(value)
+
+
 def masked_distribution(logits, masks):
     legal = torch.as_tensor(masks, dtype=torch.bool, device=logits.device)
     if legal.shape != logits.shape or not legal.any(dim=-1).all():
@@ -158,11 +206,17 @@ class MAPPOUpdater:
     def __init__(self, actor, critic, config):
         self.actor, self.critic, self.config = actor, critic, config
         self.device = next(actor.parameters()).device
+        self.value_normalizer = (RunningValueNormalizer(self.device)
+                                 if config.get("value_normalization", False) else None)
         lr = float(config.get("learning_rate", 3e-4))
         self.actor_optimizer = torch.optim.Adam(actor.parameters(), lr=lr)
         self.critic_optimizer = torch.optim.Adam(critic.parameters(), lr=lr)
         self.updates = 0
         self.last_diagnostics = {}
+
+    def predict_values(self, observations):
+        values = self.critic(observations)
+        return self.value_normalizer.denormalize(values) if self.value_normalizer else values
 
     def update(self, observations, actions, masks, old_log_probs, advantages, returns):
         tensors = [torch.as_tensor(value, device=self.device) for value in
@@ -176,6 +230,10 @@ class MAPPOUpdater:
             raise ValueError("PPO advantages and returns must retain all graph nodes")
         if not legal.gather(-1, action.long().unsqueeze(-1)).all():
             raise ValueError("Rollout contains an action that was illegal under its mask")
+        raw_target = target
+        if self.value_normalizer is not None:
+            self.value_normalizer.update(target)
+            target = self.value_normalizer.normalize(target)
         epochs = int(self.config.get("update_epochs", 4))
         batch_size = int(self.config.get("minibatch_size", 32))
         clip = float(self.config.get("clip_epsilon", .2))
@@ -186,8 +244,10 @@ class MAPPOUpdater:
         if batch_size <= 0 or epochs <= 0 or not 0 < clip < 1:
             raise ValueError("Invalid PPO update configuration")
         sample_count = len(obs)
-        diagnostics = {key: [] for key in ("actor_loss", "value_loss", "entropy", "approx_kl",
-                                            "clip_fraction", "actor_gradient_norm", "critic_gradient_norm")}
+        diagnostics = {key: [] for key in ("actor_loss", "value_loss", "raw_value_mse", "explained_variance",
+                                            "entropy", "approx_kl",
+                                            "clip_fraction", "actor_gradient_norm", "critic_gradient_norm",
+                                            "critic_clipped_fraction")}
         stopped_early = False
         for _ in range(epochs):
             permutation = torch.randperm(sample_count, device=self.device)
@@ -203,11 +263,19 @@ class MAPPOUpdater:
                 entropy = distribution.entropy().mean()
                 predicted = self.critic(obs[indices])
                 value_loss = torch.nn.functional.huber_loss(predicted, target[indices])
+                raw_predicted = (self.value_normalizer.denormalize(predicted)
+                                 if self.value_normalizer else predicted)
+                raw_mse = torch.nn.functional.mse_loss(raw_predicted, raw_target[indices])
+                target_variance = raw_target[indices].var(unbiased=False)
+                explained_variance = (1. - (raw_target[indices] - raw_predicted).var(unbiased=False)
+                                      / target_variance.clamp_min(1e-8))
+                explained_variance = torch.where(target_variance > 1e-8, explained_variance, 0.)
                 approx_kl = ((ratio - 1.) - log_ratio).mean()
                 clip_fraction = (torch.abs(ratio - 1.) > clip).float().mean()
                 loss = actor_loss - entropy_coef * entropy
                 if not all(torch.isfinite(value).all() for value in
-                           (loss, value_loss, approx_kl, clip_fraction, predicted)):
+                           (loss, value_loss, raw_mse, explained_variance,
+                            approx_kl, clip_fraction, predicted, raw_predicted)):
                     raise RuntimeError("Non-finite MAPPO loss or prediction")
                 self.actor_optimizer.zero_grad(set_to_none=True)
                 loss.backward()
@@ -222,10 +290,13 @@ class MAPPOUpdater:
                     raise RuntimeError("Non-finite MAPPO critic gradient")
                 self.critic_optimizer.step()
                 for key, value in (("actor_loss", actor_loss), ("value_loss", value_loss),
+                                   ("raw_value_mse", raw_mse),
+                                   ("explained_variance", explained_variance),
                                    ("entropy", entropy), ("approx_kl", approx_kl),
                                    ("clip_fraction", clip_fraction),
                                    ("actor_gradient_norm", actor_norm),
-                                   ("critic_gradient_norm", critic_norm)):
+                                   ("critic_gradient_norm", critic_norm),
+                                   ("critic_clipped_fraction", (critic_norm > max_norm).float())):
                     diagnostics[key].append(float(value.detach()))
                 if float(approx_kl.detach()) > kl_limit:
                     stopped_early = True

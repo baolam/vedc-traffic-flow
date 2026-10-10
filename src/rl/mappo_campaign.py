@@ -1,11 +1,8 @@
 """Freeze validation-selected MAPPO actors and run a resumable holdout campaign."""
 
 import argparse
-import hashlib
-import importlib.metadata
 import json
 import os
-import platform
 import shutil
 import time
 from pathlib import Path
@@ -16,27 +13,14 @@ from contracts.research import (GRAPH_MAPPO_PROTOCOL, GRAPH_MAPPO_SEED_SPLITS,
                                 GRAPH_MAPPO_HORIZON, GRAPH_MAPPO_TIMING,
                                 RESEARCH_SCENARIOS)
 from src.rl.benchmark import (graph_communication_comparison,
-                              graph_mappo_promotion_gate, run_case, score)
+                              graph_mappo_promotion_gate, score)
+from src.rl.evaluation import case_signature, run_case_cached
 from src.simulation.runtime import file_hash
 
 LEARNER_SEEDS = (17, 29, 43)
 ARCHITECTURES = ("graph_mappo", "local_mappo")
 BASELINES = ("fair_cycle", "fair_cycle_dqn", "fixed_time", "actuated",
              "max_queue", "max_pressure", "edgeflow")
-IMPLEMENTATION_FILES = (
-    "contracts/research.py", "contracts/scenarios.py", "contracts/contracts_sdk.py",
-    "contracts/schemas/telemetry.json", "src/control/research.py", "src/control/controllers.py",
-    "src/control/actuator.py", "src/control/fair_cycle.py",
-    "src/control/graph_mappo.py", "src/control/graph_mappo_numpy.py", "src/control/factory.py",
-    "src/rl/policy.py", "src/rl/sumo_env.py", "src/rl/benchmark.py", "src/rl/mappo_campaign.py",
-    "src/simulation/build_network.py", "src/simulation/runtime.py",
-)
-
-
-def _hash(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-
-
 def _read_training(root, algorithm, seed):
     path = Path(root) / f"seed-{seed}" / "training.json"
     training = json.loads(path.read_text(encoding="utf-8"))
@@ -101,45 +85,13 @@ def freeze_training_selections(graph_root, local_root, output):
 
 
 def _case_signature(config, controller, scenario, seed):
-    environment = config["environment"]
-    package_versions = {}
-    for package in ("eclipse-sumo", "traci", "numpy", "jsonschema"):
-        try:
-            package_versions[package] = importlib.metadata.version(package)
-        except importlib.metadata.PackageNotFoundError:
-            package_versions[package] = None
-    model_hash = file_hash(controller["model_path"]) if controller.get("model_path") else None
-    return _hash({"protocol": GRAPH_MAPPO_PROTOCOL, "controller": controller,
-                  "model_sha256": model_hash, "scenario": scenario, "seed": seed,
-                  "environment": config["environment"],
-                  "network_sha256": file_hash(environment["network_path"]),
-                  "topology_sha256": file_hash(environment["topology_path"]),
-                  "implementation": {path: file_hash(path) for path in IMPLEMENTATION_FILES},
-                  "runtime": {"python": platform.python_version(), "packages": package_versions}})
+    return case_signature(config, controller, scenario, seed)
 
 
-def _run_case_cached(config, controller, scenario, seed, root):
-    signature = _case_signature(config, controller, scenario, seed)
-    base = Path(root) / controller["name"] / f"{scenario}-{seed}-{signature[:12]}"
-    case_dir = base
-    suffix = 1
-    while case_dir.exists():
-        metrics_path, identity_path = case_dir / "metrics.json", case_dir / "identity.json"
-        if metrics_path.is_file() and identity_path.is_file():
-            identity = json.loads(identity_path.read_text(encoding="utf-8"))
-            metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
-            if identity.get("signature") == signature:
-                if not metrics.get("valid"):
-                    raise ValueError(f"Refusing invalid cached case: {case_dir}")
-                return metrics
-        suffix += 1
-        case_dir = Path(f"{base}-attempt{suffix}")
+def _run_case_cached(config, controller, scenario, seed, root, timeout_s=180., deadline=None):
     spec = {key: value for key, value in controller.items() if key != "name"}
-    metrics = run_case(config, spec, scenario, seed, case_dir)
-    if not metrics.get("valid"):
-        raise ValueError(f"Invalid holdout run retained at {case_dir}")
-    (case_dir / "identity.json").write_text(json.dumps({"signature": signature}, indent=2),
-                                            encoding="utf-8")
+    metrics, _ = run_case_cached(config, spec, scenario, seed, root,
+                                 timeout_s=timeout_s, deadline=deadline)
     return metrics
 
 
@@ -178,9 +130,14 @@ def run_holdout(config, frozen_path, output, max_seconds=9000, resume=False):
     controllers.update({name: {"name": name, **spec} for name, spec in baseline_specs.items()})
     if set(controllers) != {*[f"{arch}_seed{seed}" for arch in ARCHITECTURES for seed in LEARNER_SEEDS], *BASELINES}:
         raise ValueError("Holdout controllers must be the six selected policies and seven frozen baselines")
+    evaluation = config.get("evaluation", {})
+    case_timeout_s = float(evaluation.get("case_timeout_s", 180.))
+    if case_timeout_s <= 0:
+        raise ValueError("Holdout per-case timeout must be positive")
     output.mkdir(parents=True, exist_ok=True)
     frozen_hash = file_hash(frozen_path)
     run_config = {"environment": config["environment"], "baselines": baseline_specs,
+                  "evaluation": {"case_timeout_s": case_timeout_s},
                   "frozen_sha256": frozen_hash, "protocol": GRAPH_MAPPO_PROTOCOL}
     config_path = output / "config.json"
     if config_path.exists() and json.loads(config_path.read_text(encoding="utf-8")) != run_config:
@@ -188,6 +145,7 @@ def run_holdout(config, frozen_path, output, max_seconds=9000, resume=False):
     config_path.write_text(json.dumps(run_config, indent=2), encoding="utf-8")
     results, completed = {}, 0
     started = time.monotonic()
+    deadline = started + max_seconds
     total = len(controllers) * len(RESEARCH_SCENARIOS) * len(GRAPH_MAPPO_SEED_SPLITS["holdout"])
     for name, controller in controllers.items():
         rows = []
@@ -203,7 +161,8 @@ def run_holdout(config, frozen_path, output, max_seconds=9000, resume=False):
                     (output / "status.json").write_text(json.dumps(status, indent=2), encoding="utf-8")
                     return status
                 try:
-                    row = _run_case_cached(config, controller, scenario, seed, output / "cases")
+                    row = _run_case_cached(config, controller, scenario, seed, output / "cases",
+                                           timeout_s=case_timeout_s, deadline=deadline)
                 except Exception as error:
                     results[name] = rows
                     (output / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")

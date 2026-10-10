@@ -1,6 +1,10 @@
 import copy
 import json
+import os
 import random
+from pathlib import Path
+import threading
+import time
 
 import numpy as np
 import pytest
@@ -27,6 +31,13 @@ def telemetry_snapshot(topology, now=0.):
                             "oldest_external_wait_s": 0.}
                            for index, app in enumerate(node["approaches"])]}
     return state
+
+
+def _sleeping_case_worker(start_event, result_pipe, *unused):
+    if os.name != "nt":
+        os.setsid()
+    start_event.wait()
+    time.sleep(30)
 
 
 def actor_pair(topology, seed=17):
@@ -122,6 +133,93 @@ def test_time_scaled_gae_bootstraps_elapsed_time_and_stops_at_terminal():
     first = 1. + .99 * 3. + .99 * (.95 ** (5. / 90.)) * last
     np.testing.assert_allclose(advantages[:, 0], [first, last], rtol=1e-6)
     np.testing.assert_allclose(returns, advantages)
+
+
+def test_running_value_normalizer_tracks_returns_and_rejects_invalid_values():
+    torch = pytest.importorskip("torch")
+    from src.rl.graph_mappo import RunningValueNormalizer
+
+    normalizer = RunningValueNormalizer()
+    raw = torch.tensor([1., 2., 3.])
+    normalizer.update(raw)
+    assert normalizer.count.item() == 3
+    assert normalizer.mean.item() == 2
+    torch.testing.assert_close(normalizer.variance, torch.tensor(2 / 3, dtype=torch.float64))
+    torch.testing.assert_close(normalizer.denormalize(normalizer.normalize(raw)), raw)
+    with pytest.raises(ValueError, match="finite return targets"):
+        normalizer.update(torch.tensor([float("nan")]))
+
+
+def test_validation_case_cache_shares_fair_cycle_cases_across_architecture_configs(tmp_path, monkeypatch):
+    from src.rl import evaluation
+
+    graph_config = {"environment": {"topology_path": "contracts/topology/four_intersection_rl_v1.json",
+                                    "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+                                    "mode": "graph_mappo", "demand_s": 1800, "drain_s": 600}}
+    local_config = copy.deepcopy(graph_config)
+    local_config["environment"]["mode"] = "local_mappo"
+    controller = {"type": "fair_cycle", "parameters": {"cycle_time_s": 90,
+                                                          "min_green_share": .25}}
+    signature = evaluation.case_signature(graph_config, controller, "balanced", 31001)
+    assert evaluation.case_signature(local_config, controller, "balanced", 31001) == signature
+    calls = []
+
+    def fake_run_case(config, controller_spec, scenario, seed, output, timeout_s):
+        output = Path(output)
+        output.mkdir(parents=True)
+        metrics = {"valid": True, "scenario": scenario, "seed": seed,
+                   "delay_per_scheduled_s": 10., "controller": controller_spec}
+        (output / "metrics.json").write_text(json.dumps(metrics))
+        calls.append(output)
+        return metrics
+
+    monkeypatch.setattr(evaluation, "_run_isolated_case", fake_run_case)
+    root = tmp_path / "cache"
+    partial = root / signature[:2] / f"balanced-31001-{signature}"
+    partial.mkdir(parents=True)
+    (partial / "failure.json").write_text("partial")
+
+    first, hit = evaluation.run_case_cached(graph_config, controller, "balanced", 31001, root)
+    second, second_hit = evaluation.run_case_cached(local_config, controller, "balanced", 31001, root)
+    assert first["valid"] and second["valid"]
+    assert not hit and second_hit
+    assert len(calls) == 1 and calls[0].name.endswith("-attempt1")
+
+
+def test_isolated_evaluation_worker_is_terminated_at_case_deadline(tmp_path):
+    from src.rl.evaluation import _run_isolated_case
+
+    started = time.monotonic()
+    with pytest.raises(TimeoutError, match="deadline"):
+        _run_isolated_case({}, {}, "balanced", 31001, tmp_path / "timeout", .2,
+                           worker=_sleeping_case_worker)
+    assert time.monotonic() - started < 6.
+
+
+def test_parallel_evaluation_preserves_case_order_and_caps_worker_count(tmp_path, monkeypatch):
+    from src.rl import evaluation
+
+    guard = threading.Lock()
+    active = maximum = 0
+
+    def fake_case(config, controller, scenario, seed, root, timeout_s=180., deadline=None):
+        nonlocal active, maximum
+        with guard:
+            active += 1
+            maximum = max(maximum, active)
+        time.sleep(.02)
+        with guard:
+            active -= 1
+        return {"scenario": scenario, "seed": seed}, False
+
+    monkeypatch.setattr(evaluation, "run_case_cached", fake_case)
+    rows, diagnostics = evaluation.evaluate_cases(
+        {}, {"type": "fair_cycle"}, ("balanced", "directional_surge"), (1, 2),
+        tmp_path, workers=2)
+    assert [(row["scenario"], row["seed"]) for row in rows] == [
+        ("balanced", 1), ("balanced", 2), ("directional_surge", 1), ("directional_surge", 2)]
+    assert maximum == 2
+    assert diagnostics["cases"] == 4
 
 
 def test_masked_ppo_update_keeps_graphs_together_and_reports_diagnostics():
@@ -336,7 +434,8 @@ def test_mappo_checkpoint_restores_network_optimizers_and_rng(tmp_path):
     provenance = {"network_sha256": "net", "topology_sha256": "topo"}
     seed_everything(43)
     actor_a, critic_a = GraphActor(graph), CentralizedCritic()
-    updater_a = MAPPOUpdater(actor_a, critic_a, {"minibatch_size": 4, "update_epochs": 1})
+    updater_a = MAPPOUpdater(actor_a, critic_a, {"minibatch_size": 4, "update_epochs": 1,
+                                                "value_normalization": True})
     observations = np.random.default_rng(43).normal(size=(4, 4, 52)).astype(np.float32)
     masks = np.ones((4, 4, 3), dtype=bool)
     with torch.no_grad():
@@ -357,7 +456,8 @@ def test_mappo_checkpoint_restores_network_optimizers_and_rng(tmp_path):
     expected_critic = [parameter.detach().clone() for parameter in critic_a.parameters()]
 
     actor_b, critic_b = GraphActor(graph), CentralizedCritic()
-    updater_b = MAPPOUpdater(actor_b, critic_b, {"minibatch_size": 4, "update_epochs": 1})
+    updater_b = MAPPOUpdater(actor_b, critic_b, {"minibatch_size": 4, "update_epochs": 1,
+                                                "value_normalization": True})
     progress = load_training_checkpoint(checkpoint, config, 43, provenance,
                                         actor_b, critic_b, updater_b, torch.device("cpu"))
     assert progress == {"episodes": 8, "validation": []}
@@ -367,3 +467,19 @@ def test_mappo_checkpoint_restores_network_optimizers_and_rng(tmp_path):
     assert torch.equal(torch.rand(1), expected_random[2])
     assert all(torch.equal(left, right) for left, right in zip(actor_b.parameters(), expected_actor))
     assert all(torch.equal(left, right) for left, right in zip(critic_b.parameters(), expected_critic))
+    assert updater_a.value_normalizer.count.item() == updater_b.value_normalizer.count.item()
+
+    legacy = torch.load(checkpoint, weights_only=False)
+    legacy["version"] = 1
+    legacy.pop("value_normalizer")
+    legacy_path = tmp_path / "legacy-checkpoint.pt"
+    torch.save(legacy, legacy_path)
+    actor_c, critic_c = GraphActor(graph), CentralizedCritic()
+    updater_c = MAPPOUpdater(actor_c, critic_c, {"minibatch_size": 4, "update_epochs": 1})
+    with pytest.raises(ValueError, match="Version 1 checkpoint"):
+        load_training_checkpoint(legacy_path, config, 43, provenance,
+                                 actor_c, critic_c, MAPPOUpdater(actor_c, critic_c,
+                                                               {"value_normalization": True}),
+                                 torch.device("cpu"))
+    load_training_checkpoint(legacy_path, config, 43, provenance,
+                             actor_c, critic_c, updater_c, torch.device("cpu"))
