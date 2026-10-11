@@ -295,6 +295,7 @@ def _find_case_directory(cache_root, scenario, seed, signature):
 
 def _write_case_identity(case_dir, signature):
     identity_path = Path(case_dir) / "identity.json"
+    identity_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = Path(str(identity_path) + ".tmp")
     temporary.write_text(json.dumps({"signature": signature}, indent=2), encoding="utf-8")
     temporary.replace(identity_path)

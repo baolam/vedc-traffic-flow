@@ -306,6 +306,11 @@ def test_windows_case_scheduler_launches_two_processes_on_its_calling_thread(tmp
     assert maximum == 2
     assert len(completed) == 4
     assert diagnostics["workers"] == 2
+    for scenario, seed in (("balanced", 1), ("balanced", 2),
+                           ("directional_surge", 1), ("directional_surge", 2)):
+        identity_files = list(tmp_path.glob(f"??/{scenario}-{seed}-*/identity.json"))
+        assert len(identity_files) == 1
+        assert json.loads(identity_files[0].read_text())["signature"]
 
 
 def test_masked_ppo_update_keeps_graphs_together_and_reports_diagnostics():
