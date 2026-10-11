@@ -10,6 +10,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from pathlib import Path
 
 import numpy as np
@@ -747,7 +748,8 @@ def run_campaign(config_path, output, resume=False):
             state["preflight"] = preflight
         except Exception as error:
             preflight_stage["status"] = "failed"
-            state["failure"] = {"stage": "preflight", "reason": str(error)}
+            state["failure"] = {"stage": "preflight", "reason": str(error),
+                                 "traceback": traceback.format_exc()}
             stop_clock()
             _persist_campaign(state_path, state)
             return state
