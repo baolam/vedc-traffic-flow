@@ -7,8 +7,12 @@ import importlib.metadata
 import json
 import multiprocessing as mp
 import os
+import pickle
 import platform
+import select
 import signal
+import socket
+import struct
 import threading
 import time
 import traceback
@@ -28,6 +32,46 @@ IMPLEMENTATION_FILES = (
     "src/simulation/build_network.py", "src/simulation/runtime.py",
 )
 _WINDOWS_PROCESS_START_LOCK = threading.Lock()
+
+
+class _SocketConnection:
+    """Small framed-pickle connection for Windows, where named pipes are restricted."""
+
+    def __init__(self, sock):
+        self.sock = sock
+
+    def send(self, value):
+        payload = pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+        self.sock.sendall(struct.pack("!Q", len(payload)) + payload)
+
+    def _read_exact(self, size):
+        chunks = bytearray()
+        while len(chunks) < size:
+            chunk = self.sock.recv(size - len(chunks))
+            if not chunk:
+                raise EOFError("Isolated SUMO worker closed its result channel")
+            chunks.extend(chunk)
+        return bytes(chunks)
+
+    def recv(self):
+        size = struct.unpack("!Q", self._read_exact(8))[0]
+        return pickle.loads(self._read_exact(size))
+
+    def poll(self, timeout=0.):
+        return bool(select.select([self.sock], [], [], timeout)[0])
+
+    def close(self):
+        self.sock.close()
+
+
+def _socket_worker_entry(worker, start_event, address, *args):
+    start_event.wait()
+    child_socket = socket.create_connection(address, timeout=30.)
+    pipe = _SocketConnection(child_socket)
+    try:
+        worker(start_event, pipe, *args)
+    finally:
+        pipe.close()
 
 
 def _hash(value):
@@ -161,25 +205,36 @@ def _launch_isolated_case(config, controller, scenario, seed, output, worker=Non
     context = mp.get_context("spawn")
     job = None
     if os.name == "nt":
-        # Windows uses named pipes for multiprocessing.Connection. Concurrent
-        # Pipe creation from evaluator threads can fail with WinError 5. The
-        # multi-case scheduler launches these from its main thread.
+        # This Windows environment denies a second concurrent named Pipe.
+        # A loopback socket avoids both named pipes and socket-handle sharing.
         with _WINDOWS_PROCESS_START_LOCK:
             start_event = context.Event()
-            receive_pipe, send_pipe = context.Pipe(duplex=False)
-            process = context.Process(target=worker or _case_process,
-                                      args=(start_event, send_pipe, config, controller,
-                                            scenario, seed, str(output)))
-            process.start()
-            send_pipe.close()
+            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            listener.bind(("127.0.0.1", 0))
+            listener.listen(1)
+            address = listener.getsockname()
+            process = context.Process(
+                target=_socket_worker_entry,
+                args=(worker or _case_process, start_event, address, config,
+                      controller, scenario, seed, str(output)))
             try:
+                process.start()
                 job = _WindowsJob()
                 job.assign(process.pid)
                 start_event.set()
+                listener.settimeout(30.)
+                parent_socket, _ = listener.accept()
+                receive_pipe = _SocketConnection(parent_socket)
             except BaseException:
-                _stop_process_tree(process, job)
-                receive_pipe.close()
+                listener.close()
+                if process.pid is not None:
+                    _stop_process_tree(process, job)
+                else:
+                    if job is not None:
+                        job.close()
                 raise
+            finally:
+                listener.close()
     else:
         start_event = context.Event()
         receive_pipe, send_pipe = context.Pipe(duplex=False)
@@ -316,7 +371,6 @@ def _evaluate_cases_windows(config, controller, scenarios, seeds, output, *, cac
                     timeout_s, deadline - time.monotonic())
                 if remaining <= 0:
                     raise TimeoutError("Evaluation budget expired before the next SUMO case")
-                case_dir.mkdir(parents=True, exist_ok=True)
                 runner = _launch_isolated_case(config, controller, scenario, seed, case_dir)
                 runner.update({"index": next_index, "scenario": scenario, "seed": seed,
                                "signature": signature, "case_dir": case_dir,
