@@ -49,11 +49,15 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "display_name": "Four Intersections Grid v1",
         "net_rel_path": "services/simulator/sumo_configs/four_intersection_v1/four_intersection_v1.net.xml",
         "expected_net_sha256": [
-            "5105ee4e92315ad533ff5621dc8f8bbaf2ad72d19f6e2863091644ad24897c51",
-            "c52327a5fa6cb9aea03f170ecace465222cc03c354ce6a32e06904cffd6d4deb"
+            "98eec91d0f66ad925ecb881e911fedec018c552f9a416e548a503e76b77f0b9b",  # Canonical (LF)
+            "5105ee4e92315ad533ff5621dc8f8bbaf2ad72d19f6e2863091644ad24897c51",  # Windows (CRLF)
+            "c52327a5fa6cb9aea03f170ecace465222cc03c354ce6a32e06904cffd6d4deb",
         ],
         "topo_rel_path": "contracts/topology/four_intersection_v1.json",
-        "expected_topo_sha256": "2d5ace16693cb48591d71759da7e9fac6928975135574336bf34e57783d92e4a",
+        "expected_topo_sha256": [
+            "53f5800d8774566facd09cae0c126613247540315d5dc1c9a8680196be2732f0",  # Canonical (LF)
+            "2d5ace16693cb48591d71759da7e9fac6928975135574336bf34e57783d92e4a",  # Windows (CRLF)
+        ],
         "controlled_tls_ids": ["J1", "J2", "J3", "J4"],
         "bottleneck_edge": "J3_N_IN",
         "normal_speed_mps": 13.89,
@@ -64,9 +68,14 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "topology_id": "grid4x4",
         "display_name": "4x4 Manhattan Grid (16 Signalized Intersections)",
         "net_rel_path": "services/simulator/sumo_configs/grid4x4/grid4x4.net.xml",
-        "expected_net_sha256": "0af71d655e4d0c0e2f0a39883b60a1f95d662e930794a9c76bf961402608869d",
+        "expected_net_sha256": [
+            "0af71d655e4d0c0e2f0a39883b60a1f95d662e930794a9c76bf961402608869d",
+        ],
         "topo_rel_path": "contracts/topology/grid4x4.json",
-        "expected_topo_sha256": "5b08c09b6004a07b8a4174ff2c422beb8bdc15a504f114a7d68c7d9a382fdd9e",
+        "expected_topo_sha256": [
+            "f3372ba98c4f560da99e97bdc67d1c3fa6709849c0ad81515268ea8f0c6cb6f3",  # Canonical (LF)
+            "5b08c09b6004a07b8a4174ff2c422beb8bdc15a504f114a7d68c7d9a382fdd9e",  # Windows (CRLF)
+        ],
         "controlled_tls_ids": [
             "A0", "A1", "A2", "A3",
             "B0", "B1", "B2", "B3",
@@ -82,9 +91,14 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "topology_id": "cologne8",
         "display_name": "Cologne TAPAS Subnetwork (8 Signalized Intersections)",
         "net_rel_path": "services/simulator/sumo_configs/cologne8/cologne8.net.xml",
-        "expected_net_sha256": "51194519fd4d69726612d38b44606637c31389b86079f909139ba8f1aaffd2a8",
+        "expected_net_sha256": [
+            "51194519fd4d69726612d38b44606637c31389b86079f909139ba8f1aaffd2a8",
+        ],
         "topo_rel_path": "contracts/topology/cologne8.json",
-        "expected_topo_sha256": "7c350306e765f56833908ae3eae45ad1201a212adce9328d35067ffc387c01fe",
+        "expected_topo_sha256": [
+            "fae7e17c9a632d3b510118a3e852697142fd75b8b611c1b1b807e02a4c5f5b49",  # Canonical (LF)
+            "7c350306e765f56833908ae3eae45ad1201a212adce9328d35067ffc387c01fe",  # Windows (CRLF)
+        ],
         "controlled_tls_ids": [
             "26110729", "247379907", "256201389",
             "cluster_1098574052_1098574061_247379905",
@@ -99,9 +113,15 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "topology_id": "hcm_corridor",
         "display_name": "Ho Chi Minh City Arterial Corridor (29 Signalized Intersections)",
         "net_rel_path": "services/simulator/sumo_configs/hcm_corridor/hcm_corridor.net.xml",
-        "expected_net_sha256": "83c61b6dc6c0ff9484ad239a6d2ece7af52c0637485855684d738bc4f6a5f9d3",
+        "expected_net_sha256": [
+            "d62975213c5c4a3e9afeb71ffa611900e3c7e302d6201da04cddc160f10586c7",  # Canonical (LF)
+            "83c61b6dc6c0ff9484ad239a6d2ece7af52c0637485855684d738bc4f6a5f9d3",  # Windows (CRLF)
+        ],
         "topo_rel_path": "contracts/topology/hcm_corridor.json",
-        "expected_topo_sha256": "06f895b3e6bf315d0bada97de05a1eec9e5124b1a27b6a5cdb4804e9a305f210",
+        "expected_topo_sha256": [
+            "bbea84ac877f2e52a5f33e9d226ede2c09ec7397f53a7107675bc90d265c8954",  # Canonical (LF)
+            "06f895b3e6bf315d0bada97de05a1eec9e5124b1a27b6a5cdb4804e9a305f210",  # Windows (CRLF)
+        ],
         "controlled_tls_ids": [
             "2217938301", "2217938309", "2217938311", "2217938313", "2217938327",
             "2217939289", "2217939291", "2938641215", "2942327970", "2942327993",
@@ -122,14 +142,17 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
 
 
 def compute_file_sha256(file_path: Path) -> str:
-    """Compute SHA-256 hash of a file."""
+    """
+    Compute deterministic SHA-256 hash of a file.
+    Normalizes CRLF (\\r\\n) to LF (\\n) for text/XML/JSON files so that
+    cryptographic verification is platform-agnostic across Windows, Linux, and macOS.
+    """
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
-    h = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(65536):
-            h.update(chunk)
-    return h.hexdigest()
+    data = file_path.read_bytes()
+    if file_path.suffix.lower() in [".xml", ".json", ".txt", ".csv"]:
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 # ==============================================================================
@@ -216,24 +239,30 @@ class NetworkMappingResolver:
 
     def _verify_hashes(self):
         actual_net_sha = compute_file_sha256(self.net_path)
+        raw_net_sha = hashlib.sha256(self.net_path.read_bytes()).hexdigest()
         expected_net = self.info["expected_net_sha256"]
         valid_net_shas = expected_net if isinstance(expected_net, list) else [expected_net]
-        if actual_net_sha not in valid_net_shas:
+        if actual_net_sha not in valid_net_shas and raw_net_sha not in valid_net_shas:
             raise ValueError(
                 f"NET SHA-256 MISMATCH for {self.topology_id}:\n"
                 f"  Expected one of: {valid_net_shas}\n"
-                f"  Actual:          {actual_net_sha}"
+                f"  Actual (norm):   {actual_net_sha}\n"
+                f"  Actual (raw):    {raw_net_sha}"
             )
         self.actual_net_sha = actual_net_sha
 
         actual_topo_sha = compute_file_sha256(self.topo_path)
-        expected_topo_sha = self.info["expected_topo_sha256"]
-        if actual_topo_sha != expected_topo_sha:
+        raw_topo_sha = hashlib.sha256(self.topo_path.read_bytes()).hexdigest()
+        expected_topo = self.info["expected_topo_sha256"]
+        valid_topo_shas = expected_topo if isinstance(expected_topo, list) else [expected_topo]
+        if actual_topo_sha not in valid_topo_shas and raw_topo_sha not in valid_topo_shas:
             raise ValueError(
                 f"TOPOLOGY SHA-256 MISMATCH for {self.topology_id}:\n"
-                f"  Expected: {expected_topo_sha}\n"
-                f"  Actual:   {actual_topo_sha}"
+                f"  Expected one of: {valid_topo_shas}\n"
+                f"  Actual (norm):   {actual_topo_sha}\n"
+                f"  Actual (raw):    {raw_topo_sha}"
             )
+        self.actual_topo_sha = actual_topo_sha
 
     def _build_mapping(self) -> Dict[str, Any]:
         """Parse net XML and build multi-level topology mapping."""
@@ -419,7 +448,7 @@ class NetworkMappingResolver:
             "net_path": str(self.net_path.resolve()),
             "topo_path": str(self.topo_path.resolve()),
             "net_sha256": self.actual_net_sha,
-            "topo_sha256": self.info["expected_topo_sha256"],
+            "topo_sha256": self.actual_topo_sha,
             "controlled_tls_ids": self.info["controlled_tls_ids"],
             "uncontrolled_node_ids": [nid for nid in nodes_mapping if not nodes_mapping[nid]["is_controlled_tls"]],
             "bottleneck": {
