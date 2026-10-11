@@ -45,6 +45,7 @@ services:
       - ./contracts:/contracts
       - ./src:/app/src
       - ./output:/app/output
+      - ./artifacts:/app/artifacts
     profiles:
       - simulation
       - vision
