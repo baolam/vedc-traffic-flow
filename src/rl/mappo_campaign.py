@@ -19,7 +19,7 @@ from contracts.research import (GRAPH_MAPPO_PROTOCOL, GRAPH_MAPPO_SEED_SPLITS,
                                 GRAPH_MAPPO_SELECTION_SPEC, RESEARCH_SCENARIOS)
 from src.rl.benchmark import (graph_communication_comparison,
                               graph_mappo_promotion_gate, score)
-from src.rl.evaluation import case_signature, run_case_cached
+from src.rl.evaluation import case_signature, evaluate_cases, run_case_cached
 from src.simulation.runtime import file_hash
 
 LEARNER_SEEDS = (17, 29, 43)
