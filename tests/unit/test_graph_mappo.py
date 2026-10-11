@@ -601,7 +601,6 @@ def test_holdout_resumes_atomic_case_ledger_with_two_workers(tmp_path, monkeypat
     def fake_evaluate(unused_config, controller, scenarios, seeds, unused_output, *,
                       cache_root=None, workers=1, timeout_s=180., deadline=None,
                       on_result=None):
-        nonlocal active, maximum
         def make_row(scenario, seed):
             nonlocal active, maximum
             with lock:
