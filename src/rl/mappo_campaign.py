@@ -659,7 +659,7 @@ def _training_run(config_path, output, seed, run_seconds, state, state_path,
                "--output", str(output.resolve()), "--seed", str(seed)]
     if checkpoint.is_file():
         command.extend(("--resume", str(checkpoint.resolve())))
-    result = _run_campaign_child(command, output / f"seed-{seed}" / "campaign.log",
+    result = _run_campaign_child(command, output / "logs" / f"seed-{seed}.log",
                                  state, state_path, stage_name, stage_budget, run_seconds)
     state["training_runs"][f"{output.name}_seed{seed}"] = result
     _persist_campaign(state_path, state)
