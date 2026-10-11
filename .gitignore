@@ -82,20 +82,31 @@ yarn-error.log*
 *.rou.alt.xml
 *.traci.log
 *.tripinfo.xml
+*tripinfo.xml
 *.summary.xml
+*summary.xml
 *.queue.xml
+*queue.xml
 *.edgedata.xml
+*edgedata.xml
 *.vehroute.xml
+*vehroute.xml
 *.vtypeprobe.xml
+*vtypeprobe.xml
 *.netstate.xml
+*netstate.xml
+*.emission.xml
+*emission.xml
+*.zip
 
 # ------------------------------------------
 # Data, Output & Generated Artifacts
 # ------------------------------------------
 output/*
 !output/.gitkeep
-experiments/*
-!experiments/.gitkeep
+# Traffic scenario experiments & custom scenarios (un-ignored)
+# experiments/*
+# !experiments/.gitkeep
 artifacts/*
 !artifacts/.gitkeep
 !artifacts/benchmark_summary.md
@@ -147,6 +158,6 @@ tmp/
 .pio/
 src/hardware/secrets.ini
 
-# Test scenario temporary outputs
-services/simulator/sumo_configs/test_*
+# Test scenario temporary outputs (un-ignored for traffic scenarios)
+# services/simulator/sumo_configs/test_*
 
