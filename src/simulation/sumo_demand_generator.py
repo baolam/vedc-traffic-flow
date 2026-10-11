@@ -251,11 +251,18 @@ class SumoDemandGenerator:
         if duration_s <= 120:
             # Short smoke window
             surge_start_s = warmup_s + 10.0
-            surge_end_s = warmup_s + 40.0
+            surge_end_s = warmup_s + min(40.0, duration_s * 0.8)
             congestion_start_s = warmup_s + 15.0
-            congestion_end_s = warmup_s + 45.0
+            congestion_end_s = warmup_s + min(45.0, duration_s * 0.8)
+        elif duration_s < 1200:
+            # Intermediate duration (e.g. 180s, 300s, 600s fast benchmarks):
+            # Scale intervention window to the active cohort measurement interval [warmup .. warmup + duration]
+            surge_start_s = warmup_s + round(0.20 * duration_s, 1)
+            surge_end_s = warmup_s + round(0.70 * duration_s, 1)
+            congestion_start_s = warmup_s + round(0.20 * duration_s, 1)
+            congestion_end_s = warmup_s + round(0.70 * duration_s, 1)
         else:
-            # Standard research protocol
+            # Standard research protocol (e.g. 1800s benchmark)
             surge_start_s = warmup_s + 300.0
             surge_end_s = warmup_s + 900.0
             congestion_start_s = warmup_s + 300.0

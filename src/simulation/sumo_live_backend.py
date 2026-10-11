@@ -38,7 +38,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import contracts_sdk
+try:
+    import contracts_sdk
+except ImportError:
+    from contracts import contracts_sdk
 from contracts.contracts_sdk import load_schema
 from src.control.factory import create_controller
 from src.control.actuator import ActuatorStateMachine
@@ -100,6 +103,11 @@ class LiveSumoRuntime:
         self.resolver = NetworkMappingResolver(self.topology_id, repo_root=REPO_ROOT)
         self.mapping = self.resolver.mapping
         self.controlled_tls_ids = self.mapping["controlled_tls_ids"]
+
+        # Authoritative resolved topology containing active phase approaches and movements
+        base_topo = contracts_sdk.load_topology(self.topology_id)
+        self.resolved_topology = dict(base_topo)
+        self.resolved_topology["nodes"] = list(self.mapping["nodes"].values())
 
         # Actuator State Machine (yellow 3s, all-red 2s, min green 10s, max green 60s)
         self.actuator = ActuatorStateMachine(yellow_duration_s=3.0, all_red_duration_s=2.0)
@@ -413,12 +421,11 @@ class LiveSumoRuntime:
                     self.telemetry_validator.validate(telemetry)
                     self.telemetry_samples.append(telemetry)
 
-                    # Compute controller command
-                    topology_arg = contracts_sdk.load_topology(self.topology_id)
+                    # Compute controller command using resolved topology mapping
                     cmd = self.controller.compute_command(
                         node_id=nid,
                         telemetry=telemetry,
-                        topology=topology_arg,
+                        topology=self.resolved_topology,
                         network_state=network_state,
                         current_time_s=current_time_s,
                     )

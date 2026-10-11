@@ -335,7 +335,12 @@ class MaxQueueController(BaseController):
             phase_pressures[phase_id] = pressure
 
         if phase_pressures:
-            target_phase = max(phase_pressures.items(), key=lambda x: x[1])[0]
+            curr_p = telemetry.get("current_phase_id")
+            max_val = max(phase_pressures.values())
+            if curr_p and curr_p in phase_pressures and phase_pressures[curr_p] == max_val:
+                target_phase = curr_p
+            else:
+                target_phase = max(phase_pressures.items(), key=lambda x: x[1])[0]
         else:
             target_phase = telemetry.get("current_phase_id", phases[0]["phase_id"])
 
@@ -414,7 +419,12 @@ class MaxPressureController(BaseController):
                 phase_pressures[phase_id] = pressure
 
         if phase_pressures:
-            target_phase = max(phase_pressures.items(), key=lambda x: x[1])[0]
+            curr_p = telemetry.get("current_phase_id")
+            max_val = max(phase_pressures.values())
+            if curr_p and curr_p in phase_pressures and phase_pressures[curr_p] == max_val:
+                target_phase = curr_p
+            else:
+                target_phase = max(phase_pressures.items(), key=lambda x: x[1])[0]
         else:
             target_phase = telemetry.get("current_phase_id", phases[0]["phase_id"])
 
