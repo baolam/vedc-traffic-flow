@@ -12,7 +12,8 @@ import pytest
 from contracts.contracts_sdk import load_topology
 from contracts.research import (GRAPH_MAPPO_ACTIONS, GRAPH_MAPPO_NODE_ORDER,
                                 GRAPH_MAPPO_RELATION_FEATURE_SPEC, GRAPH_MAPPO_SEED_SPLITS,
-                                RESEARCH_SCENARIOS, TOPOLOGY_ID, build_research_graph)
+                                GRAPH_MAPPO_SELECTION_SPEC, RESEARCH_SCENARIOS,
+                                TOPOLOGY_ID, build_research_graph)
 
 
 def telemetry_snapshot(topology, now=0.):
@@ -186,6 +187,24 @@ def test_validation_case_cache_shares_fair_cycle_cases_across_architecture_confi
     assert len(calls) == 1 and calls[0].name.endswith("-attempt1")
 
 
+def test_case_cache_signature_changes_when_resolved_sumo_binary_changes(tmp_path, monkeypatch):
+    from src.rl import evaluation
+    from src.simulation import build_network
+
+    sumo = tmp_path / "sumo.exe"
+    sumo.write_text("sumo version one")
+    monkeypatch.setattr(build_network, "binary", lambda name: str(sumo))
+    config = {"environment": {"topology_path": "contracts/topology/four_intersection_rl_v1.json",
+                              "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+                              "demand_s": 1800, "drain_s": 600}}
+    controller = {"type": "fair_cycle", "parameters": {"cycle_time_s": 90,
+                                                             "min_green_share": .25}}
+    before = evaluation.case_signature(config, controller, "balanced", 60001)
+    sumo.write_text("sumo version two")
+    after = evaluation.case_signature(config, controller, "balanced", 60001)
+    assert before != after
+
+
 def test_isolated_evaluation_worker_is_terminated_at_case_deadline(tmp_path):
     from src.rl.evaluation import _run_isolated_case
 
@@ -248,6 +267,54 @@ def test_masked_ppo_update_keeps_graphs_together_and_reports_diagnostics():
     assert diagnostics["critic_gradient_norm"] >= 0.
     assert diagnostics["entropy"] >= 0.
     assert all(np.isfinite(value) for value in diagnostics.values() if isinstance(value, (int, float)))
+
+
+def test_batched_graph_attention_matches_serial_logits_and_gradients():
+    torch = pytest.importorskip("torch")
+    from src.rl.graph_mappo import GraphActor
+
+    actor = GraphActor(build_research_graph(load_topology(TOPOLOGY_ID)), device="cpu")
+    observations = torch.randn(7, 4, 52, generator=torch.Generator().manual_seed(23))
+    batch_logits = actor(observations)
+    serial_logits = torch.stack([actor(item) for item in observations])
+    torch.testing.assert_close(batch_logits, serial_logits, rtol=1e-6, atol=1e-7)
+    (batch_logits.square().sum()).backward()
+    batched_gradients = [parameter.grad.detach().clone() for parameter in actor.parameters()]
+    actor.zero_grad(set_to_none=True)
+    torch.stack([actor(item) for item in observations]).square().sum().backward()
+    for expected, parameter in zip(batched_gradients, actor.parameters()):
+        torch.testing.assert_close(parameter.grad, expected, rtol=2e-5, atol=2e-6)
+
+
+def test_ppo_kl_stop_skips_actor_updates_but_finishes_critic_epochs():
+    torch = pytest.importorskip("torch")
+    from src.rl.graph_mappo import (CentralizedCritic, GraphActor, MAPPOUpdater,
+                                    masked_distribution)
+
+    graph = build_research_graph(load_topology(TOPOLOGY_ID))
+    actor, critic = GraphActor(graph), CentralizedCritic()
+    observations = np.random.default_rng(18).normal(size=(8, 4, 52)).astype(np.float32)
+    masks = np.ones((8, 4, 3), dtype=bool)
+    with torch.no_grad():
+        logits = actor(torch.as_tensor(observations))
+        actions = torch.zeros((8, 4), dtype=torch.long)
+        log_probs = masked_distribution(logits, masks).log_prob(actions) - 1.
+    original_actor = [parameter.detach().clone() for parameter in actor.parameters()]
+    original_critic = [parameter.detach().clone() for parameter in critic.parameters()]
+    updater = MAPPOUpdater(actor, critic, {"minibatch_size": 4, "update_epochs": 3,
+                                           "target_kl": .01})
+    metrics = updater.update(observations, actions.numpy(), masks, log_probs.numpy(),
+                             np.ones((8, 4), dtype=np.float32),
+                             np.ones((8, 4), dtype=np.float32))
+    assert metrics["actor_stopped_early"]
+    assert metrics["actor_steps"] == 0
+    assert metrics["critic_steps"] == 6
+    assert metrics["stopping_kl"] > .01
+    assert metrics["final_approx_kl"] > .01
+    assert all(torch.equal(before, after) for before, after in
+               zip(original_actor, actor.parameters()))
+    assert any(not torch.equal(before, after) for before, after in
+               zip(original_critic, critic.parameters()))
 
 
 def test_joint_controller_is_call_order_independent_and_rejects_incomplete_snapshot(tmp_path):
@@ -377,6 +444,124 @@ def test_new_promotion_and_graph_contribution_gates_use_paired_holdout_blocks():
     assert not graph_communication_comparison(graph_models, local_models)["graph_value_claim_supported"]
 
 
+def test_validation_selection_uses_overall_fair_cycle_target_and_requires_complete_pairs():
+    from src.rl.train_mappo import validation_violation
+
+    timing = {"cycle_time_s": 90, "min_green_share": .25}
+
+    def rows(delay):
+        return [{"scenario": scenario, "seed": seed, "valid": True,
+                 "collisions": 0, "teleports": 0, "accounting_losses": 0,
+                 "delay_per_scheduled_s": delay, "completed": 100.,
+                 "p95_wait_s": 10., "worst_approach_wait_s": 10.,
+                 "max_approach_p95_wait_s": 10., "demand_sha256": f"{scenario}-{seed}",
+                 "network_sha256": "network", "topology_sha256": "topology",
+                 "timing": {"step_s": 1}, "scheduled": 100, "demand_s": 1800,
+                 "drain_s": 600, "controller_timing": timing}
+                for scenario in RESEARCH_SCENARIOS
+                for seed in GRAPH_MAPPO_SEED_SPLITS["validation"]]
+
+    violation, metrics = validation_violation(rows(99.), rows(100.))
+    assert violation == 0.
+    assert set(metrics) == set(RESEARCH_SCENARIOS)
+    with pytest.raises(ValueError, match="every unique scenario/seed pair"):
+        validation_violation(rows(99.)[:-1], rows(100.))
+    duplicated = rows(99.)
+    duplicated[-1] = duplicated[0]
+    with pytest.raises(ValueError, match="every unique scenario/seed pair"):
+        validation_violation(duplicated, rows(100.))
+
+
+def test_holdout_resumes_atomic_case_ledger_with_two_workers(tmp_path, monkeypatch):
+    from src.rl import mappo_campaign
+    from src.simulation.runtime import file_hash
+
+    topology = Path("contracts/topology/four_intersection_rl_v1.json").resolve()
+    network = Path("networks/four_intersection_rl_v1/network.net.xml").resolve()
+    sumo = tmp_path / "sumo.exe"
+    sumo.write_text("sumo fixture")
+    baseline_specs = {name: {"type": name} for name in mappo_campaign.BASELINES}
+    dqn = tmp_path / "fair-cycle-dqn.json"
+    dqn.write_text("frozen baseline")
+    baseline_specs["fair_cycle_dqn"] = {"type": "fair_cycle_rl", "model_path": str(dqn)}
+    for name, spec in baseline_specs.items():
+        spec.setdefault("type", name)
+    environment = {"topology_path": str(topology), "network_path": str(network),
+                   "demand_s": 1800, "drain_s": 600, "cycle_time_s": 90,
+                   "min_green_share": .25}
+    frozen_baselines = {"baseline_specs": baseline_specs,
+                        "baseline_sha256": mappo_campaign._baseline_identity(baseline_specs),
+                        "environment": {key: environment[key] for key in
+                                        ("topology_path", "network_path", "demand_s", "drain_s")},
+                        "topology_sha256": file_hash(topology),
+                        "network_sha256": file_hash(network),
+                        "sumo_executable": str(sumo.resolve()), "sumo_sha256": file_hash(sumo)}
+    actors = {}
+    for architecture in ("graph_mappo", "local_mappo"):
+        for seed in mappo_campaign.LEARNER_SEEDS:
+            name = f"{architecture}_seed{seed}"
+            actor = tmp_path / f"{name}.json"
+            actor.write_text(name)
+            actors[name] = {"type": architecture, "model_path": str(actor.resolve()),
+                            "sha256": file_hash(actor), "episodes": 16,
+                            "gate_violation": 0., "score": 90.}
+    latest = {name: {"model_path": spec["model_path"], "sha256": spec["sha256"],
+                     "episodes": 32, "gate_violation": 0., "score": 90.,
+                     "scenario_metrics": {"balanced": {"p95_wait_s": 10.,
+                                                            "delay_per_scheduled_s": 80.}}}
+              for name, spec in actors.items()}
+    frozen = {"selection_split": "validation", "protocol": mappo_campaign.GRAPH_MAPPO_PROTOCOL,
+              "selected_models": actors, "latest_common_models": latest,
+              "baseline_specs": baseline_specs,
+              "baseline_sha256": frozen_baselines["baseline_sha256"],
+              "frozen_environment": {"environment": frozen_baselines["environment"],
+                                     "topology_sha256": frozen_baselines["topology_sha256"],
+                                     "network_sha256": frozen_baselines["network_sha256"],
+                                     "sumo_executable": frozen_baselines["sumo_executable"],
+                                     "sumo_sha256": frozen_baselines["sumo_sha256"]}}
+    frozen_path = tmp_path / "frozen.json"
+    frozen_path.write_text(json.dumps(frozen))
+    config = {"environment": environment, "baselines": baseline_specs,
+              "evaluation": {"case_timeout_s": 20}}
+    lock = threading.Lock()
+    active = maximum = 0
+
+    def fake_case(unused_config, controller, scenario, seed, unused_root,
+                  timeout_s=180., deadline=None):
+        nonlocal active, maximum
+        with lock:
+            active += 1
+            maximum = max(maximum, active)
+        time.sleep(.01)
+        with lock:
+            active -= 1
+        identity = {key: controller[key] for key in ("type", "parameters", "model_path")
+                    if key in controller}
+        row = {"controller": identity, "scenario": scenario, "seed": seed,
+                "demand_sha256": f"{scenario}-{seed}", "network_sha256": "network",
+                "topology_sha256": "topology", "scheduled": 100, "demand_s": 1800,
+                "drain_s": 600, "valid": True, "collisions": 0, "teleports": 0,
+                "accounting_losses": 0, "delay_per_scheduled_s": 80.,
+                "completed": 100., "p95_wait_s": 10., "worst_approach_wait_s": 10.,
+                "max_approach_p95_wait_s": 10.,
+                "controller_timing": {"cycle_time_s": 90, "min_green_share": .25}}
+        if controller.get("model_path"):
+            row["model_sha256"] = file_hash(controller["model_path"])
+        return row
+
+    monkeypatch.setattr(mappo_campaign, "_run_case_cached", fake_case)
+    output = tmp_path / "holdout"
+    first = mappo_campaign.run_holdout(config, frozen_path, output, max_seconds=.08)
+    assert first["status"] == "incomplete"
+    assert 0 < first["completed_cases"] < first["requested_cases"]
+    second = mappo_campaign.run_holdout(config, frozen_path, output,
+                                        max_seconds=20., resume=True)
+    assert second["status"] == "complete"
+    assert second["completed_cases"] == 390
+    assert maximum == 2
+    assert json.loads((output / "results.json").read_text())
+
+
 def test_freeze_selects_only_checkpoint_counts_validated_by_both_architectures(tmp_path):
     from src.rl.mappo_campaign import freeze_training_selections
     from src.simulation.runtime import file_hash
@@ -395,17 +580,48 @@ def test_freeze_selects_only_checkpoint_counts_validated_by_both_architectures(t
                 validation.append({"episodes": episode_count, "model_path": str(model),
                                    "sha256": file_hash(model), "gate_violation": 0.1 if episode_count == 16 else 0.,
                                    "score": float(episode_count), "scenario_metrics": {
-                                       "balanced": {"p95_wait_s": 10.}}})
+                                       "balanced": {"p95_wait_s": 10.}},
+                                   "selection_rule_version": GRAPH_MAPPO_SELECTION_SPEC["version"]})
             (folder / "training.json").write_text(json.dumps({"algorithm": algorithm,
+                                                                "selection_rule_version": GRAPH_MAPPO_SELECTION_SPEC["version"],
                                                                 "validation": validation}))
     frozen = freeze_training_selections(graph_root, local_root, tmp_path / "frozen")
     assert frozen["common_validated_episode_counts_by_seed"] == {
         "17": [16, 32], "29": [16], "43": [16, 32]}
     assert frozen["latest_common_episode_count_by_seed"] == {"17": 32, "29": 16, "43": 32}
     assert len(frozen["selected_models"]) == 6
+    assert all(Path(row["model_path"]).is_file()
+               for row in frozen["latest_common_models"].values())
     assert all(frozen["selected_models"][f"{architecture}_seed{seed}"]["episodes"] ==
                (16 if seed == 29 else 32)
                for architecture in ("graph_mappo", "local_mappo") for seed in (17, 29, 43))
+
+
+def test_freeze_baseline_inputs_copies_models_and_pins_sumo(tmp_path, monkeypatch):
+    from src.rl import mappo_campaign
+    from src.simulation import build_network
+    from src.simulation.runtime import file_hash
+
+    sumo = tmp_path / "sumo.exe"
+    sumo.write_text("frozen SUMO")
+    source_model = tmp_path / "baseline.json"
+    source_model.write_text("baseline weights")
+    baseline_specs = {name: {"type": name} for name in mappo_campaign.BASELINES}
+    baseline_specs["fair_cycle_dqn"] = {"type": "fair_cycle_rl", "model_path": str(source_model)}
+    config = {"environment": {"topology_path": "contracts/topology/four_intersection_rl_v1.json",
+                              "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+                              "demand_s": 1800, "drain_s": 600,
+                              "cycle_time_s": 90, "min_green_share": .25,
+                              "wait_penalty_lambda": 0.},
+              "baselines": baseline_specs}
+    monkeypatch.setattr(build_network, "binary", lambda name: str(sumo))
+    frozen = mappo_campaign.freeze_baseline_inputs(config, tmp_path / "baseline-snapshot")
+    frozen_model = Path(frozen["baseline_specs"]["fair_cycle_dqn"]["model_path"])
+    assert frozen_model != source_model
+    assert file_hash(frozen_model) == file_hash(source_model)
+    assert frozen["sumo_sha256"] == file_hash(sumo)
+    source_model.write_text("changed source")
+    assert file_hash(frozen_model) != file_hash(source_model)
 
 
 def test_individual_holdout_evaluation_accepts_only_a_frozen_actor(tmp_path):

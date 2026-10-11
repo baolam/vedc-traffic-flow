@@ -6,7 +6,8 @@ from pathlib import Path
 import numpy as np
 
 from contracts.research import (GRAPH_MAPPO_SEED_SPLITS, RESEARCH_SCENARIOS,
-                                GRAPH_MAPPO_HORIZON, GRAPH_MAPPO_TIMING, SEED_SPLITS)
+                                GRAPH_MAPPO_HORIZON, GRAPH_MAPPO_TIMING,
+                                GRAPH_MAPPO_SELECTION_SPEC, SEED_SPLITS)
 from src.control.factory import create_controller
 from src.simulation.runtime import SumoRuntime, file_hash
 
@@ -168,12 +169,19 @@ def graph_mappo_promotion_gate(candidate, baselines, bootstrap_samples=10000):
                                ("delay_per_scheduled_s", "completed", "p95_wait_s",
                                 "worst_approach_wait_s", "max_approach_p95_wait_s")}
             base_summary = {key: float(np.mean([row[key] for row in baseline])) for key in current_summary}
-            if current_summary["delay_per_scheduled_s"] > 1.05 * base_summary["delay_per_scheduled_s"]:
+            if current_summary["delay_per_scheduled_s"] > (
+                    1. + GRAPH_MAPPO_SELECTION_SPEC["maximum_scenario_delay_regression"]
+                    ) * base_summary["delay_per_scheduled_s"]:
                 reasons.append(f"{name}/{scenario}: delay regression exceeds 5%")
-            if current_summary["completed"] < .98 * base_summary["completed"]:
+            if current_summary["completed"] < (
+                    GRAPH_MAPPO_SELECTION_SPEC["minimum_throughput_ratio"]
+                    * base_summary["completed"]):
                 reasons.append(f"{name}/{scenario}: throughput below 98%")
             for key in ("p95_wait_s", "worst_approach_wait_s", "max_approach_p95_wait_s"):
-                if current_summary[key] > base_summary[key] + max(.1 * base_summary[key], 1.):
+                tolerance = max(
+                    GRAPH_MAPPO_SELECTION_SPEC["maximum_wait_regression_ratio"] * base_summary[key],
+                    GRAPH_MAPPO_SELECTION_SPEC["maximum_wait_regression_s"])
+                if current_summary[key] > base_summary[key] + tolerance:
                     reasons.append(f"{name}/{scenario}: {key} guardrail failed")
             differences.append([right["delay_per_scheduled_s"] - left["delay_per_scheduled_s"]
                                 for left, right in zip(candidates, baseline)])
@@ -193,7 +201,9 @@ def graph_mappo_promotion_gate(candidate, baselines, bootstrap_samples=10000):
             reasons.append(f"{name}: required 5% delay improvement and positive paired interval not reached")
         if name in ("actuated", "fixed_time") and improvement < -.02:
             reasons.append(f"{name}: overall delay regression exceeds 2%")
-        if name == "fair_cycle" and (improvement < .01 or interval[0] <= 0):
+        if (name == "fair_cycle"
+                and (improvement < GRAPH_MAPPO_SELECTION_SPEC["fair_cycle_mean_delay_improvement"]
+                     or interval[0] <= 0)):
             reasons.append("fair_cycle: required 1% delay improvement and positive paired interval not reached")
     return {"promoted": not reasons, "reasons": sorted(set(reasons)), "comparisons": comparisons}
 

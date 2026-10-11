@@ -8,7 +8,9 @@ import copy
 import hashlib
 import json
 import multiprocessing as mp
+import os
 import random
+import signal
 import time
 import traceback
 from pathlib import Path
@@ -21,7 +23,8 @@ from contracts.research import (FAIR_CYCLE_FEATURE_SPEC, GRAPH_MAPPO_ACTIONS,
                                 GRAPH_MAPPO_HORIZON, GRAPH_MAPPO_MODEL_SPEC,
                                 GRAPH_MAPPO_NODE_ORDER, GRAPH_MAPPO_PROTOCOL,
                                 GRAPH_MAPPO_RELATION_FEATURE_SPEC, GRAPH_MAPPO_SEED_SPLITS,
-                                GRAPH_MAPPO_TIMING, RESEARCH_SCENARIOS, TOPOLOGY_ID,
+                                GRAPH_MAPPO_SELECTION_SPEC, GRAPH_MAPPO_TIMING,
+                                RESEARCH_SCENARIOS, TOPOLOGY_ID,
                                 build_research_graph)
 from src.rl.graph_mappo import (CentralizedCritic, GraphActor, MAPPOUpdater,
                                 actor_weights, generalized_advantage_estimate,
@@ -32,6 +35,8 @@ from src.simulation.runtime import file_hash
 
 def worker(pipe, environment, output):
     from src.rl.sumo_env import FairCycleSumoEnv
+    if os.name != "nt":
+        os.setsid()
 
     options = dict(environment)
     options.pop("mode", None)
@@ -52,9 +57,9 @@ def worker(pipe, environment, output):
         pipe.close()
 
 
-def receive(pipe):
-    if not pipe.poll(180):
-        raise RuntimeError("MAPPO SUMO worker timed out")
+def receive(pipe, timeout_s=180.):
+    if not pipe.poll(max(0., min(180., float(timeout_s)))):
+        raise TimeoutError("MAPPO SUMO worker reached its deadline")
     ok, result = pipe.recv()
     if not ok:
         raise RuntimeError(f"MAPPO SUMO worker failed:\n{result}")
@@ -155,18 +160,68 @@ def _scenario_metrics(rows):
     return result
 
 
+def _action_count_grid():
+    return {scenario: {node_id: [0, 0, 0] for node_id in GRAPH_MAPPO_NODE_ORDER}
+            for scenario in RESEARCH_SCENARIOS}
+
+
+def _index_validation(rows, label):
+    expected = {(scenario, seed) for scenario in RESEARCH_SCENARIOS
+                for seed in GRAPH_MAPPO_SEED_SPLITS["validation"]}
+    indexed = {(row.get("scenario"), row.get("seed")): row for row in rows}
+    if len(rows) != len(expected) or set(indexed) != expected:
+        raise ValueError(f"{label} validation must contain every unique scenario/seed pair")
+    metric_keys = ("delay_per_scheduled_s", "completed", "p95_wait_s",
+                   "worst_approach_wait_s", "max_approach_p95_wait_s")
+    for row in indexed.values():
+        if (not row.get("valid")
+                or any(row.get(key, 0) for key in ("collisions", "teleports", "accounting_losses"))):
+            raise ValueError(f"{label} validation contains a safety, accounting, or validity failure")
+        if any(key not in row or not np.isfinite(float(row[key])) for key in metric_keys):
+            raise ValueError(f"{label} validation contains missing or non-finite metrics")
+    return indexed
+
+
 def validation_violation(rows, baseline_rows):
+    candidate_rows = _index_validation(rows, "Candidate")
+    reference_rows = _index_validation(baseline_rows, "Fair-cycle")
+    paired_identity = ("demand_sha256", "network_sha256", "topology_sha256", "timing",
+                       "scheduled", "demand_s", "drain_s")
+    for key in candidate_rows:
+        candidate, baseline = candidate_rows[key], reference_rows[key]
+        if any(candidate.get(field) != baseline.get(field) for field in paired_identity):
+            raise ValueError("Candidate and fair-cycle validation cases use unpaired inputs")
+        if (candidate.get("controller_timing") != baseline.get("controller_timing")
+                or candidate.get("controller_timing") != {
+                    "cycle_time_s": GRAPH_MAPPO_TIMING["cycle_time_s"],
+                    "min_green_share": GRAPH_MAPPO_TIMING["min_green_share"]}):
+            raise ValueError("Validation requires the matched 90-second fair-cycle timing")
     candidate = _scenario_metrics(rows)
     baseline = _scenario_metrics(baseline_rows)
     violation = 0.
+    candidate_score = float(np.mean([candidate[s]["delay_per_scheduled_s"]
+                                     for s in RESEARCH_SCENARIOS]))
+    baseline_score = float(np.mean([baseline[s]["delay_per_scheduled_s"]
+                                    for s in RESEARCH_SCENARIOS]))
+    overall_allowance = GRAPH_MAPPO_SELECTION_SPEC["fair_cycle_mean_delay_improvement"] * baseline_score
+    violation = max(violation, max(0., (candidate_score - baseline_score + overall_allowance)
+                                   / max(overall_allowance, 1e-12)))
     for scenario in RESEARCH_SCENARIOS:
         current, reference = candidate[scenario], baseline[scenario]
         violation = max(violation,
-                        max(0., (current["delay_per_scheduled_s"] / max(reference["delay_per_scheduled_s"], 1e-12) - .99) / .01),
-                        max(0., (0.98 * reference["completed"] - current["completed"]) / max(1., 0.02 * reference["completed"])))
+                        max(0., (current["delay_per_scheduled_s"]
+                                 - (1. + GRAPH_MAPPO_SELECTION_SPEC["maximum_scenario_delay_regression"])
+                                 * reference["delay_per_scheduled_s"])
+                            / max(GRAPH_MAPPO_SELECTION_SPEC["maximum_scenario_delay_regression"]
+                                  * reference["delay_per_scheduled_s"], 1e-12)),
+                        max(0., (GRAPH_MAPPO_SELECTION_SPEC["minimum_throughput_ratio"]
+                                 * reference["completed"] - current["completed"])
+                            / max((1. - GRAPH_MAPPO_SELECTION_SPEC["minimum_throughput_ratio"])
+                                  * reference["completed"], 1.)))
         for key in ("p95_wait_s", "worst_approach_wait_s", "max_approach_p95_wait_s"):
-            tolerance = max(0.1 * reference[key], 1.)
-            violation = max(violation, max(0., (current[key] - reference[key]) / tolerance))
+            tolerance = max(GRAPH_MAPPO_SELECTION_SPEC["maximum_wait_regression_ratio"]
+                            * reference[key], GRAPH_MAPPO_SELECTION_SPEC["maximum_wait_regression_s"])
+            violation = max(violation, max(0., (current[key] - reference[key] - tolerance) / tolerance))
     return float(violation), candidate
 
 
@@ -204,23 +259,14 @@ def train(config, output, seed, resume=None):
                   "implementation_sha256": _implementation_hash()}
     progress = {"episodes": 0, "joint_decisions": 0, "elapsed_s": 0., "schedule_cursor": 0,
                 "simulated_seconds": 0., "action_counts": [0, 0, 0], "validation": [],
+                "action_counts_by_scenario": _action_count_grid(),
+                "greedy_action_counts_by_scenario": _action_count_grid(),
+                "legal_action_counts_by_scenario": _action_count_grid(),
                 "diagnostics": []}
     if resume:
         progress = load_training_checkpoint(resume, config, seed, provenance,
                                             actor, critic, updater, device)
 
-    ctx = mp.get_context("spawn")
-    pipes, processes = [], []
-    for worker_id in range(2):
-        parent, child = ctx.Pipe()
-        process = ctx.Process(target=worker, args=(child, env_config, str(output / f"worker{worker_id}")))
-        process.start()
-        child.close()
-        pipes.append(parent)
-        processes.append(process)
-
-    initial_elapsed = progress["elapsed_s"]
-    started = time.monotonic()
     max_seconds = int(training.get("max_seconds", 3600))
     max_episodes = int(training.get("max_episodes", 128))
     episodes_per_worker = int(training.get("episodes_per_worker", 4))
@@ -231,6 +277,43 @@ def train(config, output, seed, resume=None):
         raise ValueError("Episode and validation limits must be positive multiples of eight")
     if max_seconds <= 0:
         raise ValueError("Training time budget must be positive")
+
+    ctx = mp.get_context("spawn")
+    pipes, processes = [], []
+    jobs = []
+    initial_elapsed = progress["elapsed_s"]
+    started = time.monotonic()
+    try:
+        for worker_id in range(2):
+            parent, child = ctx.Pipe()
+            process = ctx.Process(target=worker,
+                                  args=(child, env_config, str(output / f"worker{worker_id}")))
+            process.start()
+            processes.append(process)
+            pipes.append(parent)
+            jobs.append(None)
+            child.close()
+            if os.name == "nt":
+                from src.rl.evaluation import _WindowsJob
+                job = _WindowsJob()
+                jobs[-1] = job
+                job.assign(process.pid)
+    except BaseException:
+        for pipe, process, job in zip(pipes, processes, jobs):
+            if job is not None:
+                job.terminate()
+                job.close()
+            elif process.is_alive():
+                if os.name == "nt":
+                    process.kill()
+                else:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        process.kill()
+            process.join(5)
+            pipe.close()
+        raise
     status = ("episode_cap" if progress["episodes"] >= max_episodes else
               "time_cap" if progress["elapsed_s"] >= max_seconds else "incomplete")
 
@@ -258,7 +341,7 @@ def train(config, output, seed, resume=None):
         intensity = float(np.random.uniform(.8, 1.2))
         pipes[worker_id].send(("reset", {"seed": demand_seed,
                                          "options": {"scenario": scenario, "intensity": intensity}}))
-        return receive(pipes[worker_id])
+        return (*receive(pipes[worker_id], max_seconds - elapsed()), scenario)
 
     def validate_latest_update():
         episode_count = progress["episodes"]
@@ -280,6 +363,7 @@ def train(config, output, seed, resume=None):
             workers=validation_workers, timeout_s=case_timeout_s, deadline=run_deadline)
         violation, metrics = validation_violation(rows, baseline_rows)
         progress["validation"].append({"episodes": episode_count,
+                                        "selection_rule_version": GRAPH_MAPPO_SELECTION_SPEC["version"],
                                         "model_path": str(actor_path.resolve()),
                                         "sha256": file_hash(actor_path), "score": score(rows),
                                         "gate_violation": violation,
@@ -302,6 +386,11 @@ def train(config, output, seed, resume=None):
                 progress["validation_error"] = str(error)
                 save_checkpoint()
                 return False
+            except ValueError as error:
+                status = "validation_invalid"
+                progress["validation_error"] = str(error)
+                save_checkpoint()
+                return False
 
         if progress["episodes"] // validation_interval > len(progress["validation"]):
             if elapsed() < max_seconds:
@@ -317,60 +406,75 @@ def train(config, output, seed, resume=None):
             episode_counts = [0, 0]
             episode_records = [None, None]
             observations, infos = [None, None], [None, None]
-            for worker_id in range(2):
-                observations[worker_id], infos[worker_id] = new_episode(worker_id)
-                episode_records[worker_id] = []
-            completed_episodes = []
+            scenario_by_worker = [None, None]
             interrupted = False
-            while any(count < episodes_per_worker for count in episode_counts):
-                if elapsed() >= max_seconds:
-                    interrupted = True
-                    break
-                active = [index for index, count in enumerate(episode_counts) if count < episodes_per_worker]
-                batch_observations = np.stack([
-                    [observations[index][node_id] for node_id in GRAPH_MAPPO_NODE_ORDER] for index in active])
-                batch_masks = np.stack([
-                    [infos[index]["action_masks"][node_id] for node_id in GRAPH_MAPPO_NODE_ORDER]
-                    for index in active])
-                with torch.no_grad():
-                    logits = actor(torch.as_tensor(batch_observations, device=device))
-                    distribution = masked_distribution(logits, batch_masks)
-                    actions = distribution.sample()
-                    log_probs = distribution.log_prob(actions)
-                    values = updater.predict_values(torch.as_tensor(batch_observations, device=device))
-                for row, worker_id in enumerate(active):
-                    action_map = {node_id: int(actions[row, index].item())
-                                  for index, node_id in enumerate(GRAPH_MAPPO_NODE_ORDER)}
-                    pipes[worker_id].send(("step", action_map))
-                step_results = {worker_id: receive(pipes[worker_id]) for worker_id in active}
-                for row, worker_id in enumerate(active):
-                    next_observations, reward, terminated, truncated, info = step_results[worker_id]
-                    next_batch = np.stack([next_observations[node_id] for node_id in GRAPH_MAPPO_NODE_ORDER])
+            completed_episodes = []
+            try:
+                for worker_id in range(2):
+                    observations[worker_id], infos[worker_id], scenario_by_worker[worker_id] = new_episode(worker_id)
+                    episode_records[worker_id] = []
+                while any(count < episodes_per_worker for count in episode_counts):
+                    if elapsed() >= max_seconds:
+                        interrupted = True
+                        break
+                    active = [index for index, count in enumerate(episode_counts) if count < episodes_per_worker]
+                    batch_observations = np.stack([
+                        [observations[index][node_id] for node_id in GRAPH_MAPPO_NODE_ORDER] for index in active])
+                    batch_masks = np.stack([
+                        [infos[index]["action_masks"][node_id] for node_id in GRAPH_MAPPO_NODE_ORDER]
+                        for index in active])
                     with torch.no_grad():
-                        next_values = updater.predict_values(
-                            torch.as_tensor(next_batch, device=device)).cpu().numpy()
-                    done = bool(terminated or truncated)
-                    elapsed_s = float(info["elapsed_s"])
-                    episode_records[worker_id].append({
-                        "observation": batch_observations[row].copy(),
-                        "action": actions[row].cpu().numpy().astype(np.int64),
-                        "mask": batch_masks[row].copy(),
-                        "old_log_prob": log_probs[row].cpu().numpy().astype(np.float32),
-                        "value": values[row].cpu().numpy().astype(np.float32),
-                        "reward": float(reward), "next_value": next_values.astype(np.float32),
-                        "terminal": done, "elapsed_s": elapsed_s})
-                    for action in action_map.values():
-                        progress["action_counts"][action] += 1
-                    progress["simulated_seconds"] += elapsed_s
-                    observations[worker_id], infos[worker_id] = next_observations, info
-                    if done:
-                        if not episode_records[worker_id]:
-                            raise RuntimeError("Completed SUMO episode has no graph transitions")
-                        completed_episodes.append(episode_records[worker_id])
-                        episode_counts[worker_id] += 1
-                        if episode_counts[worker_id] < episodes_per_worker:
-                            observations[worker_id], infos[worker_id] = new_episode(worker_id)
-                            episode_records[worker_id] = []
+                        logits = actor(torch.as_tensor(batch_observations, device=device))
+                        distribution = masked_distribution(logits, batch_masks)
+                        actions = distribution.sample()
+                        greedy_actions = distribution.probs.argmax(dim=-1)
+                        log_probs = distribution.log_prob(actions)
+                        values = updater.predict_values(torch.as_tensor(batch_observations, device=device))
+                    for row, worker_id in enumerate(active):
+                        action_map = {node_id: int(actions[row, index].item())
+                                      for index, node_id in enumerate(GRAPH_MAPPO_NODE_ORDER)}
+                        pipes[worker_id].send(("step", action_map))
+                    step_results = {
+                        worker_id: receive(pipes[worker_id], max_seconds - elapsed())
+                        for worker_id in active}
+                    for row, worker_id in enumerate(active):
+                        next_observations, reward, terminated, truncated, info = step_results[worker_id]
+                        next_batch = np.stack([next_observations[node_id] for node_id in GRAPH_MAPPO_NODE_ORDER])
+                        with torch.no_grad():
+                            next_values = updater.predict_values(
+                                torch.as_tensor(next_batch, device=device)).cpu().numpy()
+                        done = bool(terminated or truncated)
+                        elapsed_s = float(info["elapsed_s"])
+                        episode_records[worker_id].append({
+                            "observation": batch_observations[row].copy(),
+                            "action": actions[row].cpu().numpy().astype(np.int64),
+                            "mask": batch_masks[row].copy(),
+                            "old_log_prob": log_probs[row].cpu().numpy().astype(np.float32),
+                            "value": values[row].cpu().numpy().astype(np.float32),
+                            "reward": float(reward), "next_value": next_values.astype(np.float32),
+                            "terminal": done, "elapsed_s": elapsed_s})
+                        scenario = scenario_by_worker[worker_id]
+                        for node_index, node_id in enumerate(GRAPH_MAPPO_NODE_ORDER):
+                            action = int(actions[row, node_index].item())
+                            greedy_action = int(greedy_actions[row, node_index].item())
+                            progress["action_counts"][action] += 1
+                            progress["action_counts_by_scenario"][scenario][node_id][action] += 1
+                            progress["greedy_action_counts_by_scenario"][scenario][node_id][greedy_action] += 1
+                            for action_index, legal in enumerate(batch_masks[row, node_index]):
+                                progress["legal_action_counts_by_scenario"][scenario][node_id][action_index] += int(legal)
+                        progress["simulated_seconds"] += elapsed_s
+                        observations[worker_id], infos[worker_id] = next_observations, info
+                        if done:
+                            if not episode_records[worker_id]:
+                                raise RuntimeError("Completed SUMO episode has no graph transitions")
+                            completed_episodes.append(episode_records[worker_id])
+                            episode_counts[worker_id] += 1
+                            if episode_counts[worker_id] < episodes_per_worker:
+                                (observations[worker_id], infos[worker_id],
+                                 scenario_by_worker[worker_id]) = new_episode(worker_id)
+                                episode_records[worker_id] = []
+            except TimeoutError:
+                interrupted = True
             if interrupted:
                 progress = progress_before_rollout
                 random.setstate(python_rng_before)
@@ -379,6 +483,7 @@ def train(config, output, seed, resume=None):
                 if cuda_rng_before and torch.cuda.is_available():
                     torch.cuda.set_rng_state_all([value.cpu() for value in cuda_rng_before])
                 status = "budget_exhausted_mid_rollout; partial rollout discarded"
+                save_checkpoint()
                 break
 
             all_observations, all_actions, all_masks, all_log_probs = [], [], [], []
@@ -413,6 +518,9 @@ def train(config, output, seed, resume=None):
                                             "return_max": float(return_targets.max()),
                                             "action_distribution": [count / max(1, sum(progress["action_counts"]))
                                                                     for count in progress["action_counts"]],
+                                            "action_counts_by_scenario": progress["action_counts_by_scenario"],
+                                            "greedy_action_counts_by_scenario": progress["greedy_action_counts_by_scenario"],
+                                            "legal_action_counts_by_scenario": progress["legal_action_counts_by_scenario"],
                                             "simulated_seconds": progress["simulated_seconds"],
                                             "simulation_seconds_per_wall_second": progress["simulated_seconds"] / max(elapsed(), 1.)})
             actor.eval()
@@ -444,7 +552,7 @@ def train(config, output, seed, resume=None):
                                              encoding="utf-8")
         raise
     finally:
-        for pipe, process in zip(pipes, processes):
+        for pipe, process, job in zip(pipes, processes, jobs):
             if process.is_alive():
                 try:
                     pipe.send(("close", None))
@@ -452,20 +560,32 @@ def train(config, output, seed, resume=None):
                     pass
                 process.join(15)
                 if process.is_alive():
-                    process.terminate()
+                    if job is not None:
+                        job.terminate()
+                    elif os.name == "nt":
+                        process.kill()
+                    else:
+                        try:
+                            os.killpg(process.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            process.kill()
                     process.join(5)
             pipe.close()
+            if job is not None:
+                job.close()
 
     progress["elapsed_s"] = elapsed()
     selected = min(progress["validation"], key=lambda row: (
         row["gate_violation"], row["score"],
-        max(values["p95_wait_s"] for values in row["scenario_metrics"].values()))) if progress["validation"] else None
+        max(values["p95_wait_s"] for values in row["scenario_metrics"].values()),
+        row["episodes"])) if progress["validation"] else None
     if progress["episodes"] > 0:
         export_actor(output / "final.json", actor, architecture, seed, config, provenance, progress)
     result = {"status": status, "algorithm": algorithm, "seed": seed,
               "episodes": progress["episodes"], "joint_decisions": progress["joint_decisions"],
               "updates": updater.updates, "elapsed_s": progress["elapsed_s"],
               "validation": progress["validation"], "selected": selected,
+              "selection_rule_version": GRAPH_MAPPO_SELECTION_SPEC["version"],
               "promoted": False, "action_counts": progress["action_counts"],
               "diagnostics": progress["diagnostics"], "provenance": provenance,
               "runtime": {"torch": torch.__version__, "cuda": torch.version.cuda,

@@ -30,20 +30,24 @@ class GraphAttentionLayer(nn.Module):
         for value in (self.attention_receiver, self.attention_sender, self.attention_relation):
             nn.init.xavier_uniform_(value)
 
-    def forward(self, values, relation_features, senders, receivers):
-        projected = self.node(values).reshape(4, 4, 16)
-        relations = self.relation(relation_features).reshape(-1, 4, 16)
-        scores = ((projected[receivers] * self.attention_receiver).sum(-1)
-                  + (projected[senders] * self.attention_sender).sum(-1)
+    def forward(self, values, relation_features, senders, receivers, receiver_groups):
+        unbatched = values.ndim == 2
+        if unbatched:
+            values = values.unsqueeze(0)
+        batch_size = values.shape[0]
+        projected = self.node(values).reshape(batch_size, 4, 4, 16)
+        relations = self.relation(relation_features).reshape(1, -1, 4, 16)
+        scores = ((projected[:, receivers] * self.attention_receiver).sum(-1)
+                  + (projected[:, senders] * self.attention_sender).sum(-1)
                   + (relations * self.attention_relation).sum(-1))
         scores = torch.nn.functional.leaky_relu(scores, negative_slope=.2)
-        messages = projected[senders] + relations
+        messages = projected[:, senders] + relations
         aggregated = []
-        for node in range(4):
-            indices = torch.nonzero(receivers == node, as_tuple=False).flatten()
-            attention = torch.softmax(scores[indices], dim=0)
-            aggregated.append((attention.unsqueeze(-1) * messages[indices]).sum(dim=0))
-        return torch.relu(values + torch.stack(aggregated, dim=0).reshape(4, 64))
+        for indices in receiver_groups:
+            attention = torch.softmax(scores[:, indices], dim=1)
+            aggregated.append((attention.unsqueeze(-1) * messages[:, indices]).sum(dim=1))
+        result = torch.relu(values + torch.stack(aggregated, dim=1).reshape(batch_size, 4, 64))
+        return result[0] if unbatched else result
 
 
 class GraphActor(nn.Module):
@@ -62,6 +66,12 @@ class GraphActor(nn.Module):
         self.register_buffer("edge_indices", torch.tensor(
             [i for i, is_self in enumerate(graph["self_relations"]) if is_self or not local_only],
             dtype=torch.long))
+        for node in range(4):
+            incoming = [index for index, edge in enumerate(self.edge_indices.tolist())
+                        if graph["receivers"][edge] == node]
+            if not incoming:
+                raise ValueError("Every graph node requires an incoming self relation")
+            self.register_buffer(f"receiver_group_{node}", torch.tensor(incoming, dtype=torch.long))
         self.to(device)
 
     def forward(self, observations):
@@ -74,13 +84,11 @@ class GraphActor(nn.Module):
         senders = self.senders[self.edge_indices]
         receivers = self.receivers[self.edge_indices]
         relations = self.relation_features[self.edge_indices]
-        outputs = []
-        for sample in values:
-            hidden = torch.relu(self.encoder(sample))
-            for layer in self.attention:
-                hidden = layer(hidden, relations, senders, receivers)
-            outputs.append(self.head(hidden))
-        result = torch.stack(outputs)
+        receiver_groups = [getattr(self, f"receiver_group_{node}") for node in range(4)]
+        hidden = torch.relu(self.encoder(values))
+        for layer in self.attention:
+            hidden = layer(hidden, relations, senders, receivers, receiver_groups)
+        result = self.head(hidden)
         return result[0] if unbatched else result
 
 
@@ -245,22 +253,47 @@ class MAPPOUpdater:
             raise ValueError("Invalid PPO update configuration")
         sample_count = len(obs)
         diagnostics = {key: [] for key in ("actor_loss", "value_loss", "raw_value_mse", "explained_variance",
-                                            "entropy", "approx_kl",
+                                            "entropy", "pre_update_approx_kl",
                                             "clip_fraction", "actor_gradient_norm", "critic_gradient_norm",
                                             "critic_clipped_fraction")}
-        stopped_early = False
+        actor_stopped_early = False
+        actor_steps = critic_steps = 0
+        stopping_kl = 0.0
         for _ in range(epochs):
             permutation = torch.randperm(sample_count, device=self.device)
             for start in range(0, sample_count, batch_size):
                 indices = permutation[start:start + batch_size]
-                logits = self.actor(obs[indices])
-                distribution = masked_distribution(logits, legal[indices])
-                new_logp = distribution.log_prob(action[indices].long())
-                log_ratio = new_logp - old_logp[indices]
-                ratio = log_ratio.exp()
-                clipped_ratio = ratio.clamp(1. - clip, 1. + clip)
-                actor_loss = -torch.minimum(ratio * adv[indices], clipped_ratio * adv[indices]).mean()
-                entropy = distribution.entropy().mean()
+                actor_metrics = None
+                if not actor_stopped_early:
+                    logits = self.actor(obs[indices])
+                    distribution = masked_distribution(logits, legal[indices])
+                    new_logp = distribution.log_prob(action[indices].long())
+                    log_ratio = new_logp - old_logp[indices]
+                    ratio = log_ratio.exp()
+                    approx_kl = ((ratio - 1.) - log_ratio).mean()
+                    if not torch.isfinite(approx_kl):
+                        raise RuntimeError("Non-finite MAPPO approximate KL")
+                    if float(approx_kl.detach()) > kl_limit:
+                        actor_stopped_early = True
+                        stopping_kl = float(approx_kl.detach())
+                    else:
+                        clipped_ratio = ratio.clamp(1. - clip, 1. + clip)
+                        actor_loss = -torch.minimum(ratio * adv[indices],
+                                                    clipped_ratio * adv[indices]).mean()
+                        entropy = distribution.entropy().mean()
+                        clip_fraction = (torch.abs(ratio - 1.) > clip).float().mean()
+                        loss = actor_loss - entropy_coef * entropy
+                        if not all(torch.isfinite(value).all()
+                                   for value in (loss, actor_loss, entropy, clip_fraction)):
+                            raise RuntimeError("Non-finite MAPPO actor loss")
+                        self.actor_optimizer.zero_grad(set_to_none=True)
+                        loss.backward()
+                        actor_norm = nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm)
+                        if not torch.isfinite(actor_norm):
+                            raise RuntimeError("Non-finite MAPPO actor gradient")
+                        self.actor_optimizer.step()
+                        actor_steps += 1
+                        actor_metrics = (actor_loss, entropy, approx_kl, clip_fraction, actor_norm)
                 predicted = self.critic(obs[indices])
                 value_loss = torch.nn.functional.huber_loss(predicted, target[indices])
                 raw_predicted = (self.value_normalizer.denormalize(predicted)
@@ -270,40 +303,44 @@ class MAPPOUpdater:
                 explained_variance = (1. - (raw_target[indices] - raw_predicted).var(unbiased=False)
                                       / target_variance.clamp_min(1e-8))
                 explained_variance = torch.where(target_variance > 1e-8, explained_variance, 0.)
-                approx_kl = ((ratio - 1.) - log_ratio).mean()
-                clip_fraction = (torch.abs(ratio - 1.) > clip).float().mean()
-                loss = actor_loss - entropy_coef * entropy
                 if not all(torch.isfinite(value).all() for value in
-                           (loss, value_loss, raw_mse, explained_variance,
-                            approx_kl, clip_fraction, predicted, raw_predicted)):
+                           (value_loss, raw_mse, explained_variance, predicted, raw_predicted)):
                     raise RuntimeError("Non-finite MAPPO loss or prediction")
-                self.actor_optimizer.zero_grad(set_to_none=True)
-                loss.backward()
-                actor_norm = nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm)
-                if not torch.isfinite(actor_norm):
-                    raise RuntimeError("Non-finite MAPPO actor gradient")
-                self.actor_optimizer.step()
                 self.critic_optimizer.zero_grad(set_to_none=True)
                 (value_coef * value_loss).backward()
                 critic_norm = nn.utils.clip_grad_norm_(self.critic.parameters(), max_norm)
                 if not torch.isfinite(critic_norm):
                     raise RuntimeError("Non-finite MAPPO critic gradient")
                 self.critic_optimizer.step()
-                for key, value in (("actor_loss", actor_loss), ("value_loss", value_loss),
-                                   ("raw_value_mse", raw_mse),
+                critic_steps += 1
+                if actor_metrics is not None:
+                    actor_loss, entropy, approx_kl, clip_fraction, actor_norm = actor_metrics
+                    for key, value in (("actor_loss", actor_loss), ("entropy", entropy),
+                                       ("pre_update_approx_kl", approx_kl),
+                                       ("clip_fraction", clip_fraction),
+                                       ("actor_gradient_norm", actor_norm)):
+                        diagnostics[key].append(float(value.detach()))
+                for key, value in (("value_loss", value_loss), ("raw_value_mse", raw_mse),
                                    ("explained_variance", explained_variance),
-                                   ("entropy", entropy), ("approx_kl", approx_kl),
-                                   ("clip_fraction", clip_fraction),
-                                   ("actor_gradient_norm", actor_norm),
                                    ("critic_gradient_norm", critic_norm),
                                    ("critic_clipped_fraction", (critic_norm > max_norm).float())):
                     diagnostics[key].append(float(value.detach()))
-                if float(approx_kl.detach()) > kl_limit:
-                    stopped_early = True
-                    break
-            if stopped_early:
-                break
+        with torch.no_grad():
+            final_logits = self.actor(obs)
+            final_logp = masked_distribution(final_logits, legal).log_prob(action.long())
+            final_log_ratio = final_logp - old_logp
+            final_kl = ((final_log_ratio.exp() - 1.) - final_log_ratio).mean()
+        if not torch.isfinite(final_kl):
+            raise RuntimeError("Non-finite final MAPPO approximate KL")
         self.updates += 1
-        self.last_diagnostics = {key: float(np.mean(values)) for key, values in diagnostics.items()}
-        self.last_diagnostics["epochs_stopped_early"] = stopped_early
+        self.last_diagnostics = {key: float(np.mean(values)) if values else 0.0
+                                 for key, values in diagnostics.items()}
+        self.last_diagnostics.update({"actor_stopped_early": actor_stopped_early,
+                                      "epochs_stopped_early": actor_stopped_early,
+                                      "approx_kl": self.last_diagnostics["pre_update_approx_kl"],
+                                      "actor_steps": actor_steps, "critic_steps": critic_steps,
+                                      "stopping_kl": stopping_kl,
+                                      "max_pre_update_kl": max(diagnostics["pre_update_approx_kl"],
+                                                               default=0.),
+                                      "final_approx_kl": float(final_kl.detach())})
         return self.last_diagnostics

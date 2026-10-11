@@ -63,6 +63,14 @@ GRAPH_MAPPO_PROTOCOL = {
     "learner_seeds": [17, 29, 43],
     "pilot_seed": 11,
 }
+GRAPH_MAPPO_SELECTION_SPEC = {
+    "version": "graph_mappo_validation_selection_v2",
+    "fair_cycle_mean_delay_improvement": 0.01,
+    "maximum_scenario_delay_regression": 0.05,
+    "minimum_throughput_ratio": 0.98,
+    "maximum_wait_regression_ratio": 0.10,
+    "maximum_wait_regression_s": 1.0,
+}
 GRAPH_MAPPO_SEED_SPLITS = {
     "train": tuple(GRAPH_MAPPO_PROTOCOL["training_seeds"]),
     "validation": tuple(GRAPH_MAPPO_PROTOCOL["validation_seeds"]),

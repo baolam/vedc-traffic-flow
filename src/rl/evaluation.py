@@ -23,6 +23,7 @@ IMPLEMENTATION_FILES = (
     "src/control/actuator.py", "src/control/fair_cycle.py", "src/control/graph_mappo.py",
     "src/control/graph_mappo_numpy.py", "src/control/factory.py", "src/rl/policy.py",
     "src/rl/sumo_env.py", "src/rl/benchmark.py", "src/rl/evaluation.py",
+    "src/rl/mappo_campaign.py",
     "src/simulation/build_network.py", "src/simulation/runtime.py",
 )
 
@@ -46,6 +47,8 @@ def case_signature(config, controller, scenario, seed):
             package_versions[package] = importlib.metadata.version(package)
         except importlib.metadata.PackageNotFoundError:
             package_versions[package] = None
+    from src.simulation.build_network import binary
+    sumo_executable = str(Path(binary("sumo")).resolve())
     return _hash({
         "protocol": GRAPH_MAPPO_PROTOCOL, "scenario": scenario, "seed": int(seed),
         "environment": effective_environment,
@@ -54,7 +57,9 @@ def case_signature(config, controller, scenario, seed):
         "controller": controller_identity,
         "model_sha256": file_hash(model_path) if model_path else None,
         "implementation": {path: file_hash(path) for path in IMPLEMENTATION_FILES},
-        "runtime": {"python": platform.python_version(), "packages": package_versions},
+        "runtime": {"python": platform.python_version(), "packages": package_versions,
+                    "sumo_executable": sumo_executable,
+                    "sumo_sha256": file_hash(sumo_executable)},
     })
 
 
