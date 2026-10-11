@@ -120,6 +120,61 @@ def test_edgeflow_controller_spillback_and_switching_margin():
     assert cmd_switch["target_phase_id"] == "J1_PHASE_EW"
 
 
+def test_edgeflow_hybrid_ctm_multihop_bottleneck_awareness():
+    """Verify EdgeFlow v3 hybrid CTM detects 2-hop downstream congestion."""
+    topology = load_topology("four_intersection_v1")
+    controller = EdgeFlowController(switching_margin=1.0)
+
+    # J1 on NS. Both NS and EW have queues (NS: 10, EW: 11).
+    # 1-hop downstream J2 has low occupancy (0.1), but 2-hop downstream J4 is jammed (0.95).
+    # Multi-hop CTM gates EW movement, keeping NS green to prevent sending vehicles into gridlock.
+    telemetry_j1 = {
+        "node_id": "J1",
+        "source_type": "simulation",
+        "simulation_time_s": 100.0,
+        "timestamp_ms": 1727005820000,
+        "current_phase_id": "J1_PHASE_NS",
+        "approaches": [
+            {"approach_id": "J1_N_IN", "queue_vehicles": 10, "flow_veh_per_s": 0.4, "mean_speed_mps": 3.0, "occupancy_ratio": 0.2},
+            {"approach_id": "J1_S_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_E_IN", "queue_vehicles": 0, "flow_veh_per_s": 0.0, "mean_speed_mps": 5.0, "occupancy_ratio": 0.0},
+            {"approach_id": "J1_W_IN", "queue_vehicles": 11, "flow_veh_per_s": 0.4, "mean_speed_mps": 3.0, "occupancy_ratio": 0.2}
+        ]
+    }
+
+    network_state = {
+        "J2": {
+            "approaches": [
+                {"approach_id": "J2_N_IN", "queue_vehicles": 1, "occupancy_ratio": 0.1},
+                {"approach_id": "J2_S_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0},
+                {"approach_id": "J2_E_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0},
+                {"approach_id": "J2_W_IN", "queue_vehicles": 1, "occupancy_ratio": 0.1}
+            ]
+        },
+        "J3": {
+            "approaches": [
+                {"approach_id": "J3_N_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0},
+                {"approach_id": "J3_S_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0},
+                {"approach_id": "J3_E_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0},
+                {"approach_id": "J3_W_IN", "queue_vehicles": 0, "occupancy_ratio": 0.0}
+            ]
+        },
+        "J4": {
+            "approaches": [
+                {"approach_id": "J4_N_IN", "queue_vehicles": 20, "occupancy_ratio": 0.95},
+                {"approach_id": "J4_S_IN", "queue_vehicles": 18, "occupancy_ratio": 0.95},
+                {"approach_id": "J4_E_IN", "queue_vehicles": 19, "occupancy_ratio": 0.95},
+                {"approach_id": "J4_W_IN", "queue_vehicles": 20, "occupancy_ratio": 0.95}
+            ]
+        }
+    }
+
+    cmd = controller.compute_command("J1", telemetry_j1, topology, network_state=network_state)
+    assert cmd["target_phase_id"] == "J1_PHASE_NS"
+    assert cmd["controller"] == "edgeflow"
+    validate_payload(cmd, "control_command")
+
+
 def test_fixed_time_clock_driven_stability():
     """
     Appendix A2 verification: calling compute_command multiple times with the SAME timestamp

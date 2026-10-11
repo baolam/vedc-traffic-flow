@@ -102,6 +102,7 @@ TOPOLOGY_ALIASES = {
     "example": "hcm_corridor",
     "hcm": "hcm_corridor",
     "hcm_demo": "hcm_corridor",
+    "hcm-corridor": "hcm_corridor",
 }
 
 

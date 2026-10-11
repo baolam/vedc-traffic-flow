@@ -2,8 +2,8 @@ import xml.etree.ElementTree as ET
 import random
 from pathlib import Path
 
-base = Path(r"E:\vedc-traffic-flow\experiments\example")
-route_file = base / "routes.rou.xml"
+base = Path(__file__).resolve().parent
+route_file = base / "hcm_corridor.rou.xml" if (base / "hcm_corridor.rou.xml").exists() else base / "routes.rou.xml"
 
 tree = ET.parse(route_file)
 root = tree.getroot()

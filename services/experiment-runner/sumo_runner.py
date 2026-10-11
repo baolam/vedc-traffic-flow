@@ -117,6 +117,24 @@ def generate_sumo_routes(
 
     sc = scenario.lower()
 
+    if topology_id in ["grid4x4", "cologne8", "hcm_corridor"]:
+        from src.simulation.sumo_demand_generator import SumoDemandGenerator
+        out_dir = Path(output_path).parent
+        meta = SumoDemandGenerator.generate_frozen_demand(
+            topology_id=topology_id,
+            scenario=scenario,
+            seed=seed,
+            output_dir=out_dir,
+            warmup_s=0,
+            duration_s=duration_s,
+            drain_s=0,
+        )
+        gen_rou = out_dir / "demand.rou.xml"
+        if str(gen_rou.resolve()) != str(Path(output_path).resolve()):
+            import shutil
+            shutil.copy2(gen_rou, output_path)
+        return meta["demand_rou_sha256"]
+
     # Get flow parameters from canonical ScenarioRegistry via contracts_sdk
     sc_profile = contracts_sdk.get_scenario(scenario)
     flows = sc_profile.flow_rates if sc_profile.flow_rates else {
@@ -286,14 +304,14 @@ def parse_tripinfo(tripinfo_path: str) -> Dict[str, Any]:
             "completed": 0,
             "unfinished": len(unfinished),
             "completion_coverage": 0.0,
-            "mean_waiting_time_s": 0.0,
-            "p50_waiting_time_s": 0.0,
-            "p95_waiting_time_s": 0.0,
+            "mean_waiting_time_s": None,
+            "p50_waiting_time_s": None,
+            "p95_waiting_time_s": None,
             "total_waiting_vehicle_seconds": 0.0,
-            "mean_time_loss_s": 0.0,
-            "p95_time_loss_s": 0.0,
-            "mean_trip_duration_s": 0.0,
-            "mean_depart_delay_s": 0.0,
+            "mean_time_loss_s": None,
+            "p95_time_loss_s": None,
+            "mean_trip_duration_s": None,
+            "mean_depart_delay_s": None,
         }
 
     return {"vehicles": vehicles, "summary": summary}
@@ -332,7 +350,7 @@ def run_sumo_experiment(
 
     from src.control.controllers import (
         FixedTimeController, ActuatedController, MaxQueueController,
-        MaxPressureController, EdgeFlowController,
+        MaxPressureController, EdgeFlowController, FlowTheoryController,
     )
     from src.control.actuator import ActuatorStateMachine
     import contracts_sdk
@@ -348,21 +366,25 @@ def run_sumo_experiment(
     route_path = str(exp_dir / "routes.rou.xml")
     demand_hash = generate_sumo_routes(scenario, seed, duration_s, route_path, topology_id)
 
-    # Generate SUMO config with tripinfo output
-    candidates = [
-        sumo_configs_dir / topology_id / f"{topology_id}.net.xml",
-        sumo_configs_dir / f"{topology_id}.net.xml",
-        sumo_configs_dir / "four_intersection_v1" / "four_intersection_v1.net.xml",
-        sumo_configs_dir / "four_intersection_v1.net.xml",
-    ]
+    # Find net file strictly for the requested topology — zero silent fallbacks to other networks
+    from src.simulation.sumo_network_registry import NETWORK_REGISTRY
     net_file = None
-    for cand in candidates:
-        if cand.exists():
-            net_file = str(cand)
-            break
+    if topology_id in NETWORK_REGISTRY:
+        candidate_path = repo_root / NETWORK_REGISTRY[topology_id]["net_path"]
+        if candidate_path.exists():
+            net_file = str(candidate_path)
+    else:
+        candidates = [
+            sumo_configs_dir / topology_id / f"{topology_id}.net.xml",
+            sumo_configs_dir / f"{topology_id}.net.xml",
+        ]
+        for cand in candidates:
+            if cand.exists():
+                net_file = str(cand)
+                break
 
     if not net_file or not os.path.exists(net_file):
-        return {"valid": False, "error": f"Net file not found for topology '{topology_id}'", "experiment_id": exp_id}
+        return {"valid": False, "error": f"Net file not found for requested topology '{topology_id}'", "experiment_id": exp_id}
 
     tripinfo_path = str(exp_dir / "tripinfo.xml")
     summary_path = str(exp_dir / "summary.xml")
@@ -370,8 +392,8 @@ def run_sumo_experiment(
     sumocfg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <input>
-        <net-file value="{net_file}"/>
-        <route-files value="{route_path}"/>
+        <net-file value="{Path(net_file).resolve().as_posix()}"/>
+        <route-files value="routes.rou.xml"/>
     </input>
     <time>
         <begin value="0"/>
@@ -379,9 +401,9 @@ def run_sumo_experiment(
         <step-length value="1.0"/>
     </time>
     <output>
-        <tripinfo-output value="{tripinfo_path}"/>
-        <summary-output value="{summary_path}"/>
-        <emission-output value="{emission_path}"/>
+        <tripinfo-output value="tripinfo.xml"/>
+        <summary-output value="summary.xml"/>
+        <emission-output value="emission.xml"/>
         <tripinfo-output.write-unfinished value="true"/>
     </output>
     <processing>
@@ -396,19 +418,12 @@ def run_sumo_experiment(
     with open(sumocfg_path, "w") as f:
         f.write(sumocfg_content)
 
-    # Init controller
-    CONTROLLERS = {
-        "fixed_time": lambda: FixedTimeController(cycle_time_s=30.0),
-        "actuated": lambda: ActuatedController(min_green_s=10.0, max_green_s=45.0),
-        "max_queue": lambda: MaxQueueController(),
-        "max_pressure": lambda: MaxPressureController(),
-        "edgeflow": lambda: EdgeFlowController(),
-    }
-
-    if controller_name not in CONTROLLERS:
+    # Init controller using unified factory
+    from src.control.factory import create_controller, CONTROLLER_REGISTRY
+    if controller_name not in CONTROLLER_REGISTRY:
         return {"valid": False, "error": f"Unknown controller: {controller_name}", "experiment_id": exp_id}
 
-    controller = CONTROLLERS[controller_name]()
+    controller = create_controller(controller_name, parameters=parameters or {}, model_path=model_path)
     actuator = ActuatorStateMachine(yellow_duration_s=3.0, all_red_duration_s=2.0)
 
     # Find SUMO binary
@@ -486,19 +501,23 @@ def run_sumo_experiment(
                             q = float(traci.edge.getLastStepHaltingNumber(app_id))
                             raw_spd = traci.edge.getLastStepMeanSpeed(app_id)
                             spd = round(float(raw_spd) if raw_spd >= 0 else 13.89, 2)
+                            # TraCI returns occupancy as percentage 0..100%
                             raw_occ = traci.edge.getLastStepOccupancy(app_id)
-                            occ_val = float(raw_occ)
-                            if occ_val > 1.0:
-                                occ_val /= 100.0
-                            occ = round(min(1.0, max(0.0, occ_val)), 3)
+                            occ = round(min(1.0, max(0.0, float(raw_occ) / 100.0)), 3)
                             veh_count = traci.edge.getLastStepVehicleNumber(app_id)
+                            # Flow: calculate moving vehicles flow rate (veh/s)
+                            lane0 = f"{app_id}_0"
+                            edge_len = max(1.0, float(traci.lane.getLength(lane0)) if lane0 in traci.lane.getIDList() else 50.0)
+                            moving_veh = max(0, veh_count - int(q))
+                            flow_rate = (moving_veh * spd) / edge_len
                         except Exception as e:
                             logger.debug(f"TraCI error for {app_id}: {e}")
+                            flow_rate = 0.0
 
                     approaches_data.append({
                         "approach_id": app_id,
                         "queue_vehicles": round(q, 1),
-                        "flow_veh_per_s": round(float(veh_count), 2),
+                        "flow_veh_per_s": round(float(flow_rate), 4),
                         "mean_speed_mps": spd,
                         "occupancy_ratio": occ,
                         "confidence": 1.0,

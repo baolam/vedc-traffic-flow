@@ -22,6 +22,7 @@ Usage:
 import os
 import sys
 import time
+import json
 import shutil
 import subprocess
 import argparse
@@ -142,6 +143,7 @@ def run_demo_simulation(
     duration_s: int,
     seed: int,
     sumo_gui_bin: str,
+    delay_ms: int = 20,
 ):
     """Execute live TraCI simulation for canonical topologies."""
     import traci
@@ -246,7 +248,7 @@ def run_demo_simulation(
         "--gui-settings-file", str(gui_settings_path),
         "--start", "true",
         "--quit-on-end", "true",
-        "--delay", "100",
+        "--delay", str(delay_ms),
         "--tripinfo-output", str(trip_out),
         "--summary-output", str(summary_out),
         "--emission-output", str(emission_out),
@@ -271,6 +273,36 @@ def run_demo_simulation(
         ns.phase_start_time = 0.0
         ns.state_start_time = 0.0
 
+    import queue
+    import threading
+
+    telemetry_queue = queue.Queue(maxsize=2000)
+
+    def _telemetry_worker():
+        while True:
+            try:
+                item = telemetry_queue.get(timeout=0.5)
+                if item is None:
+                    break
+                endpoint, payload = item
+                try:
+                    import urllib.request
+                    req = urllib.request.Request(
+                        f"http://localhost:8000/api/v1/{endpoint}",
+                        data=json.dumps(payload).encode("utf-8"),
+                        headers={"Content-Type": "application/json"}
+                    )
+                    urllib.request.urlopen(req, timeout=0.2)
+                except Exception:
+                    pass
+                finally:
+                    telemetry_queue.task_done()
+            except queue.Empty:
+                continue
+
+    t_worker = threading.Thread(target=_telemetry_worker, daemon=True)
+    t_worker.start()
+
     step = 0
     total_queue_sum = 0.0
     samples = 0
@@ -293,21 +325,41 @@ def run_demo_simulation(
                 node_state = actuator.get_or_create_node(nid)
                 active_phase = node_state.current_phase_id
 
-                approaches_data = []
+                canonical_approaches = []
                 for app_id in node.get("approaches", []):
                     q = 0.0
+                    spd = 13.89
                     if app_id in edge_ids:
-                        q = float(traci.edge.getLastStepHaltingNumber(app_id))
-                    approaches_data.append({"approach_id": app_id, "queue_length_veh": q})
+                        try:
+                            q = float(traci.edge.getLastStepHaltingNumber(app_id))
+                            spd = max(0.1, float(traci.edge.getLastStepMeanSpeed(app_id)))
+                        except Exception:
+                            pass
+                    canonical_approaches.append({
+                        "approach_id": app_id,
+                        "queue_vehicles": round(q, 1),
+                        "flow_veh_per_s": round(0.15 * q, 2),
+                        "mean_speed_mps": round(spd, 2),
+                        "occupancy_ratio": round(min(q / 20.0, 1.0), 2),
+                        "confidence": 1.0
+                    })
                     node_queues.append(q)
 
                 telemetry = {
                     "node_id": nid,
-                    "timestamp": t,
+                    "source_type": "simulation",
+                    "simulation_time_s": t,
+                    "timestamp_ms": int(time.time() * 1000),
                     "current_phase_id": active_phase,
-                    "state": node_state.state,
-                    "approaches": approaches_data,
+                    "status": "ONLINE",
+                    "approaches": canonical_approaches,
                 }
+
+                # Push telemetry payload asynchronously to background worker (0ms overhead)
+                try:
+                    telemetry_queue.put_nowait(("telemetry", telemetry))
+                except queue.Full:
+                    pass
 
                 cmd = controller.compute_command(
                     node_id=nid,
@@ -316,7 +368,19 @@ def run_demo_simulation(
                     current_time_s=t,
                 )
                 if cmd:
-                    actuator.process_command(cmd, now=t)
+                    ack = actuator.process_command(cmd, now=t)
+                    if ack:
+                        try:
+                            ack_payload = ack.to_dict() if hasattr(ack, "to_dict") else {
+                                "command_id": getattr(ack, "command_id", f"cmd-{nid}-{t}"),
+                                "node_id": nid,
+                                "status": getattr(ack, "status", "APPLIED"),
+                                "reason": getattr(ack, "reason", "Phase command executed."),
+                                "timestamp_ms": int(time.time() * 1000)
+                            }
+                            telemetry_queue.put_nowait(("control_ack", ack_payload))
+                        except queue.Full:
+                            pass
 
                 if node_state.state == "GREEN" and nid in tl_ids:
                     phase_list = node.get("phases", [])
@@ -419,6 +483,7 @@ def main():
     parser.add_argument("--controller", type=str, default="edgeflow", help="Controller type (edgeflow, max_pressure, actuated, fixed_time)")
     parser.add_argument("--duration", type=int, default=300, help="Demo duration in seconds")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--delay", type=int, default=20, help="SUMO-GUI step delay in milliseconds (0 for max speed, 20 for fast/smooth, 100 for slow)")
     parser.add_argument("--skip-docker", action="store_true", help="Skip Docker compose initialization")
 
     args = parser.parse_args()
@@ -428,6 +493,7 @@ def main():
     controller_name = args.controller
     duration_s = args.duration
     seed = args.seed
+    delay_ms = args.delay
 
     print_banner(topology_id, scenario_id, controller_name, duration_s)
 
@@ -445,6 +511,7 @@ def main():
         duration_s=duration_s,
         seed=seed,
         sumo_gui_bin=sumo_gui_bin,
+        delay_ms=delay_ms,
     )
 
 
