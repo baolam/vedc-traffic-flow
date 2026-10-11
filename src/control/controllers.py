@@ -571,22 +571,35 @@ class EdgeFlowController(BaseController):
                     occ_out = 0.0
                     if to_node and network_state and to_node in network_state:
                         to_apps = network_state[to_node].get("approaches", [])
-                        if to_apps:
-                            q_out = sum(float(a.get("queue_vehicles", 0)) for a in to_apps) / len(to_apps)
-                            occ_out = sum(float(a.get("occupancy_ratio", 0.0)) for a in to_apps) / len(to_apps)
+                        to_approach = m.get("to_approach")
+                        mapped = None
+                        if to_approach:
+                            mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None)
+                        if not mapped and from_app:
+                            for suffix in ("_N_IN", "_S_IN", "_E_IN", "_W_IN"):
+                                if from_app.endswith(suffix):
+                                    mapped = next((a for a in to_apps if a.get("approach_id", "").endswith(suffix)), None)
+                                    if mapped:
+                                        break
+                        if mapped:
+                            q_out = float(mapped.get("queue_vehicles", 0))
+                            occ_out = float(mapped.get("occupancy_ratio", 0.0))
+                        elif to_apps:
+                            worst_app = max(to_apps, key=lambda a: float(a.get("occupancy_ratio", 0.0)))
+                            occ_out = float(worst_app.get("occupancy_ratio", 0.0))
+                            q_out = float(worst_app.get("queue_vehicles", 0))
 
                     # Nonlinear receiving-capacity gating
+                    pressure = q_in - (turn_ratio * q_out)
                     if occ_out >= self.max_occupancy_threshold or q_out >= capacity:
                         # Downstream blocked -> apply backpressure penalty
                         m_score = self.spillback_penalty * (1.0 + occ_out)
-                    elif occ_out > 0.5:
+                    elif occ_out > 0.4:
                         # Soft barrier: scale down pressure as downstream approaches saturation
-                        barrier_factor = max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold)**3)
-                        pressure = (q_in - (turn_ratio * q_out)) * barrier_factor
-                        m_score = (pressure + self.progression_weight * flow_in) * conf
+                        barrier_factor = max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold)**2)
+                        m_score = (pressure * barrier_factor + self.progression_weight * flow_in) * conf
                     else:
                         # Free-flowing downstream -> full pressure + progression flow
-                        pressure = q_in - (turn_ratio * q_out)
                         m_score = (pressure + self.progression_weight * flow_in) * conf
 
                     phase_score += m_score
@@ -597,10 +610,16 @@ class EdgeFlowController(BaseController):
                     for app_id in phase_apps
                 )
 
-            # Service-age fairness bonus (nonlinear)
-            last_served = self._last_served[node_id].get(phase_id, now)
-            service_age = max(0.0, now - last_served)
-            phase_score += self.service_age_weight * (service_age ** 1.1)
+            # Service-age fairness bonus (nonlinear, only if phase has active waiting demand)
+            phase_apps_all = phase.get("approaches", [])
+            if not phase_apps_all and phase.get("movements"):
+                phase_apps_all = list({mv.get("from_approach") for mv in phase["movements"] if mv.get("from_approach")})
+            phase_demand = sum(queue_map.get(a, 0.0) + flow_map.get(a, 0.0) for a in phase_apps_all)
+
+            if phase_demand > 0.2:
+                last_served = self._last_served[node_id].get(phase_id, now)
+                service_age = max(0.0, now - last_served)
+                phase_score += self.service_age_weight * (service_age ** 1.1)
 
             phase_scores[phase_id] = phase_score
 
@@ -629,29 +648,56 @@ class EdgeFlowController(BaseController):
                 "controller": "edgeflow",
             }
 
-        # 2. Check current phase queue and downstream blockage
+        # 2. Check current phase queue, flow, and downstream blockage
         active_phase_obj = next((p for p in phases if p["phase_id"] == current_phase_id), None)
         active_apps = active_phase_obj.get("approaches", []) if active_phase_obj else []
+        if not active_apps and active_phase_obj and active_phase_obj.get("movements"):
+            active_apps = list({m.get("from_approach") for m in active_phase_obj["movements"] if m.get("from_approach")})
+
         active_queue = sum(queue_map.get(a, 0.0) for a in active_apps)
+        active_flow = sum(flow_map.get(a, 0.0) for a in active_apps)
 
         current_blocked = False
         if active_phase_obj and active_phase_obj.get("movements"):
             for m in active_phase_obj["movements"]:
                 to_node = m.get("to_node")
+                from_app = m.get("from_approach", "")
                 if to_node and network_state and to_node in network_state:
                     to_apps = network_state[to_node].get("approaches", [])
-                    if to_apps:
-                        occ = sum(float(a.get("occupancy_ratio", 0.0)) for a in to_apps) / len(to_apps)
-                        if occ >= self.max_occupancy_threshold:
-                            current_blocked = True
+                    to_approach = m.get("to_approach")
+                    mapped = None
+                    if to_approach:
+                        mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None)
+                    if not mapped and from_app:
+                        for suffix in ("_N_IN", "_S_IN", "_E_IN", "_W_IN"):
+                            if from_app.endswith(suffix):
+                                mapped = next((a for a in to_apps if a.get("approach_id", "").endswith(suffix)), None)
+                                if mapped:
+                                    break
+                    occ = float(mapped.get("occupancy_ratio", 0.0)) if mapped else (
+                        max(float(a.get("occupancy_ratio", 0.0)) for a in to_apps) if to_apps else 0.0
+                    )
+                    if occ >= self.max_occupancy_threshold:
+                        current_blocked = True
+                        break
 
         # 3. Check best scoring phase vs current phase with switching margin
         current_score = phase_scores.get(current_phase_id, 0.0)
         best_phase, best_score = max(phase_scores.items(), key=lambda x: x[1]) if phase_scores else (current_phase_id, current_score)
 
-        if not current_blocked and active_queue > 0.5 and elapsed_green < self.max_green_s:
-            # If a competing phase has substantially higher score than current phase + switching margin -> switch!
-            if best_phase != current_phase_id and best_score > current_score + self.switching_margin:
+        # Evaluate best competing phase demand
+        best_phase_obj = next((p for p in phases if p["phase_id"] == best_phase), None)
+        best_apps = best_phase_obj.get("approaches", []) if best_phase_obj else []
+        if not best_apps and best_phase_obj and best_phase_obj.get("movements"):
+            best_apps = list({m.get("from_approach") for m in best_phase_obj["movements"] if m.get("from_approach")})
+        best_demand = sum(queue_map.get(a, 0.0) + flow_map.get(a, 0.0) for a in best_apps)
+
+        # Platoon extension: keep serving if queue remains or active discharging platoon is flowing
+        has_active_traffic = (active_queue > 0.5) or (active_flow > 0.1 and elapsed_green < 20.0)
+
+        if not current_blocked and has_active_traffic and elapsed_green < self.max_green_s:
+            # Only switch if competing phase has substantial queue advantage AND actual demand
+            if best_phase != current_phase_id and best_score > current_score + self.switching_margin and best_demand > 0.5:
                 target_phase = best_phase
             else:
                 target_phase = current_phase_id
@@ -664,8 +710,11 @@ class EdgeFlowController(BaseController):
                 "controller": "edgeflow",
             }
 
-        # 4. If gap-out or downstream blocked or max green reached -> pick best scoring phase
-        if not phase_scores:
+        # 4. Gap-out or max green reached or downstream blocked:
+        # If no competing phase has demand, remain on current phase to avoid yellow/all-red lost time
+        if not current_blocked and best_demand <= 0.2 and elapsed_green < self.max_green_s:
+            target_phase = current_phase_id
+        elif not phase_scores:
             target_phase = current_phase_id
         else:
             target_phase = best_phase

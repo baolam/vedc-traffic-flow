@@ -103,8 +103,8 @@ MAP_HTML_FILE = _get_map_html_file()
 
 # In-memory Live State Store
 LIVE_STATE: Dict[str, Any] = {
-    "active_topology_id": "four_intersection_v1",
-    "active_controller": "edgeflow",
+    "active_topology_id": os.getenv("EDGEFLOW_TOPOLOGY", "four_intersection_v1"),
+    "active_controller": os.getenv("EDGEFLOW_CONTROLLER", "max_pressure"),
     "last_updated_ms": int(time.time() * 1000),
     "source_mode": "system",
     "nodes": {},
@@ -190,24 +190,67 @@ def _start_mqtt_listener():
         def on_connect(c, userdata, flags, rc):
             if rc == 0:
                 logger.info(f"API MQTT Telemetry Subscriber connected to {mqtt_host}:{mqtt_port}")
-                c.subscribe("edgeflow/v1/telemetry/+")
-                c.subscribe("edgeflow/v1/control_ack/+")
+                c.subscribe("edgeflow/v1/#")
 
         def on_message(c, userdata, msg):
             try:
                 payload = json.loads(msg.payload.decode("utf-8"))
                 topic = msg.topic
+                now_str = time.strftime("%H:%M:%S")
+
                 if topic.startswith("edgeflow/v1/telemetry/"):
                     node_id = payload.get("node_id") or topic.split("/")[-1]
                     LIVE_STATE["nodes"][node_id] = payload
                     LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
-                elif topic.startswith("edgeflow/v1/control_ack/"):
-                    node_id = payload.get("node_id")
+                    total_q = sum(a.get("queue_vehicles", 0) for a in payload.get("approaches", []))
+                    event_msg = {
+                        "timestamp": now_str,
+                        "service": "SIMULATOR",
+                        "source": "SIMULATOR/VISION",
+                        "target": "MQTT",
+                        "topic": topic,
+                        "level": "INFO",
+                        "message": f"Telemetry Node {node_id}: Phase={payload.get('current_phase_id')}, Queue={round(total_q, 1)} veh, Flow={round(sum(a.get('flow_veh_per_s', 0) for a in payload.get('approaches', [])), 2)} veh/s"
+                    }
+                    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
+                    events.insert(0, event_msg)
+                    LIVE_STATE["recent_inter_service_events"] = events[:50]
+
+                elif topic.startswith("edgeflow/v1/control/") and topic.endswith("/command"):
+                    parts = topic.split("/")
+                    node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
+                    event_msg = {
+                        "timestamp": now_str,
+                        "service": "GRAPH-CONTROL",
+                        "source": "GRAPH-CONTROL",
+                        "target": "ACTUATOR",
+                        "topic": topic,
+                        "level": "INFO",
+                        "message": f"ControlCommand [{node_id}] -> Target Phase: {payload.get('target_phase_id')} (Decision interval: 5s)"
+                    }
+                    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
+                    events.insert(0, event_msg)
+                    LIVE_STATE["recent_inter_service_events"] = events[:50]
+
+                elif (topic.startswith("edgeflow/v1/control/") and topic.endswith("/ack")) or topic.startswith("edgeflow/v1/control_ack/"):
+                    node_id = payload.get("node_id") or (topic.split("/")[3] if len(topic.split("/")) > 3 else "unknown")
                     if node_id:
                         if node_id not in LIVE_STATE["control_acks"]:
                             LIVE_STATE["control_acks"][node_id] = []
                         LIVE_STATE["control_acks"][node_id].insert(0, payload)
                         LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
+                    event_msg = {
+                        "timestamp": now_str,
+                        "service": "ACTUATOR",
+                        "source": "ACTUATOR",
+                        "target": "SYSTEM",
+                        "topic": topic,
+                        "level": "SUCCESS" if payload.get("status") == "APPLIED" else "WARNING",
+                        "message": f"ControlACK [{node_id}] -> Status: {payload.get('status')} | {payload.get('reason', '')}"
+                    }
+                    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
+                    events.insert(0, event_msg)
+                    LIVE_STATE["recent_inter_service_events"] = events[:50]
             except Exception as ex:
                 logger.debug(f"Error parsing MQTT telemetry payload: {ex}")
 
@@ -548,7 +591,8 @@ def get_system_aggregated_reports():
     mean_wait_s = max(2.5, round(total_q * 1.8 / node_count, 1))
     throughput_per_min = max(45, round(total_flow * 60, 1))
 
-    recent_logs = [
+    live_events = LIVE_STATE.get("recent_inter_service_events", [])
+    recent_logs = list(live_events) if live_events else [
         {
             "timestamp": time.strftime("%H:%M:%S"),
             "service": "graph-control",
