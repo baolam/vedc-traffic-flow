@@ -27,7 +27,7 @@ jobs:
       - name: Install Lint & Contract Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install jsonschema pyyaml pydantic pydantic-settings pytest flake8
+          pip install jsonschema pyyaml pydantic pydantic-settings pytest flake8 sumolib
 
       - name: Lint Code Syntax (Flake8)
         run: |
@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
 
     steps:
       - name: Checkout Code
@@ -57,10 +57,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
+      - name: Install SUMO on Ubuntu
+        run: |
+          sudo add-apt-repository ppa:sumo/stable -y
+          sudo apt-get update
+          sudo apt-get install -y sumo sumo-tools
+        continue-on-error: true
+
       - name: Install Core Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov pydantic pydantic-settings pyyaml jsonschema networkx paho-mqtt fastapi uvicorn websockets requests scikit-learn scipy numpy opencv-python-headless httpx torch --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install pytest pytest-cov pydantic pydantic-settings pyyaml jsonschema networkx paho-mqtt fastapi uvicorn websockets requests scikit-learn scipy numpy opencv-python-headless httpx torch traci sumolib --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Run Full Unit Test Suite
         run: |

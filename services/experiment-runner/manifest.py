@@ -12,6 +12,8 @@ class ScenarioConfig(BaseModel):
     name: str = "directional_surge"
     duration_s: int = 900
     random_seed: int = 42
+    warmup_s: int = 300
+    drain_s: int = 600
 
 class ControllerConfig(BaseModel):
     type: str = "max_pressure"  # 'max_pressure', 'flow_theory', or 'fixed_time'

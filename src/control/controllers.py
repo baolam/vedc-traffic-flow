@@ -103,7 +103,7 @@ class FixedTimeController(BaseController):
         # Green splits per phase (the green portion only)
         clearance = self.yellow_s + self.all_red_s
         default_green = (self.cycle_time_s - clearance * num_phases) / num_phases
-        default_green = max(default_green, 5.0)  # floor
+        default_green = max(default_green, 10.0)  # floor at 10.0s min green
         splits = self.phase_splits.get(node_id, [default_green] * num_phases)
         if len(splits) != num_phases:
             splits = [default_green] * num_phases
@@ -430,18 +430,26 @@ class MaxPressureController(BaseController):
 
 class EdgeFlowController(BaseController):
     """
-    EdgeFlow Adaptive Traffic Signal Controller (v2.5 Architecture).
-    Novel Proposed Methodology: Network-Aware Dynamic Backpressure with Nonlinear Barrier.
+    EdgeFlow Adaptive Traffic Signal Controller (v3.0 Architecture).
+    Novel Proposed Methodology: Hybrid Flow Theory (Cell Transmission Model - CTM)
+    & Network-Aware Dynamic Backpressure (Max-Pressure) with Multi-hop Bottleneck Propagation.
 
     Scientific Foundations:
-      1. Nonlinear Downstream Barrier Function:
-         Smoothly penalizes and throttles movements directed toward saturated downstream links,
-         preventing intersection box-blocking (spillback).
-      2. Dynamic Platoon Progression Momentum:
-         Anticipates discharging upstream flow to coordinate green waves without fixed offsets.
-      3. Time-Decaying Switching Hysteresis:
-         Maintains green during dense platoons, then relaxes to allow swift transition.
-      4. Nonlinear Service-Age Fairness Bonus:
+      1. Cell Transmission Model (CTM) Sending & Receiving Capacity:
+         Evaluates upstream demand S_m = min(S_max, q_in/tau + f_in) and downstream supply
+         R_m = S_max * (1 - Occ_eff / Occ_crit) to regulate effective throughput flow.
+      2. Multi-hop 2-Hop Downstream Graph Bottleneck:
+         Propagates congestion from 2-hop downstream nodes (Occ_eff = max(Occ_1hop, gamma * Occ_2hop))
+         to anticipate spillbacks before queues propagate into the target intersection.
+      3. Network-Aware Dynamic Backpressure (Max-Pressure):
+         Balances queue differentials across the road network graph while gating movements
+         heading into saturated downstream cells.
+      4. Dynamic Platoon Progression Momentum:
+         Rewards flow through unobstructed downstream links to maintain coordinated green waves.
+      5. Time-Decaying Switching Hysteresis & Gap-Out:
+         Enforces min_green, checks downstream blockages in real-time, and guards against
+         phase fluttering with switching_margin.
+      6. Nonlinear Service-Age Fairness Bonus:
          Guarantees zero phase starvation and minimizes tail latency (P95).
     """
 
@@ -456,6 +464,10 @@ class EdgeFlowController(BaseController):
         progression_weight: float = 0.3,
         rl_model_path: Optional[str] = None,
         rl_residual_weight: float = 0.4,
+        saturation_flow_vps: float = 0.5,
+        hop2_attenuation: float = 0.7,
+        enable_ctm_gating: bool = True,
+        enable_multihop: bool = True,
     ):
         self.min_green_s = min_green_s
         self.max_green_s = max_green_s
@@ -465,6 +477,10 @@ class EdgeFlowController(BaseController):
         self.service_age_weight = service_age_weight
         self.progression_weight = progression_weight
         self.rl_residual_weight = rl_residual_weight
+        self.saturation_flow_vps = saturation_flow_vps
+        self.hop2_attenuation = hop2_attenuation
+        self.enable_ctm_gating = enable_ctm_gating
+        self.enable_multihop = enable_multihop
         self.rl_policy = None
 
         # Load RL residual policy if available
@@ -503,6 +519,55 @@ class EdgeFlowController(BaseController):
         self._phase_start.clear()
         self._current_phase.clear()
 
+    def _get_downstream_occupancy(
+        self,
+        to_node: Optional[str],
+        from_app: str,
+        to_approach: Optional[str],
+        network_state: Optional[Dict[str, Any]],
+        topology: Dict[str, Any],
+    ) -> float:
+        if not to_node or not network_state or to_node not in network_state:
+            return 0.0
+
+        to_apps = network_state[to_node].get("approaches", [])
+        mapped = None
+        if to_approach:
+            mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None)
+        if not mapped and from_app:
+            for suffix in ("_N_IN", "_S_IN", "_E_IN", "_W_IN"):
+                if from_app.endswith(suffix):
+                    mapped = next((a for a in to_apps if a.get("approach_id", "").endswith(suffix)), None)
+                    if mapped:
+                        break
+
+        occ_1hop = float(mapped.get("occupancy_ratio", mapped.get("occupancy", 0.0))) if mapped else (
+            max(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) if to_apps else 0.0
+        )
+
+        if not self.enable_multihop:
+            return occ_1hop
+
+        # Multi-hop Graph Reachability (2-hop downstream bottleneck)
+        to_node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == to_node), None)
+        if to_node_info and to_node_info.get("phases"):
+            hop2_occs = []
+            for p2 in to_node_info["phases"]:
+                for m2 in p2.get("movements", []):
+                    to2_node = m2.get("to_node")
+                    if to2_node and to2_node in network_state:
+                        to2_apps = network_state[to2_node].get("approaches", [])
+                        if to2_apps:
+                            hop2_occs.append(
+                                sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to2_apps)
+                                / len(to2_apps)
+                            )
+            if hop2_occs:
+                hop2_avg_occ = sum(hop2_occs) / len(hop2_occs)
+                return max(occ_1hop, self.hop2_attenuation * hop2_avg_occ)
+
+        return occ_1hop
+
     def compute_command(
         self,
         node_id: str,
@@ -523,6 +588,8 @@ class EdgeFlowController(BaseController):
             now = float(current_time_s)
         elif telemetry.get("simulation_time_s") is not None:
             now = float(telemetry["simulation_time_s"])
+        elif telemetry.get("timestamp") is not None:
+            now = float(telemetry["timestamp"])
         else:
             now = time.time()
 
@@ -542,11 +609,18 @@ class EdgeFlowController(BaseController):
 
         queue_map: Dict[str, float] = {}
         flow_map: Dict[str, float] = {}
+        occ_map: Dict[str, float] = {}
         conf_map: Dict[str, float] = {}
         for app in approaches:
             app_id = app["approach_id"]
-            queue_map[app_id] = float(app.get("queue_vehicles", 0))
-            flow_map[app_id] = float(app.get("flow_veh_per_s", 0))
+            queue_map[app_id] = float(app.get("queue_vehicles", app.get("queue_length_veh", 0.0)))
+            if "flow_veh_per_s" in app:
+                flow_map[app_id] = float(app.get("flow_veh_per_s", 0.0))
+            elif "flow_rate" in app:
+                flow_map[app_id] = float(app.get("flow_rate", 0.0)) / 3600.0
+            else:
+                flow_map[app_id] = 0.0
+            occ_map[app_id] = float(app.get("occupancy_ratio", app.get("occupancy", 0.0)))
             conf_map[app_id] = float(app.get("confidence", 1.0))
 
         phase_scores: Dict[str, float] = {}
@@ -560,6 +634,7 @@ class EdgeFlowController(BaseController):
                 for m in movements:
                     from_app = m.get("from_approach", "")
                     to_node = m.get("to_node")
+                    to_approach = m.get("to_approach")
                     turn_ratio = float(m.get("turn_ratio", 1.0))
                     capacity = float(m.get("capacity_vehicles", 20.0))
 
@@ -571,7 +646,6 @@ class EdgeFlowController(BaseController):
                     occ_out = 0.0
                     if to_node and network_state and to_node in network_state:
                         to_apps = network_state[to_node].get("approaches", [])
-                        to_approach = m.get("to_approach")
                         mapped = None
                         if to_approach:
                             mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None)
@@ -582,33 +656,78 @@ class EdgeFlowController(BaseController):
                                     if mapped:
                                         break
                         if mapped:
-                            q_out = float(mapped.get("queue_vehicles", 0))
-                            occ_out = float(mapped.get("occupancy_ratio", 0.0))
+                            q_out = float(mapped.get("queue_vehicles", mapped.get("queue_length_veh", 0.0)))
                         elif to_apps:
-                            worst_app = max(to_apps, key=lambda a: float(a.get("occupancy_ratio", 0.0)))
-                            occ_out = float(worst_app.get("occupancy_ratio", 0.0))
-                            q_out = float(worst_app.get("queue_vehicles", 0))
+                            worst_app = max(to_apps, key=lambda a: float(a.get("occupancy_ratio", a.get("occupancy", 0.0))))
+                            q_out = float(worst_app.get("queue_vehicles", worst_app.get("queue_length_veh", 0.0)))
 
-                    # Nonlinear receiving-capacity gating
-                    pressure = q_in - (turn_ratio * q_out)
+                        occ_out = self._get_downstream_occupancy(
+                            to_node=to_node,
+                            from_app=from_app,
+                            to_approach=to_approach,
+                            network_state=network_state,
+                            topology=topology,
+                        )
+
+                    # 1. Flow Theory (Cell Transmission Model - CTM):
+                    # Sending Capacity S_m = min(S_max, (q_in / tau) + flow_in)
+                    sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + flow_in)
+
+                    # Receiving Capacity R_m
                     if occ_out >= self.max_occupancy_threshold or q_out >= capacity:
+                        receiving_capacity = 0.0
+                    elif occ_out > 0.40:
+                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold) ** 2)
+                    else:
+                        receiving_capacity = self.saturation_flow_vps
+
+                    ctm_throughput = min(sending_capacity, receiving_capacity)
+
+                    # 2. Network Dynamic Max-Pressure
+                    pressure = q_in - (turn_ratio * q_out)
+
+                    # 3. Hybrid Synthesis: CTM-Modulated Max-Pressure with Spillback Penalty
+                    if occ_out >= self.max_occupancy_threshold or q_out >= capacity or receiving_capacity <= 0.0:
                         # Downstream blocked -> apply backpressure penalty
                         m_score = self.spillback_penalty * (1.0 + occ_out)
-                    elif occ_out > 0.4:
+                    elif occ_out > 0.40:
                         # Soft barrier: scale down pressure as downstream approaches saturation
-                        barrier_factor = max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold)**2)
-                        m_score = (pressure * barrier_factor + self.progression_weight * flow_in) * conf
+                        barrier_factor = max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold) ** 2)
+                        if self.enable_ctm_gating:
+                            ctm_flow_ratio = ctm_throughput / max(1e-4, self.saturation_flow_vps)
+                            m_score = (pressure * barrier_factor + self.progression_weight * (flow_in * ctm_flow_ratio + ctm_throughput)) * conf
+                        else:
+                            m_score = (pressure * barrier_factor + self.progression_weight * flow_in) * conf
                     else:
                         # Free-flowing downstream -> full pressure + progression flow
-                        m_score = (pressure + self.progression_weight * flow_in) * conf
+                        if self.enable_ctm_gating:
+                            m_score = (pressure + self.progression_weight * (flow_in + ctm_throughput)) * conf
+                        else:
+                            m_score = (pressure + self.progression_weight * flow_in) * conf
 
                     phase_score += m_score
             else:
                 phase_apps = phase.get("approaches", [])
-                phase_score = sum(
-                    (queue_map.get(app_id, 0.0) + self.progression_weight * flow_map.get(app_id, 0.0)) * conf_map.get(app_id, 1.0)
-                    for app_id in phase_apps
-                )
+                phase_score = 0.0
+                for app_id in phase_apps:
+                    q_in = queue_map.get(app_id, 0.0)
+                    flow_in = flow_map.get(app_id, 0.0)
+                    conf = conf_map.get(app_id, 1.0)
+                    occ_in = occ_map.get(app_id, 0.0)
+
+                    sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + flow_in)
+                    if occ_in >= self.max_occupancy_threshold:
+                        receiving_capacity = 0.0
+                    elif occ_in > 0.40:
+                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - (occ_in / self.max_occupancy_threshold) ** 2)
+                    else:
+                        receiving_capacity = self.saturation_flow_vps
+                    eff_flow = min(sending_capacity, receiving_capacity)
+
+                    if self.enable_ctm_gating:
+                        phase_score += (q_in + self.progression_weight * (flow_in + eff_flow)) * conf
+                    else:
+                        phase_score += (q_in + self.progression_weight * flow_in) * conf
 
             # Service-age fairness bonus (nonlinear, only if phase has active waiting demand)
             phase_apps_all = phase.get("approaches", [])
@@ -662,20 +781,14 @@ class EdgeFlowController(BaseController):
             for m in active_phase_obj["movements"]:
                 to_node = m.get("to_node")
                 from_app = m.get("from_approach", "")
+                to_approach = m.get("to_approach")
                 if to_node and network_state and to_node in network_state:
-                    to_apps = network_state[to_node].get("approaches", [])
-                    to_approach = m.get("to_approach")
-                    mapped = None
-                    if to_approach:
-                        mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None)
-                    if not mapped and from_app:
-                        for suffix in ("_N_IN", "_S_IN", "_E_IN", "_W_IN"):
-                            if from_app.endswith(suffix):
-                                mapped = next((a for a in to_apps if a.get("approach_id", "").endswith(suffix)), None)
-                                if mapped:
-                                    break
-                    occ = float(mapped.get("occupancy_ratio", 0.0)) if mapped else (
-                        max(float(a.get("occupancy_ratio", 0.0)) for a in to_apps) if to_apps else 0.0
+                    occ = self._get_downstream_occupancy(
+                        to_node=to_node,
+                        from_app=from_app,
+                        to_approach=to_approach,
+                        network_state=network_state,
+                        topology=topology,
                     )
                     if occ >= self.max_occupancy_threshold:
                         current_blocked = True
@@ -888,7 +1001,12 @@ class FlowTheoryController(BaseController):
         for app in approaches:
             aid = app["approach_id"]
             queue_map[aid] = float(app.get("queue_vehicles", app.get("queue_length_veh", 0.0)))
-            flow_map[aid] = float(app.get("flow_rate", 0.0)) / 3600.0
+            if "flow_veh_per_s" in app:
+                flow_map[aid] = float(app["flow_veh_per_s"])
+            elif "flow_rate" in app:
+                flow_map[aid] = float(app["flow_rate"]) / 3600.0
+            else:
+                flow_map[aid] = 0.0
             occ_map[aid] = float(app.get("occupancy_ratio", app.get("occupancy", 0.0)))
 
         phase_flows: Dict[str, float] = {}
@@ -914,8 +1032,15 @@ class FlowTheoryController(BaseController):
                     if to_node and network_state and to_node in network_state:
                         to_node_data = network_state[to_node]
                         to_apps = to_node_data.get("approaches", [])
-                        if to_apps:
+                        to_approach = m.get("to_approach")
+                        mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None) if to_approach else None
+                        if mapped:
+                            occ_down = float(mapped.get("occupancy_ratio", mapped.get("occupancy", 0.0)))
+                        elif to_apps:
+                            # Documented heuristic fallback when specific movement approach mapping is absent
                             occ_down = sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) / len(to_apps)
+                        else:
+                            occ_down = 0.0
 
                         # Graph Theory Multi-hop Path Bottleneck (2-hop graph reachability):
                         # Inspect 2-hop downstream neighbors in graph topology G
@@ -927,7 +1052,11 @@ class FlowTheoryController(BaseController):
                                     to2_node = m2.get("to_node")
                                     if to2_node and network_state and to2_node in network_state:
                                         to2_apps = network_state[to2_node].get("approaches", [])
-                                        if to2_apps:
+                                        to2_approach = m2.get("to_approach")
+                                        mapped2 = next((a for a in to2_apps if a.get("approach_id") == to2_approach), None) if to2_approach else None
+                                        if mapped2:
+                                            hop2_occs.append(float(mapped2.get("occupancy_ratio", mapped2.get("occupancy", 0.0))))
+                                        elif to2_apps:
                                             hop2_occs.append(sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to2_apps) / len(to2_apps))
                             if hop2_occs:
                                 hop2_avg_occ = sum(hop2_occs) / len(hop2_occs)

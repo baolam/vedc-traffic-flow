@@ -66,7 +66,7 @@ class SumoTrafficEngine:
         nod_file = self.config_path.replace(".sumocfg", ".nod.xml")
         edg_file = self.config_path.replace(".sumocfg", ".edg.xml")
         net_file = self.config_path.replace(".sumocfg", ".net.xml")
-        if os.path.exists(nod_file) and os.path.exists(edg_file):
+        if os.path.exists(nod_file) and os.path.exists(edg_file) and not os.path.exists(net_file):
             try:
                 import subprocess
                 logger.info(f"Running SUMO netconvert for {nod_file} and {edg_file}...")

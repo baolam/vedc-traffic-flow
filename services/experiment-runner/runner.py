@@ -228,6 +228,7 @@ class SingleExperimentRunner:
             "fixed_time": "FixedTimeController",
             "max_queue": "MaxQueueController",
             "max_pressure": "MaxPressureController",
+            "flow_theory": "FlowTheoryController",
             "edgeflow": "EdgeFlowController",
             "presslight_rl": "PressLightRLController",
             "rl": "PressLightRLController",
@@ -278,19 +279,21 @@ class SingleExperimentRunner:
         self.signal_events.clear()
         self.run_valid = True
 
-        # TASK 7: Generate deterministic demand
-        self.demand = DemandGenerator.generate(
-            scenario_name=self.manifest.scenario.name,
-            seed=self.manifest.scenario.random_seed,
-            duration_s=self.manifest.scenario.duration_s,
-            topology=self.topology,
-        )
-        self.demand_hash = self.demand["hash"]
+        # Demand setup
+        if self.mode != "sumo_live":
+            # TASK 7: Generate deterministic demand for internal python sim
+            self.demand = DemandGenerator.generate(
+                scenario_name=self.manifest.scenario.name,
+                seed=self.manifest.scenario.random_seed,
+                duration_s=self.manifest.scenario.duration_s,
+                topology=self.topology,
+            )
+            self.demand_hash = self.demand["hash"]
 
-        # Save demand file
-        demand_path = self.artifacts_dir / "demand.json"
-        with open(demand_path, "w", encoding="utf-8") as f:
-            json.dump(self.demand, f, indent=2)
+            # Save demand file
+            demand_path = self.artifacts_dir / "demand.json"
+            with open(demand_path, "w", encoding="utf-8") as f:
+                json.dump(self.demand, f, indent=2)
 
         # Save manifest
         self.manifest.save_yaml(str(self.artifacts_dir / "manifest.yaml"))
@@ -317,7 +320,9 @@ class SingleExperimentRunner:
         self.collector.start()
 
         try:
-            if self.mode == "deterministic_sim":
+            if self.mode == "sumo_live":
+                self._run_sumo_live()
+            elif self.mode == "deterministic_sim":
                 self._run_deterministic_sim()
             elif self.mode == "mock_demo":
                 self._run_mock_demo()
@@ -341,12 +346,47 @@ class SingleExperimentRunner:
             self.run_valid = False
             self._fault("NO_DATA", "Zero telemetry samples collected")
 
-        self._export_all_artifacts()
+        if self.mode != "sumo_live":
+            self._export_all_artifacts()
         logger.info(
             f"Experiment {self.manifest.experiment_id} completed. "
             f"Valid={self.run_valid}, Samples={len(self.collector.telemetry_samples)}"
         )
         return self.run_valid
+
+    def _run_sumo_live(self):
+        """Execute real SUMO/TraCI experiment via LiveSumoRuntime."""
+        from src.simulation.sumo_live_backend import LiveSumoRuntime
+
+        warmup_s = getattr(self.manifest.scenario, "warmup_s", 300)
+        drain_s = getattr(self.manifest.scenario, "drain_s", 600)
+        duration_s = self.manifest.scenario.duration_s
+
+        frozen_dir = getattr(self, "frozen_demand_dir", None)
+        if not frozen_dir:
+            candidate = self.artifacts_dir.parent / "frozen_inputs" / self.manifest.topology / self.manifest.scenario.name / f"seed_{self.manifest.scenario.random_seed}"
+            if (candidate / "demand.rou.xml").exists():
+                frozen_dir = candidate
+
+        runtime = LiveSumoRuntime(
+            topology_id=self.manifest.topology,
+            scenario=self.manifest.scenario.name,
+            seed=self.manifest.scenario.random_seed,
+            controller_name=self.requested_controller,
+            artifacts_dir=self.artifacts_dir,
+            warmup_s=warmup_s,
+            duration_s=duration_s,
+            drain_s=drain_s,
+            frozen_demand_dir=frozen_dir,
+            controller_params=self.manifest.controller.parameters,
+            model_path=self.manifest.controller.model_path,
+        )
+        summary = runtime.run()
+        self.run_valid = bool(summary.get("valid_for_research", False))
+        self.faults.extend(runtime.faults)
+        self.demand_hash = summary.get("demand_hash") or summary.get("demand_rou_sha256")
+        self.collector.telemetry_samples = runtime.telemetry_samples
+        self.summary = summary
 
     # ----------------------------------------------------------
     # Deterministic simulation (controller-agnostic physics)
@@ -673,9 +713,11 @@ def main():
     parser.add_argument("--output-dir", type=str, default="artifacts")
     parser.add_argument(
         "--mode", type=str, default="deterministic_sim",
-        choices=["deterministic_sim", "mock_demo"],
+        choices=["sumo_live", "deterministic_sim", "mock_demo"],
         help="Execution mode",
     )
+    parser.add_argument("--warmup", type=int, default=300, help="Warmup duration in seconds")
+    parser.add_argument("--drain", type=int, default=600, help="Drain duration in seconds")
     args = parser.parse_args()
 
     exp_id = args.experiment_id or f"{args.scenario}_{args.controller}_seed{args.seed}"
@@ -684,7 +726,11 @@ def main():
         experiment_id=exp_id,
         topology=args.topology,
         scenario=ScenarioConfig(
-            name=args.scenario, duration_s=args.duration, random_seed=args.seed
+            name=args.scenario,
+            duration_s=args.duration,
+            random_seed=args.seed,
+            warmup_s=args.warmup,
+            drain_s=args.drain,
         ),
         controller=ControllerConfig(type=args.controller, decision_interval_s=1.0),
     )
