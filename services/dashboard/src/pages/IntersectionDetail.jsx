@@ -235,7 +235,7 @@ const IntersectionDetail = () => {
     };
   }, [appStats, nodeId, activePhase]);
 
-  const availablePhases = nodeDetail?.phases || [
+  const availablePhases = (nodeDetail?.phases && nodeDetail.phases.length > 0) ? nodeDetail.phases : [
     { phase_id: `${nodeId}_PHASE_NS`, name: 'North-South Green' },
     { phase_id: `${nodeId}_PHASE_EW`, name: 'East-West Green' }
   ];
@@ -617,19 +617,19 @@ const IntersectionDetail = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
               <div style={{ backgroundColor: activePhase.includes('NS') ? '#e0f2fe' : '#ffffff', border: '1px solid #bae6fd', padding: '8px 12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700 }}>Pha Bắc-Nam ($W_{NS}$)</span>
+                <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700 }}>Pha Bắc-Nam (W_NS)</span>
                 <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0c4a6e' }}>{pressureAnalysis.nsQueue} veh</div>
               </div>
 
               <div style={{ backgroundColor: activePhase.includes('EW') ? '#e0f2fe' : '#ffffff', border: '1px solid #bae6fd', padding: '8px 12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700 }}>Pha Đông-Tây ($W_{EW}$)</span>
+                <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700 }}>Pha Đông-Tây (W_EW)</span>
                 <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0c4a6e' }}>{pressureAnalysis.ewQueue} veh</div>
               </div>
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Info size={14} color="#0284c7" />
-              <span>Chênh lệch áp lực ($\Delta W$): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Thuật toán khuyên dùng: <strong style={{ color: '#0284c7' }}>{pressureAnalysis.recommendedPhase}</strong></span>
+              <span>Chênh lệch áp lực (ΔW): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Thuật toán khuyên dùng: <strong style={{ color: '#0284c7' }}>{pressureAnalysis.recommendedPhase}</strong></span>
             </div>
           </div>
 
@@ -672,7 +672,7 @@ const IntersectionDetail = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#475569', fontWeight: 600, marginBottom: '4px' }}>
-                <span>Thời gian Đèn Vàng ($t_y$)</span>
+                <span>Thời gian Đèn Vàng (t_yellow)</span>
                 <strong style={{ color: '#d97706' }}>{yellowDuration}s</strong>
               </div>
               <input
@@ -691,7 +691,7 @@ const IntersectionDetail = () => {
 
             <div style={{ backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#475569', fontWeight: 600, marginBottom: '4px' }}>
-                <span>Thời gian Đỏ Toàn Bộ ($t_r$)</span>
+                <span>Thời gian Đỏ Toàn Bộ (t_all_red)</span>
                 <strong style={{ color: '#dc2626' }}>{allRedDuration}s</strong>
               </div>
               <input

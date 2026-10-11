@@ -28,7 +28,7 @@ logger = logging.getLogger("batch-runner")
 
 SCENARIOS = ["balanced", "directional_surge", "downstream_congestion"]
 CONTROLLERS = ["fixed_time", "max_queue", "max_pressure", "flow_theory", "edgeflow"]
-TOPOLOGIES = ["four_intersection_v1", "grid4x4", "cologne8", "hcm_realworld_v1"]
+TOPOLOGIES = ["four_intersection_v1", "grid4x4", "cologne8", "hcm_corridor", "hcm_realworld_v1"]
 SEEDS = [101, 202, 303, 404, 505]
 
 
@@ -53,12 +53,13 @@ class BatchRunner:
         self.seeds = seeds or SEEDS
 
         if isinstance(topology, list):
-            self.topologies = topology
+            self.topologies = [t.strip().replace("-", "_") for t in topology]
         elif isinstance(topology, str):
-            if topology.lower() == "all":
-                self.topologies = ["four_intersection_v1", "grid4x4", "cologne8"]
+            clean_top = topology.strip().replace("-", "_")
+            if clean_top.lower() == "all":
+                self.topologies = ["four_intersection_v1", "grid4x4", "cologne8", "hcm_corridor"]
             else:
-                self.topologies = [topology]
+                self.topologies = [clean_top]
         else:
             self.topologies = ["four_intersection_v1"]
 
