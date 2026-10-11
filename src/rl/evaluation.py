@@ -9,6 +9,7 @@ import multiprocessing as mp
 import os
 import platform
 import signal
+import threading
 import time
 import traceback
 from pathlib import Path
@@ -26,6 +27,7 @@ IMPLEMENTATION_FILES = (
     "src/rl/mappo_campaign.py",
     "src/simulation/build_network.py", "src/simulation/runtime.py",
 )
+_WINDOWS_PROCESS_START_LOCK = threading.Lock()
 
 
 def _hash(value):
@@ -157,19 +159,36 @@ def _stop_process_tree(process, job):
 
 def _run_isolated_case(config, controller, scenario, seed, output, timeout_s, worker=None):
     context = mp.get_context("spawn")
-    start_event = context.Event()
-    receive_pipe, send_pipe = context.Pipe(duplex=False)
-    process = context.Process(target=worker or _case_process,
-                              args=(start_event, send_pipe, config, controller,
-                                    scenario, seed, str(output)))
     job = None
-    process.start()
-    send_pipe.close()
-    try:
-        if os.name == "nt":
-            job = _WindowsJob()
-            job.assign(process.pid)
+    if os.name == "nt":
+        # Windows uses named pipes for multiprocessing.Connection. Concurrent
+        # Pipe creation from evaluator threads can fail with WinError 5.
+        with _WINDOWS_PROCESS_START_LOCK:
+            start_event = context.Event()
+            receive_pipe, send_pipe = context.Pipe(duplex=False)
+            process = context.Process(target=worker or _case_process,
+                                      args=(start_event, send_pipe, config, controller,
+                                            scenario, seed, str(output)))
+            process.start()
+            send_pipe.close()
+            try:
+                job = _WindowsJob()
+                job.assign(process.pid)
+                start_event.set()
+            except BaseException:
+                _stop_process_tree(process, job)
+                receive_pipe.close()
+                raise
+    else:
+        start_event = context.Event()
+        receive_pipe, send_pipe = context.Pipe(duplex=False)
+        process = context.Process(target=worker or _case_process,
+                                  args=(start_event, send_pipe, config, controller,
+                                        scenario, seed, str(output)))
+        process.start()
+        send_pipe.close()
         start_event.set()
+    try:
         if not receive_pipe.poll(timeout_s):
             _stop_process_tree(process, job)
             job = None

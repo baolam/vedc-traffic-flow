@@ -41,6 +41,12 @@ def _sleeping_case_worker(start_event, result_pipe, *unused):
     time.sleep(30)
 
 
+def _quick_case_worker(start_event, result_pipe, *unused):
+    start_event.wait()
+    result_pipe.send((True, {"ok": True}))
+    result_pipe.close()
+
+
 def actor_pair(topology, seed=17):
     torch = pytest.importorskip("torch")
     from src.rl.graph_mappo import GraphActor, actor_weights
@@ -213,6 +219,17 @@ def test_isolated_evaluation_worker_is_terminated_at_case_deadline(tmp_path):
         _run_isolated_case({}, {}, "balanced", 31001, tmp_path / "timeout", .2,
                            worker=_sleeping_case_worker)
     assert time.monotonic() - started < 6.
+
+
+def test_concurrent_isolated_workers_start_without_named_pipe_collision(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from src.rl.evaluation import _run_isolated_case
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(_run_isolated_case, {}, {}, "balanced", seed,
+                               tmp_path / f"worker-{seed}", 10., _quick_case_worker)
+                   for seed in (1, 2)]
+        assert [future.result() for future in futures] == [{"ok": True}, {"ok": True}]
 
 
 def test_parallel_evaluation_preserves_case_order_and_caps_worker_count(tmp_path, monkeypatch):
