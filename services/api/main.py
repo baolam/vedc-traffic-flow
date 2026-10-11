@@ -516,15 +516,24 @@ def trigger_emergency_override(req: OverrideRequest):
     cmd_id = f"cmd-override-{req.node_id}-{int(time.time() * 1000)}"
     now_ms = int(time.time() * 1000)
 
+    min_green = float(req.min_green_s) if req.min_green_s is not None else 10.0
+    max_green = float(req.max_green_s) if req.max_green_s is not None else 60.0
+
     command_payload = {
         "command_id": cmd_id,
         "node_id": req.node_id,
         "target_phase_id": req.target_phase_id,
-        "min_green_s": req.min_green_s,
-        "max_green_s": req.max_green_s,
+        "min_green_s": min_green,
+        "max_green_s": max_green,
+        "controller": "manual_override",
         "timestamp_ms": now_ms,
         "expires_at_ms": now_ms + 10000
     }
+
+    try:
+        contracts_sdk.validate_payload(command_payload, "control_command")
+    except Exception as ve:
+        logger.warning(f"ControlCommand validation warning: {ve}")
 
     # Record ACK in live state
     if req.node_id not in LIVE_STATE["control_acks"]:
