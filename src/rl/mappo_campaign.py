@@ -321,52 +321,36 @@ def run_holdout(config, frozen_path, output, max_seconds=9000, resume=False):
     started = time.monotonic()
     deadline = started + max_seconds
     total = len(cases)
-    pending = [case for case in cases if case not in completed_cases]
     errors = []
-    pool = concurrent.futures.ThreadPoolExecutor(max_workers=2)
-    active = {}
-    next_case = 0
-    try:
-        while next_case < len(pending) or active:
-            while next_case < len(pending) and len(active) < 2 and time.monotonic() < deadline:
-                name, scenario, seed = pending[next_case]
-                next_case += 1
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    break
-                controller_timeout = min(case_timeout_s, remaining)
-                future = pool.submit(_run_case_cached, config, controllers[name], scenario, seed,
-                                     output / "cases", controller_timeout, deadline)
-                active[future] = (name, scenario, seed)
-            if not active:
-                break
-            done, _ = concurrent.futures.wait(
-                active, timeout=max(0., min(.5, deadline - time.monotonic())),
-                return_when=concurrent.futures.FIRST_COMPLETED)
-            for future in done:
-                name, scenario, seed = active.pop(future)
-                try:
-                    row = future.result()
-                except Exception as error:
-                    errors.append({"controller": name, "scenario": scenario,
-                                   "seed": seed, "reason": str(error)})
-                    continue
-                results[name].append(row)
-                results[name].sort(key=lambda item: (tuple(RESEARCH_SCENARIOS).index(item["scenario"]),
-                                                     item["seed"]))
-                completed_cases.add((name, scenario, seed))
-                _write_json(output / "results.json", results)
-                _write_json(output / "status.json", {
-                    "status": "running", "promoted": False,
-                    "completed_cases": len(completed_cases), "requested_cases": total,
-                    "remaining_cases": total - len(completed_cases),
-                    "workers": 2, "errors": errors})
-            if errors or time.monotonic() >= deadline:
-                for future in active:
-                    future.cancel()
-                break
-    finally:
-        pool.shutdown(wait=True, cancel_futures=True)
+
+    def record_case(controller_name, row):
+        key = (controller_name, row["scenario"], row["seed"])
+        if key not in completed_cases:
+            results[controller_name].append(row)
+            results[controller_name].sort(
+                key=lambda item: (tuple(RESEARCH_SCENARIOS).index(item["scenario"]), item["seed"]))
+            completed_cases.add(key)
+            _write_json(output / "results.json", results)
+        _write_json(output / "status.json", {
+            "status": "running", "promoted": False,
+            "completed_cases": len(completed_cases), "requested_cases": total,
+            "remaining_cases": total - len(completed_cases), "workers": 2,
+            "errors": errors})
+
+    for name, controller in controllers.items():
+        if time.monotonic() >= deadline:
+            break
+        controller_spec = {key: value for key, value in controller.items() if key != "name"}
+        try:
+            evaluate_cases(
+                config, controller_spec, RESEARCH_SCENARIOS,
+                GRAPH_MAPPO_SEED_SPLITS["holdout"], output / "cases",
+                cache_root=output / "cases", workers=2, timeout_s=case_timeout_s,
+                deadline=deadline,
+                on_result=lambda row, controller_name=name: record_case(controller_name, row))
+        except Exception as error:
+            errors.append({"controller": name, "reason": str(error)})
+            break
 
     _write_json(output / "results.json", results)
     if errors or completed_cases != set(cases):

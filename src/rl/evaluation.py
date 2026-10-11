@@ -157,12 +157,13 @@ def _stop_process_tree(process, job):
         process.join(5)
 
 
-def _run_isolated_case(config, controller, scenario, seed, output, timeout_s, worker=None):
+def _launch_isolated_case(config, controller, scenario, seed, output, worker=None):
     context = mp.get_context("spawn")
     job = None
     if os.name == "nt":
         # Windows uses named pipes for multiprocessing.Connection. Concurrent
-        # Pipe creation from evaluator threads can fail with WinError 5.
+        # Pipe creation from evaluator threads can fail with WinError 5. The
+        # multi-case scheduler launches these from its main thread.
         with _WINDOWS_PROCESS_START_LOCK:
             start_event = context.Event()
             receive_pipe, send_pipe = context.Pipe(duplex=False)
@@ -188,6 +189,13 @@ def _run_isolated_case(config, controller, scenario, seed, output, timeout_s, wo
         process.start()
         send_pipe.close()
         start_event.set()
+    return {"process": process, "receive_pipe": receive_pipe, "job": job,
+            "started_at": time.monotonic()}
+
+
+def _run_isolated_case(config, controller, scenario, seed, output, timeout_s, worker=None):
+    runner = _launch_isolated_case(config, controller, scenario, seed, output, worker)
+    process, receive_pipe, job = (runner["process"], runner["receive_pipe"], runner["job"])
     try:
         if not receive_pipe.poll(timeout_s):
             _stop_process_tree(process, job)
@@ -213,8 +221,7 @@ def _run_isolated_case(config, controller, scenario, seed, output, timeout_s, wo
             job.close()
 
 
-def run_case_cached(config, controller, scenario, seed, cache_root, timeout_s=180., deadline=None):
-    signature = case_signature(config, controller, scenario, seed)
+def _find_case_directory(cache_root, scenario, seed, signature):
     base = Path(cache_root) / signature[:2] / f"{scenario}-{seed}-{signature}"
     case_dir, suffix = base, 0
     while case_dir.exists():
@@ -225,9 +232,24 @@ def run_case_cached(config, controller, scenario, seed, cache_root, timeout_s=18
             if identity.get("signature") == signature:
                 if not metrics.get("valid"):
                     raise ValueError(f"Refusing invalid cached case: {case_dir}")
-                return metrics, True
+                return case_dir, metrics
         suffix += 1
         case_dir = Path(f"{base}-attempt{suffix}")
+    return case_dir, None
+
+
+def _write_case_identity(case_dir, signature):
+    identity_path = Path(case_dir) / "identity.json"
+    temporary = Path(str(identity_path) + ".tmp")
+    temporary.write_text(json.dumps({"signature": signature}, indent=2), encoding="utf-8")
+    temporary.replace(identity_path)
+
+
+def run_case_cached(config, controller, scenario, seed, cache_root, timeout_s=180., deadline=None):
+    signature = case_signature(config, controller, scenario, seed)
+    case_dir, cached = _find_case_directory(cache_root, scenario, seed, signature)
+    if cached is not None:
+        return cached, True
 
     remaining = timeout_s if deadline is None else min(timeout_s, deadline - time.monotonic())
     if remaining <= 0:
@@ -235,15 +257,12 @@ def run_case_cached(config, controller, scenario, seed, cache_root, timeout_s=18
     result = _run_isolated_case(config, controller, scenario, seed, case_dir, remaining)
     if not result.get("valid"):
         raise ValueError(f"Invalid SUMO case retained at {case_dir}")
-    identity_path = case_dir / "identity.json"
-    temporary = Path(str(identity_path) + ".tmp")
-    temporary.write_text(json.dumps({"signature": signature}, indent=2), encoding="utf-8")
-    temporary.replace(identity_path)
+    _write_case_identity(case_dir, signature)
     return result, False
 
 
-def evaluate_cases(config, controller, scenarios, seeds, output, *, cache_root=None,
-                   workers=1, timeout_s=180., deadline=None):
+def _evaluate_cases_threaded(config, controller, scenarios, seeds, output, *, cache_root=None,
+                             workers=1, timeout_s=180., deadline=None, on_result=None):
     if workers <= 0 or timeout_s <= 0:
         raise ValueError("Evaluation workers and case timeout must be positive")
     cases = [(scenario, int(seed)) for scenario in scenarios for seed in seeds]
@@ -261,5 +280,98 @@ def evaluate_cases(config, controller, scenarios, seeds, output, *, cache_root=N
         for future in concurrent.futures.as_completed(futures):
             index, row, hit = future.result()
             results[index], hits[index] = row, hit
+            if on_result:
+                on_result(row)
     return results, {"cache_hits": sum(hits), "cache_misses": len(hits) - sum(hits),
                      "cases": len(hits), "workers": workers}
+
+
+def _evaluate_cases_windows(config, controller, scenarios, seeds, output, *, cache_root=None,
+                            workers=1, timeout_s=180., deadline=None, on_result=None):
+    if workers <= 0 or timeout_s <= 0:
+        raise ValueError("Evaluation workers and case timeout must be positive")
+    cases = [(scenario, int(seed)) for scenario in scenarios for seed in seeds]
+    root = Path(cache_root) if cache_root is not None else Path(output)
+    results, hits = [None] * len(cases), [False] * len(cases)
+    running, next_index = {}, 0
+
+    def accept(index, row, was_cached):
+        results[index], hits[index] = row, was_cached
+        if on_result:
+            on_result(row)
+
+    try:
+        while next_index < len(cases) or running:
+            while next_index < len(cases) and len(running) < workers:
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise TimeoutError("Evaluation budget expired before the next SUMO case")
+                scenario, seed = cases[next_index]
+                signature = case_signature(config, controller, scenario, seed)
+                case_dir, cached = _find_case_directory(root, scenario, seed, signature)
+                if cached is not None:
+                    accept(next_index, cached, True)
+                    next_index += 1
+                    continue
+                remaining = timeout_s if deadline is None else min(
+                    timeout_s, deadline - time.monotonic())
+                if remaining <= 0:
+                    raise TimeoutError("Evaluation budget expired before the next SUMO case")
+                case_dir.mkdir(parents=True, exist_ok=True)
+                runner = _launch_isolated_case(config, controller, scenario, seed, case_dir)
+                runner.update({"index": next_index, "scenario": scenario, "seed": seed,
+                               "signature": signature, "case_dir": case_dir,
+                               "timeout_s": remaining})
+                running[next_index] = runner
+                next_index += 1
+
+            completed = []
+            for index, runner in list(running.items()):
+                process, pipe = runner["process"], runner["receive_pipe"]
+                if pipe.poll(0):
+                    ok, result = pipe.recv()
+                    process.join(10)
+                    if process.is_alive():
+                        _stop_process_tree(process, runner["job"])
+                        raise RuntimeError("SUMO case worker did not exit after returning a result")
+                    if not ok:
+                        raise RuntimeError(f"SUMO case failed:\n{result}")
+                    if not result.get("valid"):
+                        raise ValueError(f"Invalid SUMO case retained at {runner['case_dir']}")
+                    _write_case_identity(runner["case_dir"], runner["signature"])
+                    accept(index, result, False)
+                    pipe.close()
+                    if runner["job"] is not None:
+                        runner["job"].close()
+                    completed.append(index)
+                    continue
+                elapsed = time.monotonic() - runner["started_at"]
+                if elapsed >= runner["timeout_s"]:
+                    _stop_process_tree(process, runner["job"])
+                    pipe.close()
+                    raise TimeoutError(f"SUMO case exceeded its {runner['timeout_s']:.1f}s deadline")
+            for index in completed:
+                running.pop(index)
+            if running:
+                time.sleep(.02)
+    except BaseException:
+        for runner in running.values():
+            _stop_process_tree(runner["process"], runner["job"])
+            runner["receive_pipe"].close()
+            if runner["job"] is not None:
+                runner["job"].close()
+        raise
+    return results, {"cache_hits": sum(hits), "cache_misses": len(hits) - sum(hits),
+                     "cases": len(hits), "workers": workers}
+
+
+def evaluate_cases(config, controller, scenarios, seeds, output, *, cache_root=None,
+                   workers=1, timeout_s=180., deadline=None, on_result=None):
+    if os.name == "nt":
+        return _evaluate_cases_windows(config, controller, scenarios, seeds, output,
+                                       cache_root=cache_root, workers=workers,
+                                       timeout_s=timeout_s, deadline=deadline,
+                                       on_result=on_result)
+    return _evaluate_cases_threaded(config, controller, scenarios, seeds, output,
+                                    cache_root=cache_root, workers=workers,
+                                    timeout_s=timeout_s, deadline=deadline,
+                                    on_result=on_result)

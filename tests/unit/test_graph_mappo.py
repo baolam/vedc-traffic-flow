@@ -249,13 +249,63 @@ def test_parallel_evaluation_preserves_case_order_and_caps_worker_count(tmp_path
         return {"scenario": scenario, "seed": seed}, False
 
     monkeypatch.setattr(evaluation, "run_case_cached", fake_case)
-    rows, diagnostics = evaluation.evaluate_cases(
+    rows, diagnostics = evaluation._evaluate_cases_threaded(
         {}, {"type": "fair_cycle"}, ("balanced", "directional_surge"), (1, 2),
         tmp_path, workers=2)
     assert [(row["scenario"], row["seed"]) for row in rows] == [
         ("balanced", 1), ("balanced", 2), ("directional_surge", 1), ("directional_surge", 2)]
     assert maximum == 2
     assert diagnostics["cases"] == 4
+
+
+def test_windows_case_scheduler_launches_two_processes_on_its_calling_thread(tmp_path, monkeypatch):
+    from src.rl import evaluation
+
+    active = maximum = 0
+    completed = []
+
+    class Pipe:
+        def __init__(self, row):
+            self.row = row
+
+        def poll(self, unused_timeout):
+            return True
+
+        def recv(self):
+            nonlocal active
+            active -= 1
+            return True, self.row
+
+        def close(self):
+            pass
+
+    class Process:
+        def join(self, unused_timeout):
+            pass
+
+        def is_alive(self):
+            return False
+
+    def launch(config, controller, scenario, seed, output):
+        nonlocal active, maximum
+        active += 1
+        maximum = max(maximum, active)
+        return {"process": Process(), "receive_pipe": Pipe({"valid": True,
+                "scenario": scenario, "seed": seed}), "job": None,
+                "started_at": time.monotonic()}
+
+    monkeypatch.setattr(evaluation, "_launch_isolated_case", launch)
+    config = {"environment": {"topology_path": "contracts/topology/four_intersection_rl_v1.json",
+                              "network_path": "networks/four_intersection_rl_v1/network.net.xml"}}
+    rows, diagnostics = evaluation._evaluate_cases_windows(
+        config, {"type": "fair_cycle"}, ("balanced", "directional_surge"), (1, 2),
+        tmp_path, workers=2, on_result=completed.append)
+    assert [(row["scenario"], row["seed"]) for row in rows] == [
+        ("balanced", 1), ("balanced", 2), ("directional_surge", 1),
+        ("directional_surge", 2)]
+    assert maximum == 2
+    assert len(completed) == 4
+    assert diagnostics["workers"] == 2
 
 
 def test_masked_ppo_update_keeps_graphs_together_and_reports_diagnostics():
@@ -543,30 +593,47 @@ def test_holdout_resumes_atomic_case_ledger_with_two_workers(tmp_path, monkeypat
     lock = threading.Lock()
     active = maximum = 0
 
-    def fake_case(unused_config, controller, scenario, seed, unused_root,
-                  timeout_s=180., deadline=None):
+    def fake_evaluate(unused_config, controller, scenarios, seeds, unused_output, *,
+                      cache_root=None, workers=1, timeout_s=180., deadline=None,
+                      on_result=None):
         nonlocal active, maximum
-        with lock:
-            active += 1
-            maximum = max(maximum, active)
-        time.sleep(.01)
-        with lock:
-            active -= 1
-        identity = {key: controller[key] for key in ("type", "parameters", "model_path")
-                    if key in controller}
-        row = {"controller": identity, "scenario": scenario, "seed": seed,
-                "demand_sha256": f"{scenario}-{seed}", "network_sha256": "network",
-                "topology_sha256": "topology", "scheduled": 100, "demand_s": 1800,
-                "drain_s": 600, "valid": True, "collisions": 0, "teleports": 0,
-                "accounting_losses": 0, "delay_per_scheduled_s": 80.,
-                "completed": 100., "p95_wait_s": 10., "worst_approach_wait_s": 10.,
-                "max_approach_p95_wait_s": 10.,
-                "controller_timing": {"cycle_time_s": 90, "min_green_share": .25}}
-        if controller.get("model_path"):
-            row["model_sha256"] = file_hash(controller["model_path"])
-        return row
+        def make_row(scenario, seed):
+            nonlocal active, maximum
+            with lock:
+                active += 1
+                maximum = max(maximum, active)
+            time.sleep(.01)
+            with lock:
+                active -= 1
+            identity = {key: controller[key] for key in ("type", "parameters", "model_path")
+                        if key in controller}
+            row = {"controller": identity, "scenario": scenario, "seed": seed,
+                   "demand_sha256": f"{scenario}-{seed}", "network_sha256": "network",
+                   "topology_sha256": "topology", "scheduled": 100, "demand_s": 1800,
+                   "drain_s": 600, "valid": True, "collisions": 0, "teleports": 0,
+                   "accounting_losses": 0, "delay_per_scheduled_s": 80.,
+                   "completed": 100., "p95_wait_s": 10., "worst_approach_wait_s": 10.,
+                   "max_approach_p95_wait_s": 10.,
+                   "controller_timing": {"cycle_time_s": 90, "min_green_share": .25}}
+            if controller.get("model_path"):
+                row["model_sha256"] = file_hash(controller["model_path"])
+            return row
 
-    monkeypatch.setattr(mappo_campaign, "_run_case_cached", fake_case)
+        pairs = [(scenario, seed) for scenario in scenarios for seed in seeds]
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        rows = []
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [pool.submit(make_row, scenario, seed) for scenario, seed in pairs]
+            for future in as_completed(futures):
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise TimeoutError("fixture evaluation budget expired")
+                row = future.result()
+                rows.append(row)
+                if on_result:
+                    on_result(row)
+        return rows, {"workers": workers, "cases": len(rows)}
+
+    monkeypatch.setattr(mappo_campaign, "evaluate_cases", fake_evaluate)
     output = tmp_path / "holdout"
     first = mappo_campaign.run_holdout(config, frozen_path, output, max_seconds=.08)
     assert first["status"] == "incomplete"
