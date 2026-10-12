@@ -1,0 +1,21 @@
+{
+  "nodes": {},
+  "source": "Imported v2 network is immutable. Rebuild conflicts, then yield at external stop lines where an interior pocket is unsafe. Geometry must be reviewed against 12 m buses.",
+  "connection_shapes": {
+    "J17:1": "277.26,301.29 276.09,298.52 274.15,293.92 274.66,292.57 276.00,291.45 278.10,290.50 282.02,289.86"
+  },
+  "force_stop_line_waiting": [
+    "J05"
+  ],
+  "geometry_evidence": "cases/repair-replay-qualification-directional_shift-500-72002-native_fixed/collision-inventory.json",
+  "geometry_reason": "Use the aligned entry connector with its waiting check immediately before the turn at 8 m. Earlier 1 m and 4 m checks let queued internal vehicles move beyond the check before a phase change; compact boundary trials introduced teleports and were rejected. The bus remains aligned until crossing the protected traffic.",
+  "cont_positions": {
+    "J17:1": 8
+  },
+  "yield_to": {
+    "J17:1": [
+      "J17:4"
+    ]
+  },
+  "vehicle_width_m": 2.5
+}

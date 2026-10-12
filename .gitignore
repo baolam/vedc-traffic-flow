@@ -112,6 +112,10 @@ artifacts/*
 !artifacts/benchmark_summary.md
 !artifacts/benchmark_comparison_report.json
 !artifacts/end_to_end_latency_report.json
+!artifacts/hcm-qualification-v3/
+artifacts/hcm-qualification-v3/*
+!artifacts/hcm-qualification-v3/campaign.json
+!artifacts/hcm-qualification-v3/budget-origin.json
 data/processed/*.pkl
 data/processed/*.json
 data/raw/*.csv
@@ -157,7 +161,7 @@ tmp/
 # PlatformIO build output & local firmware network secrets
 .pio/
 src/hardware/secrets.ini
+.codegraph/
 
 # Test scenario temporary outputs (un-ignored for traffic scenarios)
 # services/simulator/sumo_configs/test_*
-

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph-MAPPO NumPy actor artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["algorithm", "artifact_version", "architecture", "model_spec", "weights", "feature_spec", "relation_feature_spec", "node_order", "topology_id", "timing", "horizon", "training_seeds", "learner_seed", "protocol", "provenance"],
+  "properties": {
+    "algorithm": {"enum": ["graph_mappo", "local_mappo"]},
+    "artifact_version": {"const": 2},
+    "architecture": {"enum": ["graph_attention", "self_only"]},
+    "model_spec": {"type": "object"},
+    "weights": {
+      "type": "object",
+      "required": ["encoder", "attention", "head"],
+      "properties": {
+        "encoder": {"$ref": "#/definitions/linear"},
+        "attention": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object"}},
+        "head": {"$ref": "#/definitions/linear"}
+      }
+    },
+    "feature_spec": {"type": "object"},
+    "relation_feature_spec": {"type": "object"},
+    "node_order": {"type": "array", "items": {"type": "string"}, "minItems": 4, "maxItems": 4},
+    "topology_id": {"const": "four_intersection_rl_v1"},
+    "timing": {"type": "object"},
+    "horizon": {"type": "object"},
+    "training_seeds": {"type": "array", "items": {"type": "integer"}, "minItems": 1},
+    "learner_seed": {"type": "integer"},
+    "protocol": {"type": "object"},
+    "provenance": {
+      "type": "object",
+      "required": ["network_sha256", "topology_sha256", "training_config_sha256", "implementation_sha256", "actor_sha256", "joint_decisions", "episodes", "elapsed_s"],
+      "properties": {
+        "network_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "topology_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "training_config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "implementation_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "actor_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "joint_decisions": {"type": "integer", "minimum": 0},
+        "episodes": {"type": "integer", "minimum": 0},
+        "elapsed_s": {"type": "number", "minimum": 0}
+      }
+    }
+  },
+  "definitions": {
+    "linear": {
+      "type": "object", "required": ["weight", "bias"],
+      "properties": {"weight": {"type": "array", "minItems": 1}, "bias": {"type": "array", "minItems": 1}}
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "budget_seconds": 36000,
+  "holdout_config": "configs/rl/graph_mappo_holdout.json",
+  "training_configs": {
+    "graph_mappo": "configs/rl/graph_mappo_normalized.json",
+    "local_mappo": "configs/rl/local_mappo_normalized.json"
+  },
+  "minimum_batch32_speedup": 2.0,
+  "preflight_case_timeout_s": 1650,
+  "stages": {
+    "preflight_seconds": 1800,
+    "pilot_stage_seconds": 3600,
+    "pilot_run_seconds": 1800,
+    "training_stage_seconds": 21600,
+    "learner_run_seconds": 3600,
+    "max_episodes_per_run": 128,
+    "selection_holdout_seconds": 9000
+  }
+}

@@ -1,0 +1,325 @@
+{
+  "cases": [
+    {
+      "case": "qualification-light_uniform-500-72001-native_fixed",
+      "condition": "light_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-light_uniform-500-72001-native_actuated",
+      "condition": "light_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-light_uniform-500-72002-native_fixed",
+      "condition": "light_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-light_uniform-500-72002-native_actuated",
+      "condition": "light_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-light_uniform-500-72003-native_fixed",
+      "condition": "light_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-light_uniform-500-72003-native_actuated",
+      "condition": "light_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-light_uniform-500-72004-native_fixed",
+      "condition": "light_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-light_uniform-500-72004-native_actuated",
+      "condition": "light_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-light_uniform-500-72005-native_fixed",
+      "condition": "light_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-light_uniform-500-72005-native_actuated",
+      "condition": "light_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\light_uniform-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-primary_uniform-500-72001-native_fixed",
+      "condition": "primary_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-primary_uniform-500-72001-native_actuated",
+      "condition": "primary_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-primary_uniform-500-72002-native_fixed",
+      "condition": "primary_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-primary_uniform-500-72002-native_actuated",
+      "condition": "primary_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-primary_uniform-500-72003-native_fixed",
+      "condition": "primary_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-primary_uniform-500-72003-native_actuated",
+      "condition": "primary_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-primary_uniform-500-72004-native_fixed",
+      "condition": "primary_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-primary_uniform-500-72004-native_actuated",
+      "condition": "primary_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-primary_uniform-500-72005-native_fixed",
+      "condition": "primary_uniform",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-primary_uniform-500-72005-native_actuated",
+      "condition": "primary_uniform",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\primary_uniform-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-directional_shift-500-72001-native_fixed",
+      "condition": "directional_shift",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-directional_shift-500-72001-native_actuated",
+      "condition": "directional_shift",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-directional_shift-500-72002-native_fixed",
+      "condition": "directional_shift",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-directional_shift-500-72002-native_actuated",
+      "condition": "directional_shift",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-directional_shift-500-72003-native_fixed",
+      "condition": "directional_shift",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-directional_shift-500-72003-native_actuated",
+      "condition": "directional_shift",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-directional_shift-500-72004-native_fixed",
+      "condition": "directional_shift",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-directional_shift-500-72004-native_actuated",
+      "condition": "directional_shift",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-directional_shift-500-72005-native_fixed",
+      "condition": "directional_shift",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-directional_shift-500-72005-native_actuated",
+      "condition": "directional_shift",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\directional_shift-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72001-native_fixed",
+      "condition": "downstream_bottleneck",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72001-native_actuated",
+      "condition": "downstream_bottleneck",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72001.rou.json",
+      "load_vph": 500,
+      "seed": 72001
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72002-native_fixed",
+      "condition": "downstream_bottleneck",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72002-native_actuated",
+      "condition": "downstream_bottleneck",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72002.rou.json",
+      "load_vph": 500,
+      "seed": 72002
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72003-native_fixed",
+      "condition": "downstream_bottleneck",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72003-native_actuated",
+      "condition": "downstream_bottleneck",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72003.rou.json",
+      "load_vph": 500,
+      "seed": 72003
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72004-native_fixed",
+      "condition": "downstream_bottleneck",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72004-native_actuated",
+      "condition": "downstream_bottleneck",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72004.rou.json",
+      "load_vph": 500,
+      "seed": 72004
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72005-native_fixed",
+      "condition": "downstream_bottleneck",
+      "controller": "native_fixed",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    },
+    {
+      "case": "qualification-downstream_bottleneck-500-72005-native_actuated",
+      "condition": "downstream_bottleneck",
+      "controller": "native_actuated",
+      "demand_metadata": "inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72005.rou.json",
+      "load_vph": 500,
+      "seed": 72005
+    }
+  ],
+  "fingerprint": "b932dd3e93501b0faea6da63da4e8d1d2f68894fdc75e2b9bd4053da2ea48e97"
+}

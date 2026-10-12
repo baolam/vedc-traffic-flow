@@ -1,0 +1,94 @@
+{
+  "audit_errors": [],
+  "bottleneck": {
+    "edge_id": "211849413#0",
+    "lane_speeds_mps": {
+      "211849413#0_0": 13.89
+    },
+    "length_m": 41.74,
+    "route_vehicles": 96
+  },
+  "bottleneck_control_trace": "C:\\Users\\Zephyrus M16\\Desktop\\UNI\\VEDC\\vedc-traffic-flow\\workspaces\\hcm-benchmark-v2\\artifacts\\hcm-qualification-v2\\cases\\diagnostic-bottleneck-control-500-72004-native_actuated\\bottleneck_trace.json",
+  "condition": "downstream_bottleneck",
+  "controller": "native_actuated",
+  "demand": "C:\\Users\\Zephyrus M16\\Desktop\\UNI\\VEDC\\vedc-traffic-flow\\workspaces\\hcm-benchmark-v2\\artifacts\\hcm-qualification-v2\\inputs\\hcm_neighborhood_benchmark_v2\\demand\\downstream_bottleneck-500-72004.rou.xml",
+  "demand_metadata": {
+    "bottleneck": {
+      "edge_id": "211849413#0",
+      "lane_speeds_mps": {
+        "211849413#0_0": 13.89
+      },
+      "length_m": 41.74,
+      "route_vehicles": 96
+    },
+    "condition": "downstream_bottleneck",
+    "controller_vehicles": {
+      "J01": 57,
+      "J02": 248,
+      "J03": 60,
+      "J04": 70,
+      "J05": 232,
+      "J06": 31,
+      "J07": 48,
+      "J08": 70,
+      "J09": 67,
+      "J10": 67,
+      "J11": 94,
+      "J12": 85,
+      "J13": 130,
+      "J14": 174,
+      "J15": 103,
+      "J16": 46,
+      "J17": 202,
+      "J18": 113,
+      "J19": 91,
+      "J20": 59,
+      "J21": 53,
+      "J22": 121,
+      "J23": 190,
+      "J24": 51,
+      "J25": 88,
+      "J26": 181,
+      "J27": 101,
+      "J28": 75,
+      "J29": 86
+    },
+    "corridor_od_counts": {
+      "forward_window:forward": 14,
+      "forward_window:other": 89,
+      "forward_window:reverse": 22,
+      "outside:forward": 34,
+      "outside:other": 186,
+      "outside:reverse": 30,
+      "reverse_window:forward": 17,
+      "reverse_window:other": 93,
+      "reverse_window:reverse": 15
+    },
+    "coverage_gate": true,
+    "imported_type_counts": {
+      "blue_car": 96,
+      "bus": 37,
+      "car": 156,
+      "motorcycle": 642,
+      "taxi": 39,
+      "truck": 30
+    },
+    "multi_signal_fraction": 1.0,
+    "route_population": "Uniform over eligible boundary OD pairs per vehicle class, using shortest permitted non-U-turn paths; no repeated road edges.",
+    "scheduled": 500,
+    "seed": 72004,
+    "sha256": "c145ac778492744bec3f53f92df440e023feba6256d75cda63ea1ec3f2a18243",
+    "type_counts": {
+      "blue_car": 48,
+      "bus": 19,
+      "car": 78,
+      "motorcycle": 321,
+      "taxi": 19,
+      "truck": 15
+    }
+  },
+  "network": "C:\\Users\\Zephyrus M16\\Desktop\\UNI\\VEDC\\vedc-traffic-flow\\workspaces\\hcm-benchmark-v2\\artifacts\\hcm-qualification-v2\\inputs\\hcm_neighborhood_benchmark_v2\\network.net.xml",
+  "program": "C:\\Users\\Zephyrus M16\\Desktop\\UNI\\VEDC\\vedc-traffic-flow\\workspaces\\hcm-benchmark-v2\\artifacts\\hcm-qualification-v2\\inputs\\hcm_neighborhood_benchmark_v2\\native_actuated.add.xml",
+  "seed": 72004,
+  "topology": "C:\\Users\\Zephyrus M16\\Desktop\\UNI\\VEDC\\vedc-traffic-flow\\workspaces\\hcm-benchmark-v2\\artifacts\\hcm-qualification-v2\\inputs\\hcm_neighborhood_benchmark_v2\\topology.json"
+}

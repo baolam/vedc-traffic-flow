@@ -1,0 +1,12 @@
+{
+  "imported_config": "networks/hcm_neighborhood_benchmark_v2/simulation.sumocfg",
+  "workers": 1,
+  "case_timeout_s": 300,
+  "campaign_budget_s": 7200,
+  "output": "artifacts/hcm-qualification-v3",
+  "topology_id": "hcm_neighborhood_benchmark_v3",
+  "protocol_id": "hcm_qualification_v3",
+  "repair_source_network": "networks/hcm_neighborhood_benchmark_v2/network.net.xml",
+  "repaired_network": "networks/hcm_neighborhood_benchmark_v3/network.net.xml",
+  "repair_inputs": "configs/hcm_repair_v3.json"
+}

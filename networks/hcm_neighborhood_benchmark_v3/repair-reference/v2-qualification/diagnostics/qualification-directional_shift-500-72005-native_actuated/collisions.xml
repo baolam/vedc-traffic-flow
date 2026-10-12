@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-10-11T19:50:02.500503+07:00 by Eclipse SUMO sumo 1.25.0
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\inputs\hcm_neighborhood_benchmark_v2\network.net.xml"/>
+        <route-files value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v1-baseline\inputs\hcm_neighborhood_benchmark_v1\demand\directional_shift-500-72005.rou.xml"/>
+        <additional-files value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\inputs\hcm_neighborhood_benchmark_v2\native_actuated.add.xml"/>
+    </input>
+
+    <output>
+        <fcd-output value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72005-native_actuated\fcd.xml"/>
+        <tripinfo-output value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72005-native_actuated\tripinfo.xml"/>
+        <tripinfo-output.write-unfinished value="true"/>
+        <collision-output value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72005-native_actuated\collisions.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="4500"/>
+        <step-length value="1"/>
+    </time>
+
+    <processing>
+        <ignore-route-errors value="false"/>
+        <collision.action value="warn"/>
+        <collision.check-junctions value="true"/>
+        <time-to-teleport value="300"/>
+        <max-depart-delay value="-1"/>
+    </processing>
+
+    <report>
+        <error-log value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72005-native_actuated\sumo-warnings.log"/>
+        <duration-log.disable value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="57785"/>
+    </traci_server>
+
+    <random_number>
+        <seed value="72005"/>
+    </random_number>
+
+</sumoConfiguration>
+-->
+
+<collisions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/collision_file.xsd">
+    <collision time="1714.00" type="junction" lane=":2217938327_6_0" pos="0.83" collider="veh_000235" victim="veh_000228" colliderType="car" victimType="bus" colliderSpeed="1.83" victimSpeed="4.23" colliderFront="295.68,325.70" colliderBack="299.87,324.06" victimFront="297.10,321.76" victimBack="289.57,329.97"/>
+    <collision time="2669.00" type="junction" lane=":cluster_2217938303_2217938318_14_0" pos="0.31" collider="veh_000355" victim="veh_000365" colliderType="motorcycle" victimType="bus" colliderSpeed="0.11" victimSpeed="13.82" colliderFront="145.53,401.10" colliderBack="143.50,401.94" victimFront="140.07,406.91" victimBack="148.91,399.78"/>
+</collisions>

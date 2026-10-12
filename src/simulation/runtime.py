@@ -29,6 +29,20 @@ def occupancy_ratio(percent):
     return value
 
 
+def reconcile_signal_seconds(green_seconds, clearance_seconds, elapsed_s, node_ids):
+    """Return network node-seconds clearing after reconciling every signal clock."""
+    totals = {}
+    for node_id in node_ids:
+        green = sum(green_seconds[node_id].values())
+        clearance = clearance_seconds[node_id]
+        if green < 0 or clearance < 0 or green + clearance != elapsed_s:
+            raise RuntimeError(f"Signal-time accounting does not reconcile at {node_id}")
+        totals[node_id] = clearance
+    if set(green_seconds) != set(node_ids) or set(clearance_seconds) != set(node_ids):
+        raise RuntimeError("Signal-time accounting does not cover every canonical intersection")
+    return sum(totals.values()), totals
+
+
 def generate_demand(topology, scenario, seed, duration, intensity, path):
     profile = ALL_RESEARCH_SCENARIOS[scenario]
     rates = ScenarioRegistry.get_flow_rates(profile["profile"])
@@ -118,6 +132,7 @@ class SumoRuntime:
         self.actuator = ActuatorStateMachine(3, 2)
         self.last_served = {}
         self.green_seconds = {}
+        self.clearance_seconds = {}
         self.schema_validator = Draft7Validator(load_schema("telemetry"))
         self.metadata = {"topology_id": TOPOLOGY_ID, "topology_sha256": file_hash(topology_path),
                          "network_sha256": file_hash(network_path), "demand_sha256": file_hash(routes_path),
@@ -147,6 +162,7 @@ class SumoRuntime:
                 self.actuator.get_or_create_node(nid, node["phases"][0]["phase_id"])
                 self.last_served[nid] = {p["phase_id"]: 0 for p in node["phases"]}
                 self.green_seconds[nid] = {p["phase_id"]: 0 for p in node["phases"]}
+                self.clearance_seconds[nid] = 0
             self._apply_signals({})
             self.telemetry = self._telemetry({})
         except BaseException as error:
@@ -253,6 +269,8 @@ class SumoRuntime:
                 signal = self.actuator.nodes[node["node_id"]]
                 if signal.state == "GREEN":
                     self.green_seconds[node["node_id"]][signal.current_phase_id] += 1
+                else:
+                    self.clearance_seconds[node["node_id"]] += 1
             self.connection.simulationStep()
             self.time += 1
             sim, vehicles = self.connection.simulation, self.connection.vehicle
@@ -337,7 +355,10 @@ class SumoRuntime:
         worst_approach_wait = max((max(values, default=0.) for values in approach_waits.values()), default=0.)
         legacy_worst_approach_wait = max(
             (max(values.values(), default=0.) for values in self.approach_wait.values()), default=0.)
-        result = {**self.metadata, "metrics_version": 2, "valid": not self.invalid, "failure_reasons": self.invalid,
+        clearance_total, clearance_by_node = reconcile_signal_seconds(
+            self.green_seconds, self.clearance_seconds, self.time,
+            [node["node_id"] for node in self.topology["nodes"]])
+        result = {**self.metadata, "metrics_version": 3, "valid": not self.invalid, "failure_reasons": self.invalid,
                   "time_s": self.time, "scheduled": len(self.scheduled), "departed": len(self.departed),
                   "completed": len(self.arrived), "unfinished": len(self.departed-self.arrived),
                   "uninserted": len(self.scheduled)-len(self.departed),
@@ -348,8 +369,8 @@ class SumoRuntime:
                   "approach_p95_wait_s": approach_p95,
                   "max_approach_p95_wait_s": max(approach_p95.values(), default=0.),
                   "signal_green_seconds": self.green_seconds,
-                  "signal_clearance_seconds": max(0, self.time - sum(
-                      seconds for phases in self.green_seconds.values() for seconds in phases.values())),
+                  "signal_clearance_seconds": clearance_total,
+                  "signal_clearance_seconds_by_node": clearance_by_node,
                   "collisions": 0, "teleports": 0, "accounting_losses": 0}
         if result["scheduled"] != result["completed"] + result["unfinished"] + result["uninserted"]:
             raise RuntimeError("Vehicle accounting does not balance")
