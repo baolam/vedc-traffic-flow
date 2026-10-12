@@ -2,33 +2,34 @@ import os
 import time
 import random
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from simulator_contracts_helper import validate_payload
 
 logger = logging.getLogger("traffic_engine")
 
 class ApproachState:
-    def __init__(self, approach_id: str, capacity: float = 30.0):
+    def __init__(self, approach_id: str, capacity: float = 30.0, rng: Optional[random.Random] = None):
         self.approach_id = approach_id
         self.capacity = capacity
-        self.queue_vehicles: float = random.uniform(3.0, 8.0)
+        self.rng = rng or random.Random(42)
+        self.queue_vehicles: float = self.rng.uniform(3.0, 8.0)
         self.flow_veh_per_s: float = 0.0
         self.mean_speed_mps: float = 5.0
         self.occupancy_ratio: float = self.queue_vehicles / self.capacity
         self.confidence: float = 1.0
 
     def step(self, is_green: bool, dt_s: float = 1.0):
-        arrival_rate = random.uniform(0.2, 0.4)  # vehicles per second coming in
+        arrival_rate = self.rng.uniform(0.2, 0.4)  # vehicles per second coming in
         
         if is_green:
-            discharge_rate = random.uniform(0.5, 0.8)  # vehicles per second leaving
+            discharge_rate = self.rng.uniform(0.5, 0.8)  # vehicles per second leaving
             net_change = (arrival_rate - discharge_rate) * dt_s
             self.queue_vehicles = max(0.0, self.queue_vehicles + net_change)
             self.flow_veh_per_s = round(discharge_rate, 2)
             
             # Speed increases as queue decreases
             if self.queue_vehicles < 2.0:
-                self.mean_speed_mps = round(random.uniform(9.0, 12.0), 2)
+                self.mean_speed_mps = round(self.rng.uniform(9.0, 12.0), 2)
             else:
                 self.mean_speed_mps = round(max(2.0, 10.0 - self.queue_vehicles * 0.5), 2)
         else:
@@ -47,6 +48,12 @@ class NodeTrafficState:
         self.node_id = node_id
         self.phases = phases
         self.current_phase_id = phases[0]["phase_id"] if phases else "J1_PHASE_NS"
+        self.signal_state = "GREEN"
+        self.pending_phase_id = None
+        self.elapsed_green_s = 0.0
+        self.phase_service_age_s: Dict[str, float] = {
+            p["phase_id"]: 0.0 for p in phases
+        } if phases else {self.current_phase_id: 0.0}
         self.approaches: Dict[str, ApproachState] = {
             app_id: ApproachState(app_id) for app_id in approaches
         }
@@ -58,12 +65,22 @@ class NodeTrafficState:
         return False
 
     def step(self, dt_s: float = 1.0):
+        self.elapsed_green_s += dt_s
+        for pid in self.phase_service_age_s:
+            if pid == self.current_phase_id:
+                self.phase_service_age_s[pid] = 0.0
+            else:
+                self.phase_service_age_s[pid] += dt_s
+
         for app_id, app_state in self.approaches.items():
             is_green = self.approach_belongs_to_phase(app_id, self.current_phase_id)
             app_state.step(is_green=is_green, dt_s=dt_s)
 
     def set_phase(self, phase_id: str):
-        self.current_phase_id = phase_id
+        if phase_id != self.current_phase_id:
+            self.current_phase_id = phase_id
+            self.elapsed_green_s = 0.0
+            self.phase_service_age_s[phase_id] = 0.0
 
 
 class SyntheticTrafficEngine:
@@ -102,6 +119,10 @@ class SyntheticTrafficEngine:
             "simulation_time_s": round(sim_time_s, 2),
             "timestamp_ms": int(time.time() * 1000),
             "current_phase_id": node.current_phase_id,
+            "signal_state": node.signal_state,
+            "pending_phase_id": node.pending_phase_id,
+            "elapsed_green_s": round(node.elapsed_green_s, 2),
+            "phase_service_age_s": {k: round(v, 2) for k, v in node.phase_service_age_s.items()},
             "approaches": [
                 {
                     "approach_id": app.approach_id,

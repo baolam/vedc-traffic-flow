@@ -11,7 +11,10 @@
       "enum": [
         "simulation",
         "vision",
-        "physical"
+        "physical",
+        "sumo_traci",
+        "deterministic_sim",
+        "mock_demo"
       ]
     },
     "simulation_time_s": {

@@ -129,10 +129,12 @@ class EdgeSpec:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EdgeSpec":
+        from_n = data.get("from_node") or data.get("source")
+        to_n = data.get("to_node") or data.get("target")
         return cls(
             edge_id=data.get("edge_id", ""),
-            from_node=data.get("from_node"),
-            to_node=data.get("to_node"),
+            from_node=from_n,
+            to_node=to_n,
             length_m=float(data.get("length_m", 100.0)),
             lanes_count=int(data.get("lanes_count", 1)),
             speed_limit_mps=float(data.get("speed_limit_mps", 13.89)),

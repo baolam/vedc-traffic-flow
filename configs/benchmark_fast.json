@@ -1,0 +1,29 @@
+{
+  "title": "EdgeFlow AI — SUMO Live Benchmark Semi-Final Configuration",
+  "description": "Standardized paired benchmark comparing 4 controllers across 4 SUMO networks under 3 realistic scenarios with deterministic frozen demand.",
+  "mode": "sumo_live",
+  "topologies": [
+    "four_intersection_v1",
+    "grid4x4",
+    "cologne8",
+    "hcm_corridor"
+  ],
+  "scenarios": [
+    "balanced",
+    "directional_surge",
+    "downstream_congestion"
+  ],
+  "controllers": [
+    "fixed_time",
+    "flow_theory",
+    "edgeflow"
+  ],
+  "seeds": [
+    1310
+  ],
+  "warmup_s": 300,
+  "duration_s": 180,
+  "drain_s": 600,
+  "total_horizon_s": 1080,
+  "output_dir": null
+}

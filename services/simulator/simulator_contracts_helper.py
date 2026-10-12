@@ -37,3 +37,9 @@ def validate_payload(payload: Dict[str, Any], schema_name: str) -> None:
 
 def list_topologies():
     return contracts_sdk.list_topologies()
+
+try:
+    import topics
+except ImportError:
+    from contracts import topics
+

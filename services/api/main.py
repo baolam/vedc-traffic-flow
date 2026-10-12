@@ -64,8 +64,10 @@ artifacts_dir = _get_artifacts_dir()
 
 try:
     import contracts_sdk
+    import topics
 except ImportError:
     import contracts.contracts_sdk as contracts_sdk
+    from contracts import topics
 
 try:
     from sumo_converter import SumoNetworkConverter
@@ -190,7 +192,7 @@ def _start_mqtt_listener():
         def on_connect(c, userdata, flags, rc):
             if rc == 0:
                 logger.info(f"API MQTT Telemetry Subscriber connected to {mqtt_host}:{mqtt_port}")
-                c.subscribe("edgeflow/v1/#")
+                c.subscribe(topics.ALL_EDGEFLOW_SUB)
 
         def on_message(c, userdata, msg):
             try:
@@ -198,7 +200,7 @@ def _start_mqtt_listener():
                 topic = msg.topic
                 now_str = time.strftime("%H:%M:%S")
 
-                if topic.startswith("edgeflow/v1/telemetry/"):
+                if topic.startswith(f"{topics.PREFIX_V1}/telemetry/"):
                     node_id = payload.get("node_id") or topic.split("/")[-1]
                     LIVE_STATE["nodes"][node_id] = payload
                     LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
@@ -216,7 +218,7 @@ def _start_mqtt_listener():
                     events.insert(0, event_msg)
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
 
-                elif topic.startswith("edgeflow/v1/control/") and topic.endswith("/command"):
+                elif topic.startswith(f"{topics.PREFIX_V1}/control/") and topic.endswith("/command"):
                     parts = topic.split("/")
                     node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
                     event_msg = {
@@ -232,7 +234,7 @@ def _start_mqtt_listener():
                     events.insert(0, event_msg)
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
 
-                elif (topic.startswith("edgeflow/v1/control/") and topic.endswith("/ack")) or topic.startswith("edgeflow/v1/control_ack/"):
+                elif (topic.startswith(f"{topics.PREFIX_V1}/control/") and topic.endswith("/ack")) or topic.startswith(f"{topics.PREFIX_V1}/control_ack/"):
                     node_id = payload.get("node_id") or (topic.split("/")[3] if len(topic.split("/")) > 3 else "unknown")
                     if node_id:
                         if node_id not in LIVE_STATE["control_acks"]:
@@ -556,7 +558,7 @@ def trigger_emergency_override(req: OverrideRequest):
     # Publish ControlCommand to MQTT if client connected
     if MQTT_CLIENT and MQTT_CLIENT.is_connected():
         try:
-            pub_topic = f"edgeflow/v1/control/{req.node_id}/command"
+            pub_topic = topics.get_command_topic(req.node_id)
             MQTT_CLIENT.publish(pub_topic, json.dumps(command_payload))
             logger.info(f"Published ControlCommand to MQTT [{pub_topic}]: {cmd_id}")
         except Exception as ex:

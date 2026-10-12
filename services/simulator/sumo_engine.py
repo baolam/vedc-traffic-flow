@@ -164,13 +164,14 @@ class SumoTrafficEngine:
                     queue_vehicles = float(halting_vehicles)
                     mean_speed_mps = round(float(speed) if speed >= 0 else 13.89, 2)
                     
-                    # Convert occupancy percentage (0-100) to ratio (0-1)
-                    occ_val = float(raw_occ)
-                    if occ_val > 1.0:
-                        occ_val = occ_val / 100.0
-                    occupancy_ratio = round(min(1.0, max(0.0, occ_val)), 3)
-                    # flow = vehicles per step; at 1s step interval this is veh/s
-                    flow_veh_per_s = round(float(vehicle_count), 2)
+                    # TraCI returns occupancy as percentage 0..100% -> normalize to ratio [0.0, 1.0]
+                    occupancy_ratio = round(min(1.0, max(0.0, float(raw_occ) / 100.0)), 3)
+                    # Flow rate (veh/s)
+                    lane0 = f"{edge_id}_0"
+                    edge_len = max(1.0, float(traci.lane.getLength(lane0)) if (lane0 in traci.lane.getIDList()) else 50.0)
+                    moving_veh = max(0, int(vehicle_count) - int(halting_vehicles))
+                    calc_flow = (moving_veh * (float(speed) if speed >= 0 else 0.0)) / edge_len
+                    flow_veh_per_s = round(float(calc_flow), 4)
                 except Exception as e:
                     logger.debug(f"TraCI query fallback for edge {edge_id}: {e}")
 

@@ -529,6 +529,36 @@ class EdgeFlowController(BaseController):
         self._phase_start.clear()
         self._current_phase.clear()
 
+    def _resolve_downstream(
+        self,
+        to_node: Optional[str],
+        to_approach: Optional[str],
+        to_edge: Optional[str],
+        from_app: str,
+        topology: Dict[str, Any],
+        network_state: Optional[Dict[str, Any]],
+    ) -> tuple[Optional[str], Optional[str]]:
+        """Resolve downstream node and approach across graph topology contracts."""
+        if to_node and (to_approach or not to_edge):
+            return to_node, to_approach
+
+        # 1. Check if to_edge matches an edge in topology.edges
+        if to_edge and topology:
+            for e in topology.get("edges", []):
+                if e.get("edge_id") == to_edge or e.get("id") == to_edge:
+                    resolved_node = e.get("target")
+                    if resolved_node and network_state and resolved_node in network_state:
+                        return resolved_node, to_edge
+
+        # 2. Check if to_edge is an approach of any node in network_state
+        if to_edge and network_state:
+            for nid, ndata in network_state.items():
+                for app in ndata.get("approaches", []):
+                    if app.get("approach_id") == to_edge:
+                        return nid, to_edge
+
+        return to_node, to_approach or to_edge
+
     def _get_downstream_occupancy(
         self,
         to_node: Optional[str],
@@ -552,7 +582,7 @@ class EdgeFlowController(BaseController):
                         break
 
         occ_1hop = float(mapped.get("occupancy_ratio", mapped.get("occupancy", 0.0))) if mapped else (
-            max(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) if to_apps else 0.0
+            sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) / max(1, len(to_apps)) if to_apps else 0.0
         )
 
         if not self.enable_multihop:
@@ -561,20 +591,28 @@ class EdgeFlowController(BaseController):
         # Multi-hop Graph Reachability (2-hop downstream bottleneck)
         to_node_info = next((n for n in topology.get("nodes", []) if n["node_id"] == to_node), None)
         if to_node_info and to_node_info.get("phases"):
-            hop2_occs = []
+            hop2_worst = 0.0
             for p2 in to_node_info["phases"]:
                 for m2 in p2.get("movements", []):
+                    # Directional alignment: Only propagate if m2's from_approach aligns with to_approach
+                    from_app2 = m2.get("from_approach")
+                    if to_approach and from_app2 and from_app2 != to_approach:
+                        continue
                     to2_node = m2.get("to_node")
                     if to2_node and to2_node in network_state:
                         to2_apps = network_state[to2_node].get("approaches", [])
                         if to2_apps:
-                            hop2_occs.append(
-                                sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to2_apps)
-                                / len(to2_apps)
-                            )
-            if hop2_occs:
-                hop2_avg_occ = sum(hop2_occs) / len(hop2_occs)
-                return max(occ_1hop, self.hop2_attenuation * hop2_avg_occ)
+                            to2_app_target = m2.get("to_approach")
+                            target_app = next((a for a in to2_apps if a.get("approach_id") == to2_app_target), None) if to2_app_target else None
+                            if target_app:
+                                occ = float(target_app.get("occupancy_ratio", target_app.get("occupancy", 0.0)))
+                            else:
+                                occ = sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to2_apps) / len(to2_apps)
+                            if occ > hop2_worst:
+                                hop2_worst = occ
+            # Propagate back if severe downstream bottleneck is detected (> threshold)
+            if hop2_worst >= self.max_occupancy_threshold:
+                return max(occ_1hop, self.hop2_attenuation * hop2_worst)
 
         return occ_1hop
 
@@ -654,11 +692,19 @@ class EdgeFlowController(BaseController):
 
                     q_out = 0.0
                     occ_out = 0.0
-                    if to_node and network_state and to_node in network_state:
-                        to_apps = network_state[to_node].get("approaches", [])
+                    to_node_res, to_app_res = self._resolve_downstream(
+                        to_node=to_node,
+                        to_approach=to_approach,
+                        to_edge=m.get("to_edge"),
+                        from_app=from_app,
+                        topology=topology,
+                        network_state=network_state,
+                    )
+                    if to_node_res and network_state and to_node_res in network_state:
+                        to_apps = network_state[to_node_res].get("approaches", [])
                         mapped = None
-                        if to_approach:
-                            mapped = next((a for a in to_apps if a.get("approach_id") == to_approach), None)
+                        if to_app_res:
+                            mapped = next((a for a in to_apps if a.get("approach_id") == to_app_res), None)
                         if not mapped and from_app:
                             for suffix in ("_N_IN", "_S_IN", "_E_IN", "_W_IN"):
                                 if from_app.endswith(suffix):
@@ -668,13 +714,12 @@ class EdgeFlowController(BaseController):
                         if mapped:
                             q_out = float(mapped.get("queue_vehicles", mapped.get("queue_length_veh", 0.0)))
                         elif to_apps:
-                            worst_app = max(to_apps, key=lambda a: float(a.get("occupancy_ratio", a.get("occupancy", 0.0))))
-                            q_out = float(worst_app.get("queue_vehicles", worst_app.get("queue_length_veh", 0.0)))
+                            q_out = sum(float(a.get("queue_vehicles", a.get("queue_length_veh", 0.0))) for a in to_apps) / len(to_apps)
 
                         occ_out = self._get_downstream_occupancy(
-                            to_node=to_node,
+                            to_node=to_node_res,
                             from_app=from_app,
-                            to_approach=to_approach,
+                            to_approach=to_app_res,
                             network_state=network_state,
                             topology=topology,
                         )
@@ -693,21 +738,35 @@ class EdgeFlowController(BaseController):
 
                     ctm_throughput = min(sending_capacity, receiving_capacity)
 
-                    # 2. Network Dynamic Max-Pressure
+                    # 2. Network Dynamic Max-Pressure (Pressure-Aware Formulation)
                     pressure = q_in - (turn_ratio * q_out)
 
-                    # 3. Hybrid Synthesis: CTM-Modulated Max-Pressure with Spillback Penalty
-                    if occ_out >= self.max_occupancy_threshold or q_out >= capacity or receiving_capacity <= 0.0:
-                        # Downstream blocked -> apply backpressure penalty
-                        m_score = self.spillback_penalty * (1.0 + occ_out)
+                    # 3. Hybrid Synthesis: Pressure-Aware CTM with Spillback Rejection
+                    is_downstream_blocked = (
+                        occ_out >= self.max_occupancy_threshold
+                        or q_out >= capacity
+                        or receiving_capacity <= 0.0
+                    )
+                    if is_downstream_blocked:
+                        if pressure <= 0.0:
+                            # Downstream blocked and backpressure is negative or zero:
+                            # strict backpressure rejection penalty
+                            m_score = (self.spillback_penalty * (1.0 + occ_out) - abs(turn_ratio * q_out)) * conf
+                        else:
+                            # Upstream queue exceeds downstream queue (positive pressure):
+                            # throttle by receiving capacity ratio instead of applying negative penalty,
+                            # preventing permanent corridor starvation / deadlocks!
+                            throttle = max(0.1, 1.0 - (occ_out / max(0.85, self.max_occupancy_threshold)))
+                            m_score = (pressure * throttle + self.progression_weight * ctm_throughput) * conf
                     elif occ_out > 0.40:
-                        # Soft barrier: scale down pressure as downstream approaches saturation
+                        # Soft barrier: scale down forward flow, but preserve negative backpressure
                         barrier_factor = max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold) ** 2)
+                        eff_pressure = pressure * barrier_factor if pressure > 0 else (pressure / max(0.2, barrier_factor))
                         if self.enable_ctm_gating:
                             ctm_flow_ratio = ctm_throughput / max(1e-4, self.saturation_flow_vps)
-                            m_score = (pressure * barrier_factor + self.progression_weight * (flow_in * ctm_flow_ratio + ctm_throughput)) * conf
+                            m_score = (eff_pressure + self.progression_weight * (flow_in * ctm_flow_ratio + ctm_throughput)) * conf
                         else:
-                            m_score = (pressure * barrier_factor + self.progression_weight * flow_in) * conf
+                            m_score = (eff_pressure + self.progression_weight * flow_in) * conf
                     else:
                         # Free-flowing downstream -> full pressure + progression flow
                         if self.enable_ctm_gating:
@@ -725,19 +784,37 @@ class EdgeFlowController(BaseController):
                     conf = conf_map.get(app_id, 1.0)
                     occ_in = occ_map.get(app_id, 0.0)
 
+                    # Downstream estimation for approach-only nodes
+                    q_out = 0.0
+                    occ_out = 0.0
+                    to_node_res, to_app_res = self._resolve_downstream(
+                        to_node=None,
+                        to_approach=None,
+                        to_edge=app_id,
+                        from_app=app_id,
+                        topology=topology,
+                        network_state=network_state,
+                    )
+                    if to_node_res and network_state and to_node_res in network_state:
+                        to_apps = network_state[to_node_res].get("approaches", [])
+                        if to_apps:
+                            q_out = sum(float(a.get("queue_vehicles", a.get("queue_length_veh", 0.0))) for a in to_apps) / len(to_apps)
+                            occ_out = sum(float(a.get("occupancy_ratio", a.get("occupancy", 0.0))) for a in to_apps) / len(to_apps)
+
                     sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + flow_in)
-                    if occ_in >= self.max_occupancy_threshold:
+                    if occ_out >= self.max_occupancy_threshold:
                         receiving_capacity = 0.0
-                    elif occ_in > 0.40:
-                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - (occ_in / self.max_occupancy_threshold) ** 2)
+                    elif occ_out > 0.40:
+                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - (occ_out / self.max_occupancy_threshold) ** 2)
                     else:
                         receiving_capacity = self.saturation_flow_vps
                     eff_flow = min(sending_capacity, receiving_capacity)
 
+                    pressure = q_in - q_out
                     if self.enable_ctm_gating:
-                        phase_score += (q_in + self.progression_weight * (flow_in + eff_flow)) * conf
+                        phase_score += (pressure + self.progression_weight * (flow_in + eff_flow)) * conf
                     else:
-                        phase_score += (q_in + self.progression_weight * flow_in) * conf
+                        phase_score += (pressure + self.progression_weight * flow_in) * conf
 
             # Service-age fairness bonus (nonlinear, only if phase has active waiting demand)
             phase_apps_all = phase.get("approaches", [])
@@ -792,19 +869,36 @@ class EdgeFlowController(BaseController):
                 to_node = m.get("to_node")
                 from_app = m.get("from_approach", "")
                 to_approach = m.get("to_approach")
-                if to_node and network_state and to_node in network_state:
+                to_node_res, to_app_res = self._resolve_downstream(
+                    to_node=to_node,
+                    to_approach=to_approach,
+                    to_edge=m.get("to_edge"),
+                    from_app=from_app,
+                    topology=topology,
+                    network_state=network_state,
+                )
+                if to_node_res and network_state and to_node_res in network_state:
                     occ = self._get_downstream_occupancy(
-                        to_node=to_node,
+                        to_node=to_node_res,
                         from_app=from_app,
-                        to_approach=to_approach,
+                        to_approach=to_app_res,
                         network_state=network_state,
                         topology=topology,
                     )
                     if occ >= self.max_occupancy_threshold:
-                        current_blocked = True
-                        break
+                        # Only mark blocked if downstream queue exceeds upstream queue (negative backpressure)
+                        from_app_q = queue_map.get(from_app, 0.0)
+                        downstream_q = 0.0
+                        if to_app_res:
+                            to_apps = network_state[to_node_res].get("approaches", [])
+                            mapped_app = next((a for a in to_apps if a.get("approach_id") == to_app_res), None)
+                            if mapped_app:
+                                downstream_q = float(mapped_app.get("queue_vehicles", mapped_app.get("queue_length_veh", 0.0)))
+                        if downstream_q >= from_app_q or downstream_q >= float(m.get("capacity_vehicles", 20.0)):
+                            current_blocked = True
+                            break
 
-        # 3. Check best scoring phase vs current phase with switching margin
+        # 3. Check best scoring phase vs current phase with time-decaying switching margin
         current_score = phase_scores.get(current_phase_id, 0.0)
         best_phase, best_score = max(phase_scores.items(), key=lambda x: x[1]) if phase_scores else (current_phase_id, current_score)
 
@@ -815,12 +909,19 @@ class EdgeFlowController(BaseController):
             best_apps = list({m.get("from_approach") for m in best_phase_obj["movements"] if m.get("from_approach")})
         best_demand = sum(queue_map.get(a, 0.0) + flow_map.get(a, 0.0) for a in best_apps)
 
-        # Platoon extension: keep serving if queue remains or active discharging platoon is flowing
-        has_active_traffic = (active_queue > 0.5) or (active_flow > 0.1 and elapsed_green < 20.0)
+        # Time-decaying switching hysteresis to prevent fluttering while avoiding locking green
+        if elapsed_green <= self.min_green_s + 5.0:
+            effective_margin = self.switching_margin
+        else:
+            time_decay = max(0.05, 1.0 - (elapsed_green - (self.min_green_s + 5.0)) / max(1.0, self.max_green_s - (self.min_green_s + 5.0)))
+            effective_margin = self.switching_margin * time_decay
+
+        # Platoon extension: keep serving only if meaningful queue remains or discharging platoon is flowing
+        has_active_traffic = (active_queue > 0.5) or (active_flow > 0.15 and elapsed_green < 15.0)
 
         if not current_blocked and has_active_traffic and elapsed_green < self.max_green_s:
-            # Only switch if competing phase has substantial queue advantage AND actual demand
-            if best_phase != current_phase_id and best_score > current_score + self.switching_margin and best_demand > 0.5:
+            # Switch if competing phase has substantial advantage exceeding time-decayed margin AND actual demand
+            if best_phase != current_phase_id and best_score > current_score + effective_margin and best_demand > 0.5:
                 target_phase = best_phase
             else:
                 target_phase = current_phase_id
@@ -838,6 +939,8 @@ class EdgeFlowController(BaseController):
         if not current_blocked and best_demand <= 0.2 and elapsed_green < self.max_green_s:
             target_phase = current_phase_id
         elif not phase_scores:
+            target_phase = current_phase_id
+        elif best_demand <= 0.2 and has_active_traffic and elapsed_green < self.max_green_s:
             target_phase = current_phase_id
         else:
             target_phase = best_phase
@@ -945,10 +1048,17 @@ class FlowTheoryController(BaseController):
     Gates green phases when downstream exit link is saturated (> 0.85) to prevent gridlock.
     """
 
-    def __init__(self, min_green_s: float = 10.0, max_green_s: float = 60.0, saturation_flow_vps: float = 0.5):
+    def __init__(
+        self,
+        min_green_s: float = 10.0,
+        max_green_s: float = 60.0,
+        saturation_flow_vps: float = 0.5,
+        switching_margin: float = 0.0,
+    ):
         self.min_green_s = min_green_s
         self.max_green_s = max_green_s
         self.saturation_flow_vps = saturation_flow_vps
+        self.switching_margin = switching_margin
         self._node_state: Dict[str, Dict[str, Any]] = {}
 
     def reset(self):
@@ -1059,6 +1169,10 @@ class FlowTheoryController(BaseController):
                             hop2_occs = []
                             for p2 in to_node_info["phases"]:
                                 for m2 in p2.get("movements", []):
+                                    # Directional alignment: Only consider movements continuing from m's to_approach
+                                    from_app2 = m2.get("from_approach")
+                                    if to_approach and from_app2 and from_app2 != to_approach:
+                                        continue
                                     to2_node = m2.get("to_node")
                                     if to2_node and network_state and to2_node in network_state:
                                         to2_apps = network_state[to2_node].get("approaches", [])
@@ -1074,10 +1188,11 @@ class FlowTheoryController(BaseController):
                     else:
                         occ_down = occ_map.get(from_app, 0.0)
 
-                    if occ_down >= 0.85:
+                    # Smooth CTM receiving capacity curve avoiding abrupt step
+                    if occ_down >= 0.90:
                         receiving_capacity = 0.0  # Cut flow if downstream is jammed to prevent gridlock
                     else:
-                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - occ_down)
+                        receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - (occ_down / 0.90) ** 2)
 
                     effective_flow = min(sending_capacity, receiving_capacity)
                     total_effective_flow += effective_flow
@@ -1088,14 +1203,19 @@ class FlowTheoryController(BaseController):
                     f_in = flow_map.get(app_id, 0.0)
                     occ_in = occ_map.get(app_id, 0.0)
                     sending_capacity = min(self.saturation_flow_vps, (q_in / 10.0) + f_in)
-                    receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - occ_in) if occ_in < 0.85 else 0.0
+                    receiving_capacity = self.saturation_flow_vps * max(0.0, 1.0 - (occ_in / 0.90) ** 2) if occ_in < 0.90 else 0.0
                     effective_flow = min(sending_capacity, receiving_capacity)
                     total_effective_flow += effective_flow
 
             phase_flows[phase_id] = total_effective_flow
 
         if phase_flows:
-            target_phase = max(phase_flows.items(), key=lambda x: x[1])[0]
+            current_flow = phase_flows.get(current_phase_id, 0.0)
+            best_phase, best_flow = max(phase_flows.items(), key=lambda x: x[1])
+            if best_phase != current_phase_id and best_flow > current_flow + self.switching_margin:
+                target_phase = best_phase
+            else:
+                target_phase = current_phase_id
         else:
             target_phase = current_phase_id
 

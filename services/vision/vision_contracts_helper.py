@@ -39,3 +39,9 @@ def load_schema(schema_name: str) -> Dict[str, Any]:
 
 def validate_payload(payload: Dict[str, Any], schema_name: str) -> None:
     contracts_sdk.validate_payload(payload, schema_name)
+
+try:
+    import topics
+except ImportError:
+    from contracts import topics
+

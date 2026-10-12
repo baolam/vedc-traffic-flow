@@ -358,7 +358,7 @@ class BatchRunner:
             row["completed_vehicles"] = acct.get("completed_vehicles", "")
             row["active_vehicles"] = acct.get("active_vehicles", "")
             row["pending_vehicles"] = acct.get("pending_vehicles", "")
-            row["completion_coverage"] = acct.get("completion_coverage", "")
+            row["completion_coverage"] = acct.get("completion_rate", acct.get("completion_coverage", ""))
 
             row["mean_waiting_completed_s"] = kpis.get("mean_waiting_completed_s", summary.get("average_waiting_time_s", ""))
             row["p95_waiting_completed_s"] = kpis.get("p95_waiting_completed_s", "")
@@ -369,7 +369,7 @@ class BatchRunner:
             row["mean_network_queue_veh"] = kpis.get("mean_network_queue_veh", summary.get("average_queue_veh", ""))
             row["max_network_queue_veh"] = kpis.get("max_network_queue_veh", summary.get("maximum_queue_veh", ""))
             row["p95_network_queue_veh"] = kpis.get("p95_network_queue_veh", summary.get("p95_queue_veh", ""))
-            row["throughput_veh_per_s"] = summary.get("throughput_veh_per_s", "")
+            row["throughput_veh_per_s"] = kpis.get("arrivals_measurement_veh_per_s", summary.get("throughput_veh_per_s", ""))
             row["faults_count"] = summary.get("faults_count", summary.get("fault_count", 0))
 
         return row
@@ -484,8 +484,14 @@ class BatchRunner:
                     max_queues = [get_stat(r, "max_network_queue_veh", "maximum_queue_veh") for r in runs]
                     valid_max_queues = [mq for mq in max_queues if mq is not None]
 
-                    throughputs = [float(r.get("throughput_veh_per_s", 0.0)) for r in runs]
-                    coverages = [float(r.get("accounting", {}).get("completion_coverage", 1.0)) for r in runs]
+                    throughputs = [
+                        float(r.get("kpis", {}).get("arrivals_measurement_veh_per_s", r.get("throughput_veh_per_s", 0.0)))
+                        for r in runs
+                    ]
+                    coverages = [
+                        float(r.get("accounting", {}).get("completion_rate", r.get("accounting", {}).get("completion_coverage", 1.0)))
+                        for r in runs
+                    ]
 
                     n = len(runs)
                     paired_aggregates[top_id][scenario][ctrl] = {

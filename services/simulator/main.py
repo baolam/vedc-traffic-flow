@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any
 
 from config import settings
-from simulator_contracts_helper import load_topology
+from simulator_contracts_helper import load_topology, topics
 from traffic_engine import TrafficEngine
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
@@ -34,7 +34,7 @@ def main():
         if rc == 0:
             logger.info("Connected to MQTT Broker successfully.")
             # Subscribe to Actuator ACKs to sync physical/actuated phase transitions
-            client.subscribe("edgeflow/v1/control/+/ack")
+            client.subscribe(topics.ACK_SUB_PATTERN)
         else:
             logger.warning(f"MQTT Connect failed with code {rc}")
 
@@ -42,7 +42,7 @@ def main():
         try:
             topic = msg.topic
             payload = json.loads(msg.payload.decode("utf-8"))
-            if topic.startswith("edgeflow/v1/control/") and topic.endswith("/ack"):
+            if topic.startswith(f"{topics.PREFIX_V1}/control/") and topic.endswith("/ack"):
                 node_id = payload.get("node_id")
                 status = payload.get("status")
                 # If signal transition was applied, update simulator phase state
@@ -83,7 +83,7 @@ def main():
             try:
                 telemetry = engine.generate_telemetry(node_id, sim_time_s)
                 if mqtt_client and mqtt_client.is_connected():
-                    pub_topic = f"edgeflow/v1/telemetry/{node_id}"
+                    pub_topic = topics.get_telemetry_topic(node_id)
                     mqtt_client.publish(pub_topic, json.dumps(telemetry))
                     logger.debug(f"Published telemetry for {node_id} to {pub_topic}")
             except Exception as e:
@@ -99,7 +99,8 @@ def main():
                     "simulation_time_s": round(sim_time_s, 2),
                     "timestamp_ms": int(time.time() * 1000)
                 }
-                mqtt_client.publish("edgeflow/v1/health/simulator", json.dumps(health_payload))
+                health_topic = topics.get_health_topic("simulator")
+                mqtt_client.publish(health_topic, json.dumps(health_payload))
                 logger.info(f"Simulator Health Check - Sim Time: {sim_time_s:.1f}s")
 
         elapsed = time.time() - loop_start

@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     mqtt_port: int = 1883
     yellow_duration_s: float = 3.0
     all_red_duration_s: float = 2.0
+    min_green_s: float = 10.0
+    max_green_s: float = 60.0
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -30,13 +30,13 @@ try:
     from config import settings
     from perception_engine import PerceptionEngine
     from hardware_monitor import get_hardware_diagnostics, is_raspberry_pi
-    from vision_contracts_helper import load_topology, validate_payload
+    from vision_contracts_helper import load_topology, validate_payload, topics
     from roi_config import load_roi_config, validate_against_topology
 except ImportError:
     from services.vision.config import settings
     from services.vision.perception_engine import PerceptionEngine
     from services.vision.hardware_monitor import get_hardware_diagnostics, is_raspberry_pi
-    from services.vision.vision_contracts_helper import load_topology, validate_payload
+    from services.vision.vision_contracts_helper import load_topology, validate_payload, topics
     from services.vision.roi_config import load_roi_config, validate_against_topology
 
 logging.basicConfig(
@@ -186,7 +186,7 @@ def main(argv: Optional[List[str]] = None):
             if rc == 0:
                 logger.info(f"Connected to MQTT Broker successfully at {mqtt_host}:{mqtt_port}")
                 # Publish initial Health Status
-                health_topic = "edgeflow/v1/health/vision"
+                health_topic = topics.get_health_topic("vision")
                 health_payload = {
                     "service": "vision",
                     "status": "HEALTHY",
@@ -227,7 +227,7 @@ def main(argv: Optional[List[str]] = None):
                 node_id = node["node_id"]
                 telemetry_payload = build_telemetry(node, per_node.get(node_id, []), sim_time_s, timestamp_ms)
                 validate_payload(telemetry_payload, "telemetry")
-                telemetry_topic = f"edgeflow/v1/telemetry/{node_id}"
+                telemetry_topic = topics.get_telemetry_topic(node_id)
                 approaches = telemetry_payload["approaches"]
                 if mqtt_client and mqtt_client.is_connected():
                     mqtt_client.publish(telemetry_topic, json.dumps(telemetry_payload))
@@ -242,7 +242,7 @@ def main(argv: Optional[List[str]] = None):
                 last_health_report = time.time()
                 current_temp = get_hardware_diagnostics()["cpu_temp_c"]
                 if mqtt_client and mqtt_client.is_connected():
-                    mqtt_client.publish("edgeflow/v1/health/vision", json.dumps({
+                    mqtt_client.publish(topics.get_health_topic("vision"), json.dumps({
                         "service": "vision",
                         "status": "HEALTHY",
                         "cpu_temp_c": current_temp,

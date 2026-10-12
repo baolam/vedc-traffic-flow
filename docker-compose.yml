@@ -76,6 +76,7 @@ services:
         condition: service_healthy
     volumes:
       - ./contracts:/contracts
+      - ./src:/app/src
       - ./models:/models:ro
     profiles:
       - simulation
@@ -148,6 +149,7 @@ services:
         condition: service_healthy
     volumes:
       - ./contracts:/contracts
+      - ./src:/app/src
     profiles:
       - simulation
       - vision

@@ -1,6 +1,9 @@
 {
-  "timestamp": "2026-10-11T10:11:45Z",
-  "total_valid_runs": 300,
+  "timestamp": "2026-10-12T14:02:47Z",
+  "code_commit": "857e4f6147c5",
+  "mode": "sumo_live",
+  "total_runs_planned": 60,
+  "total_valid_runs": 60,
   "total_failed_runs": 0,
   "topologies": [
     "four_intersection_v1",
@@ -21,1003 +24,1678 @@
     "edgeflow"
   ],
   "seeds": [
-    101,
-    202,
-    303,
-    404,
-    505
+    1310
   ],
-  "mode": "deterministic_sim",
-  "topology_aggregates": {
+  "paired_seeds_map": {
+    "four_intersection_v1": {
+      "balanced": [
+        1310
+      ],
+      "directional_surge": [
+        1310
+      ],
+      "downstream_congestion": [
+        1310
+      ]
+    },
+    "grid4x4": {
+      "balanced": [
+        1310
+      ],
+      "directional_surge": [
+        1310
+      ],
+      "downstream_congestion": [
+        1310
+      ]
+    },
+    "cologne8": {
+      "balanced": [
+        1310
+      ],
+      "directional_surge": [
+        1310
+      ],
+      "downstream_congestion": [
+        1310
+      ]
+    },
+    "hcm_corridor": {
+      "balanced": [
+        1310
+      ],
+      "directional_surge": [
+        1310
+      ],
+      "downstream_congestion": [
+        1310
+      ]
+    }
+  },
+  "paired_aggregates": {
     "four_intersection_v1": {
       "balanced": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 9.37,
-          "average_queue_veh": 8.25,
-          "maximum_queue_veh": 18.42,
-          "p95_queue_veh": 17.67,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "e83f04e15bc0894d",
-            "968a5bd84dac7e93",
-            "ba4d3cc8d17532a9",
-            "7f6bf10bcd6cbe9d",
-            "40d5e669c590919c"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.33,
+          "p95_waiting_completed_s": 37.4,
+          "mean_network_queue_veh": 7.6,
+          "p95_network_queue_veh": 11.0,
+          "max_network_queue_veh": 11.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 9.94,
-          "average_queue_veh": 8.75,
-          "maximum_queue_veh": 16.88,
-          "p95_queue_veh": 16.14,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "e83f04e15bc0894d",
-            "968a5bd84dac7e93",
-            "ba4d3cc8d17532a9",
-            "7f6bf10bcd6cbe9d",
-            "40d5e669c590919c"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 2.04,
+          "p95_waiting_completed_s": 6.0,
+          "mean_network_queue_veh": 1.77,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.5167,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 9.94,
-          "average_queue_veh": 8.75,
-          "maximum_queue_veh": 16.88,
-          "p95_queue_veh": 16.14,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "e83f04e15bc0894d",
-            "968a5bd84dac7e93",
-            "ba4d3cc8d17532a9",
-            "7f6bf10bcd6cbe9d",
-            "40d5e669c590919c"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 2.04,
+          "p95_waiting_completed_s": 6.0,
+          "mean_network_queue_veh": 1.77,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.5167,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 9.88,
-          "average_queue_veh": 8.69,
-          "maximum_queue_veh": 17.13,
-          "p95_queue_veh": 16.54,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "e83f04e15bc0894d",
-            "968a5bd84dac7e93",
-            "ba4d3cc8d17532a9",
-            "7f6bf10bcd6cbe9d",
-            "40d5e669c590919c"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 4.88,
+          "p95_waiting_completed_s": 19.4,
+          "mean_network_queue_veh": 2.67,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 14.01,
-          "average_queue_veh": 9.32,
-          "maximum_queue_veh": 19.4,
-          "p95_queue_veh": 18.35,
-          "throughput_veh_per_s": 2.8021,
-          "mean_network_speed_mps": 4.27,
-          "demand_hashes": [
-            "e83f04e15bc0894d",
-            "968a5bd84dac7e93",
-            "ba4d3cc8d17532a9",
-            "7f6bf10bcd6cbe9d",
-            "40d5e669c590919c"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 6.92,
+          "p95_waiting_completed_s": 16.7,
+          "mean_network_queue_veh": 3.3,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
         }
       },
       "directional_surge": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 8.99,
-          "average_queue_veh": 7.91,
-          "maximum_queue_veh": 19.19,
-          "p95_queue_veh": 17.93,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "a656233fcf328e40",
-            "437022679d1aa700",
-            "19459086d79bb981",
-            "6c289d3468a377be",
-            "68941759953468b2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 21.04,
+          "p95_waiting_completed_s": 46.7,
+          "mean_network_queue_veh": 9.55,
+          "p95_network_queue_veh": 17.1,
+          "max_network_queue_veh": 20.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 6.69,
-          "average_queue_veh": 7.36,
-          "maximum_queue_veh": 14.79,
-          "p95_queue_veh": 13.78,
-          "throughput_veh_per_s": 4.6316,
-          "mean_network_speed_mps": 5.75,
-          "demand_hashes": [
-            "a656233fcf328e40",
-            "437022679d1aa700",
-            "19459086d79bb981",
-            "6c289d3468a377be",
-            "68941759953468b2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 3.98,
+          "p95_waiting_completed_s": 14.7,
+          "mean_network_queue_veh": 1.33,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 6.69,
-          "average_queue_veh": 7.36,
-          "maximum_queue_veh": 14.79,
-          "p95_queue_veh": 13.78,
-          "throughput_veh_per_s": 4.6316,
-          "mean_network_speed_mps": 5.75,
-          "demand_hashes": [
-            "a656233fcf328e40",
-            "437022679d1aa700",
-            "19459086d79bb981",
-            "6c289d3468a377be",
-            "68941759953468b2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 3.98,
+          "p95_waiting_completed_s": 14.7,
+          "mean_network_queue_veh": 1.33,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 6.69,
-          "average_queue_veh": 7.36,
-          "maximum_queue_veh": 14.79,
-          "p95_queue_veh": 13.78,
-          "throughput_veh_per_s": 4.6316,
-          "mean_network_speed_mps": 5.75,
-          "demand_hashes": [
-            "a656233fcf328e40",
-            "437022679d1aa700",
-            "19459086d79bb981",
-            "6c289d3468a377be",
-            "68941759953468b2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.36,
+          "p95_waiting_completed_s": 25.8,
+          "mean_network_queue_veh": 3.17,
+          "p95_network_queue_veh": 6.05,
+          "max_network_queue_veh": 10.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 6.69,
-          "average_queue_veh": 7.36,
-          "maximum_queue_veh": 14.79,
-          "p95_queue_veh": 13.78,
-          "throughput_veh_per_s": 4.6316,
-          "mean_network_speed_mps": 5.75,
-          "demand_hashes": [
-            "a656233fcf328e40",
-            "437022679d1aa700",
-            "19459086d79bb981",
-            "6c289d3468a377be",
-            "68941759953468b2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 6.83,
+          "p95_waiting_completed_s": 20.1,
+          "mean_network_queue_veh": 2.68,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
         }
       },
       "downstream_congestion": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 10.08,
-          "average_queue_veh": 8.87,
-          "maximum_queue_veh": 20.05,
-          "p95_queue_veh": 19.58,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "a38b61cddecfd786",
-            "983a374b909461a3",
-            "8e1869acdc063ce7",
-            "d45e99d659eb9fcb",
-            "8fec358bc7399257"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.33,
+          "p95_waiting_completed_s": 37.4,
+          "mean_network_queue_veh": 7.6,
+          "p95_network_queue_veh": 11.0,
+          "max_network_queue_veh": 11.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 11.05,
-          "average_queue_veh": 9.73,
-          "maximum_queue_veh": 19.51,
-          "p95_queue_veh": 18.84,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "a38b61cddecfd786",
-            "983a374b909461a3",
-            "8e1869acdc063ce7",
-            "d45e99d659eb9fcb",
-            "8fec358bc7399257"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 4.38,
+          "p95_waiting_completed_s": 15.85,
+          "mean_network_queue_veh": 2.02,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 11.05,
-          "average_queue_veh": 9.73,
-          "maximum_queue_veh": 19.51,
-          "p95_queue_veh": 18.84,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "a38b61cddecfd786",
-            "983a374b909461a3",
-            "8e1869acdc063ce7",
-            "d45e99d659eb9fcb",
-            "8fec358bc7399257"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 4.38,
+          "p95_waiting_completed_s": 15.85,
+          "mean_network_queue_veh": 2.02,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 10.89,
-          "average_queue_veh": 9.58,
-          "maximum_queue_veh": 19.56,
-          "p95_queue_veh": 18.97,
-          "throughput_veh_per_s": 3.7053,
-          "mean_network_speed_mps": 5.0,
-          "demand_hashes": [
-            "a38b61cddecfd786",
-            "983a374b909461a3",
-            "8e1869acdc063ce7",
-            "d45e99d659eb9fcb",
-            "8fec358bc7399257"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 5.08,
+          "p95_waiting_completed_s": 19.1,
+          "mean_network_queue_veh": 2.6,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.3833,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 16.55,
-          "average_queue_veh": 10.92,
-          "maximum_queue_veh": 23.17,
-          "p95_queue_veh": 22.42,
-          "throughput_veh_per_s": 2.7789,
-          "mean_network_speed_mps": 4.25,
-          "demand_hashes": [
-            "a38b61cddecfd786",
-            "983a374b909461a3",
-            "8e1869acdc063ce7",
-            "d45e99d659eb9fcb",
-            "8fec358bc7399257"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.54,
+          "p95_waiting_completed_s": 16.55,
+          "mean_network_queue_veh": 3.08,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4,
+          "completion_coverage": 1.0
         }
       }
     },
     "grid4x4": {
       "balanced": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.87,
-          "average_queue_veh": 0.95,
-          "maximum_queue_veh": 6.39,
-          "p95_queue_veh": 4.97,
-          "throughput_veh_per_s": 37.0526,
-          "mean_network_speed_mps": 8.0,
-          "demand_hashes": [
-            "578f942276259f93",
-            "5f4e8ffead72a7c0",
-            "b6f85ce44cf0f893",
-            "06b826baa1497efd",
-            "583ffd71bf4b77ef"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 142.47,
+          "p95_waiting_completed_s": 199.9,
+          "mean_network_queue_veh": 146.78,
+          "p95_network_queue_veh": 210.15,
+          "max_network_queue_veh": 216.0,
+          "throughput_veh_per_s": 0.8167,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "578f942276259f93",
-            "5f4e8ffead72a7c0",
-            "b6f85ce44cf0f893",
-            "06b826baa1497efd",
-            "583ffd71bf4b77ef"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 18.66,
+          "p95_waiting_completed_s": 34.2,
+          "mean_network_queue_veh": 24.83,
+          "p95_network_queue_veh": 32.0,
+          "max_network_queue_veh": 32.0,
+          "throughput_veh_per_s": 1.0667,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "578f942276259f93",
-            "5f4e8ffead72a7c0",
-            "b6f85ce44cf0f893",
-            "06b826baa1497efd",
-            "583ffd71bf4b77ef"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 57.56,
+          "p95_waiting_completed_s": 108.8,
+          "mean_network_queue_veh": 78.87,
+          "p95_network_queue_veh": 93.0,
+          "max_network_queue_veh": 94.0,
+          "throughput_veh_per_s": 1.1,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "578f942276259f93",
-            "5f4e8ffead72a7c0",
-            "b6f85ce44cf0f893",
-            "06b826baa1497efd",
-            "583ffd71bf4b77ef"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 29.53,
+          "p95_waiting_completed_s": 68.5,
+          "mean_network_queue_veh": 32.3,
+          "p95_network_queue_veh": 37.05,
+          "max_network_queue_veh": 40.0,
+          "throughput_veh_per_s": 1.25,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.24,
-          "average_queue_veh": 0.28,
-          "maximum_queue_veh": 4.89,
-          "p95_queue_veh": 2.83,
-          "throughput_veh_per_s": 39.3684,
-          "mean_network_speed_mps": 8.38,
-          "demand_hashes": [
-            "578f942276259f93",
-            "5f4e8ffead72a7c0",
-            "b6f85ce44cf0f893",
-            "06b826baa1497efd",
-            "583ffd71bf4b77ef"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 104.71,
+          "p95_waiting_completed_s": 155.1,
+          "mean_network_queue_veh": 115.3,
+          "p95_network_queue_veh": 128.0,
+          "max_network_queue_veh": 130.0,
+          "throughput_veh_per_s": 0.7667,
+          "completion_coverage": 1.0
         }
       },
       "directional_surge": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.19,
-          "average_queue_veh": 0.21,
-          "maximum_queue_veh": 2.67,
-          "p95_queue_veh": 1.55,
-          "throughput_veh_per_s": 37.0526,
-          "mean_network_speed_mps": 8.0,
-          "demand_hashes": [
-            "ded717025a2ac87f",
-            "48ce22eb463ea21d",
-            "6e721705a0d44e70",
-            "384c710b6e2f59d2",
-            "de7354dbffceec89"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 145.67,
+          "p95_waiting_completed_s": 229.3,
+          "mean_network_queue_veh": 138.68,
+          "p95_network_queue_veh": 197.2,
+          "max_network_queue_veh": 211.0,
+          "throughput_veh_per_s": 0.8833,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "ded717025a2ac87f",
-            "48ce22eb463ea21d",
-            "6e721705a0d44e70",
-            "384c710b6e2f59d2",
-            "de7354dbffceec89"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 20.51,
+          "p95_waiting_completed_s": 41.0,
+          "mean_network_queue_veh": 18.68,
+          "p95_network_queue_veh": 33.15,
+          "max_network_queue_veh": 40.0,
+          "throughput_veh_per_s": 1.0167,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "ded717025a2ac87f",
-            "48ce22eb463ea21d",
-            "6e721705a0d44e70",
-            "384c710b6e2f59d2",
-            "de7354dbffceec89"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 63.31,
+          "p95_waiting_completed_s": 120.85,
+          "mean_network_queue_veh": 75.57,
+          "p95_network_queue_veh": 90.05,
+          "max_network_queue_veh": 92.0,
+          "throughput_veh_per_s": 0.9333,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "ded717025a2ac87f",
-            "48ce22eb463ea21d",
-            "6e721705a0d44e70",
-            "384c710b6e2f59d2",
-            "de7354dbffceec89"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 25.09,
+          "p95_waiting_completed_s": 49.0,
+          "mean_network_queue_veh": 36.8,
+          "p95_network_queue_veh": 45.0,
+          "max_network_queue_veh": 50.0,
+          "throughput_veh_per_s": 1.1167,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.1,
-          "average_queue_veh": 0.11,
-          "maximum_queue_veh": 2.06,
-          "p95_queue_veh": 1.08,
-          "throughput_veh_per_s": 39.3684,
-          "mean_network_speed_mps": 8.38,
-          "demand_hashes": [
-            "ded717025a2ac87f",
-            "48ce22eb463ea21d",
-            "6e721705a0d44e70",
-            "384c710b6e2f59d2",
-            "de7354dbffceec89"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 99.84,
+          "p95_waiting_completed_s": 142.0,
+          "mean_network_queue_veh": 97.33,
+          "p95_network_queue_veh": 113.05,
+          "max_network_queue_veh": 115.0,
+          "throughput_veh_per_s": 0.8167,
+          "completion_coverage": 1.0
         }
       },
       "downstream_congestion": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.97,
-          "average_queue_veh": 1.07,
-          "maximum_queue_veh": 6.67,
-          "p95_queue_veh": 5.55,
-          "throughput_veh_per_s": 37.0526,
-          "mean_network_speed_mps": 8.0,
-          "demand_hashes": [
-            "5b3f955cec04fab1",
-            "8f7920e1686e3cb4",
-            "cfece660b319a9cc",
-            "c4aa3fcb6ee8e9d1",
-            "1485dcf1341af030"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 142.47,
+          "p95_waiting_completed_s": 199.9,
+          "mean_network_queue_veh": 146.78,
+          "p95_network_queue_veh": 210.15,
+          "max_network_queue_veh": 216.0,
+          "throughput_veh_per_s": 0.8167,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "5b3f955cec04fab1",
-            "8f7920e1686e3cb4",
-            "cfece660b319a9cc",
-            "c4aa3fcb6ee8e9d1",
-            "1485dcf1341af030"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.02,
+          "p95_waiting_completed_s": 30.6,
+          "mean_network_queue_veh": 23.78,
+          "p95_network_queue_veh": 31.05,
+          "max_network_queue_veh": 32.0,
+          "throughput_veh_per_s": 1.0667,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "5b3f955cec04fab1",
-            "8f7920e1686e3cb4",
-            "cfece660b319a9cc",
-            "c4aa3fcb6ee8e9d1",
-            "1485dcf1341af030"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 57.15,
+          "p95_waiting_completed_s": 105.2,
+          "mean_network_queue_veh": 80.07,
+          "p95_network_queue_veh": 95.05,
+          "max_network_queue_veh": 97.0,
+          "throughput_veh_per_s": 1.0833,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.0,
-          "average_queue_veh": 0.0,
-          "maximum_queue_veh": 0.0,
-          "p95_queue_veh": 0.0,
-          "throughput_veh_per_s": 46.3158,
-          "mean_network_speed_mps": 9.5,
-          "demand_hashes": [
-            "5b3f955cec04fab1",
-            "8f7920e1686e3cb4",
-            "cfece660b319a9cc",
-            "c4aa3fcb6ee8e9d1",
-            "1485dcf1341af030"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 28.29,
+          "p95_waiting_completed_s": 68.2,
+          "mean_network_queue_veh": 32.32,
+          "p95_network_queue_veh": 37.05,
+          "max_network_queue_veh": 40.0,
+          "throughput_veh_per_s": 1.25,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 0.26,
-          "average_queue_veh": 0.3,
-          "maximum_queue_veh": 5.06,
-          "p95_queue_veh": 3.08,
-          "throughput_veh_per_s": 39.3684,
-          "mean_network_speed_mps": 8.38,
-          "demand_hashes": [
-            "5b3f955cec04fab1",
-            "8f7920e1686e3cb4",
-            "cfece660b319a9cc",
-            "c4aa3fcb6ee8e9d1",
-            "1485dcf1341af030"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 105.44,
+          "p95_waiting_completed_s": 146.5,
+          "mean_network_queue_veh": 115.15,
+          "p95_network_queue_veh": 128.0,
+          "max_network_queue_veh": 130.0,
+          "throughput_veh_per_s": 0.75,
+          "completion_coverage": 1.0
         }
       }
     },
     "cologne8": {
       "balanced": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 47.45,
-          "average_queue_veh": 6.64,
-          "maximum_queue_veh": 30.56,
-          "p95_queue_veh": 18.46,
-          "throughput_veh_per_s": 11.4921,
-          "mean_network_speed_mps": 2.57,
-          "demand_hashes": [
-            "a8b0f9d079fbe8a2",
-            "6d357d7a1b8ce1e3",
-            "64a698d4bffcc9f3",
-            "1aaffca608d07bcd",
-            "49db86be15c1d92e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 114.17,
+          "p95_waiting_completed_s": 251.75,
+          "mean_network_queue_veh": 29.82,
+          "p95_network_queue_veh": 47.0,
+          "max_network_queue_veh": 48.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 33.97,
-          "average_queue_veh": 6.47,
-          "maximum_queue_veh": 30.56,
-          "p95_queue_veh": 18.46,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "a8b0f9d079fbe8a2",
-            "6d357d7a1b8ce1e3",
-            "64a698d4bffcc9f3",
-            "1aaffca608d07bcd",
-            "49db86be15c1d92e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 6.04,
+          "p95_waiting_completed_s": 33.25,
+          "mean_network_queue_veh": 2.15,
+          "p95_network_queue_veh": 3.0,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 33.97,
-          "average_queue_veh": 6.47,
-          "maximum_queue_veh": 30.56,
-          "p95_queue_veh": 18.46,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "a8b0f9d079fbe8a2",
-            "6d357d7a1b8ce1e3",
-            "64a698d4bffcc9f3",
-            "1aaffca608d07bcd",
-            "49db86be15c1d92e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.88,
+          "p95_waiting_completed_s": 39.35,
+          "mean_network_queue_veh": 2.47,
+          "p95_network_queue_veh": 4.0,
+          "max_network_queue_veh": 5.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 33.97,
-          "average_queue_veh": 6.47,
-          "maximum_queue_veh": 30.56,
-          "p95_queue_veh": 18.46,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "a8b0f9d079fbe8a2",
-            "6d357d7a1b8ce1e3",
-            "64a698d4bffcc9f3",
-            "1aaffca608d07bcd",
-            "49db86be15c1d92e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 8.71,
+          "p95_waiting_completed_s": 48.25,
+          "mean_network_queue_veh": 3.83,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 40.21,
-          "average_queue_veh": 6.51,
-          "maximum_queue_veh": 30.56,
-          "p95_queue_veh": 18.46,
-          "throughput_veh_per_s": 13.2868,
-          "mean_network_speed_mps": 2.65,
-          "demand_hashes": [
-            "a8b0f9d079fbe8a2",
-            "6d357d7a1b8ce1e3",
-            "64a698d4bffcc9f3",
-            "1aaffca608d07bcd",
-            "49db86be15c1d92e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.54,
+          "p95_waiting_completed_s": 19.7,
+          "mean_network_queue_veh": 6.68,
+          "p95_network_queue_veh": 12.0,
+          "max_network_queue_veh": 13.0,
+          "throughput_veh_per_s": 0.5333,
+          "completion_coverage": 1.0
         }
       },
       "directional_surge": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 18.86,
-          "average_queue_veh": 2.64,
-          "maximum_queue_veh": 12.37,
-          "p95_queue_veh": 7.39,
-          "throughput_veh_per_s": 11.4921,
-          "mean_network_speed_mps": 2.57,
-          "demand_hashes": [
-            "dafa266499212fa7",
-            "54d15ada60cc6130",
-            "2722e35684066d46",
-            "4b977b954c140ddb",
-            "eac7f5e9aad68da2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 150.15,
+          "p95_waiting_completed_s": 333.2,
+          "mean_network_queue_veh": 33.68,
+          "p95_network_queue_veh": 55.15,
+          "max_network_queue_veh": 62.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 13.6,
-          "average_queue_veh": 2.59,
-          "maximum_queue_veh": 12.37,
-          "p95_queue_veh": 7.39,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "dafa266499212fa7",
-            "54d15ada60cc6130",
-            "2722e35684066d46",
-            "4b977b954c140ddb",
-            "eac7f5e9aad68da2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.4,
+          "p95_waiting_completed_s": 29.7,
+          "mean_network_queue_veh": 2.83,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.5833,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 13.6,
-          "average_queue_veh": 2.59,
-          "maximum_queue_veh": 12.37,
-          "p95_queue_veh": 7.39,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "dafa266499212fa7",
-            "54d15ada60cc6130",
-            "2722e35684066d46",
-            "4b977b954c140ddb",
-            "eac7f5e9aad68da2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 15.19,
+          "p95_waiting_completed_s": 49.5,
+          "mean_network_queue_veh": 3.63,
+          "p95_network_queue_veh": 7.05,
+          "max_network_queue_veh": 9.0,
+          "throughput_veh_per_s": 0.55,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 13.6,
-          "average_queue_veh": 2.59,
-          "maximum_queue_veh": 12.37,
-          "p95_queue_veh": 7.39,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "dafa266499212fa7",
-            "54d15ada60cc6130",
-            "2722e35684066d46",
-            "4b977b954c140ddb",
-            "eac7f5e9aad68da2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 5.02,
+          "p95_waiting_completed_s": 23.8,
+          "mean_network_queue_veh": 1.92,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 8.0,
+          "throughput_veh_per_s": 0.5333,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 16.09,
-          "average_queue_veh": 2.6,
-          "maximum_queue_veh": 12.37,
-          "p95_queue_veh": 7.39,
-          "throughput_veh_per_s": 13.2868,
-          "mean_network_speed_mps": 2.65,
-          "demand_hashes": [
-            "dafa266499212fa7",
-            "54d15ada60cc6130",
-            "2722e35684066d46",
-            "4b977b954c140ddb",
-            "eac7f5e9aad68da2"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 12.81,
+          "p95_waiting_completed_s": 32.0,
+          "mean_network_queue_veh": 4.42,
+          "p95_network_queue_veh": 8.0,
+          "max_network_queue_veh": 9.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
         }
       },
       "downstream_congestion": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 50.64,
-          "average_queue_veh": 7.09,
-          "maximum_queue_veh": 32.37,
-          "p95_queue_veh": 19.5,
-          "throughput_veh_per_s": 11.4921,
-          "mean_network_speed_mps": 2.57,
-          "demand_hashes": [
-            "80228b2ba771b7dc",
-            "c5a3d3e2aadf4ef8",
-            "acebc6cacb523a66",
-            "f71be031beea4d46",
-            "b38d175a1f6aea9e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 115.12,
+          "p95_waiting_completed_s": 237.4,
+          "mean_network_queue_veh": 20.98,
+          "p95_network_queue_veh": 43.05,
+          "max_network_queue_veh": 46.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 36.23,
-          "average_queue_veh": 6.9,
-          "maximum_queue_veh": 32.37,
-          "p95_queue_veh": 19.5,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "80228b2ba771b7dc",
-            "c5a3d3e2aadf4ef8",
-            "acebc6cacb523a66",
-            "f71be031beea4d46",
-            "b38d175a1f6aea9e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.83,
+          "p95_waiting_completed_s": 41.05,
+          "mean_network_queue_veh": 2.38,
+          "p95_network_queue_veh": 4.0,
+          "max_network_queue_veh": 5.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 36.23,
-          "average_queue_veh": 6.9,
-          "maximum_queue_veh": 32.37,
-          "p95_queue_veh": 19.5,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "80228b2ba771b7dc",
-            "c5a3d3e2aadf4ef8",
-            "acebc6cacb523a66",
-            "f71be031beea4d46",
-            "b38d175a1f6aea9e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 10.62,
+          "p95_waiting_completed_s": 43.25,
+          "mean_network_queue_veh": 2.42,
+          "p95_network_queue_veh": 4.0,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 36.23,
-          "average_queue_veh": 6.9,
-          "maximum_queue_veh": 32.37,
-          "p95_queue_veh": 19.5,
-          "throughput_veh_per_s": 15.6316,
-          "mean_network_speed_mps": 2.77,
-          "demand_hashes": [
-            "80228b2ba771b7dc",
-            "c5a3d3e2aadf4ef8",
-            "acebc6cacb523a66",
-            "f71be031beea4d46",
-            "b38d175a1f6aea9e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 8.62,
+          "p95_waiting_completed_s": 46.4,
+          "mean_network_queue_veh": 3.75,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 42.87,
-          "average_queue_veh": 6.94,
-          "maximum_queue_veh": 32.37,
-          "p95_queue_veh": 19.5,
-          "throughput_veh_per_s": 13.2868,
-          "mean_network_speed_mps": 2.65,
-          "demand_hashes": [
-            "80228b2ba771b7dc",
-            "c5a3d3e2aadf4ef8",
-            "acebc6cacb523a66",
-            "f71be031beea4d46",
-            "b38d175a1f6aea9e"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 13.21,
+          "p95_waiting_completed_s": 41.1,
+          "mean_network_queue_veh": 6.37,
+          "p95_network_queue_veh": 10.05,
+          "max_network_queue_veh": 12.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
         }
       }
     },
     "hcm_corridor": {
       "balanced": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 12.51,
-          "average_queue_veh": 5.87,
-          "maximum_queue_veh": 24.48,
-          "p95_queue_veh": 15.36,
-          "throughput_veh_per_s": 24.6921,
-          "mean_network_speed_mps": 3.79,
-          "demand_hashes": [
-            "76a7a7fad711fe06",
-            "669c55e36fbcc28d",
-            "12c752c95c7920e3",
-            "b8dfb7532f284d3f",
-            "dc76a04b12f63c3a"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 132.29,
+          "p95_waiting_completed_s": 397.4,
+          "mean_network_queue_veh": 35.62,
+          "p95_network_queue_veh": 49.0,
+          "max_network_queue_veh": 52.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 11.49,
-          "average_queue_veh": 5.86,
-          "maximum_queue_veh": 24.48,
-          "p95_queue_veh": 15.51,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "76a7a7fad711fe06",
-            "669c55e36fbcc28d",
-            "12c752c95c7920e3",
-            "b8dfb7532f284d3f",
-            "dc76a04b12f63c3a"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 18.6,
+          "p95_waiting_completed_s": 63.9,
+          "mean_network_queue_veh": 49.7,
+          "p95_network_queue_veh": 53.0,
+          "max_network_queue_veh": 54.0,
+          "throughput_veh_per_s": 0.2833,
+          "completion_coverage": 0.625
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 11.49,
-          "average_queue_veh": 5.86,
-          "maximum_queue_veh": 24.48,
-          "p95_queue_veh": 15.51,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "76a7a7fad711fe06",
-            "669c55e36fbcc28d",
-            "12c752c95c7920e3",
-            "b8dfb7532f284d3f",
-            "dc76a04b12f63c3a"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.33,
+          "p95_waiting_completed_s": 46.35,
+          "mean_network_queue_veh": 12.15,
+          "p95_network_queue_veh": 22.05,
+          "max_network_queue_veh": 23.0,
+          "throughput_veh_per_s": 0.5667,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 11.42,
-          "average_queue_veh": 5.83,
-          "maximum_queue_veh": 24.92,
-          "p95_queue_veh": 15.82,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "76a7a7fad711fe06",
-            "669c55e36fbcc28d",
-            "12c752c95c7920e3",
-            "b8dfb7532f284d3f",
-            "dc76a04b12f63c3a"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 10.71,
+          "p95_waiting_completed_s": 17.0,
+          "mean_network_queue_veh": 7.25,
+          "p95_network_queue_veh": 12.05,
+          "max_network_queue_veh": 13.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 16.07,
-          "average_queue_veh": 6.2,
-          "maximum_queue_veh": 27.47,
-          "p95_queue_veh": 16.03,
-          "throughput_veh_per_s": 20.2979,
-          "mean_network_speed_mps": 3.49,
-          "demand_hashes": [
-            "76a7a7fad711fe06",
-            "669c55e36fbcc28d",
-            "12c752c95c7920e3",
-            "b8dfb7532f284d3f",
-            "dc76a04b12f63c3a"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 16.91,
+          "p95_waiting_completed_s": 68.5,
+          "mean_network_queue_veh": 23.5,
+          "p95_network_queue_veh": 30.0,
+          "max_network_queue_veh": 30.0,
+          "throughput_veh_per_s": 0.4,
+          "completion_coverage": 0.4583
         }
       },
       "directional_surge": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 4.91,
-          "average_queue_veh": 2.31,
-          "maximum_queue_veh": 8.41,
-          "p95_queue_veh": 6.12,
-          "throughput_veh_per_s": 24.6921,
-          "mean_network_speed_mps": 3.79,
-          "demand_hashes": [
-            "2d926e0bb186c139",
-            "1c6e167af36f379d",
-            "7cfc200fdf804971",
-            "1c861d3717e74f11",
-            "ad587139f74b4cf7"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 106.04,
+          "p95_waiting_completed_s": 375.6,
+          "mean_network_queue_veh": 30.7,
+          "p95_network_queue_veh": 44.05,
+          "max_network_queue_veh": 48.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 4.12,
-          "average_queue_veh": 2.11,
-          "maximum_queue_veh": 8.41,
-          "p95_queue_veh": 5.11,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "2d926e0bb186c139",
-            "1c6e167af36f379d",
-            "7cfc200fdf804971",
-            "1c861d3717e74f11",
-            "ad587139f74b4cf7"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 9.53,
+          "p95_waiting_completed_s": 23.45,
+          "mean_network_queue_veh": 42.9,
+          "p95_network_queue_veh": 49.05,
+          "max_network_queue_veh": 52.0,
+          "throughput_veh_per_s": 0.3667,
+          "completion_coverage": 0.6809
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 4.12,
-          "average_queue_veh": 2.11,
-          "maximum_queue_veh": 8.41,
-          "p95_queue_veh": 5.11,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "2d926e0bb186c139",
-            "1c6e167af36f379d",
-            "7cfc200fdf804971",
-            "1c861d3717e74f11",
-            "ad587139f74b4cf7"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 22.96,
+          "p95_waiting_completed_s": 45.8,
+          "mean_network_queue_veh": 10.08,
+          "p95_network_queue_veh": 19.1,
+          "max_network_queue_veh": 23.0,
+          "throughput_veh_per_s": 0.5167,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 4.24,
-          "average_queue_veh": 2.17,
-          "maximum_queue_veh": 8.9,
-          "p95_queue_veh": 5.39,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "2d926e0bb186c139",
-            "1c6e167af36f379d",
-            "7cfc200fdf804971",
-            "1c861d3717e74f11",
-            "ad587139f74b4cf7"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 9.55,
+          "p95_waiting_completed_s": 26.7,
+          "mean_network_queue_veh": 4.45,
+          "p95_network_queue_veh": 8.05,
+          "max_network_queue_veh": 11.0,
+          "throughput_veh_per_s": 0.5333,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 5.26,
-          "average_queue_veh": 2.01,
-          "maximum_queue_veh": 8.81,
-          "p95_queue_veh": 4.62,
-          "throughput_veh_per_s": 20.1474,
-          "mean_network_speed_mps": 3.48,
-          "demand_hashes": [
-            "2d926e0bb186c139",
-            "1c6e167af36f379d",
-            "7cfc200fdf804971",
-            "1c861d3717e74f11",
-            "ad587139f74b4cf7"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 32.68,
+          "p95_waiting_completed_s": 90.4,
+          "mean_network_queue_veh": 13.37,
+          "p95_network_queue_veh": 19.1,
+          "max_network_queue_veh": 22.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
         }
       },
       "downstream_congestion": {
         "fixed_time": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 13.36,
-          "average_queue_veh": 6.27,
-          "maximum_queue_veh": 26.18,
-          "p95_queue_veh": 16.26,
-          "throughput_veh_per_s": 24.6921,
-          "mean_network_speed_mps": 3.79,
-          "demand_hashes": [
-            "34436b90ea867819",
-            "7c5686d6dbd0a10b",
-            "05aad25ef07bf3a5",
-            "a171c1ff8de5a904",
-            "cea134d4a3026722"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 133.5,
+          "p95_waiting_completed_s": 411.9,
+          "mean_network_queue_veh": 35.13,
+          "p95_network_queue_veh": 49.0,
+          "max_network_queue_veh": 52.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
         },
         "max_queue": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 12.31,
-          "average_queue_veh": 6.28,
-          "maximum_queue_veh": 26.18,
-          "p95_queue_veh": 16.78,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "34436b90ea867819",
-            "7c5686d6dbd0a10b",
-            "05aad25ef07bf3a5",
-            "a171c1ff8de5a904",
-            "cea134d4a3026722"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 18.6,
+          "p95_waiting_completed_s": 63.9,
+          "mean_network_queue_veh": 49.7,
+          "p95_network_queue_veh": 53.0,
+          "max_network_queue_veh": 54.0,
+          "throughput_veh_per_s": 0.2833,
+          "completion_coverage": 0.625
         },
         "max_pressure": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 12.31,
-          "average_queue_veh": 6.28,
-          "maximum_queue_veh": 26.18,
-          "p95_queue_veh": 16.78,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "34436b90ea867819",
-            "7c5686d6dbd0a10b",
-            "05aad25ef07bf3a5",
-            "a171c1ff8de5a904",
-            "cea134d4a3026722"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.96,
+          "p95_waiting_completed_s": 46.65,
+          "mean_network_queue_veh": 12.0,
+          "p95_network_queue_veh": 22.05,
+          "max_network_queue_veh": 23.0,
+          "throughput_veh_per_s": 0.5667,
+          "completion_coverage": 1.0
         },
         "flow_theory": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 12.21,
-          "average_queue_veh": 6.23,
-          "maximum_queue_veh": 26.53,
-          "p95_queue_veh": 17.0,
-          "throughput_veh_per_s": 26.8632,
-          "mean_network_speed_mps": 3.98,
-          "demand_hashes": [
-            "34436b90ea867819",
-            "7c5686d6dbd0a10b",
-            "05aad25ef07bf3a5",
-            "a171c1ff8de5a904",
-            "cea134d4a3026722"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 8.79,
+          "p95_waiting_completed_s": 20.4,
+          "mean_network_queue_veh": 6.92,
+          "p95_network_queue_veh": 12.05,
+          "max_network_queue_veh": 13.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
         },
         "edgeflow": {
-          "valid_runs": 5,
-          "average_waiting_time_s": 17.33,
-          "average_queue_veh": 6.7,
-          "maximum_queue_veh": 29.32,
-          "p95_queue_veh": 17.48,
-          "throughput_veh_per_s": 20.3442,
-          "mean_network_speed_mps": 3.5,
-          "demand_hashes": [
-            "34436b90ea867819",
-            "7c5686d6dbd0a10b",
-            "05aad25ef07bf3a5",
-            "a171c1ff8de5a904",
-            "cea134d4a3026722"
-          ]
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 10.5,
+          "p95_waiting_completed_s": 44.25,
+          "mean_network_queue_veh": 23.07,
+          "p95_network_queue_veh": 30.0,
+          "max_network_queue_veh": 30.0,
+          "throughput_veh_per_s": 0.4,
+          "completion_coverage": 0.4167
+        }
+      }
+    }
+  },
+  "topology_aggregates": {
+    "four_intersection_v1": {
+      "balanced": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.33,
+          "p95_waiting_completed_s": 37.4,
+          "mean_network_queue_veh": 7.6,
+          "p95_network_queue_veh": 11.0,
+          "max_network_queue_veh": 11.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 2.04,
+          "p95_waiting_completed_s": 6.0,
+          "mean_network_queue_veh": 1.77,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.5167,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 2.04,
+          "p95_waiting_completed_s": 6.0,
+          "mean_network_queue_veh": 1.77,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.5167,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 4.88,
+          "p95_waiting_completed_s": 19.4,
+          "mean_network_queue_veh": 2.67,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 6.92,
+          "p95_waiting_completed_s": 16.7,
+          "mean_network_queue_veh": 3.3,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
+        }
+      },
+      "directional_surge": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 21.04,
+          "p95_waiting_completed_s": 46.7,
+          "mean_network_queue_veh": 9.55,
+          "p95_network_queue_veh": 17.1,
+          "max_network_queue_veh": 20.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 3.98,
+          "p95_waiting_completed_s": 14.7,
+          "mean_network_queue_veh": 1.33,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 3.98,
+          "p95_waiting_completed_s": 14.7,
+          "mean_network_queue_veh": 1.33,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.36,
+          "p95_waiting_completed_s": 25.8,
+          "mean_network_queue_veh": 3.17,
+          "p95_network_queue_veh": 6.05,
+          "max_network_queue_veh": 10.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 6.83,
+          "p95_waiting_completed_s": 20.1,
+          "mean_network_queue_veh": 2.68,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
+        }
+      },
+      "downstream_congestion": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.33,
+          "p95_waiting_completed_s": 37.4,
+          "mean_network_queue_veh": 7.6,
+          "p95_network_queue_veh": 11.0,
+          "max_network_queue_veh": 11.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 4.38,
+          "p95_waiting_completed_s": 15.85,
+          "mean_network_queue_veh": 2.02,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 4.38,
+          "p95_waiting_completed_s": 15.85,
+          "mean_network_queue_veh": 2.02,
+          "p95_network_queue_veh": 3.05,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 5.08,
+          "p95_waiting_completed_s": 19.1,
+          "mean_network_queue_veh": 2.6,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.3833,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.54,
+          "p95_waiting_completed_s": 16.55,
+          "mean_network_queue_veh": 3.08,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4,
+          "completion_coverage": 1.0
+        }
+      }
+    },
+    "grid4x4": {
+      "balanced": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 142.47,
+          "p95_waiting_completed_s": 199.9,
+          "mean_network_queue_veh": 146.78,
+          "p95_network_queue_veh": 210.15,
+          "max_network_queue_veh": 216.0,
+          "throughput_veh_per_s": 0.8167,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 18.66,
+          "p95_waiting_completed_s": 34.2,
+          "mean_network_queue_veh": 24.83,
+          "p95_network_queue_veh": 32.0,
+          "max_network_queue_veh": 32.0,
+          "throughput_veh_per_s": 1.0667,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 57.56,
+          "p95_waiting_completed_s": 108.8,
+          "mean_network_queue_veh": 78.87,
+          "p95_network_queue_veh": 93.0,
+          "max_network_queue_veh": 94.0,
+          "throughput_veh_per_s": 1.1,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 29.53,
+          "p95_waiting_completed_s": 68.5,
+          "mean_network_queue_veh": 32.3,
+          "p95_network_queue_veh": 37.05,
+          "max_network_queue_veh": 40.0,
+          "throughput_veh_per_s": 1.25,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 104.71,
+          "p95_waiting_completed_s": 155.1,
+          "mean_network_queue_veh": 115.3,
+          "p95_network_queue_veh": 128.0,
+          "max_network_queue_veh": 130.0,
+          "throughput_veh_per_s": 0.7667,
+          "completion_coverage": 1.0
+        }
+      },
+      "directional_surge": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 145.67,
+          "p95_waiting_completed_s": 229.3,
+          "mean_network_queue_veh": 138.68,
+          "p95_network_queue_veh": 197.2,
+          "max_network_queue_veh": 211.0,
+          "throughput_veh_per_s": 0.8833,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 20.51,
+          "p95_waiting_completed_s": 41.0,
+          "mean_network_queue_veh": 18.68,
+          "p95_network_queue_veh": 33.15,
+          "max_network_queue_veh": 40.0,
+          "throughput_veh_per_s": 1.0167,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 63.31,
+          "p95_waiting_completed_s": 120.85,
+          "mean_network_queue_veh": 75.57,
+          "p95_network_queue_veh": 90.05,
+          "max_network_queue_veh": 92.0,
+          "throughput_veh_per_s": 0.9333,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 25.09,
+          "p95_waiting_completed_s": 49.0,
+          "mean_network_queue_veh": 36.8,
+          "p95_network_queue_veh": 45.0,
+          "max_network_queue_veh": 50.0,
+          "throughput_veh_per_s": 1.1167,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 99.84,
+          "p95_waiting_completed_s": 142.0,
+          "mean_network_queue_veh": 97.33,
+          "p95_network_queue_veh": 113.05,
+          "max_network_queue_veh": 115.0,
+          "throughput_veh_per_s": 0.8167,
+          "completion_coverage": 1.0
+        }
+      },
+      "downstream_congestion": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 142.47,
+          "p95_waiting_completed_s": 199.9,
+          "mean_network_queue_veh": 146.78,
+          "p95_network_queue_veh": 210.15,
+          "max_network_queue_veh": 216.0,
+          "throughput_veh_per_s": 0.8167,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.02,
+          "p95_waiting_completed_s": 30.6,
+          "mean_network_queue_veh": 23.78,
+          "p95_network_queue_veh": 31.05,
+          "max_network_queue_veh": 32.0,
+          "throughput_veh_per_s": 1.0667,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 57.15,
+          "p95_waiting_completed_s": 105.2,
+          "mean_network_queue_veh": 80.07,
+          "p95_network_queue_veh": 95.05,
+          "max_network_queue_veh": 97.0,
+          "throughput_veh_per_s": 1.0833,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 28.29,
+          "p95_waiting_completed_s": 68.2,
+          "mean_network_queue_veh": 32.32,
+          "p95_network_queue_veh": 37.05,
+          "max_network_queue_veh": 40.0,
+          "throughput_veh_per_s": 1.25,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 105.44,
+          "p95_waiting_completed_s": 146.5,
+          "mean_network_queue_veh": 115.15,
+          "p95_network_queue_veh": 128.0,
+          "max_network_queue_veh": 130.0,
+          "throughput_veh_per_s": 0.75,
+          "completion_coverage": 1.0
+        }
+      }
+    },
+    "cologne8": {
+      "balanced": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 114.17,
+          "p95_waiting_completed_s": 251.75,
+          "mean_network_queue_veh": 29.82,
+          "p95_network_queue_veh": 47.0,
+          "max_network_queue_veh": 48.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 6.04,
+          "p95_waiting_completed_s": 33.25,
+          "mean_network_queue_veh": 2.15,
+          "p95_network_queue_veh": 3.0,
+          "max_network_queue_veh": 4.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.88,
+          "p95_waiting_completed_s": 39.35,
+          "mean_network_queue_veh": 2.47,
+          "p95_network_queue_veh": 4.0,
+          "max_network_queue_veh": 5.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 8.71,
+          "p95_waiting_completed_s": 48.25,
+          "mean_network_queue_veh": 3.83,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.54,
+          "p95_waiting_completed_s": 19.7,
+          "mean_network_queue_veh": 6.68,
+          "p95_network_queue_veh": 12.0,
+          "max_network_queue_veh": 13.0,
+          "throughput_veh_per_s": 0.5333,
+          "completion_coverage": 1.0
+        }
+      },
+      "directional_surge": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 150.15,
+          "p95_waiting_completed_s": 333.2,
+          "mean_network_queue_veh": 33.68,
+          "p95_network_queue_veh": 55.15,
+          "max_network_queue_veh": 62.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.4,
+          "p95_waiting_completed_s": 29.7,
+          "mean_network_queue_veh": 2.83,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.5833,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 15.19,
+          "p95_waiting_completed_s": 49.5,
+          "mean_network_queue_veh": 3.63,
+          "p95_network_queue_veh": 7.05,
+          "max_network_queue_veh": 9.0,
+          "throughput_veh_per_s": 0.55,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 5.02,
+          "p95_waiting_completed_s": 23.8,
+          "mean_network_queue_veh": 1.92,
+          "p95_network_queue_veh": 5.0,
+          "max_network_queue_veh": 8.0,
+          "throughput_veh_per_s": 0.5333,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 12.81,
+          "p95_waiting_completed_s": 32.0,
+          "mean_network_queue_veh": 4.42,
+          "p95_network_queue_veh": 8.0,
+          "max_network_queue_veh": 9.0,
+          "throughput_veh_per_s": 0.5,
+          "completion_coverage": 1.0
+        }
+      },
+      "downstream_congestion": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 115.12,
+          "p95_waiting_completed_s": 237.4,
+          "mean_network_queue_veh": 20.98,
+          "p95_network_queue_veh": 43.05,
+          "max_network_queue_veh": 46.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 7.83,
+          "p95_waiting_completed_s": 41.05,
+          "mean_network_queue_veh": 2.38,
+          "p95_network_queue_veh": 4.0,
+          "max_network_queue_veh": 5.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 10.62,
+          "p95_waiting_completed_s": 43.25,
+          "mean_network_queue_veh": 2.42,
+          "p95_network_queue_veh": 4.0,
+          "max_network_queue_veh": 6.0,
+          "throughput_veh_per_s": 0.4333,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 8.62,
+          "p95_waiting_completed_s": 46.4,
+          "mean_network_queue_veh": 3.75,
+          "p95_network_queue_veh": 6.0,
+          "max_network_queue_veh": 7.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 13.21,
+          "p95_waiting_completed_s": 41.1,
+          "mean_network_queue_veh": 6.37,
+          "p95_network_queue_veh": 10.05,
+          "max_network_queue_veh": 12.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
+        }
+      }
+    },
+    "hcm_corridor": {
+      "balanced": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 132.29,
+          "p95_waiting_completed_s": 397.4,
+          "mean_network_queue_veh": 35.62,
+          "p95_network_queue_veh": 49.0,
+          "max_network_queue_veh": 52.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 18.6,
+          "p95_waiting_completed_s": 63.9,
+          "mean_network_queue_veh": 49.7,
+          "p95_network_queue_veh": 53.0,
+          "max_network_queue_veh": 54.0,
+          "throughput_veh_per_s": 0.2833,
+          "completion_coverage": 0.625
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.33,
+          "p95_waiting_completed_s": 46.35,
+          "mean_network_queue_veh": 12.15,
+          "p95_network_queue_veh": 22.05,
+          "max_network_queue_veh": 23.0,
+          "throughput_veh_per_s": 0.5667,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 10.71,
+          "p95_waiting_completed_s": 17.0,
+          "mean_network_queue_veh": 7.25,
+          "p95_network_queue_veh": 12.05,
+          "max_network_queue_veh": 13.0,
+          "throughput_veh_per_s": 0.4833,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 16.91,
+          "p95_waiting_completed_s": 68.5,
+          "mean_network_queue_veh": 23.5,
+          "p95_network_queue_veh": 30.0,
+          "max_network_queue_veh": 30.0,
+          "throughput_veh_per_s": 0.4,
+          "completion_coverage": 0.4583
+        }
+      },
+      "directional_surge": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 106.04,
+          "p95_waiting_completed_s": 375.6,
+          "mean_network_queue_veh": 30.7,
+          "p95_network_queue_veh": 44.05,
+          "max_network_queue_veh": 48.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 9.53,
+          "p95_waiting_completed_s": 23.45,
+          "mean_network_queue_veh": 42.9,
+          "p95_network_queue_veh": 49.05,
+          "max_network_queue_veh": 52.0,
+          "throughput_veh_per_s": 0.3667,
+          "completion_coverage": 0.6809
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 22.96,
+          "p95_waiting_completed_s": 45.8,
+          "mean_network_queue_veh": 10.08,
+          "p95_network_queue_veh": 19.1,
+          "max_network_queue_veh": 23.0,
+          "throughput_veh_per_s": 0.5167,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 9.55,
+          "p95_waiting_completed_s": 26.7,
+          "mean_network_queue_veh": 4.45,
+          "p95_network_queue_veh": 8.05,
+          "max_network_queue_veh": 11.0,
+          "throughput_veh_per_s": 0.5333,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 32.68,
+          "p95_waiting_completed_s": 90.4,
+          "mean_network_queue_veh": 13.37,
+          "p95_network_queue_veh": 19.1,
+          "max_network_queue_veh": 22.0,
+          "throughput_veh_per_s": 0.4667,
+          "completion_coverage": 1.0
+        }
+      },
+      "downstream_congestion": {
+        "fixed_time": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 133.5,
+          "p95_waiting_completed_s": 411.9,
+          "mean_network_queue_veh": 35.13,
+          "p95_network_queue_veh": 49.0,
+          "max_network_queue_veh": 52.0,
+          "throughput_veh_per_s": 0.4167,
+          "completion_coverage": 1.0
+        },
+        "max_queue": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 18.6,
+          "p95_waiting_completed_s": 63.9,
+          "mean_network_queue_veh": 49.7,
+          "p95_network_queue_veh": 53.0,
+          "max_network_queue_veh": 54.0,
+          "throughput_veh_per_s": 0.2833,
+          "completion_coverage": 0.625
+        },
+        "max_pressure": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 17.96,
+          "p95_waiting_completed_s": 46.65,
+          "mean_network_queue_veh": 12.0,
+          "p95_network_queue_veh": 22.05,
+          "max_network_queue_veh": 23.0,
+          "throughput_veh_per_s": 0.5667,
+          "completion_coverage": 1.0
+        },
+        "flow_theory": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 8.79,
+          "p95_waiting_completed_s": 20.4,
+          "mean_network_queue_veh": 6.92,
+          "p95_network_queue_veh": 12.05,
+          "max_network_queue_veh": 13.0,
+          "throughput_veh_per_s": 0.45,
+          "completion_coverage": 1.0
+        },
+        "edgeflow": {
+          "paired_runs": 1,
+          "paired_seeds": [
+            1310
+          ],
+          "mean_waiting_completed_s": 10.5,
+          "p95_waiting_completed_s": 44.25,
+          "mean_network_queue_veh": 23.07,
+          "p95_network_queue_veh": 30.0,
+          "max_network_queue_veh": 30.0,
+          "throughput_veh_per_s": 0.4,
+          "completion_coverage": 0.4167
         }
       }
     }
@@ -1026,272 +1704,546 @@
     "four_intersection_v1": {
       "balanced": {
         "max_queue": {
-          "waiting_time_reduction_pct": -6.08,
-          "queue_length_reduction_pct": -6.06,
-          "throughput_gain_pct": 0.0
+          "waiting_time_reduction_pct": 88.23,
+          "queue_length_reduction_pct": 76.71,
+          "throughput_gain_pct": 6.91
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": -6.08,
-          "queue_length_reduction_pct": -6.06,
-          "throughput_gain_pct": 0.0
+          "waiting_time_reduction_pct": 88.23,
+          "queue_length_reduction_pct": 76.71,
+          "throughput_gain_pct": 6.91
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": -5.44,
-          "queue_length_reduction_pct": -5.33,
-          "throughput_gain_pct": 0.0
+          "waiting_time_reduction_pct": 71.84,
+          "queue_length_reduction_pct": 64.87,
+          "throughput_gain_pct": -3.43
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": -49.52,
-          "queue_length_reduction_pct": -12.97,
-          "throughput_gain_pct": -24.38
+          "waiting_time_reduction_pct": 60.07,
+          "queue_length_reduction_pct": 56.58,
+          "throughput_gain_pct": -3.43
         }
       },
       "directional_surge": {
         "max_queue": {
-          "waiting_time_reduction_pct": 25.58,
-          "queue_length_reduction_pct": 6.95,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 81.08,
+          "queue_length_reduction_pct": 86.07,
+          "throughput_gain_pct": 7.4
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 25.58,
-          "queue_length_reduction_pct": 6.95,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 81.08,
+          "queue_length_reduction_pct": 86.07,
+          "throughput_gain_pct": 7.4
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 25.58,
-          "queue_length_reduction_pct": 6.95,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 65.02,
+          "queue_length_reduction_pct": 66.81,
+          "throughput_gain_pct": -3.71
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 25.58,
-          "queue_length_reduction_pct": 6.95,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 67.54,
+          "queue_length_reduction_pct": 71.94,
+          "throughput_gain_pct": -7.4
         }
       },
       "downstream_congestion": {
         "max_queue": {
-          "waiting_time_reduction_pct": -9.62,
-          "queue_length_reduction_pct": -9.7,
-          "throughput_gain_pct": 0.0
+          "waiting_time_reduction_pct": 74.73,
+          "queue_length_reduction_pct": 73.42,
+          "throughput_gain_pct": -3.71
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": -9.62,
-          "queue_length_reduction_pct": -9.7,
-          "throughput_gain_pct": 0.0
+          "waiting_time_reduction_pct": 74.73,
+          "queue_length_reduction_pct": 73.42,
+          "throughput_gain_pct": -3.71
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": -8.04,
-          "queue_length_reduction_pct": -8.0,
-          "throughput_gain_pct": 0.0
+          "waiting_time_reduction_pct": 70.69,
+          "queue_length_reduction_pct": 65.79,
+          "throughput_gain_pct": -14.82
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": -64.19,
-          "queue_length_reduction_pct": -23.11,
-          "throughput_gain_pct": -25.0
+          "waiting_time_reduction_pct": 56.49,
+          "queue_length_reduction_pct": 59.47,
+          "throughput_gain_pct": -11.11
         }
       }
     },
     "grid4x4": {
       "balanced": {
         "max_queue": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 86.9,
+          "queue_length_reduction_pct": 83.08,
+          "throughput_gain_pct": 30.61
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 59.6,
+          "queue_length_reduction_pct": 46.27,
+          "throughput_gain_pct": 34.69
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 79.27,
+          "queue_length_reduction_pct": 77.99,
+          "throughput_gain_pct": 53.05
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 72.41,
-          "queue_length_reduction_pct": 70.53,
-          "throughput_gain_pct": 6.25
+          "waiting_time_reduction_pct": 26.5,
+          "queue_length_reduction_pct": 21.45,
+          "throughput_gain_pct": -6.12
         }
       },
       "directional_surge": {
         "max_queue": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 85.92,
+          "queue_length_reduction_pct": 86.53,
+          "throughput_gain_pct": 15.1
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 56.54,
+          "queue_length_reduction_pct": 45.51,
+          "throughput_gain_pct": 5.66
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 82.78,
+          "queue_length_reduction_pct": 73.46,
+          "throughput_gain_pct": 26.42
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 47.37,
-          "queue_length_reduction_pct": 47.62,
-          "throughput_gain_pct": 6.25
+          "waiting_time_reduction_pct": 31.46,
+          "queue_length_reduction_pct": 29.82,
+          "throughput_gain_pct": -7.54
         }
       },
       "downstream_congestion": {
         "max_queue": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 88.05,
+          "queue_length_reduction_pct": 83.8,
+          "throughput_gain_pct": 30.61
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 59.89,
+          "queue_length_reduction_pct": 45.45,
+          "throughput_gain_pct": 32.64
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 100.0,
-          "queue_length_reduction_pct": 100.0,
-          "throughput_gain_pct": 25.0
+          "waiting_time_reduction_pct": 80.14,
+          "queue_length_reduction_pct": 77.98,
+          "throughput_gain_pct": 53.05
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 73.2,
-          "queue_length_reduction_pct": 71.96,
-          "throughput_gain_pct": 6.25
+          "waiting_time_reduction_pct": 25.99,
+          "queue_length_reduction_pct": 21.55,
+          "throughput_gain_pct": -8.17
         }
       }
     },
     "cologne8": {
       "balanced": {
         "max_queue": {
-          "waiting_time_reduction_pct": 28.41,
-          "queue_length_reduction_pct": 2.56,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 94.71,
+          "queue_length_reduction_pct": 92.79,
+          "throughput_gain_pct": -6.66
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 28.41,
-          "queue_length_reduction_pct": 2.56,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 93.1,
+          "queue_length_reduction_pct": 91.72,
+          "throughput_gain_pct": 0.0
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 28.41,
-          "queue_length_reduction_pct": 2.56,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 92.37,
+          "queue_length_reduction_pct": 87.16,
+          "throughput_gain_pct": 0.0
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 15.26,
-          "queue_length_reduction_pct": 1.96,
-          "throughput_gain_pct": 15.62
+          "waiting_time_reduction_pct": 93.4,
+          "queue_length_reduction_pct": 77.6,
+          "throughput_gain_pct": 6.66
         }
       },
       "directional_surge": {
         "max_queue": {
-          "waiting_time_reduction_pct": 27.89,
-          "queue_length_reduction_pct": 1.89,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 95.07,
+          "queue_length_reduction_pct": 91.6,
+          "throughput_gain_pct": 20.69
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 27.89,
-          "queue_length_reduction_pct": 1.89,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 89.88,
+          "queue_length_reduction_pct": 89.22,
+          "throughput_gain_pct": 13.8
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 27.89,
-          "queue_length_reduction_pct": 1.89,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 96.66,
+          "queue_length_reduction_pct": 94.3,
+          "throughput_gain_pct": 10.35
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 14.69,
-          "queue_length_reduction_pct": 1.52,
-          "throughput_gain_pct": 15.62
+          "waiting_time_reduction_pct": 91.47,
+          "queue_length_reduction_pct": 86.88,
+          "throughput_gain_pct": 3.46
         }
       },
       "downstream_congestion": {
         "max_queue": {
-          "waiting_time_reduction_pct": 28.46,
-          "queue_length_reduction_pct": 2.68,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 93.2,
+          "queue_length_reduction_pct": 88.66,
+          "throughput_gain_pct": -10.71
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 28.46,
-          "queue_length_reduction_pct": 2.68,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 90.77,
+          "queue_length_reduction_pct": 88.47,
+          "throughput_gain_pct": -7.16
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 28.46,
-          "queue_length_reduction_pct": 2.68,
-          "throughput_gain_pct": 36.02
+          "waiting_time_reduction_pct": 92.51,
+          "queue_length_reduction_pct": 82.13,
+          "throughput_gain_pct": -3.58
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": 15.34,
-          "queue_length_reduction_pct": 2.12,
-          "throughput_gain_pct": 15.62
+          "waiting_time_reduction_pct": 88.53,
+          "queue_length_reduction_pct": 69.64,
+          "throughput_gain_pct": 3.56
         }
       }
     },
     "hcm_corridor": {
       "balanced": {
         "max_queue": {
-          "waiting_time_reduction_pct": 8.15,
-          "queue_length_reduction_pct": 0.17,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 85.94,
+          "queue_length_reduction_pct": -39.53,
+          "throughput_gain_pct": -32.01
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 8.15,
-          "queue_length_reduction_pct": 0.17,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 86.9,
+          "queue_length_reduction_pct": 65.89,
+          "throughput_gain_pct": 36.0
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 8.71,
-          "queue_length_reduction_pct": 0.68,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 91.9,
+          "queue_length_reduction_pct": 79.65,
+          "throughput_gain_pct": 15.98
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": -28.46,
-          "queue_length_reduction_pct": -5.62,
-          "throughput_gain_pct": -17.8
+          "waiting_time_reduction_pct": 87.22,
+          "queue_length_reduction_pct": 34.03,
+          "throughput_gain_pct": -4.01
         }
       },
       "directional_surge": {
         "max_queue": {
-          "waiting_time_reduction_pct": 16.09,
-          "queue_length_reduction_pct": 8.66,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 91.01,
+          "queue_length_reduction_pct": -39.74,
+          "throughput_gain_pct": -21.43
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 16.09,
-          "queue_length_reduction_pct": 8.66,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 78.35,
+          "queue_length_reduction_pct": 67.17,
+          "throughput_gain_pct": 10.71
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 13.65,
-          "queue_length_reduction_pct": 6.06,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 90.99,
+          "queue_length_reduction_pct": 85.5,
+          "throughput_gain_pct": 14.27
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": -7.13,
-          "queue_length_reduction_pct": 12.99,
-          "throughput_gain_pct": -18.41
+          "waiting_time_reduction_pct": 69.18,
+          "queue_length_reduction_pct": 56.45,
+          "throughput_gain_pct": 0.0
         }
       },
       "downstream_congestion": {
         "max_queue": {
-          "waiting_time_reduction_pct": 7.86,
-          "queue_length_reduction_pct": -0.16,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 86.07,
+          "queue_length_reduction_pct": -41.47,
+          "throughput_gain_pct": -32.01
         },
         "max_pressure": {
-          "waiting_time_reduction_pct": 7.86,
-          "queue_length_reduction_pct": -0.16,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 86.55,
+          "queue_length_reduction_pct": 65.84,
+          "throughput_gain_pct": 36.0
         },
         "flow_theory": {
-          "waiting_time_reduction_pct": 8.61,
-          "queue_length_reduction_pct": 0.64,
-          "throughput_gain_pct": 8.79
+          "waiting_time_reduction_pct": 93.42,
+          "queue_length_reduction_pct": 80.3,
+          "throughput_gain_pct": 7.99
         },
         "edgeflow": {
-          "waiting_time_reduction_pct": -29.72,
-          "queue_length_reduction_pct": -6.86,
-          "throughput_gain_pct": -17.61
+          "waiting_time_reduction_pct": 92.13,
+          "queue_length_reduction_pct": 34.33,
+          "throughput_gain_pct": -4.01
+        }
+      }
+    }
+  },
+  "improvements_vs_fixed_time": {
+    "four_intersection_v1": {
+      "balanced": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 88.23,
+          "queue_length_reduction_pct": 76.71,
+          "throughput_gain_pct": 6.91
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 88.23,
+          "queue_length_reduction_pct": 76.71,
+          "throughput_gain_pct": 6.91
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 71.84,
+          "queue_length_reduction_pct": 64.87,
+          "throughput_gain_pct": -3.43
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 60.07,
+          "queue_length_reduction_pct": 56.58,
+          "throughput_gain_pct": -3.43
+        }
+      },
+      "directional_surge": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 81.08,
+          "queue_length_reduction_pct": 86.07,
+          "throughput_gain_pct": 7.4
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 81.08,
+          "queue_length_reduction_pct": 86.07,
+          "throughput_gain_pct": 7.4
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 65.02,
+          "queue_length_reduction_pct": 66.81,
+          "throughput_gain_pct": -3.71
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 67.54,
+          "queue_length_reduction_pct": 71.94,
+          "throughput_gain_pct": -7.4
+        }
+      },
+      "downstream_congestion": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 74.73,
+          "queue_length_reduction_pct": 73.42,
+          "throughput_gain_pct": -3.71
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 74.73,
+          "queue_length_reduction_pct": 73.42,
+          "throughput_gain_pct": -3.71
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 70.69,
+          "queue_length_reduction_pct": 65.79,
+          "throughput_gain_pct": -14.82
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 56.49,
+          "queue_length_reduction_pct": 59.47,
+          "throughput_gain_pct": -11.11
+        }
+      }
+    },
+    "grid4x4": {
+      "balanced": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 86.9,
+          "queue_length_reduction_pct": 83.08,
+          "throughput_gain_pct": 30.61
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 59.6,
+          "queue_length_reduction_pct": 46.27,
+          "throughput_gain_pct": 34.69
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 79.27,
+          "queue_length_reduction_pct": 77.99,
+          "throughput_gain_pct": 53.05
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 26.5,
+          "queue_length_reduction_pct": 21.45,
+          "throughput_gain_pct": -6.12
+        }
+      },
+      "directional_surge": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 85.92,
+          "queue_length_reduction_pct": 86.53,
+          "throughput_gain_pct": 15.1
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 56.54,
+          "queue_length_reduction_pct": 45.51,
+          "throughput_gain_pct": 5.66
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 82.78,
+          "queue_length_reduction_pct": 73.46,
+          "throughput_gain_pct": 26.42
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 31.46,
+          "queue_length_reduction_pct": 29.82,
+          "throughput_gain_pct": -7.54
+        }
+      },
+      "downstream_congestion": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 88.05,
+          "queue_length_reduction_pct": 83.8,
+          "throughput_gain_pct": 30.61
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 59.89,
+          "queue_length_reduction_pct": 45.45,
+          "throughput_gain_pct": 32.64
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 80.14,
+          "queue_length_reduction_pct": 77.98,
+          "throughput_gain_pct": 53.05
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 25.99,
+          "queue_length_reduction_pct": 21.55,
+          "throughput_gain_pct": -8.17
+        }
+      }
+    },
+    "cologne8": {
+      "balanced": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 94.71,
+          "queue_length_reduction_pct": 92.79,
+          "throughput_gain_pct": -6.66
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 93.1,
+          "queue_length_reduction_pct": 91.72,
+          "throughput_gain_pct": 0.0
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 92.37,
+          "queue_length_reduction_pct": 87.16,
+          "throughput_gain_pct": 0.0
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 93.4,
+          "queue_length_reduction_pct": 77.6,
+          "throughput_gain_pct": 6.66
+        }
+      },
+      "directional_surge": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 95.07,
+          "queue_length_reduction_pct": 91.6,
+          "throughput_gain_pct": 20.69
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 89.88,
+          "queue_length_reduction_pct": 89.22,
+          "throughput_gain_pct": 13.8
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 96.66,
+          "queue_length_reduction_pct": 94.3,
+          "throughput_gain_pct": 10.35
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 91.47,
+          "queue_length_reduction_pct": 86.88,
+          "throughput_gain_pct": 3.46
+        }
+      },
+      "downstream_congestion": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 93.2,
+          "queue_length_reduction_pct": 88.66,
+          "throughput_gain_pct": -10.71
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 90.77,
+          "queue_length_reduction_pct": 88.47,
+          "throughput_gain_pct": -7.16
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 92.51,
+          "queue_length_reduction_pct": 82.13,
+          "throughput_gain_pct": -3.58
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 88.53,
+          "queue_length_reduction_pct": 69.64,
+          "throughput_gain_pct": 3.56
+        }
+      }
+    },
+    "hcm_corridor": {
+      "balanced": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 85.94,
+          "queue_length_reduction_pct": -39.53,
+          "throughput_gain_pct": -32.01
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 86.9,
+          "queue_length_reduction_pct": 65.89,
+          "throughput_gain_pct": 36.0
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 91.9,
+          "queue_length_reduction_pct": 79.65,
+          "throughput_gain_pct": 15.98
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 87.22,
+          "queue_length_reduction_pct": 34.03,
+          "throughput_gain_pct": -4.01
+        }
+      },
+      "directional_surge": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 91.01,
+          "queue_length_reduction_pct": -39.74,
+          "throughput_gain_pct": -21.43
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 78.35,
+          "queue_length_reduction_pct": 67.17,
+          "throughput_gain_pct": 10.71
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 90.99,
+          "queue_length_reduction_pct": 85.5,
+          "throughput_gain_pct": 14.27
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 69.18,
+          "queue_length_reduction_pct": 56.45,
+          "throughput_gain_pct": 0.0
+        }
+      },
+      "downstream_congestion": {
+        "max_queue": {
+          "waiting_time_reduction_pct": 86.07,
+          "queue_length_reduction_pct": -41.47,
+          "throughput_gain_pct": -32.01
+        },
+        "max_pressure": {
+          "waiting_time_reduction_pct": 86.55,
+          "queue_length_reduction_pct": 65.84,
+          "throughput_gain_pct": 36.0
+        },
+        "flow_theory": {
+          "waiting_time_reduction_pct": 93.42,
+          "queue_length_reduction_pct": 80.3,
+          "throughput_gain_pct": 7.99
+        },
+        "edgeflow": {
+          "waiting_time_reduction_pct": 92.13,
+          "queue_length_reduction_pct": 34.33,
+          "throughput_gain_pct": -4.01
         }
       }
     }

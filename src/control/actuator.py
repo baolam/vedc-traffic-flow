@@ -8,6 +8,7 @@ yellow and all-red. The actuator is the sole owner of physical timing.
 All time parameters use simulation seconds, not wall-clock.
 """
 
+import time
 import logging
 from typing import Dict, Any, Optional, List
 
@@ -164,13 +165,17 @@ class ActuatorStateMachine:
         """
         applied_events: List[Dict[str, Any]] = []
         for node_id, node in self.nodes.items():
+            cmd_id = node.pending_command_id
             result = node.update_clock(now)
             if result == "APPLIED":
                 applied_events.append({
+                    "command_id": cmd_id or f"cmd-auto-{int(now * 1000)}",
                     "node_id": node_id,
+                    "target_phase_id": node.current_phase_id,
                     "phase_id": node.current_phase_id,
                     "time_s": round(now, 3),
                 })
+                node.pending_command_id = None
         return {"now": now, "applied_events": applied_events}
 
     # ------------------------------------------------------------------
@@ -278,11 +283,12 @@ class ActuatorStateMachine:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _ack(command: Dict[str, Any], status: str, reason: str) -> Dict[str, Any]:
+    def _ack(command: Dict[str, Any], status: str, reason: str, timestamp_ms: Optional[int] = None) -> Dict[str, Any]:
         return {
             "command_id": command.get("command_id", "unknown"),
             "node_id": command.get("node_id", "unknown"),
             "target_phase_id": command.get("target_phase_id", "unknown"),
             "status": status,
+            "timestamp_ms": timestamp_ms if timestamp_ms is not None else int(time.time() * 1000),
             "reason": reason,
         }

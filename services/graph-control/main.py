@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any
 
 from config import settings
-from graph_contracts_helper import load_topology, validate_payload
+from graph_contracts_helper import load_topology, validate_payload, topics
 from controller import (
     MaxPressureController, FixedTimeController, ActuatedController,
     MaxQueueController, EdgeFlowController, PressLightRLController,
@@ -36,7 +36,7 @@ def main():
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             logger.info("Connected to MQTT Broker successfully.")
-            client.subscribe("edgeflow/v1/telemetry/+")
+            client.subscribe(topics.TELEMETRY_SUB_PATTERN)
         else:
             logger.warning(f"MQTT Connect failed with code {rc}")
 
@@ -59,7 +59,7 @@ def main():
 
             validate_payload(cmd, "control_command")
 
-            pub_topic = f"edgeflow/v1/control/{node_id}/command"
+            pub_topic = topics.get_command_topic(node_id)
             client.publish(pub_topic, json.dumps(cmd))
             logger.info(f"Published ControlCommand to {pub_topic}: {cmd['target_phase_id']}")
         except Exception as e:
