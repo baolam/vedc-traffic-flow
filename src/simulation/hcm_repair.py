@@ -45,8 +45,15 @@ def reference_file(name, manifest=None):
     if not path.is_relative_to(V2_REFERENCE.resolve()):
         raise ValueError(f"V2 reference escapes the tracked bundle: {name}")
     relative = path.relative_to(V2_REFERENCE.resolve()).as_posix()
-    if not path.is_file() or manifest["files"].get(relative) != sha(path):
+    if not path.is_file():
         raise ValueError(f"V2 reference is missing or changed: {relative}")
+    expected = manifest["files"].get(relative)
+    if expected != sha(path):
+        content = path.read_bytes()
+        canonical_lf = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        canonical_crlf_sha = hashlib.sha256(canonical_lf.replace(b"\n", b"\r\n")).hexdigest()
+        if expected != canonical_crlf_sha:
+            raise ValueError(f"V2 reference is missing or changed: {relative}")
     return path
 
 
@@ -57,8 +64,11 @@ def save(path, data):
 
 
 def sha(path):
+    digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def xml_value(element):

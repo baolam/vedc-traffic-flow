@@ -1,5 +1,6 @@
 """Repair invariants and complete vehicle footprints, independent of SUMO runs."""
 import copy
+import hashlib
 import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -32,6 +33,20 @@ def test_reference_specs_work_without_temporary_workspaces():
             if key in spec:
                 assert Path(spec[key]).is_relative_to(reference)
                 assert Path(spec[key]).is_file()
+
+
+def test_reference_file_accepts_lf_checkout_of_crlf_archived_evidence(tmp_path, monkeypatch):
+    monkeypatch.setattr(hcm_repair, "V2_REFERENCE", tmp_path)
+    path = tmp_path / "qualification_cases.json"
+    path.write_bytes(b'{"cases": []}\n')
+    crlf_sha256 = hashlib.sha256(b'{"cases": []}\r\n').hexdigest()
+    manifest = {"files": {path.name: crlf_sha256}}
+
+    assert hcm_repair.reference_file(path.name, manifest) == path
+
+    path.write_bytes(b'{"cases": [null]}\n')
+    with pytest.raises(ValueError, match="missing or changed"):
+        hcm_repair.reference_file(path.name, manifest)
 
 
 @pytest.mark.parametrize("invalid", [False, "missing", "outside"])

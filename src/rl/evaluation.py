@@ -31,7 +31,7 @@ IMPLEMENTATION_FILES = (
     "src/rl/mappo_campaign.py",
     "src/simulation/build_network.py", "src/simulation/runtime.py",
 )
-_WINDOWS_PROCESS_START_LOCK = threading.Lock()
+_PROCESS_START_LOCK = threading.Lock()
 
 
 class _SocketConnection:
@@ -207,7 +207,7 @@ def _launch_isolated_case(config, controller, scenario, seed, output, worker=Non
     if os.name == "nt":
         # This Windows environment denies a second concurrent named Pipe.
         # A loopback socket avoids both named pipes and socket-handle sharing.
-        with _WINDOWS_PROCESS_START_LOCK:
+        with _PROCESS_START_LOCK:
             start_event = context.Event()
             listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             listener.bind(("127.0.0.1", 0))
@@ -236,16 +236,17 @@ def _launch_isolated_case(config, controller, scenario, seed, output, worker=Non
             finally:
                 listener.close()
     else:
-        start_event = context.Event()
-        receive_pipe, send_pipe = context.Pipe(duplex=False)
-        process = context.Process(target=worker or _case_process,
-                                  args=(start_event, send_pipe, config, controller,
-                                        scenario, seed, str(output)))
-        process.start()
-        send_pipe.close()
-        start_event.set()
+        with _PROCESS_START_LOCK:
+            start_event = context.Event()
+            receive_pipe, send_pipe = context.Pipe(duplex=False)
+            process = context.Process(target=worker or _case_process,
+                                      args=(start_event, send_pipe, config, controller,
+                                            scenario, seed, str(output)))
+            process.start()
+            send_pipe.close()
+            start_event.set()
     return {"process": process, "receive_pipe": receive_pipe, "job": job,
-            "started_at": time.monotonic()}
+            "started_at": time.monotonic(), "start_event": start_event}
 
 
 def _run_isolated_case(config, controller, scenario, seed, output, timeout_s, worker=None):
