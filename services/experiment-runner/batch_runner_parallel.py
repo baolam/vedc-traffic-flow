@@ -98,6 +98,11 @@ def _run_single_experiment_worker(task: Dict[str, Any]) -> Dict[str, Any]:
     valid = False
 
     try:
+        # Subtle startup jitter in sumo_live mode to prevent concurrent TraCI socket collisions
+        if mode == "sumo_live":
+            import random
+            time.sleep(random.uniform(0.05, 0.35))
+
         runner = SingleExperimentRunner(
             manifest=manifest,
             artifacts_root=artifacts_root,
@@ -189,7 +194,12 @@ class ParallelBatchRunner(BatchRunner):
             self.workers = int(workers)
         else:
             cpu_cnt = os.cpu_count() or 4
-            self.workers = max(1, min(cpu_cnt, 16))
+            if self.mode == "sumo_live":
+                # SUMO processes are heavy binaries requiring socket connections and memory.
+                # Default to half of available cores (bounded 1..4) to prevent socket/RAM exhaustion.
+                self.workers = max(1, min(cpu_cnt // 2 or 1, 4))
+            else:
+                self.workers = max(1, min(cpu_cnt, 16))
 
     def _write_campaign_manifest(self):
         super()._write_campaign_manifest()
@@ -377,6 +387,24 @@ class ParallelBatchRunner(BatchRunner):
                         exp_id = task["exp_id"]
                         try:
                             res = future.result()
+                        except concurrent.futures.process.BrokenProcessPool as bpe:
+                            logger.error(
+                                f"\n{'='*75}\n"
+                                f"CRITICAL: A worker process was terminated abruptly by the OS (BrokenProcessPool).\n"
+                                f"Task: {exp_id}\n"
+                                f"Primary causes:\n"
+                                f"  1. OS Resource Limits: Spawning too many concurrent live SUMO processes\n"
+                                f"     exhausts system RAM or socket resources.\n"
+                                f"  2. External Process Termination / Keyboard Interrupt.\n"
+                                f"\n"
+                                f"RECOMMENDED FIX: Re-run with lower worker concurrency:\n"
+                                f"  --workers 2  (or --workers 4)\n"
+                                f"{'='*75}\n"
+                            )
+                            for f in futures:
+                                f.cancel()
+                            executor.shutdown(wait=False, cancel_futures=True)
+                            return
                         except Exception as e:
                             logger.error(f"Task {exp_id} worker crashed unexpectedly: {e}", exc_info=True)
                             res = {
