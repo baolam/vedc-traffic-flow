@@ -1,0 +1,142 @@
+{
+  "topology_id": "tabletop_j1_j2_v1",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "J1",
+      "name": "Intersection 1",
+      "approaches": [
+        "J1_N_IN",
+        "J1_S_IN",
+        "J1_E_IN",
+        "J1_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J1_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": [
+            "J1_N_IN",
+            "J1_S_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J1_N_IN",
+              "to_edge": "EXIT_SOUTH",
+              "to_node": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 100
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_edge": "EXIT_NORTH",
+              "to_node": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 100
+            }
+          ]
+        },
+        {
+          "phase_id": "J1_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": [
+            "J1_E_IN",
+            "J1_W_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J1_E_IN",
+              "to_edge": "EXIT_WEST",
+              "to_node": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 100
+            },
+            {
+              "from_approach": "J1_W_IN",
+              "to_edge": "E_J1_J2_EB",
+              "to_node": "J2",
+              "turn_ratio": 0.8,
+              "capacity_vehicles": 20,
+              "to_approach": "J2_W_IN"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_id": "J2",
+      "name": "Intersection 2",
+      "approaches": [
+        "J2_N_IN",
+        "J2_S_IN",
+        "J2_E_IN",
+        "J2_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J2_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": [
+            "J2_N_IN",
+            "J2_S_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J2_N_IN",
+              "to_edge": "EXIT_SOUTH",
+              "to_node": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 100
+            },
+            {
+              "from_approach": "J2_S_IN",
+              "to_edge": "EXIT_NORTH",
+              "to_node": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 100
+            }
+          ]
+        },
+        {
+          "phase_id": "J2_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": [
+            "J2_E_IN",
+            "J2_W_IN"
+          ],
+          "movements": [
+            {
+              "from_approach": "J2_E_IN",
+              "to_edge": "E_J2_J1_WB",
+              "to_node": "J1",
+              "turn_ratio": 0.8,
+              "capacity_vehicles": 20,
+              "to_approach": "J1_E_IN"
+            },
+            {
+              "from_approach": "J2_W_IN",
+              "to_edge": "EXIT_EAST",
+              "to_node": null,
+              "turn_ratio": 1.0,
+              "capacity_vehicles": 100
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "E_J1_J2_EB",
+      "source": "J1",
+      "target": "J2",
+      "capacity_vehicles": 20
+    },
+    {
+      "edge_id": "E_J2_J1_WB",
+      "source": "J2",
+      "target": "J1",
+      "capacity_vehicles": 20
+    }
+  ]
+}

@@ -126,6 +126,7 @@ data/raw/*.csv
 # ------------------------------------------
 .pytest_cache/
 tmp_pytest/
+.pytest_temp/
 .coverage
 .coverage.*
 htmlcov/
