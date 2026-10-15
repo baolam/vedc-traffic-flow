@@ -4,6 +4,7 @@ Controls video ingestion, YOLO model weights, target node ID, and Raspberry Pi h
 """
 
 import os
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
@@ -40,7 +41,15 @@ class Settings(BaseSettings):
     camera_flicker_period_us: int = Field(default_factory=lambda: int(os.getenv("CAMERA_FLICKER_PERIOD_US", "10000")))
 
     # AI Detection Model Configs (YOLOv8 / YOLOv5 / ONNX / OpenCV DNN)
-    detection_model_path: str = Field(default_factory=lambda: os.getenv("DETECTION_MODEL_PATH", ""))
+    detection_model_path: str = Field(
+        default_factory=lambda: os.getenv(
+            "DETECTION_MODEL_PATH",
+            str(Path(__file__).resolve().parent / "models" / "yolov8n.onnx")
+            if (Path(__file__).resolve().parent / "models" / "yolov8n.onnx").is_file()
+            else (str(Path(__file__).resolve().parents[2] / "models" / "yolov8n.onnx")
+                  if (Path(__file__).resolve().parents[2] / "models" / "yolov8n.onnx").is_file() else "")
+        )
+    )
     confidence_threshold: float = Field(default_factory=lambda: float(os.getenv("CONFIDENCE_THRESHOLD", "0.4")))
     detector_input_size: int = Field(default_factory=lambda: int(os.getenv("DETECTOR_INPUT_SIZE", "640")))
     detector_output_format: str = Field(default_factory=lambda: os.getenv("DETECTOR_OUTPUT_FORMAT", "yolov8"))

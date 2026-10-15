@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Health",
+  "type": "object",
+  "properties": {
+    "service": { "type": "string" },
+    "status": { "type": "string" },
+    "node_id": { "type": "string" },
+    "device": { "type": "string" },
+    "cpu_temp_c": { "type": "number" },
+    "current_phase": { "type": "string" },
+    "current_phase_id": { "type": "string" },
+    "clearance": { "type": "string" },
+    "safe_stop": { "type": "boolean" },
+    "backend": { "type": "string" },
+    "fps": { "type": "number" },
+    "roi_sha256": { "type": ["string", "null"] },
+    "model_sha256": { "type": ["string", "null"] },
+    "active_nodes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "timestamp_ms": { "type": "integer" }
+  },
+  "required": ["service", "status"]
+}

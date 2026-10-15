@@ -120,13 +120,28 @@ data/raw/*.csv
 *.pt
 *.weights
 *.h5
+*.ckpt
+*.safetensors
+
+# ------------------------------------------
+# AI & Reinforcement Learning Models & Reports
+# ------------------------------------------
+models/*
+!models/.gitkeep
+reports/*
+!reports/.gitkeep
+checkpoints/
+runs/
+wandb/
 
 # ------------------------------------------
 # Testing & Code Quality
 # ------------------------------------------
 .pytest_cache/
 tmp_pytest/
+.pytest_temp/
 .coverage
+
 .coverage.*
 htmlcov/
 .nox/
@@ -158,6 +173,6 @@ tmp/
 .pio/
 src/hardware/secrets.ini
 
-# Test scenario temporary outputs (un-ignored for traffic scenarios)
-# services/simulator/sumo_configs/test_*
+# Test scenario temporary outputs
+services/simulator/sumo_configs/test_*
 

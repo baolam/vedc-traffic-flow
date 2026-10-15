@@ -56,6 +56,7 @@ const Header = () => {
           }
         })
         .catch(() => {
+          setSystemStatus('DISCONNECTED');
           const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
           setActiveScenario(current);
         });
@@ -150,8 +151,8 @@ const Header = () => {
 
         {/* System Health */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem' }}>
-          <ShieldCheck size={15} color="#16a34a" />
-          <span className="badge badge-green" style={{ fontSize: '0.7rem', padding: '3px 8px' }}>
+          <ShieldCheck size={15} color={systemStatus === 'ONLINE' ? '#16a34a' : '#dc2626'} />
+          <span className={`badge ${systemStatus === 'ONLINE' ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.7rem', padding: '3px 8px', backgroundColor: systemStatus === 'ONLINE' ? undefined : '#fee2e2', color: systemStatus === 'ONLINE' ? undefined : '#b91c1c' }}>
             {systemStatus}
           </span>
         </div>

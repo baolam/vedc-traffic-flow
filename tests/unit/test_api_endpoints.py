@@ -101,3 +101,78 @@ def test_get_experiments():
     data = response.json()
     assert "total_runs" in data
     assert "runs" in data
+
+
+def test_vision_demo_status_and_report():
+    response = client.get("/api/v1/vision/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert "has_video" in data
+    assert "has_report" in data
+    assert "detector_backend" in data
+
+    if data["has_report"]:
+        res_rep = client.get("/api/v1/vision/demo-report")
+        assert res_rep.status_code == 200
+        rep = res_rep.json()
+        assert rep["status"] == "SUCCESS"
+        assert "metrics" in rep
+
+    if data["has_video"]:
+        res_vid = client.get("/api/v1/vision/demo-video")
+        assert res_vid.status_code == 200
+        assert "video/mp4" in res_vid.headers["content-type"]
+
+
+def test_network_state_device_health_and_staleness():
+    import time
+    now_ms = int(time.time() * 1000)
+    # 1. Fresh active telemetry
+    client.post("/api/v1/telemetry", json={
+        "node_id": "J1",
+        "timestamp_ms": now_ms,
+        "current_phase_id": "J1_PHASE_NS",
+        "approaches": [
+            {"approach_id": "J1_N_IN", "queue_vehicles": 3.0, "confidence": 0.95}
+        ]
+    })
+    res = client.get("/api/v1/network/state/J1")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["telemetry"]["status"] == "ONLINE"
+    assert data["device_health"]["camera"]["status"] == "ACTIVE"
+    assert data["device_health"]["camera"]["confidence"] == 0.95
+
+    # 2. Zero-confidence telemetry (simulating camera frame failure / disconnect)
+    client.post("/api/v1/telemetry", json={
+        "node_id": "J1",
+        "timestamp_ms": now_ms,
+        "approaches": [
+            {"approach_id": "J1_N_IN", "queue_vehicles": 0.0, "confidence": 0.0}
+        ]
+    })
+    res2 = client.get("/api/v1/network/state/J1")
+    data2 = res2.json()
+    assert data2["telemetry"]["status"] == "CAMERA_FAULT"
+    assert data2["device_health"]["camera"]["status"] == "ZERO_CONFIDENCE"
+
+    # 3. Ingest stale telemetry (>3.5s ago)
+    LIVE_STATE["nodes"]["J1"]["_ingested_at_ms"] = now_ms - 5000
+    LIVE_STATE["nodes"]["J1"]["timestamp_ms"] = now_ms - 5000
+    res3 = client.get("/api/v1/network/state/J1")
+    data3 = res3.json()
+    assert data3["telemetry"]["status"] == "SIGNAL_LOST"
+    assert data3["device_health"]["camera"]["status"] == "SIGNAL_LOST"
+
+    # 4. Ingest heartbeat
+    res_hb = client.post("/api/v1/health/heartbeat", json={
+        "service_name": "J1",
+        "status": "HEALTHY",
+        "clearance": "GREEN"
+    })
+    assert res_hb.status_code == 200
+    res4 = client.get("/api/v1/network/state/J1")
+    data4 = res4.json()
+    assert data4["device_health"]["actuator"]["status"] == "ACTIVE"
+
+

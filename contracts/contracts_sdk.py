@@ -103,7 +103,10 @@ TOPOLOGY_ALIASES = {
     "hcm": "hcm_corridor",
     "hcm_demo": "hcm_corridor",
     "hcm-corridor": "hcm_corridor",
+    "tabletop": "tabletop_j1_j2_v1",
+    "tabletop_v1": "tabletop_j1_j2_v1",
 }
+
 
 
 def resolve_topology_id(topology_id: str) -> str:

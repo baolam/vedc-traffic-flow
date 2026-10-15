@@ -21,7 +21,11 @@ const IntersectionDetail = () => {
   const [telemetryHistory, setTelemetryHistory] = useState([]);
   const [controlAcks, setControlAcks] = useState([]);
   const [lastPingMs, setLastPingMs] = useState(12);
-  const [visionMode, setVisionMode] = useState('roi'); // 'roi', 'bbox', 'heatmap'
+  const [visionMode, setVisionMode] = useState('video'); // 'video', 'roi', 'bbox', 'heatmap'
+  const [visionReport, setVisionReport] = useState(null);
+  const [isRunningVision, setIsRunningVision] = useState(false);
+  const [deviceHealth, setDeviceHealth] = useState(null);
+  const [isServerDisconnected, setIsServerDisconnected] = useState(false);
 
   // Manual Override Local State
   const [overrideTargetPhase, setOverrideTargetPhase] = useState('');
@@ -82,8 +86,12 @@ const IntersectionDetail = () => {
       .then(data => {
         const latency = Math.round(performance.now() - startTime);
         setLastPingMs(Math.max(5, Math.min(120, latency)));
+        setIsServerDisconnected(false);
 
         if (data) {
+          if (data.device_health) {
+            setDeviceHealth(data.device_health);
+          }
           if (data.telemetry) {
             setNodeTelemetry(data.telemetry);
             if (data.telemetry.current_phase_id && !clearanceStep) {
@@ -109,7 +117,9 @@ const IntersectionDetail = () => {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setIsServerDisconnected(true);
+      });
   }, [nodeId, clearanceStep, apiBase]);
 
   useEffect(() => {
@@ -117,6 +127,38 @@ const IntersectionDetail = () => {
     const interval = setInterval(fetchNodeState, 1500);
     return () => clearInterval(interval);
   }, [fetchNodeState]);
+
+  // Fetch Vision Demo Status & Report
+  useEffect(() => {
+    fetch(`${apiBase}/api/v1/vision/status`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.report) {
+          setVisionReport(data.report);
+        }
+      })
+      .catch(() => {});
+  }, [apiBase]);
+
+  const handleRunVisionDemo = async () => {
+    setIsRunningVision(true);
+    try {
+      const res = await fetch(`${apiBase}/api/v1/vision/run-demo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video: 'synthetic', frames: 30, controller: 'max_pressure', node_id: nodeId || 'J1' })
+      });
+      const data = await res.json();
+      if (data && data.report) {
+        setVisionReport(data.report);
+      }
+    } catch (e) {
+      console.error("Run vision demo failed:", e);
+    } finally {
+      setIsRunningVision(false);
+    }
+  };
+
 
   // 3. Update Actuator State Machine Parameters via API
   const handleUpdateActuatorConfig = (updates) => {
@@ -308,6 +350,31 @@ const IntersectionDetail = () => {
         </div>
       </div>
 
+      {/* Realtime API Server Disconnected Alert */}
+      {isServerDisconnected && (
+        <div style={{
+          backgroundColor: '#fef2f2',
+          border: '2px solid #ef4444',
+          borderRadius: '12px',
+          padding: '14px 20px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          color: '#991b1b',
+          fontWeight: 700,
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
+        }}>
+          <AlertTriangle size={26} color="#dc2626" />
+          <div>
+            <div style={{ fontSize: '0.98rem' }}>MẤT KẾT NỐI REALTIME VỚI API SERVER (PORT 8000)</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 500, color: '#b91c1c', marginTop: '2px' }}>
+              Trình duyệt đang tự động thử kết nối lại mỗi 1.5s. Dữ liệu trên màn hình đang tạm dừng đồng bộ.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Emergency Override Status Alert Banner */}
       {overrideStatus && (
         <div style={{
@@ -334,6 +401,59 @@ const IntersectionDetail = () => {
           </div>
           <div style={{ fontSize: '1.5rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 900, backgroundColor: 'rgba(255,255,255,0.8)', padding: '6px 16px', borderRadius: '8px' }}>
             {clearanceCountdown}s
+          </div>
+        </div>
+      )}
+
+      {/* Hardware Signal & Fail-Safe Monitor Banner */}
+      {(nodeTelemetry?.status === 'SIGNAL_LOST' || 
+        nodeTelemetry?.status === 'CAMERA_FAULT' || 
+        nodeTelemetry?.status === 'ACTUATOR_FAULT' ||
+        deviceHealth?.camera?.status === 'SIGNAL_LOST' || 
+        deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || 
+        deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' || 
+        deviceHealth?.actuator?.status === 'SAFE_STOP') && (
+        <div style={{
+          backgroundColor: '#fef2f2',
+          border: '2px solid #ef4444',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          color: '#991b1b',
+          boxShadow: '0 4px 14px rgba(239, 68, 68, 0.12)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <AlertTriangle size={28} color="#dc2626" />
+            <div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>
+                CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG ({nodeId})
+              </div>
+              <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: '#7f1d1d' }}>
+                {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
+                  ? 'Mạch ESP32 ngắt nhịp tim (>6s). Control Gateway đã tự động khóa lệnh chuyển pha để tránh xung đột.'
+                  : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
+                  ? 'Camera mất kết nối hoặc độ tin cậy 0.0 (Rút cáp/hỏng cảm biến). Hệ thống hủy quyết định chuyển pha và kích hoạt chế độ an toàn.'
+                  : (deviceHealth?.camera?.status === 'SIGNAL_LOST' || nodeTelemetry?.status === 'SIGNAL_LOST')
+                  ? 'Gói tin telemetry quá hạn (>3.5s mất mạng). Hệ thống đình chỉ phát lệnh điều khiển theo dữ liệu cũ.'
+                  : 'Phần cứng Actuator đang trong chế độ Safe-Stop hoặc chờ xác thực an toàn.'}
+              </div>
+            </div>
+          </div>
+          <div style={{
+            fontSize: '0.82rem',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontWeight: 800,
+            backgroundColor: '#ffffff',
+            color: '#dc2626',
+            border: '1.5px solid #f87171',
+            padding: '6px 14px',
+            borderRadius: '8px',
+            textTransform: 'uppercase'
+          }}>
+            FAIL-SAFE INTERLOCK
           </div>
         </div>
       )}
@@ -371,16 +491,25 @@ const IntersectionDetail = () => {
         </div>
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ backgroundColor: 'rgba(202, 138, 4, 0.12)', padding: '14px', borderRadius: '12px' }}>
-            <Wifi size={26} color="#ca8a04" />
+          <div style={{ backgroundColor: deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(202, 138, 4, 0.12)', padding: '14px', borderRadius: '12px' }}>
+            <Wifi size={26} color={deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626' : '#ca8a04'} />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Độ Trễ Phần Cứng (Ping)</span>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-              {lastPingMs} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>ms</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Trạng Thái Phần Cứng</span>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
+              {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? 'LOST (>6s)' : `${lastPingMs} ms`}
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 600, marginTop: '2px' }}>
-              ● ESP32 Hardware Active
+            <div style={{
+              fontSize: '0.78rem',
+              color: deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626' : deviceHealth?.actuator?.status === 'SAFE_STOP' ? '#d97706' : '#16a34a',
+              fontWeight: 600,
+              marginTop: '2px'
+            }}>
+              {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
+                ? '● Mất Nhịp Tim ESP32 (>6s)'
+                : deviceHealth?.actuator?.status === 'SAFE_STOP'
+                ? '● Actuator Safe-Stop'
+                : '● ESP32 Hardware Active'}
             </div>
           </div>
         </div>
@@ -421,7 +550,8 @@ const IntersectionDetail = () => {
             const queueVal = Math.round((app.queue_vehicles || 0) * 10) / 10;
             const speedKmh = ((app.mean_speed_mps || 0) * 3.6).toFixed(1);
             const occPct = Math.round((app.occupancy_ratio || 0) * 100);
-            const confPct = Math.round((app.confidence || 0.95) * 100);
+            const confPct = Math.round((app.confidence !== undefined ? app.confidence : 0.95) * 100);
+            const isZeroConf = (app.confidence !== undefined && app.confidence <= 0);
             const isGreenActive = (activePhase.includes('NS') && (app.approach_id.includes('_N_') || app.approach_id.includes('_S_'))) ||
                                   (activePhase.includes('EW') && (app.approach_id.includes('_E_') || app.approach_id.includes('_W_')));
 
@@ -430,37 +560,43 @@ const IntersectionDetail = () => {
                 key={app.approach_id || idx} 
                 className="card"
                 style={{ 
-                  borderLeft: `4px solid ${isGreenActive ? '#22c55e' : '#cbd5e1'}`,
-                  backgroundColor: '#ffffff',
+                  borderLeft: `4px solid ${isZeroConf ? '#ef4444' : isGreenActive ? '#22c55e' : '#cbd5e1'}`,
+                  backgroundColor: isZeroConf ? '#fff1f2' : '#ffffff',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
+                  <span style={{ fontWeight: 800, fontSize: '0.9rem', color: isZeroConf ? '#991b1b' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
                     {app.approach_id}
                   </span>
-                  <span className={`badge ${isGreenActive ? 'badge-green' : 'badge-blue'}`} style={{ fontSize: '0.7rem' }}>
-                    {isGreenActive ? 'GREEN PHASE' : 'RED PHASE'}
-                  </span>
+                  {isZeroConf ? (
+                    <span className="badge badge-red" style={{ fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#b91c1c' }}>
+                      ⚠️ MẤT TÍN HIỆU
+                    </span>
+                  ) : (
+                    <span className={`badge ${isGreenActive ? 'badge-green' : 'badge-blue'}`} style={{ fontSize: '0.7rem' }}>
+                      {isGreenActive ? 'GREEN PHASE' : 'RED PHASE'}
+                    </span>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>
                     <span>Hàng chờ xe</span>
-                    <strong style={{ color: queueVal > 5 ? '#dc2626' : '#0f172a' }}>{queueVal} veh</strong>
+                    <strong style={{ color: isZeroConf ? '#991b1b' : queueVal > 5 ? '#dc2626' : '#0f172a' }}>{queueVal} veh</strong>
                   </div>
                   {/* Queue Visual Progress Bar */}
                   <div style={{ height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{ 
                       height: '100%', 
                       width: `${Math.min(100, (queueVal / 10) * 100)}%`, 
-                      backgroundColor: queueVal > 5 ? '#ef4444' : queueVal > 2 ? '#f59e0b' : '#0284c7',
+                      backgroundColor: isZeroConf ? '#94a3b8' : queueVal > 5 ? '#ef4444' : queueVal > 2 ? '#f59e0b' : '#0284c7',
                       transition: 'width 0.4s ease'
                     }} />
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.78rem', color: '#475569', backgroundColor: '#f8fafc', padding: '8px 10px', borderRadius: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.78rem', color: '#475569', backgroundColor: isZeroConf ? '#fee2e2' : '#f8fafc', padding: '8px 10px', borderRadius: '8px' }}>
                   <div>
                     <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.7rem' }}>Tốc độ TB</span>
                     <strong>{speedKmh} km/h</strong>
@@ -473,7 +609,9 @@ const IntersectionDetail = () => {
 
                 <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b' }}>
                   <span>Độ tin cậy AI Vision:</span>
-                  <strong style={{ color: '#16a34a' }}>{confPct}% YOLO</strong>
+                  <strong style={{ color: isZeroConf ? '#dc2626' : '#16a34a' }}>
+                    {isZeroConf ? '0% (Mất Tín Hiệu)' : `${confPct}% YOLO`}
+                  </strong>
                 </div>
               </div>
             );
@@ -494,26 +632,49 @@ const IntersectionDetail = () => {
               </h3>
             </div>
             
-            {/* Vision Display Mode Switcher */}
-            <div style={{ display: 'flex', gap: '4px', backgroundColor: '#f1f5f9', padding: '2px', borderRadius: '6px' }}>
-              {['roi', 'bbox', 'heatmap'].map(m => (
-                <button
-                  key={m}
-                  onClick={() => setVisionMode(m)}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    borderRadius: '4px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    backgroundColor: visionMode === m ? '#0284c7' : 'transparent',
-                    color: visionMode === m ? '#ffffff' : '#64748b'
-                  }}
-                >
-                  {m.toUpperCase()}
-                </button>
-              ))}
+            {/* Vision Display Mode Switcher & Trigger Button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={handleRunVisionDemo}
+                disabled={isRunningVision}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  borderRadius: '6px',
+                  border: '1px solid #0284c7',
+                  backgroundColor: isRunningVision ? '#f1f5f9' : '#e0f2fe',
+                  color: isRunningVision ? '#94a3b8' : '#0284c7',
+                  cursor: isRunningVision ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <RefreshCw size={12} className={isRunningVision ? 'spin' : ''} />
+                {isRunningVision ? 'Đang chạy YOLO...' : 'Chạy lại Demo'}
+              </button>
+
+              <div style={{ display: 'flex', gap: '4px', backgroundColor: '#f1f5f9', padding: '2px', borderRadius: '6px' }}>
+                {['video', 'roi', 'bbox', 'heatmap'].map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setVisionMode(m)}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      borderRadius: '4px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: visionMode === m ? '#0284c7' : 'transparent',
+                      color: visionMode === m ? '#ffffff' : '#64748b'
+                    }}
+                  >
+                    {m.toUpperCase()}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -536,63 +697,87 @@ const IntersectionDetail = () => {
               top: '12px',
               left: '12px',
               display: 'flex',
+              flexWrap: 'wrap',
               gap: '8px',
               zIndex: 10
             }}>
               <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#4ade80', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
-                ● LIVE 30 FPS | YOLOv8n-ONNX
+                ● {visionReport?.metrics?.throughput_fps ? `${visionReport.metrics.throughput_fps} FPS` : 'LIVE 30 FPS'} | {visionReport?.detector_backend === 'opencv_dnn' ? 'YOLOv8n-ONNX' : 'YOLOv8'}
               </span>
               <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#38bdf8', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
-                640x480 Camera Feed
+                {visionReport?.metrics?.p50_latency_ms ? `Latency: ${visionReport.metrics.p50_latency_ms}ms (P95: ${visionReport.metrics.p95_latency_ms}ms)` : '640x480 Camera Feed'}
               </span>
+              {visionReport?.next_step_controller && (
+                <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#f59e0b', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                  Next Phase: {visionReport?.sample_decision?.target_phase_id || 'HOLD'}
+                </span>
+              )}
             </div>
 
-            {/* Dynamic Road Intersection Canvas Simulation */}
-            <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {/* Road Asphalt Graphics */}
-              <div style={{ position: 'absolute', width: '90px', height: '100%', backgroundColor: '#1e293b', borderLeft: '2px dashed #475569', borderRight: '2px dashed #475569' }} />
-              <div style={{ position: 'absolute', width: '100%', height: '90px', backgroundColor: '#1e293b', borderTop: '2px dashed #475569', borderBottom: '2px dashed #475569' }} />
-              
-              {/* Center Intersection Box */}
-              <div style={{ 
-                position: 'absolute', 
-                width: '90px', 
-                height: '90px', 
-                backgroundColor: activePhase.includes('NS') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                border: `2px solid ${activePhase.includes('NS') ? '#22c55e' : '#38bdf8'}`,
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                color: activePhase.includes('NS') ? '#4ade80' : '#38bdf8'
-              }}>
-                {activePhase.includes('NS') ? 'GREEN NS' : 'GREEN EW'}
+            {visionMode === 'video' ? (
+              <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '280px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <video
+                  key={visionReport?.frames_processed || 'video-demo'}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{ width: '100%', maxHeight: '310px', borderRadius: '8px', objectFit: 'contain' }}
+                  src={`${apiBase}/api/v1/vision/demo-video`}
+                >
+                  Trình duyệt không hỗ trợ thẻ video.
+                </video>
               </div>
+            ) : (
+              /* Dynamic Road Intersection Canvas Simulation */
+              <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Road Asphalt Graphics */}
+                <div style={{ position: 'absolute', width: '90px', height: '100%', backgroundColor: '#1e293b', borderLeft: '2px dashed #475569', borderRight: '2px dashed #475569' }} />
+                <div style={{ position: 'absolute', width: '100%', height: '90px', backgroundColor: '#1e293b', borderTop: '2px dashed #475569', borderBottom: '2px dashed #475569' }} />
 
-              {/* Approach ROI Bounding Rectangles with Live Queue Numbers */}
-              {/* North Approach */}
-              <div style={{ position: 'absolute', top: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
-                N_IN: {Math.round((appStats[0]?.queue_vehicles || 3.2) * 10) / 10} veh
-              </div>
+                {/* Center Intersection Box */}
+                <div style={{
+                  position: 'absolute',
+                  width: '90px',
+                  height: '90px',
+                  backgroundColor: activePhase.includes('NS') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                  border: `2px solid ${activePhase.includes('NS') ? '#22c55e' : '#38bdf8'}`,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  color: activePhase.includes('NS') ? '#4ade80' : '#38bdf8'
+                }}>
+                  {activePhase.includes('NS') ? 'GREEN NS' : 'GREEN EW'}
+                </div>
 
-              {/* South Approach */}
-              <div style={{ position: 'absolute', bottom: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
-                S_IN: {Math.round((appStats[1]?.queue_vehicles || 2.1) * 10) / 10} veh
-              </div>
+                {/* Approach ROI Bounding Rectangles with Live Queue Numbers */}
+                {/* North Approach */}
+                <div style={{ position: 'absolute', top: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
+                  N_IN: {Math.round((appStats[0]?.queue_vehicles || 3.2) * 10) / 10} veh
+                </div>
 
-              {/* East Approach */}
-              <div style={{ position: 'absolute', right: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
-                E_IN: {Math.round((appStats[2]?.queue_vehicles || 1.5) * 10) / 10} veh
-              </div>
+                {/* South Approach */}
+                <div style={{ position: 'absolute', bottom: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
+                  S_IN: {Math.round((appStats[1]?.queue_vehicles || 2.1) * 10) / 10} veh
+                </div>
 
-              {/* West Approach */}
-              <div style={{ position: 'absolute', left: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
-                W_IN: {Math.round((appStats[3]?.queue_vehicles || 2.8) * 10) / 10} veh
+                {/* East Approach */}
+                <div style={{ position: 'absolute', right: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
+                  E_IN: {Math.round((appStats[2]?.queue_vehicles || 1.5) * 10) / 10} veh
+                </div>
+
+                {/* West Approach */}
+                <div style={{ position: 'absolute', left: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
+                  W_IN: {Math.round((appStats[3]?.queue_vehicles || 2.8) * 10) / 10} veh
+                </div>
               </div>
-            </div>
+            )}
           </div>
+
         </div>
 
         {/* MODULE 3: Max-Pressure Controller Decision & Actuator Controls */}

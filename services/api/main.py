@@ -111,6 +111,7 @@ LIVE_STATE: Dict[str, Any] = {
     "source_mode": "system",
     "nodes": {},
     "control_acks": {},
+    "health": {},
     "actuator_config": {
         "yellow_duration_s": 3.0,
         "all_red_duration_s": 2.0,
@@ -193,6 +194,7 @@ def _start_mqtt_listener():
             if rc == 0:
                 logger.info(f"API MQTT Telemetry Subscriber connected to {mqtt_host}:{mqtt_port}")
                 c.subscribe(topics.ALL_EDGEFLOW_SUB)
+                c.subscribe("edgex/health/#")
 
         def on_message(c, userdata, msg):
             try:
@@ -202,6 +204,7 @@ def _start_mqtt_listener():
 
                 if topic.startswith(f"{topics.PREFIX_V1}/telemetry/"):
                     node_id = payload.get("node_id") or topic.split("/")[-1]
+                    payload["_ingested_at_ms"] = int(time.time() * 1000)
                     LIVE_STATE["nodes"][node_id] = payload
                     LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
                     total_q = sum(a.get("queue_vehicles", 0) for a in payload.get("approaches", []))
@@ -249,6 +252,25 @@ def _start_mqtt_listener():
                         "topic": topic,
                         "level": "SUCCESS" if payload.get("status") == "APPLIED" else "WARNING",
                         "message": f"ControlACK [{node_id}] -> Status: {payload.get('status')} | {payload.get('reason', '')}"
+                    }
+                    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
+                    events.insert(0, event_msg)
+                    LIVE_STATE["recent_inter_service_events"] = events[:50]
+
+                elif topic.startswith(f"{topics.PREFIX_V1}/health/") or topic.startswith("edgex/health/"):
+                    svc_id = payload.get("service_name") or payload.get("node_id") or topic.split("/")[-1]
+                    payload["timestamp_ms"] = payload.get("timestamp_ms") or int(time.time() * 1000)
+                    if "health" not in LIVE_STATE:
+                        LIVE_STATE["health"] = {}
+                    LIVE_STATE["health"][svc_id] = payload
+                    event_msg = {
+                        "timestamp": now_str,
+                        "service": "HEALTH",
+                        "source": svc_id,
+                        "target": "SYSTEM",
+                        "topic": topic,
+                        "level": "INFO" if payload.get("status") in ("HEALTHY", "GREEN") else "WARNING",
+                        "message": f"Heartbeat [{svc_id}] -> Status: {payload.get('status', 'OK')}, Clearance: {payload.get('clearance', 'GREEN')}"
                     }
                     events = LIVE_STATE.setdefault("recent_inter_service_events", [])
                     events.insert(0, event_msg)
@@ -328,6 +350,7 @@ def ingest_telemetry(payload: Dict[str, Any]):
     node_id = payload.get("node_id")
     if not node_id:
         raise HTTPException(status_code=400, detail="Missing required 'node_id' in telemetry payload.")
+    payload["_ingested_at_ms"] = int(time.time() * 1000)
     LIVE_STATE["nodes"][node_id] = payload
     LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
     return {"status": "SUCCESS", "node_id": node_id, "timestamp_ms": LIVE_STATE["last_updated_ms"]}
@@ -346,21 +369,106 @@ def ingest_control_ack(payload: Dict[str, Any]):
     LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
     return {"status": "SUCCESS", "node_id": node_id}
 
+@app.post("/api/v1/health/heartbeat")
+def ingest_heartbeat(payload: Dict[str, Any]):
+    """
+    Ingests device or actuator heartbeat / health telemetry.
+    """
+    service_id = payload.get("service_name") or payload.get("node_id", "actuator")
+    if "health" not in LIVE_STATE:
+        LIVE_STATE["health"] = {}
+    payload["timestamp_ms"] = payload.get("timestamp_ms") or int(time.time() * 1000)
+    LIVE_STATE["health"][service_id] = payload
+    return {"status": "SUCCESS", "service": service_id, "timestamp_ms": payload["timestamp_ms"]}
+
+TELEMETRY_STALE_TIMEOUT_MS = 3500  # 3.5s without telemetry -> SIGNAL_LOST
+ACTUATOR_HEARTBEAT_TIMEOUT_MS = 6000  # 6.0s without heartbeat -> HEARTBEAT_LOST
+
+def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], now_ms: int) -> Dict[str, Any]:
+    approaches = (node_live or {}).get("approaches", [])
+    telemetry_time = (node_live or {}).get("_ingested_at_ms") or (node_live or {}).get("timestamp_ms") or 0
+    age_ms = (now_ms - telemetry_time) if (telemetry_time and node_live) else None
+
+    all_zero_conf = bool(approaches) and all(a.get("confidence", 1.0) <= 0.0 for a in approaches)
+
+    if not node_live or age_ms is None:
+        camera_status = "WAITING"
+    elif age_ms > TELEMETRY_STALE_TIMEOUT_MS:
+        camera_status = "SIGNAL_LOST"
+    elif all_zero_conf:
+        camera_status = "ZERO_CONFIDENCE"
+    else:
+        camera_status = "ACTIVE"
+
+    avg_conf = (sum(a.get("confidence", 1.0) for a in approaches) / len(approaches)) if approaches else 0.0
+
+    actuator_data = (
+        LIVE_STATE.get("health", {}).get(nid)
+        or LIVE_STATE.get("health", {}).get(f"actuator-{nid}")
+        or LIVE_STATE.get("health", {}).get("actuator")
+    )
+    actuator_status = "ACTIVE"
+    actuator_age_ms = None
+    clearance = "GREEN"
+    if actuator_data:
+        h_time = actuator_data.get("timestamp_ms") or 0
+        actuator_age_ms = (now_ms - h_time) if h_time else None
+        clearance = actuator_data.get("clearance", "GREEN")
+        safe_stop = actuator_data.get("safe_stop", False) or clearance != "GREEN"
+
+        if actuator_age_ms is not None and actuator_age_ms > ACTUATOR_HEARTBEAT_TIMEOUT_MS:
+            actuator_status = "HEARTBEAT_LOST"
+        elif safe_stop:
+            actuator_status = "SAFE_STOP"
+        elif actuator_data.get("status") in ("DEGRADED", "UNHEALTHY"):
+            actuator_status = actuator_data.get("status")
+        else:
+            actuator_status = "ACTIVE"
+
+    if camera_status == "SIGNAL_LOST":
+        overall_status = "SIGNAL_LOST"
+    elif camera_status == "ZERO_CONFIDENCE":
+        overall_status = "CAMERA_FAULT"
+    elif actuator_status in ("HEARTBEAT_LOST", "SAFE_STOP"):
+        overall_status = "ACTUATOR_FAULT"
+    elif not node_live:
+        overall_status = "WAITING_FOR_TELEMETRY"
+    else:
+        overall_status = node_live.get("status", "ONLINE")
+
+    return {
+        "overall_status": overall_status,
+        "camera": {
+            "status": camera_status,
+            "confidence": round(avg_conf, 2),
+            "last_seen_ms_ago": age_ms,
+            "zero_confidence": all_zero_conf
+        },
+        "actuator": {
+            "status": actuator_status,
+            "last_heartbeat_ms_ago": actuator_age_ms,
+            "clearance": clearance
+        }
+    }
+
 @app.get("/api/v1/network/state")
 def get_network_state():
     """
-    Returns the real-time live traffic network telemetry and phase states for the active topology.
+    Returns the real-time live traffic network telemetry, device health and phase states for the active topology.
     """
     try:
         topo = contracts_sdk.load_topology(LIVE_STATE["active_topology_id"])
+        now_ms = int(time.time() * 1000)
         nodes_info = []
         for n in topo.get("nodes", []):
             nid = n["node_id"]
             node_live = LIVE_STATE["nodes"].get(nid)
+            health_meta = compute_node_device_health(nid, node_live, now_ms)
             if node_live:
                 node_data = dict(node_live)
                 node_data["name"] = n.get("name", nid)
-                node_data["status"] = node_data.get("status", "ONLINE")
+                node_data["status"] = health_meta["overall_status"]
+                node_data["device_health"] = health_meta
                 nodes_info.append(node_data)
             else:
                 phases = n.get("phases", [])
@@ -369,7 +477,8 @@ def get_network_state():
                     "name": n.get("name", nid),
                     "current_phase_id": phases[0]["phase_id"] if phases else f"{nid}_PHASE_NS",
                     "source_type": LIVE_STATE["source_mode"],
-                    "status": "WAITING_FOR_TELEMETRY",
+                    "status": health_meta["overall_status"],
+                    "device_health": health_meta,
                     "approaches": [
                         {
                             "approach_id": app_id,
@@ -397,7 +506,7 @@ def get_network_state():
 @app.get("/api/v1/network/state/{node_id}")
 def get_node_network_state(node_id: str):
     """
-    Returns full real-time telemetry parameters, approach breakdown, phase state, and control ACK logs for a specific node.
+    Returns full real-time telemetry parameters, approach breakdown, phase state, device health, and control ACK logs for a specific node.
     """
     try:
         topo = contracts_sdk.load_topology(LIVE_STATE["active_topology_id"])
@@ -407,11 +516,14 @@ def get_node_network_state(node_id: str):
 
         live_data = LIVE_STATE["nodes"].get(node_id)
         acks = LIVE_STATE["control_acks"].get(node_id, [])
+        now_ms = int(time.time() * 1000)
+        health_meta = compute_node_device_health(node_id, live_data, now_ms)
 
         if live_data:
             response_node = dict(live_data)
             response_node["name"] = node_spec.get("name", node_id)
-            response_node["status"] = live_data.get("status", "ONLINE")
+            response_node["status"] = health_meta["overall_status"]
+            response_node["device_health"] = health_meta
         else:
             phases = node_spec.get("phases", [])
             response_node = {
@@ -419,7 +531,8 @@ def get_node_network_state(node_id: str):
                 "name": node_spec.get("name", node_id),
                 "current_phase_id": phases[0]["phase_id"] if phases else f"{node_id}_PHASE_NS",
                 "source_type": LIVE_STATE["source_mode"],
-                "status": "WAITING_FOR_TELEMETRY",
+                "status": health_meta["overall_status"],
+                "device_health": health_meta,
                 "approaches": [
                     {
                         "approach_id": app_id,
@@ -437,6 +550,7 @@ def get_node_network_state(node_id: str):
             "topology_id": LIVE_STATE["active_topology_id"],
             "node_spec": node_spec,
             "telemetry": response_node,
+            "device_health": health_meta,
             "control_acks": acks
         }
     except HTTPException:
@@ -854,6 +968,112 @@ def get_hcm_camera_map():
     
     return HTMLResponse(content=html_content, status_code=200)
 
+
+# ============================================================================
+# Vision Perception Demo & Video Playback Endpoints
+# ============================================================================
+
+class VisionRunRequest(BaseModel):
+    video: Optional[str] = "synthetic"
+    frames: Optional[int] = 30
+    controller: Optional[str] = "max_pressure"
+    node_id: Optional[str] = "J1"
+
+
+@app.get("/api/v1/vision/demo-video")
+def get_vision_demo_video():
+    """Serves the annotated video output produced by demo_video_pipeline.py."""
+    candidates = [
+        artifacts_dir / "yolo_demo_annotated.mp4",
+        curr_dir.parent.parent / "artifacts" / "yolo_demo_annotated.mp4",
+    ]
+    for p in candidates:
+        if p.is_file():
+            return FileResponse(str(p), media_type="video/mp4", filename="yolo_demo_annotated.mp4")
+    raise HTTPException(status_code=404, detail="No demo video found. Run services/vision/demo_video_pipeline.py first.")
+
+
+@app.get("/api/v1/vision/demo-report")
+def get_vision_demo_report():
+    """Returns the JSON summary report from demo_video_pipeline.py."""
+    candidates = [
+        artifacts_dir / "yolo_demo_report.json",
+        curr_dir.parent.parent / "artifacts" / "yolo_demo_report.json",
+    ]
+    for p in candidates:
+        if p.is_file():
+            with open(p, "r", encoding="utf-8") as f:
+                return json.load(f)
+    raise HTTPException(status_code=404, detail="No demo report found.")
+
+
+@app.get("/api/v1/vision/status")
+def get_vision_demo_status():
+    """Returns status and availability of the vision demo video & report."""
+    video_path = artifacts_dir / "yolo_demo_annotated.mp4"
+    report_path = artifacts_dir / "yolo_demo_report.json"
+    has_video = video_path.is_file()
+    has_report = report_path.is_file()
+
+    report_data = None
+    if has_report:
+        try:
+            with open(report_path, "r", encoding="utf-8") as f:
+                report_data = json.load(f)
+        except Exception:
+            pass
+
+    return {
+        "has_video": has_video,
+        "video_url": "/api/v1/vision/demo-video" if has_video else None,
+        "video_size_bytes": video_path.stat().st_size if has_video else 0,
+        "has_report": has_report,
+        "report": report_data,
+        "detector_backend": report_data.get("detector_backend", "opencv_dnn") if report_data else "opencv_dnn",
+    }
+
+
+@app.post("/api/v1/vision/run-demo")
+def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRequest)):
+    """Triggers execution of services/vision/demo_video_pipeline.py and returns updated report."""
+    import subprocess
+    import sys
+    py_exec = sys.executable
+    script_path = curr_dir.parent / "vision" / "demo_video_pipeline.py"
+    if not script_path.is_file():
+        raise HTTPException(status_code=500, detail="demo_video_pipeline.py not found.")
+
+    out_video = artifacts_dir / "yolo_demo_annotated.mp4"
+    out_report = artifacts_dir / "yolo_demo_report.json"
+
+    cmd = [
+        py_exec, str(script_path),
+        "--video", req.video,
+        "--frames", str(req.frames),
+        "--controller", req.controller,
+        "--node-id", req.node_id,
+        "--output-video", str(out_video),
+        "--output-report", str(out_report),
+    ]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if proc.returncode != 0:
+            logger.error(f"Vision demo run failed: {proc.stderr}")
+            raise HTTPException(status_code=500, detail=f"Pipeline failed: {proc.stderr[-300:]}")
+
+        with open(out_report, "r", encoding="utf-8") as f:
+            report_data = json.load(f)
+        return {
+            "status": "SUCCESS",
+            "message": "Vision demo completed successfully",
+            "report": report_data,
+            "video_url": "/api/v1/vision/demo-video"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=settings.api_host, port=settings.api_port)
+

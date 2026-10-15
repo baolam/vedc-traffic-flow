@@ -676,6 +676,12 @@ const NetworkOverview = () => {
                       {/* Health Status */}
                       {data.status === 'WAITING_FOR_TELEMETRY' ? (
                         <span className="badge badge-yellow" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>WAITING</span>
+                      ) : data.status === 'SIGNAL_LOST' ? (
+                        <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>SIGNAL LOST</span>
+                      ) : data.status === 'CAMERA_FAULT' ? (
+                        <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>CAM FAULT</span>
+                      ) : data.status === 'ACTUATOR_FAULT' ? (
+                        <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>ACTUATOR ERR</span>
                       ) : (
                         <span className="badge badge-green" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>ONLINE</span>
                       )}
