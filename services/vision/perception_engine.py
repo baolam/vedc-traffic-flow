@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
@@ -43,6 +44,9 @@ class PerceptionEngine:
         self.height = height
         self.node_id = None
         self.node_ids: Optional[List[str]] = None
+        # Last processed frame: wall-clock capture time (ms) plus measured stage timings; {} on failure.
+        # A processed frame reports confidence 1.0; main.TelemetryWindow lowers it when frames are lost.
+        self.last_frame: Dict[str, Any] = {}
 
     def setup_topology(self, topology: Dict[str, Any], node_id: str = "J1") -> None:
         """Sets up the default (uncalibrated) ROIs for a single node."""
@@ -109,7 +113,7 @@ class PerceptionEngine:
                 approach_id=app_id,
                 boxes=app_boxes,
                 roi_area=roi_area,
-                detection_confidence=0.92
+                detection_confidence=1.0
             )
             approaches_telemetry.append(metrics)
 
@@ -120,13 +124,18 @@ class PerceptionEngine:
         Reads one frame, detects once, and returns approach metrics per configured node.
         Returns {} when no frame is available (the caller reports missing data).
         """
+        started = time.perf_counter()
         ret, frame = self.video_source.read_frame()
         if not ret or frame is None:
+            self.last_frame = {}
             return {}
+        frame_info = {"captured_at_ms": int(time.time() * 1000),
+                      "capture_ms": (time.perf_counter() - started) * 1000}
         if frame.shape[:2] != (self.height, self.width):
             frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
 
         assigned_boxes = self.roi_manager.assign_detections(self.detect_vehicles(frame))
+        self.last_frame = {**frame_info, **self.detector.last_timings}
         results: Dict[str, List[Dict[str, Any]]] = {}
         for node_id in self.node_ids or []:
             results[node_id] = [
@@ -134,7 +143,7 @@ class PerceptionEngine:
                     approach_id=app_id,
                     boxes=assigned_boxes.get(app_id, []),
                     roi_area=self.roi_manager.get_roi_area(app_id),
-                    detection_confidence=0.92
+                    detection_confidence=1.0
                 )
                 for app_id in self.roi_manager.approaches_for_node(node_id)
             ]

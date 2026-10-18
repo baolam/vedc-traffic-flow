@@ -16,10 +16,15 @@ import sys
 import os
 import json
 import time
+import signal
 import logging
 import argparse
+import platform
+import threading
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+
+import cv2
 
 # Ensure services/vision directory is in sys.path for IDE & module resolution
 CURR_DIR = Path(__file__).resolve().parent
@@ -29,21 +34,33 @@ if str(CURR_DIR) not in sys.path:
 try:
     from config import settings
     from perception_engine import PerceptionEngine
-    from hardware_monitor import get_hardware_diagnostics, is_raspberry_pi
+    from hardware_monitor import get_hardware_diagnostics, get_runtime_hardware, is_raspberry_pi, read_board_model
     from vision_contracts_helper import load_topology, validate_payload, topics
     from roi_config import load_roi_config, validate_against_topology
+    from runtime_stats import RuntimeStats
+    from telemetry_window import TelemetryWindow
+    from phase_tracker import PhaseTracker, SOURCE_DEVICE
 except ImportError:
     from services.vision.config import settings
     from services.vision.perception_engine import PerceptionEngine
-    from services.vision.hardware_monitor import get_hardware_diagnostics, is_raspberry_pi
+    from services.vision.hardware_monitor import (get_hardware_diagnostics, get_runtime_hardware,
+                                                  is_raspberry_pi, read_board_model)
     from services.vision.vision_contracts_helper import load_topology, validate_payload, topics
     from services.vision.roi_config import load_roi_config, validate_against_topology
+    from services.vision.runtime_stats import RuntimeStats
+    from services.vision.telemetry_window import TelemetryWindow
+    from services.vision.phase_tracker import PhaseTracker, SOURCE_DEVICE
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
     format="%(asctime)s [%(levelname)s] [Vision-Pi] %(message)s"
 )
 logger = logging.getLogger("vision-service")
+
+HEALTH_TOPIC = topics.get_health_topic("vision")
+HEALTH_PERIOD_S = 10.0
+STATS_WINDOW_S = 30.0
+OFFLINE_PAYLOAD = json.dumps({"service": "vision", "status": "OFFLINE"})
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -83,9 +100,55 @@ def resolve_node_ids(cfg) -> List[str]:
     return [cfg.vision_node_id]
 
 
+def set_offline_will(client) -> None:
+    """The broker publishes this retained OFFLINE when the service dies or drops off the network,
+    so a stale retained HEALTHY never outlives the process."""
+    client.will_set(HEALTH_TOPIC, OFFLINE_PAYLOAD, qos=1, retain=True)
+
+
+def health_status(snapshot: Dict[str, Any]) -> str:
+    """DEGRADED as soon as the camera misses a frame; STARTING until the first frame is processed."""
+    if snapshot["consecutive_failures"] > 0:
+        return "DEGRADED"
+    return "HEALTHY" if snapshot["frames_ok"] > 0 else "STARTING"
+
+
+def build_health(identity: Dict[str, Any], snapshot: Dict[str, Any],
+                 hardware: Dict[str, Any], timestamp_ms: int,
+                 phase_sources: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """Retained health message carrying measured runtime figures only."""
+    payload = {**identity, "status": health_status(snapshot), "timestamp_ms": timestamp_ms,
+               "runtime": snapshot, "hardware": hardware}
+    if phase_sources is not None:
+        payload["phase_source"] = phase_sources  # per node: esp32_health, or default (not observed)
+    if payload["status"] == "DEGRADED":
+        payload["reason"] = f"camera: {snapshot['consecutive_failures']} consecutive frames without image"
+    return payload
+
+
+def format_runtime(snapshot: Dict[str, Any], hardware: Dict[str, Any]) -> str:
+    """One journal line per health period, readable without an MQTT client."""
+    latency = snapshot["latency_ms"]
+    parts = [f"processed {snapshot['processed_fps']} fps ({snapshot['frames_ok']} ok / "
+             f"{snapshot['frames_failed']} failed in {snapshot['window_s']}s)"]
+    for key in ("capture_ms", "inference_ms", "total_ms", "age_at_publish_ms"):
+        if key in latency:
+            parts.append(f"{key[:-3]} p50/p95 {latency[key]['p50']}/{latency[key]['p95']} ms")
+    if hardware:
+        parts.append(f"temp {hardware.get('cpu_temp_c')} C, throttled {hardware.get('throttled_flags')}, "
+                     f"5V {hardware.get('ext5v_v')}")
+    return " | ".join(parts)
+
+
+def _stop_on_sigterm(_signum, _frame):
+    raise KeyboardInterrupt  # `systemctl stop` gets the same clean shutdown as Ctrl+C
+
+
 def build_telemetry(node: Dict[str, Any], approaches: List[Dict[str, Any]],
-                    sim_time_s: float, timestamp_ms: int) -> Dict[str, Any]:
-    """Canonical telemetry for one node; a missing frame yields zero-confidence approaches."""
+                    sim_time_s: float, timestamp_ms: int,
+                    current_phase_id: Optional[str] = None) -> Dict[str, Any]:
+    """Canonical telemetry for one node; a missing frame yields zero-confidence approaches.
+    current_phase_id is the phase the device reported (PhaseTracker); without one, the first phase."""
     node_id = node["node_id"]
     if not approaches:
         # Camera disconnection / failure: report 0.0 confidence (never fabricate high-confidence queues)
@@ -107,7 +170,7 @@ def build_telemetry(node: Dict[str, Any], approaches: List[Dict[str, Any]],
         "source_type": "vision",
         "simulation_time_s": round(sim_time_s, 2),
         "timestamp_ms": timestamp_ms,
-        "current_phase_id": phases[0]["phase_id"] if phases else f"{node_id}_PHASE_NS",
+        "current_phase_id": current_phase_id or (phases[0]["phase_id"] if phases else f"{node_id}_PHASE_NS"),
         "approaches": approaches
     }
 
@@ -128,7 +191,8 @@ def main(argv: Optional[List[str]] = None):
     logger.info(f"Raspberry Pi Mode  : {'YES (Hardware Native)' if hw_diag['is_raspberry_pi'] else 'NO (Desktop / Virtual / CI)'}")
     logger.info(f"CPU Temperature    : {hw_diag['cpu_temp_c']} °C")
     logger.info(f"Video Source       : {cfg.video_source}")
-    logger.info(f"Telemetry Period   : {cfg.telemetry_period_s}s")
+    logger.info(f"Telemetry Period   : {cfg.telemetry_period_s}s (median over the frames of each period)")
+    logger.info(f"Processing cap     : {cfg.vision_fps} fps (VISION_FPS, 0 = as fast as possible)")
     logger.info(f"Detection Model    : {cfg.detection_model_path or 'OpenCV MOG2 (Motion Baseline)'}")
     logger.info("=========================================================")
 
@@ -170,6 +234,29 @@ def main(argv: Optional[List[str]] = None):
     engine.setup_nodes(node_ids, roi_config.nodes if roi_config else None)
     logger.info(f"Perception Engine initialized using backend: [{engine.detector.backend}]")
 
+    period_s = cfg.telemetry_period_s
+    stats = RuntimeStats(window_s=STATS_WINDOW_S)
+    identity = {
+        "service": "vision",
+        "device": "raspberry_pi_5" if is_raspberry_pi() else "generic_edge",
+        "board_model": read_board_model(),
+        "backend": engine.detector.backend,
+        "model_sha256": engine.detector.model_sha256,
+        "detector_input_size": cfg.detector_input_size,
+        "video_source": cfg.video_source,
+        "active_nodes": node_ids,
+        "roi_sha256": roi_config.sha256 if roi_config else None,
+        "telemetry_period_s": period_s,
+        "vision_fps_cap": cfg.vision_fps,
+        "opencv": cv2.__version__,
+        "python": platform.python_version(),
+    }
+    # Set from the MQTT thread on every (re)connect; the main loop publishes, so stats stay single-threaded.
+    health_request = threading.Event()
+    # Phase each ESP32 shows, from edgeflow/v1/health/{node} (O7): fed by the MQTT thread
+    phase_tracker = PhaseTracker(active_nodes)
+    phase_sources: Dict[str, str] = {}  # last source logged per node
+
     # 4. MQTT Broker Client Setup
     mqtt_host = cfg.mqtt_host
     mqtt_port = cfg.mqtt_port
@@ -185,24 +272,18 @@ def main(argv: Optional[List[str]] = None):
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
                 logger.info(f"Connected to MQTT Broker successfully at {mqtt_host}:{mqtt_port}")
-                # Publish initial Health Status
-                health_topic = topics.get_health_topic("vision")
-                health_payload = {
-                    "service": "vision",
-                    "status": "HEALTHY",
-                    "device": "raspberry_pi_5" if is_raspberry_pi() else "generic_edge",
-                    "cpu_temp_c": hw_diag["cpu_temp_c"],
-                    "backend": engine.detector.backend,
-                    "active_nodes": node_ids,
-                    "roi_sha256": roi_config.sha256 if roi_config else None,
-                    "model_sha256": engine.detector.model_sha256,
-                    "timestamp_ms": int(time.time() * 1000)
-                }
-                client.publish(health_topic, json.dumps(health_payload), retain=True)
+                for topic in phase_tracker.topics:
+                    client.subscribe(topic)
+                health_request.set()  # replaces a retained OFFLINE left by the will after a drop
             else:
                 logger.warning(f"MQTT connection failed with return code {rc}")
 
+        def on_message(client, userdata, msg):
+            phase_tracker.update(msg.topic, msg.payload)
+
         mqtt_client.on_connect = on_connect
+        mqtt_client.on_message = on_message
+        set_offline_will(mqtt_client)
         logger.info(f"Connecting to MQTT broker at {mqtt_host}:{mqtt_port}...")
         mqtt_client.connect_async(mqtt_host, mqtt_port, 60)
         mqtt_client.loop_start()
@@ -210,56 +291,98 @@ def main(argv: Optional[List[str]] = None):
         logger.warning(f"MQTT client connection skipped ({e}). Operating in standalone edge perception mode.")
 
     sim_time_s = 0.0
-    period_s = cfg.telemetry_period_s
     last_health_report = time.time()
+    window = TelemetryWindow()
+    frame_interval_s = 1.0 / cfg.vision_fps if cfg.vision_fps > 0 else 0.0
+    next_publish = time.monotonic() + period_s
+    signal.signal(signal.SIGTERM, _stop_on_sigterm)
 
     # 5. Continuous Vision Perception & Telemetry Loop
     try:
         logger.info("🚀 Starting Continuous Edge Vision Ingestion Loop...")
         while True:
-            start_tick = time.time()
-            sim_time_s += period_s
-            timestamp_ms = int(time.time() * 1000)
+            frame_started = time.monotonic()
 
-            # One frame, one detection pass, telemetry for every node this camera covers
+            # One frame, one detection pass for every node this camera covers
             per_node = engine.process_frame_nodes()
-            for node in active_nodes:
-                node_id = node["node_id"]
-                telemetry_payload = build_telemetry(node, per_node.get(node_id, []), sim_time_s, timestamp_ms)
-                validate_payload(telemetry_payload, "telemetry")
-                telemetry_topic = topics.get_telemetry_topic(node_id)
-                approaches = telemetry_payload["approaches"]
-                if mqtt_client and mqtt_client.is_connected():
-                    mqtt_client.publish(telemetry_topic, json.dumps(telemetry_payload))
-                    logger.debug(f"Published Vision Telemetry to {telemetry_topic} ({len(approaches)} approaches)")
-                else:
-                    total_q = sum(a.get("queue_vehicles", 0) for a in approaches)
-                    logger.info(f"Extracted Telemetry [{node_id}]: Total Queue = {total_q:.1f} veh | "
-                                f"Confidence = {approaches[0]['confidence'] if approaches else 0}")
+            frame_info = engine.last_frame
+            if frame_info:
+                window.add(per_node, frame_info["captured_at_ms"])
+                stats.record(True, {k: v for k, v in frame_info.items() if k != "captured_at_ms"})
+            else:
+                window.add_failure()
+                stats.record(False)
+                if stats.consecutive_failures == 1 or stats.consecutive_failures % 10 == 0:
+                    logger.warning(f"No camera frame ({stats.consecutive_failures} in a row): "
+                                   "the period's telemetry loses confidence, zero if no frame at all")
 
-            # Periodic hardware health report (every 10s)
-            if cfg.enable_hardware_telemetry and (time.time() - last_health_report >= 10.0):
+            # One telemetry message per node and period: medians over the period's frames (O14/O10)
+            if time.monotonic() >= next_publish:
+                sim_time_s += period_s
+                publish_started = time.perf_counter()
+                # Observation time is the capture time of the newest frame in the period
+                timestamp_ms = window.last_capture_ms or int(time.time() * 1000)
+                for node in active_nodes:
+                    node_id = node["node_id"]
+                    phase_id, source = phase_tracker.current(node_id)
+                    if phase_sources.get(node_id) != source:
+                        if source == SOURCE_DEVICE:
+                            logger.info(f"[{node_id}] current_phase_id now follows the ESP32 health topic")
+                        else:
+                            logger.warning(f"[{node_id}] no fresh ESP32 health: telemetry reports the default "
+                                           f"phase {phase_id}, so the EdgeFlow controller's green timing is a guess")
+                        phase_sources[node_id] = source
+                    telemetry_payload = build_telemetry(node, window.aggregate(node_id), sim_time_s, timestamp_ms,
+                                                        current_phase_id=phase_id)
+                    validate_payload(telemetry_payload, "telemetry")
+                    telemetry_topic = topics.get_telemetry_topic(node_id)
+                    approaches = telemetry_payload["approaches"]
+                    if mqtt_client and mqtt_client.is_connected():
+                        mqtt_client.publish(telemetry_topic, json.dumps(telemetry_payload))
+                        logger.debug(f"Published Vision Telemetry to {telemetry_topic} ({len(approaches)} approaches)")
+                    else:
+                        total_q = sum(a.get("queue_vehicles", 0) for a in approaches)
+                        logger.info(f"Extracted Telemetry [{node_id}]: Total Queue = {total_q:.1f} veh | "
+                                    f"Confidence = {approaches[0]['confidence'] if approaches else 0}")
+                publish_timings = {"publish_ms": (time.perf_counter() - publish_started) * 1000,
+                                   "frames_per_publish": window.frames}
+                if window.last_capture_ms is not None:
+                    publish_timings["age_at_publish_ms"] = time.time() * 1000 - window.last_capture_ms
+                stats.record_publish(publish_timings)
+                window.reset()
+                next_publish = max(next_publish + period_s, time.monotonic())
+
+            # Health with measured runtime figures: on every (re)connect and every HEALTH_PERIOD_S
+            if health_request.is_set() or time.time() - last_health_report >= HEALTH_PERIOD_S:
+                health_request.clear()
                 last_health_report = time.time()
-                current_temp = get_hardware_diagnostics()["cpu_temp_c"]
+                hardware = get_runtime_hardware() if cfg.enable_hardware_telemetry else {}
+                snapshot = stats.snapshot()
+                logger.info(f"Runtime: {format_runtime(snapshot, hardware)}")
                 if mqtt_client and mqtt_client.is_connected():
-                    mqtt_client.publish(topics.get_health_topic("vision"), json.dumps({
-                        "service": "vision",
-                        "status": "HEALTHY",
-                        "cpu_temp_c": current_temp,
-                        "backend": engine.detector.backend,
-                        "fps": round(1.0 / max(period_s, 0.001), 1),
-                        "timestamp_ms": timestamp_ms
-                    }))
+                    sources = {node_id: phase_tracker.current(node_id)[1] for node_id in node_ids}
+                    health = build_health(identity, snapshot, hardware, int(time.time() * 1000), sources)
+                    mqtt_client.publish(HEALTH_TOPIC, json.dumps(health), qos=1, retain=True)
 
-            elapsed = time.time() - start_tick
-            sleep_dur = max(period_s - elapsed, 0.02)
-            time.sleep(sleep_dur)
+            # Cap processing at VISION_FPS without sleeping past the next publish; back off on camera errors
+            wait = min(frame_interval_s - (time.monotonic() - frame_started), next_publish - time.monotonic())
+            time.sleep(max(wait, 0.0 if frame_info else 0.05))
 
     except KeyboardInterrupt:
         logger.info("Stopping Raspberry Pi Vision Perception Service...")
     finally:
         engine.close()
         if mqtt_client:
+            if mqtt_client.is_connected():
+                # A clean DISCONNECT suppresses the will, so announce OFFLINE explicitly
+                info = mqtt_client.publish(HEALTH_TOPIC, OFFLINE_PAYLOAD, qos=1, retain=True)
+                try:
+                    info.wait_for_publish(timeout=2.0)
+                except TypeError:
+                    pass  # paho-mqtt < 2.0 has no timeout argument; do not risk blocking shutdown
+                except (RuntimeError, ValueError) as e:
+                    logger.warning(f"OFFLINE health not confirmed: {e}")
+            mqtt_client.disconnect()
             mqtt_client.loop_stop()
         logger.info("Perception Engine stopped safely.")
 

@@ -514,6 +514,10 @@ void loop() {
     mqttClient.loop();
   }
 
+  // onMqttCommand() runs inside mqttClient.loop() and stamps stateStartTime with a newer millis().
+  // Refresh `now` so the unsigned `now - stateStartTime` below cannot wrap and skip the 3 s YELLOW.
+  now = millis();
+
   if (safeStopActive) {
     // Flash all yellow lights as emergency caution
     bool on = (now / SAFE_STOP_FLASH_MS) % 2;
@@ -548,6 +552,9 @@ void loop() {
           pendingCommandId = "";
           pendingTargetPhaseStr = "";
         }
+        // Every switch to GREEN (command, max green, fallback, safe-stop release, boot) announces the
+        // new phase at once: vision copies it into telemetry current_phase_id instead of waiting 5 s
+        publishHealth(now);
       }
     }
 

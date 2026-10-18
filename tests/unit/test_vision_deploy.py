@@ -29,17 +29,27 @@ def load_vision_main():
     return module
 
 
+# Modes reported by Camera Module 3 (imx708): 1536x864 is a centre crop of the sensor, 2304x1296 is
+# 2x2-binned full field of view (rpicam-hello --list-cameras).
+IMX708_MODES = [
+    {"size": (1536, 864), "fps": 120.13, "bit_depth": 10, "crop_limits": (768, 432, 3072, 1728)},
+    {"size": (2304, 1296), "fps": 56.03, "bit_depth": 10, "crop_limits": (0, 0, 4608, 2592)},
+    {"size": (4608, 2592), "fps": 14.35, "bit_depth": 10, "crop_limits": (0, 0, 4608, 2592)},
+]
+
+
 class FakePicamera2:
     """Minimal stand-in for picamera2.Picamera2 recording the calls the source makes."""
 
     def __init__(self):
         self.camera_controls = {"LensPosition": (0.0, 15.0, 1.0), "AeFlickerPeriod": (100, 1000000, 0)}
+        self.sensor_modes = IMX708_MODES
         self.applied_controls = {}
         self.started = False
         self.closed = False
 
-    def create_video_configuration(self, main, controls, buffer_count):
-        return {"main": main, "controls": controls, "buffer_count": buffer_count}
+    def create_video_configuration(self, main, controls, buffer_count, sensor=None):
+        return {"main": main, "controls": controls, "buffer_count": buffer_count, "sensor": sensor}
 
     def configure(self, config):
         self.config = config
@@ -80,6 +90,26 @@ def test_picamera_source_uses_picamera2_not_v4l2(fake_picamera2):
     assert isinstance(source, Picamera2VideoSource)
     assert fake_picamera2.started is True
     assert fake_picamera2.config["main"] == {"size": (640, 480), "format": "RGB888"}
+
+
+def test_picamera_source_keeps_the_full_field_of_view(fake_picamera2):
+    # Left to itself libcamera picks the cropped 1536x864 mode for a 1280x720 output.
+    create_video_source("picamera", width=1280, height=720)
+    assert fake_picamera2.config["sensor"] == {"output_size": (2304, 1296), "bit_depth": 10}
+
+
+def test_full_fov_mode_selection_respects_frame_rate():
+    assert video_source.pick_full_fov_mode(IMX708_MODES, min_fps=30) == IMX708_MODES[1]
+    assert video_source.pick_full_fov_mode(IMX708_MODES, min_fps=10) == IMX708_MODES[1]  # smallest full-FOV
+    # No full-FOV mode is fast enough: still keep the field of view, at the fastest such mode.
+    assert video_source.pick_full_fov_mode(IMX708_MODES, min_fps=90) == IMX708_MODES[1]
+    assert video_source.pick_full_fov_mode([], min_fps=30) is None
+
+
+def test_picamera_without_mode_list_uses_libcamera_default(fake_picamera2):
+    fake_picamera2.sensor_modes = []
+    create_video_source("picamera")
+    assert fake_picamera2.config["sensor"] is None
 
 
 def test_picamera_source_locks_focus_and_flicker(fake_picamera2):

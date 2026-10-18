@@ -61,4 +61,5 @@ if $INSTALL_SERVICE; then
   echo "Logs: journalctl -u edgeflow-vision -f"
 fi
 
-echo "== Done. Manual run: $VENV_DIR/bin/python services/vision/main.py --video picamera --mqtt-host <BROKER_IP> --node-id J1"
+echo "== Done. Check: bash infra/rpi/preflight.sh"
+echo "   Manual run (main.py does not read .env.rpi by itself): set -a; . ./.env.rpi; set +a; $VENV_DIR/bin/python services/vision/main.py"

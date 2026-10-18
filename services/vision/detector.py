@@ -53,11 +53,16 @@ class VehicleDetector:
             self.net.setInput(blank)
             outputs = self.net.forward(self.output_names)
         except cv2.error as exc:
-            # Raw YOLOv8/11 ONNX hits a shape_utils assertion in OpenCV 4.6/4.7 (checked 4.6.0, 4.7.0).
-            raise RuntimeError(
-                f"OpenCV {cv2.__version__} cannot run {path.name}: {str(exc).strip()}. "
-                "YOLOv8/YOLO11 ONNX needs OpenCV >= 4.8; Raspberry Pi OS Bookworm's python3-opencv "
-                "is 4.6, use Raspberry Pi OS Trixie (4.10)") from exc
+            if tuple(int(p) for p in cv2.__version__.split(".")[:2]) < (4, 8):
+                # Raw YOLOv8/11 ONNX hits a shape_utils assertion in OpenCV 4.6/4.7 (checked 4.6.0, 4.7.0).
+                hint = ("YOLOv8/YOLO11 ONNX needs OpenCV >= 4.8; Raspberry Pi OS Bookworm's python3-opencv "
+                        "is 4.6, use Raspberry Pi OS Trixie (4.10)")
+            else:
+                # Static exports only run at their export size: a 416 model fed a 640 blob fails in a Reshape.
+                hint = (f"a static ONNX export only runs at the imgsz it was exported with; check that "
+                        f"DETECTOR_INPUT_SIZE={self.input_size} matches `yolo export ... imgsz=`")
+            raise RuntimeError(f"OpenCV {cv2.__version__} cannot run {path.name}: {hint}. "
+                               f"OpenCV error: {str(exc).strip()}") from exc
         try:
             self.postprocess(outputs, (self.input_size, self.input_size, 3), (1.0, 0, 0))
         except ValueError as exc:

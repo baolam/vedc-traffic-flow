@@ -6,7 +6,7 @@ Supports File streams, Webcams, Raspberry Pi Camera Module 3 / V4L2 devices, and
 import time
 import logging
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import cv2
 
@@ -60,6 +60,24 @@ class PiCameraVideoSource(BaseVideoSource):
             logger.info(f"Released PiCamera source on device {self.device_index}")
 
 
+def pick_full_fov_mode(sensor_modes: List[Dict[str, Any]], min_fps: float) -> Optional[Dict[str, Any]]:
+    """
+    Smallest sensor mode that sees the whole sensor (largest crop_limits area) at >= min_fps.
+    For a 1280x720 output libcamera otherwise picks Camera Module 3's 1536x864 mode, a centre crop
+    (768,432)/3072x1728 that loses a third of the Wide lens' view in each direction.
+    If no full-FOV mode reaches min_fps, the fastest full-FOV mode is returned: coverage matters more.
+    """
+    modes = [m for m in sensor_modes if m.get("crop_limits") and m.get("size")]
+    if not modes:
+        return None
+    area = lambda m: m["crop_limits"][2] * m["crop_limits"][3]  # noqa: E731
+    full = [m for m in modes if area(m) == max(area(m) for m in modes)]
+    fast = [m for m in full if m.get("fps", 0) >= min_fps]
+    if fast:
+        return min(fast, key=lambda m: m["size"][0] * m["size"][1])
+    return max(full, key=lambda m: m.get("fps", 0))
+
+
 class Picamera2VideoSource(BaseVideoSource):
     """
     Raspberry Pi Camera Module 3 (CSI) through libcamera/Picamera2.
@@ -79,13 +97,20 @@ class Picamera2VideoSource(BaseVideoSource):
         self.width = width
         self.height = height
         self.camera = Picamera2()
+        mode = pick_full_fov_mode(list(getattr(self.camera, "sensor_modes", None) or []), fps)
+        # Only pin the mode when the camera lists its modes; otherwise keep libcamera's choice.
+        extra = {"sensor": {"output_size": tuple(mode["size"]), "bit_depth": mode["bit_depth"]}} if mode else {}
         # "RGB888" in Picamera2 is BGR byte order in memory, i.e. what OpenCV expects.
         config = self.camera.create_video_configuration(
             main={"size": (width, height), "format": "RGB888"},
-            controls={"FrameRate": fps},
+            controls={"FrameRate": min(fps, mode["fps"]) if mode else fps},
             buffer_count=2,
+            **extra,
         )
         self.camera.configure(config)
+        if mode:
+            logger.info(f"Sensor mode {mode['size'][0]}x{mode['size'][1]} @ {mode['fps']:.0f} fps, "
+                        f"crop {tuple(mode['crop_limits'])} (full field of view)")
         self.camera.start()
         self._apply_controls(lens_position, flicker_period_us)
         logger.info(f"Initialized Picamera2 CSI source ({width}x{height} @ {fps}fps, "

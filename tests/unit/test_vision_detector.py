@@ -61,10 +61,22 @@ def use_net(monkeypatch, net):
 
 
 def test_opencv_that_cannot_run_the_graph_fails_at_load_with_version_hint(monkeypatch, model_file):
+    monkeypatch.setattr(cv2, "__version__", "4.6.0")
     use_net(monkeypatch, FakeNet(error=cv2.error("(-215:Assertion failed) start <= (int)shape.size()")))
 
-    with pytest.raises(RuntimeError, match=r"OpenCV .* cannot run model\.onnx.*>= 4\.8"):
+    with pytest.raises(RuntimeError, match=r"OpenCV 4\.6\.0 cannot run model\.onnx.*>= 4\.8"):
         VehicleDetector(model_path=str(model_file))
+
+
+def test_recent_opencv_failure_points_to_input_size_not_os_upgrade(monkeypatch, model_file):
+    # A static yolo11n_416.onnx loaded with the default DETECTOR_INPUT_SIZE=640 fails in a Reshape
+    # on OpenCV 4.10 (checked 07/10); telling the user to reinstall Trixie would be wrong.
+    monkeypatch.setattr(cv2, "__version__", "4.10.0")
+    use_net(monkeypatch, FakeNet(error=cv2.error("(-215:Assertion failed) total(srcShape) == maskTotal")))
+
+    with pytest.raises(RuntimeError, match=r"DETECTOR_INPUT_SIZE=640.*imgsz") as excinfo:
+        VehicleDetector(model_path=str(model_file), input_size=640)
+    assert "Trixie" not in str(excinfo.value)
 
 
 def test_class_count_mismatch_fails_at_load_not_on_first_frame(monkeypatch, model_file):
