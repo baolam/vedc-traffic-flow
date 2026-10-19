@@ -106,8 +106,23 @@ def test_update_actuator_config_endpoint():
     ))
 
 
-def test_trigger_emergency_override_endpoint():
-    """Test POST /api/v1/control/override issues manual priority command."""
+def test_trigger_emergency_override_endpoint(monkeypatch):
+    """Test POST /api/v1/control/override publishes a manual priority command (ESP32 answer tracked separately)."""
+    import json
+    import services.api.main as api_main
+
+    published = []
+
+    class _Mqtt:
+        def is_connected(self):
+            return True
+
+        def publish(self, topic, payload):
+            published.append((topic, json.loads(payload)))
+            return type("Info", (), {"rc": 0})()
+
+    monkeypatch.setattr(api_main, "MQTT_CLIENT", _Mqtt())
+    monkeypatch.setitem(LIVE_STATE, "active_topology_id", "four_intersection_v1")
     req = OverrideRequest(
         node_id="J1",
         target_phase_id="J1_PHASE_NS",
@@ -115,18 +130,14 @@ def test_trigger_emergency_override_endpoint():
         max_green_s=60.0
     )
     res = trigger_emergency_override(req)
-    assert res["status"] == "ACCEPTED"
+    assert res["status"] == "SENT"
     assert res["node_id"] == "J1"
     assert res["target_phase_id"] == "J1_PHASE_NS"
-    assert "command_id" in res
     assert "cmd-override-J1" in res["command_id"]
+    assert published[0][1]["controller"] == "manual_override"
 
-    # Verify control ACK was logged in live state
-    assert "J1" in LIVE_STATE["control_acks"]
-    acks = LIVE_STATE["control_acks"]["J1"]
-    assert len(acks) > 0
-    assert acks[0]["node_id"] == "J1"
-    assert acks[0]["status"] == "ACCEPTED"
+    # The override is tracked until the ESP32 answers; no ACK is invented on its behalf
+    assert LIVE_STATE["manual_overrides"]["J1"]["status"] == "SENT"
 
 
 def test_system_aggregated_reports_endpoint():

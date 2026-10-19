@@ -153,7 +153,8 @@ class PolicyChangeRequest(BaseModel):
 class OverrideRequest(BaseModel):
     node_id: str
     target_phase_id: str
-    min_green_s: Optional[float] = 10.0
+    # 5 s is the ESP32 floor: a larger value only makes the device reject the override for longer
+    min_green_s: Optional[float] = 5.0
     max_green_s: Optional[float] = 60.0
 
 class ConnectionManager:
@@ -178,6 +179,79 @@ class ConnectionManager:
 ws_manager = ConnectionManager()
 
 MQTT_CLIENT = None
+
+
+def ingest_health_message(topic: str, payload: Dict[str, Any]) -> None:
+    """Store a health/heartbeat message; its age is measured from when the API received it."""
+    svc_id = payload.get("service_name") or payload.get("node_id") or topic.split("/")[-1]
+    now_ms = int(time.time() * 1000)
+    payload["timestamp_ms"] = payload.get("timestamp_ms") or now_ms
+    # ESP32 clocks come from SNTP and may be unsynced or hours off: liveness uses the receive time (G3)
+    payload["_ingested_at_ms"] = now_ms
+    LIVE_STATE.setdefault("health", {})[svc_id] = payload
+    event_msg = {
+        "timestamp": time.strftime("%H:%M:%S"),
+        "service": "HEALTH",
+        "source": svc_id,
+        "target": "SYSTEM",
+        "topic": topic,
+        "level": "INFO" if payload.get("status") in ("HEALTHY", "GREEN") else "WARNING",
+        "message": f"Heartbeat [{svc_id}] -> Status: {payload.get('status', 'OK')}, Clearance: {payload.get('clearance', 'GREEN')}"
+    }
+    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
+    events.insert(0, event_msg)
+    LIVE_STATE["recent_inter_service_events"] = events[:50]
+
+
+# Dashboard phase override. graph-control re-sends the forced phase until the ESP32 takes it and keeps it green
+# this long (MANUAL_OVERRIDE_HOLD_S, same variable for both services); the API only reports what the ESP32 answers.
+MANUAL_OVERRIDE_HOLD_S = float(os.getenv("MANUAL_OVERRIDE_HOLD_S", "15"))
+OVERRIDE_MAX_WAIT_S = 25.0     # same give-up time as graph-control
+OVERRIDE_SHOW_AFTER_END_S = 30.0
+OVERRIDE_ACK_STATUS = {"APPLIED": "APPLIED", "ACCEPTED": "CLEARING",
+                       "REJECTED": "WAITING", "EXPIRED": "WAITING", "FAILED": "WAITING"}
+
+
+def track_override_ack(node_id: str, ack: Dict[str, Any], now_ms: Optional[int] = None) -> None:
+    """Follow the ESP32 answers about the overridden phase (to the API command and to graph-control's re-sends)."""
+    override = LIVE_STATE.setdefault("manual_overrides", {}).get(node_id)
+    if not override or override["status"] == "APPLIED" or ack.get("target_phase_id") != override["target_phase_id"]:
+        return
+    status = OVERRIDE_ACK_STATUS.get(ack.get("status"))
+    if not status:
+        return
+    override["status"] = status
+    override["last_reason"] = ack.get("reason")
+    if status == "APPLIED":
+        override["applied_ms"] = now_ms or int(time.time() * 1000)
+
+
+def override_view(override: Optional[Dict[str, Any]], now_ms: int,
+                  hold_s: float = MANUAL_OVERRIDE_HOLD_S) -> Optional[Dict[str, Any]]:
+    """What the dashboard shows about the last override of a node; None once it is old news."""
+    if not override:
+        return None
+    view = dict(override, hold_s=hold_s)
+    if override["status"] == "APPLIED":
+        held_s = (now_ms - override["applied_ms"]) / 1000.0
+        if held_s < hold_s:
+            view["hold_remaining_s"] = round(hold_s - held_s, 1)
+            return view
+        view["status"] = "ENDED"   # graph-control has handed the node back to the controller
+        return view if held_s - hold_s < OVERRIDE_SHOW_AFTER_END_S else None
+    waited_s = (now_ms - override["requested_ms"]) / 1000.0
+    if waited_s < OVERRIDE_MAX_WAIT_S:
+        return view
+    view["status"] = "NOT_APPLIED"
+    return view if waited_s - OVERRIDE_MAX_WAIT_S < OVERRIDE_SHOW_AFTER_END_S else None
+
+
+def note_command_controller(payload: Dict[str, Any]) -> None:
+    """Remember which controller graph-control really runs, from the `controller` field of its commands."""
+    controller = payload.get("controller")
+    if controller and controller != "manual_override":
+        LIVE_STATE["applied_controller"] = controller
+
 
 # Background MQTT Telemetry Subscriber (Optional automatic ingestion)
 def _start_mqtt_listener():
@@ -222,6 +296,7 @@ def _start_mqtt_listener():
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
 
                 elif topic.startswith(f"{topics.PREFIX_V1}/control/") and topic.endswith("/command"):
+                    note_command_controller(payload)
                     parts = topic.split("/")
                     node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
                     event_msg = {
@@ -244,6 +319,7 @@ def _start_mqtt_listener():
                             LIVE_STATE["control_acks"][node_id] = []
                         LIVE_STATE["control_acks"][node_id].insert(0, payload)
                         LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
+                        track_override_ack(node_id, payload)
                     event_msg = {
                         "timestamp": now_str,
                         "service": "ACTUATOR",
@@ -258,23 +334,7 @@ def _start_mqtt_listener():
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
 
                 elif topic.startswith(f"{topics.PREFIX_V1}/health/") or topic.startswith("edgex/health/"):
-                    svc_id = payload.get("service_name") or payload.get("node_id") or topic.split("/")[-1]
-                    payload["timestamp_ms"] = payload.get("timestamp_ms") or int(time.time() * 1000)
-                    if "health" not in LIVE_STATE:
-                        LIVE_STATE["health"] = {}
-                    LIVE_STATE["health"][svc_id] = payload
-                    event_msg = {
-                        "timestamp": now_str,
-                        "service": "HEALTH",
-                        "source": svc_id,
-                        "target": "SYSTEM",
-                        "topic": topic,
-                        "level": "INFO" if payload.get("status") in ("HEALTHY", "GREEN") else "WARNING",
-                        "message": f"Heartbeat [{svc_id}] -> Status: {payload.get('status', 'OK')}, Clearance: {payload.get('clearance', 'GREEN')}"
-                    }
-                    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
-                    events.insert(0, event_msg)
-                    LIVE_STATE["recent_inter_service_events"] = events[:50]
+                    ingest_health_message(topic, payload)
             except Exception as ex:
                 logger.debug(f"Error parsing MQTT telemetry payload: {ex}")
 
@@ -339,6 +399,8 @@ def health():
         "status": "healthy",
         "timestamp_ms": int(time.time() * 1000),
         "active_controller": LIVE_STATE["active_controller"],
+        # What graph-control actually runs (from its commands); None until the first command is seen
+        "applied_controller": LIVE_STATE.get("applied_controller"),
         "active_topology": LIVE_STATE["active_topology_id"]
     }
 
@@ -381,6 +443,12 @@ def ingest_heartbeat(payload: Dict[str, Any]):
     LIVE_STATE["health"][service_id] = payload
     return {"status": "SUCCESS", "service": service_id, "timestamp_ms": payload["timestamp_ms"]}
 
+def _placeholder_approaches(approach_ids: List[str]) -> List[Dict[str, Any]]:
+    """Approaches of a node that has not reported: zero values, zero confidence (nothing was observed)."""
+    return [{"approach_id": app_id, "queue_vehicles": 0.0, "flow_veh_per_s": 0.0, "mean_speed_mps": 0.0,
+             "occupancy_ratio": 0.0, "confidence": 0.0} for app_id in approach_ids]
+
+
 TELEMETRY_STALE_TIMEOUT_MS = 3500  # 3.5s without telemetry -> SIGNAL_LOST
 ACTUATOR_HEARTBEAT_TIMEOUT_MS = 6000  # 6.0s without heartbeat -> HEARTBEAT_LOST
 
@@ -411,17 +479,22 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
     actuator_age_ms = None
     clearance = "GREEN"
     if actuator_data:
-        h_time = actuator_data.get("timestamp_ms") or 0
+        # Receive time first: the device clock (SNTP) may be unsynced or wrong (G3)
+        h_time = actuator_data.get("_ingested_at_ms") or actuator_data.get("timestamp_ms") or 0
         actuator_age_ms = (now_ms - h_time) if h_time else None
         clearance = actuator_data.get("clearance", "GREEN")
-        safe_stop = actuator_data.get("safe_stop", False) or clearance != "GREEN"
+        device_status = actuator_data.get("status")
+        # YELLOW / ALL_RED are the normal 5 s clearance of every phase change, not a safe-stop (G2)
+        safe_stop = bool(actuator_data.get("safe_stop")) or device_status == "SAFE_STOP"
 
-        if actuator_age_ms is not None and actuator_age_ms > ACTUATOR_HEARTBEAT_TIMEOUT_MS:
-            actuator_status = "HEARTBEAT_LOST"
+        if device_status == "OFFLINE" or (actuator_age_ms is not None and actuator_age_ms > ACTUATOR_HEARTBEAT_TIMEOUT_MS):
+            actuator_status = "HEARTBEAT_LOST"   # OFFLINE = the ESP32's MQTT last will
         elif safe_stop:
             actuator_status = "SAFE_STOP"
-        elif actuator_data.get("status") in ("DEGRADED", "UNHEALTHY"):
-            actuator_status = actuator_data.get("status")
+        elif device_status in ("DEGRADED", "UNHEALTHY"):
+            actuator_status = device_status
+        elif device_status == "FALLBACK_AUTONOMOUS":
+            actuator_status = "FALLBACK"         # no command for > 5 s: fixed 15 s/phase cycle on the ESP32
         else:
             actuator_status = "ACTIVE"
 
@@ -431,6 +504,8 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
         overall_status = "CAMERA_FAULT"
     elif actuator_status in ("HEARTBEAT_LOST", "SAFE_STOP"):
         overall_status = "ACTUATOR_FAULT"
+    elif actuator_status == "FALLBACK" and node_live:
+        overall_status = "FALLBACK"
     elif not node_live:
         overall_status = "WAITING_FOR_TELEMETRY"
     else:
@@ -479,22 +554,12 @@ def get_network_state():
                     "source_type": LIVE_STATE["source_mode"],
                     "status": health_meta["overall_status"],
                     "device_health": health_meta,
-                    "approaches": [
-                        {
-                            "approach_id": app_id,
-                            "queue_vehicles": 0.0,
-                            "flow_veh_per_s": 0.0,
-                            "mean_speed_mps": 13.89,
-                            "occupancy_ratio": 0.0,
-                            "confidence": 1.0
-                        }
-                        for app_id in n.get("approaches", [])
-                    ]
+                    "approaches": _placeholder_approaches(n.get("approaches", []))
                 })
 
         return {
             "topology_id": LIVE_STATE["active_topology_id"],
-            "controller": LIVE_STATE["active_controller"],
+            "controller": LIVE_STATE.get("applied_controller") or LIVE_STATE["active_controller"],
             "source_mode": LIVE_STATE["source_mode"],
             "last_updated_ms": LIVE_STATE["last_updated_ms"],
             "total_nodes": len(nodes_info),
@@ -533,41 +598,48 @@ def get_node_network_state(node_id: str):
                 "source_type": LIVE_STATE["source_mode"],
                 "status": health_meta["overall_status"],
                 "device_health": health_meta,
-                "approaches": [
-                    {
-                        "approach_id": app_id,
-                        "queue_vehicles": 0.0,
-                        "flow_veh_per_s": 0.0,
-                        "mean_speed_mps": 13.89,
-                        "occupancy_ratio": 0.0,
-                        "confidence": 1.0
-                    }
-                    for app_id in node_spec.get("approaches", [])
-                ]
+                "approaches": _placeholder_approaches(node_spec.get("approaches", []))
             }
 
+        vision = LIVE_STATE.get("health", {}).get("vision")
         return {
             "topology_id": LIVE_STATE["active_topology_id"],
             "node_spec": node_spec,
             "telemetry": response_node,
             "device_health": health_meta,
-            "control_acks": acks
+            "control_acks": acks,
+            # Last dashboard phase override and what the ESP32 made of it (SENT/WAITING/CLEARING/APPLIED/...)
+            "manual_override": override_view(LIVE_STATE.get("manual_overrides", {}).get(node_id), now_ms),
+            # Measured runtime of the vision service that watches this node (model, fps, latency), if any
+            "vision_health": vision if vision and node_id in (vision.get("active_nodes") or []) else None
         }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed retrieving node state: {str(e)}")
 
+@app.get("/api/v1/control/policy")
+def get_control_policy():
+    """Requested controller policy; graph-control polls this (CONTROL_POLICY_URL) and switches to it live."""
+    return {
+        "active_controller": LIVE_STATE["active_controller"],
+        "applied_controller": LIVE_STATE.get("applied_controller"),
+        "timestamp_ms": LIVE_STATE["last_updated_ms"]
+    }
+
+
 @app.post("/api/v1/control/policy")
 def set_control_policy(req: PolicyChangeRequest):
     """
     Updates the active traffic control policy (fixed_time, max_queue, max_pressure, edgeflow).
     """
-    valid_controllers = ["fixed_time", "max_queue", "max_pressure", "edgeflow", "presslight_rl", "rl", "rl_ppo"]
+    # RL policies need a trained model file on the graph-control host; accepting them here would only
+    # change the dashboard label while graph-control keeps the previous controller.
+    valid_controllers = ["fixed_time", "max_queue", "max_pressure", "edgeflow"]
     req_ctrl = req.controller.lower()
     if req_ctrl not in valid_controllers:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=f"Invalid controller: {req_ctrl}. Valid options: {valid_controllers}"
         )
 
@@ -626,65 +698,62 @@ def update_actuator_config(req: ActuatorConfigRequest):
 @app.post("/api/v1/control/override")
 def trigger_emergency_override(req: OverrideRequest):
     """
-    Executes a manual emergency priority phase override for a specific intersection node.
-    Performs clearance transitions G -> Y -> R -> G through Actuator State Machine.
+    Manual phase override for one node (dashboard buttons). Publishes one ControlCommand to the ESP32, which
+    clears through Yellow (3 s) and All-Red (2 s) under its own safety rules; graph-control then re-sends the
+    phase until it has been green MANUAL_OVERRIDE_HOLD_S. The ESP32 answer is followed in
+    GET /api/v1/network/state/{node_id} -> manual_override; "SENT" here only means it left the API.
     """
-    cmd_id = f"cmd-override-{req.node_id}-{int(time.time() * 1000)}"
+    try:
+        topo = contracts_sdk.load_topology(LIVE_STATE["active_topology_id"])
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Cannot load topology: {exc}")
+    node_spec = next((n for n in topo.get("nodes", []) if n["node_id"] == req.node_id), None)
+    if node_spec is None:
+        raise HTTPException(status_code=404, detail=f"Node '{req.node_id}' is not in topology '{LIVE_STATE['active_topology_id']}'.")
+    if req.target_phase_id not in [ph["phase_id"] for ph in node_spec.get("phases", [])]:
+        raise HTTPException(status_code=400, detail=f"Phase '{req.target_phase_id}' does not belong to node '{req.node_id}'.")
+    if not (MQTT_CLIENT and MQTT_CLIENT.is_connected()):
+        raise HTTPException(status_code=503, detail="MQTT broker not connected: override not sent to the ESP32.")
+
     now_ms = int(time.time() * 1000)
-
-    min_green = float(req.min_green_s) if req.min_green_s is not None else 10.0
-    max_green = float(req.max_green_s) if req.max_green_s is not None else 60.0
-
+    cmd_id = f"cmd-override-{req.node_id}-{now_ms}"   # graph-control recognises overrides by this prefix
     command_payload = {
         "command_id": cmd_id,
         "node_id": req.node_id,
         "target_phase_id": req.target_phase_id,
-        "min_green_s": min_green,
-        "max_green_s": max_green,
+        "min_green_s": float(req.min_green_s) if req.min_green_s is not None else 5.0,
+        "max_green_s": float(req.max_green_s) if req.max_green_s is not None else 60.0,
         "controller": "manual_override",
         "timestamp_ms": now_ms,
         "expires_at_ms": now_ms + 10000
     }
-
     try:
         contracts_sdk.validate_payload(command_payload, "control_command")
     except Exception as ve:
         logger.warning(f"ControlCommand validation warning: {ve}")
 
-    # Record ACK in live state
-    if req.node_id not in LIVE_STATE["control_acks"]:
-        LIVE_STATE["control_acks"][req.node_id] = []
-    
-    ack_entry = {
+    pub_topic = topics.get_command_topic(req.node_id)
+    info = MQTT_CLIENT.publish(pub_topic, json.dumps(command_payload))
+    if getattr(info, "rc", 0) != 0:
+        raise HTTPException(status_code=503, detail=f"MQTT publish failed (rc={info.rc}): override not sent.")
+    LIVE_STATE.setdefault("manual_overrides", {})[req.node_id] = {
         "command_id": cmd_id,
-        "node_id": req.node_id,
         "target_phase_id": req.target_phase_id,
-        "status": "ACCEPTED",
-        "timestamp_ms": now_ms,
-        "reason": f"Emergency manual override requested. Clearing to {req.target_phase_id} via Yellow (3s) & All-Red (2s)."
+        "requested_ms": now_ms,
+        "status": "SENT",
+        "last_reason": None,
     }
-    LIVE_STATE["control_acks"][req.node_id].insert(0, ack_entry)
-
-    # Update node telemetry current_phase_id
     if req.node_id in LIVE_STATE["nodes"]:
         LIVE_STATE["nodes"][req.node_id]["pending_phase_id"] = req.target_phase_id
 
-    # Publish ControlCommand to MQTT if client connected
-    if MQTT_CLIENT and MQTT_CLIENT.is_connected():
-        try:
-            pub_topic = topics.get_command_topic(req.node_id)
-            MQTT_CLIENT.publish(pub_topic, json.dumps(command_payload))
-            logger.info(f"Published ControlCommand to MQTT [{pub_topic}]: {cmd_id}")
-        except Exception as ex:
-            logger.warning(f"Could not publish ControlCommand to MQTT: {ex}")
-
-    logger.info(f"Emergency Manual Override issued for node {req.node_id} -> target phase {req.target_phase_id}")
+    logger.info(f"Manual override published to {pub_topic}: {req.node_id} -> {req.target_phase_id} ({cmd_id})")
     return {
-        "status": "ACCEPTED",
+        "status": "SENT",
         "command_id": cmd_id,
         "node_id": req.node_id,
         "target_phase_id": req.target_phase_id,
-        "reason": ack_entry["reason"],
+        "hold_s": MANUAL_OVERRIDE_HOLD_S,
+        "reason": "Published to the ESP32; its answer appears in /api/v1/network/state/{node_id} -> manual_override.",
         "timestamp_ms": now_ms
     }
 

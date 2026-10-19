@@ -42,8 +42,9 @@ const Header = () => {
         .then(res => res.json())
         .then(data => {
           if (data) {
-            if (data.active_controller) {
-              setActiveController(data.active_controller);
+            // applied_controller = what graph-control's commands say it runs; requested policy until then
+            if (data.applied_controller || data.active_controller) {
+              setActiveController(data.applied_controller || data.active_controller);
             }
             if (data.active_topology) {
               setActiveScenario(data.active_topology);

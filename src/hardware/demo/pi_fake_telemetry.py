@@ -211,7 +211,8 @@ def run(args: argparse.Namespace, stop: Optional[threading.Event] = None) -> int
     client = None
     if not args.dry_run:
         health_topic = mc.topics.get_health_topic(mc.HEALTH_VISION)
-        client = mc.make_client("pi-fake-telemetry", will=(health_topic, OFFLINE_PAYLOAD))
+        # One client id per node set: two fake sources (e.g. J1 camera_lost, J2 normal) must not kick each other
+        client = mc.make_client(f"pi-fake-telemetry-{'-'.join(node_ids)}", will=(health_topic, OFFLINE_PAYLOAD))
         client.on_message = lambda c, u, msg: fake.observe_health(msg.topic, msg.payload, time.monotonic())
         try:
             mc.connect(client, args.mqtt_host, args.mqtt_port)

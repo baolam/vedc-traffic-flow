@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import PhaseIndicator from '../components/PhaseIndicator';
+import { describeOverride, overrideRequestError, OVERRIDE_IN_PROGRESS } from '../utils/manualOverride';
 import { 
   ArrowLeft, Cpu, Activity, ShieldCheck, Gauge, Car, AlertTriangle, Play, 
   ShieldAlert, Radio, Video, Sliders, CheckCircle2, Clock, RefreshCw, 
@@ -25,13 +26,13 @@ const IntersectionDetail = () => {
   const [visionReport, setVisionReport] = useState(null);
   const [isRunningVision, setIsRunningVision] = useState(false);
   const [deviceHealth, setDeviceHealth] = useState(null);
+  const [visionHealth, setVisionHealth] = useState(null); // measured by the vision service (health topic)
   const [isServerDisconnected, setIsServerDisconnected] = useState(false);
 
   // Manual Override Local State
   const [overrideTargetPhase, setOverrideTargetPhase] = useState('');
-  const [overrideStatus, setOverrideStatus] = useState(null);
-  const [clearanceStep, setClearanceStep] = useState(null); // 'YELLOW', 'ALL_RED', 'APPLIED'
-  const [clearanceCountdown, setClearanceCountdown] = useState(0);
+  const [manualOverride, setManualOverride] = useState(null); // API view of the last override, from the ESP32 ACKs
+  const [overrideError, setOverrideError] = useState(null);
 
   // Actuator State Machine Dynamic Parameters
   const [minGreen, setMinGreen] = useState(10);
@@ -92,9 +93,11 @@ const IntersectionDetail = () => {
           if (data.device_health) {
             setDeviceHealth(data.device_health);
           }
+          setVisionHealth(data.vision_health || null);
+          setManualOverride(data.manual_override || null);
           if (data.telemetry) {
             setNodeTelemetry(data.telemetry);
-            if (data.telemetry.current_phase_id && !clearanceStep) {
+            if (data.telemetry.current_phase_id) {
               setActivePhase(data.telemetry.current_phase_id);
             }
 
@@ -120,7 +123,7 @@ const IntersectionDetail = () => {
       .catch(() => {
         setIsServerDisconnected(true);
       });
-  }, [nodeId, clearanceStep, apiBase]);
+  }, [nodeId, apiBase]);
 
   useEffect(() => {
     fetchNodeState();
@@ -189,51 +192,29 @@ const IntersectionDetail = () => {
       .catch(() => {});
   };
 
-  // 4. Handle Emergency Manual Phase Override
+  // 4. Manual phase override: the ESP32 decides when it is safe; the banner follows its ACKs via the API
   const handleTriggerOverride = (targetPhaseId) => {
     const target = targetPhaseId || overrideTargetPhase;
-    setOverrideStatus(`Manual Emergency Phase Override triggered for Node ${nodeId} -> Target: ${target}`);
-    setClearanceStep('YELLOW');
-    setClearanceCountdown(yellowDuration);
-
+    setOverrideError(null);
     fetch(`${apiBase}/api/v1/control/override`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        node_id: nodeId,
-        target_phase_id: target,
-        min_green_s: minGreen,
-        max_green_s: maxGreen
+      body: JSON.stringify({ node_id: nodeId, target_phase_id: target })
+    })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setOverrideError(overrideRequestError(`API từ chối: ${data.detail || 'lỗi không rõ'}`));
+          return;
+        }
+        fetchNodeState();
       })
-    }).catch(() => {});
-
-    // Countdown simulation for Actuator safe clearance (Yellow -> All-Red -> Applied Green)
-    let yellowLeft = yellowDuration;
-    const yellowInterval = setInterval(() => {
-      yellowLeft -= 1;
-      setClearanceCountdown(yellowLeft);
-      if (yellowLeft <= 0) {
-        clearInterval(yellowInterval);
-        setClearanceStep('ALL_RED');
-        setClearanceCountdown(allRedDuration);
-
-        let redLeft = allRedDuration;
-        const redInterval = setInterval(() => {
-          redLeft -= 1;
-          setClearanceCountdown(redLeft);
-          if (redLeft <= 0) {
-            clearInterval(redInterval);
-            setClearanceStep('APPLIED');
-            setActivePhase(target);
-            setTimeout(() => {
-              setClearanceStep(null);
-              setOverrideStatus(null);
-            }, 2500);
-          }
-        }, 1000);
-      }
-    }, 1000);
+      .catch(() => setOverrideError(overrideRequestError('Không gọi được API: lệnh chưa tới ESP32.')));
   };
+
+  const overrideBanner = overrideError || describeOverride(manualOverride);
+  const overrideBusy = Boolean(manualOverride && OVERRIDE_IN_PROGRESS.includes(manualOverride.status));
+  const liveClearance = deviceHealth?.actuator?.clearance;
 
   const appStats = useMemo(() => nodeTelemetry?.approaches || [], [nodeTelemetry]);
   const sourceType = nodeTelemetry?.source_type || 'system';
@@ -345,7 +326,7 @@ const IntersectionDetail = () => {
           </div>
 
           <div style={{ backgroundColor: '#ffffff', padding: '10px 18px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-            <PhaseIndicator activePhase={activePhase} state={clearanceStep || 'GREEN'} />
+            <PhaseIndicator activePhase={activePhase} state={liveClearance === 'YELLOW' || liveClearance === 'ALL_RED' ? liveClearance : 'GREEN'} />
           </div>
         </div>
       </div>
@@ -375,32 +356,25 @@ const IntersectionDetail = () => {
         </div>
       )}
 
-      {/* Emergency Override Status Alert Banner */}
-      {overrideStatus && (
+      {/* Manual override status, as reported by the ESP32 ACKs (not a browser-side countdown) */}
+      {overrideBanner && (
         <div style={{
-          backgroundColor: clearanceStep === 'YELLOW' ? '#fffbeb' : clearanceStep === 'ALL_RED' ? '#fef2f2' : '#f0fdf4',
-          border: `2px solid ${clearanceStep === 'YELLOW' ? '#f59e0b' : clearanceStep === 'ALL_RED' ? '#ef4444' : '#16a34a'}`,
+          backgroundColor: overrideBanner.colors.background,
+          border: `2px solid ${overrideBanner.colors.border}`,
           borderRadius: '12px',
           padding: '16px 20px',
           marginBottom: '24px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          color: clearanceStep === 'YELLOW' ? '#b45309' : clearanceStep === 'ALL_RED' ? '#dc2626' : '#15803d',
+          gap: '14px',
+          color: overrideBanner.colors.color,
           fontWeight: 600,
           boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <ShieldAlert size={26} />
-            <div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>{overrideStatus}</div>
-              <div style={{ fontSize: '0.88rem', fontWeight: 500, marginTop: '2px' }}>
-                Quy trình Chuyển pha An toàn Actuator: <strong>{clearanceStep}</strong> ({clearanceCountdown}s còn lại)
-              </div>
-            </div>
-          </div>
-          <div style={{ fontSize: '1.5rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 900, backgroundColor: 'rgba(255,255,255,0.8)', padding: '6px 16px', borderRadius: '8px' }}>
-            {clearanceCountdown}s
+          <ShieldAlert size={26} />
+          <div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>{overrideBanner.title}</div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 500, marginTop: '2px' }}>{overrideBanner.detail}</div>
           </div>
         </div>
       )}
@@ -433,11 +407,11 @@ const IntersectionDetail = () => {
               </div>
               <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: '#7f1d1d' }}>
                 {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                  ? 'Mạch ESP32 ngắt nhịp tim (>6s). Control Gateway đã tự động khóa lệnh chuyển pha để tránh xung đột.'
+                  ? 'Không nhận nhịp tim ESP32 quá 6 s (mất nguồn hoặc Wi-Fi). Nếu ESP32 vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
-                  ? 'Camera mất kết nối hoặc độ tin cậy 0.0 (Rút cáp/hỏng cảm biến). Hệ thống hủy quyết định chuyển pha và kích hoạt chế độ an toàn.'
+                  ? 'Camera/video không cho quan sát (độ tin cậy 0). Graph-control ngừng gửi lệnh cho nút này; sau 5 s ESP32 tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'SIGNAL_LOST' || nodeTelemetry?.status === 'SIGNAL_LOST')
-                  ? 'Gói tin telemetry quá hạn (>3.5s mất mạng). Hệ thống đình chỉ phát lệnh điều khiển theo dữ liệu cũ.'
+                  ? 'Không nhận telemetry quá 3,5 s (Pi/vision hoặc mạng). Không có telemetry thì graph-control không ra lệnh; sau 5 s ESP32 tự chạy chu kỳ cố định.'
                   : 'Phần cứng Actuator đang trong chế độ Safe-Stop hoặc chờ xác thực an toàn.'}
               </div>
             </div>
@@ -495,13 +469,18 @@ const IntersectionDetail = () => {
             <Wifi size={26} color={deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626' : '#ca8a04'} />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Trạng Thái Phần Cứng</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Nhịp Tim ESP32</span>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-              {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? 'LOST (>6s)' : `${lastPingMs} ms`}
+              {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
+                ? 'LOST (>6s)'
+                : deviceHealth?.actuator?.last_heartbeat_ms_ago != null
+                ? `${(deviceHealth.actuator.last_heartbeat_ms_ago / 1000).toFixed(1)} s trước`
+                : 'Chưa nhận'}
             </div>
             <div style={{
               fontSize: '0.78rem',
-              color: deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626' : deviceHealth?.actuator?.status === 'SAFE_STOP' ? '#d97706' : '#16a34a',
+              color: deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626'
+                : (deviceHealth?.actuator?.status === 'SAFE_STOP' || deviceHealth?.actuator?.status === 'FALLBACK') ? '#d97706' : '#16a34a',
               fontWeight: 600,
               marginTop: '2px'
             }}>
@@ -509,7 +488,9 @@ const IntersectionDetail = () => {
                 ? '● Mất Nhịp Tim ESP32 (>6s)'
                 : deviceHealth?.actuator?.status === 'SAFE_STOP'
                 ? '● Actuator Safe-Stop'
-                : '● ESP32 Hardware Active'}
+                : deviceHealth?.actuator?.status === 'FALLBACK'
+                ? '● Fallback cố định 15 s/pha'
+                : `● ESP32 ${deviceHealth?.actuator?.clearance || 'GREEN'} | API ${lastPingMs} ms`}
             </div>
           </div>
         </div>
@@ -521,7 +502,7 @@ const IntersectionDetail = () => {
           <div>
             <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Kiểm Duyệt An Toàn</span>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
-              100% Interlocked
+              Interlock trên ESP32
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
               Vàng: {yellowDuration}s | Đỏ Toàn Bộ: {allRedDuration}s
@@ -701,12 +682,22 @@ const IntersectionDetail = () => {
               gap: '8px',
               zIndex: 10
             }}>
-              <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#4ade80', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
-                ● {visionReport?.metrics?.throughput_fps ? `${visionReport.metrics.throughput_fps} FPS` : 'LIVE 30 FPS'} | {visionReport?.detector_backend === 'opencv_dnn' ? 'YOLOv8n-ONNX' : 'YOLOv8'}
+              {/* Live figures measured by the vision service (edgeflow/v1/health/vision), never constants */}
+              <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: visionHealth?.status === 'HEALTHY' ? '#4ade80' : '#f87171', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                {visionHealth
+                  ? `● ${visionHealth.status} | ${visionHealth.runtime?.processed_fps != null ? `${visionHealth.runtime.processed_fps} fps` : '-- fps'} | ${visionHealth.model || visionHealth.backend || 'model ?'}`
+                  : '○ Chưa có health của vision'}
               </span>
-              <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#38bdf8', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
-                {visionReport?.metrics?.p50_latency_ms ? `Latency: ${visionReport.metrics.p50_latency_ms}ms (P95: ${visionReport.metrics.p95_latency_ms}ms)` : '640x480 Camera Feed'}
-              </span>
+              {visionHealth && (
+                <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#38bdf8', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {`Inference p50 ${visionHealth.runtime?.latency_ms?.inference_ms?.p50 ?? '--'} ms | ${visionHealth.detector_input_size || '?'} px | ${visionHealth.device || ''}`}
+                </span>
+              )}
+              {visionMode === 'video' && (
+                <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                  Video chú thích ghi sẵn (không phải luồng trực tiếp)
+                </span>
+              )}
               {visionReport?.next_step_controller && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#f59e0b', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
                   Next Phase: {visionReport?.sample_decision?.target_phase_id || 'HOLD'}
@@ -757,22 +748,22 @@ const IntersectionDetail = () => {
                 {/* Approach ROI Bounding Rectangles with Live Queue Numbers */}
                 {/* North Approach */}
                 <div style={{ position: 'absolute', top: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
-                  N_IN: {Math.round((appStats[0]?.queue_vehicles || 3.2) * 10) / 10} veh
+                  N_IN: {Math.round((appStats[0]?.queue_vehicles ?? 0) * 10) / 10} veh
                 </div>
 
                 {/* South Approach */}
                 <div style={{ position: 'absolute', bottom: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
-                  S_IN: {Math.round((appStats[1]?.queue_vehicles || 2.1) * 10) / 10} veh
+                  S_IN: {Math.round((appStats[1]?.queue_vehicles ?? 0) * 10) / 10} veh
                 </div>
 
                 {/* East Approach */}
                 <div style={{ position: 'absolute', right: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
-                  E_IN: {Math.round((appStats[2]?.queue_vehicles || 1.5) * 10) / 10} veh
+                  E_IN: {Math.round((appStats[2]?.queue_vehicles ?? 0) * 10) / 10} veh
                 </div>
 
                 {/* West Approach */}
                 <div style={{ position: 'absolute', left: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
-                  W_IN: {Math.round((appStats[3]?.queue_vehicles || 2.8) * 10) / 10} veh
+                  W_IN: {Math.round((appStats[3]?.queue_vehicles ?? 0) * 10) / 10} veh
                 </div>
               </div>
             )}
@@ -780,12 +771,12 @@ const IntersectionDetail = () => {
 
         </div>
 
-        {/* MODULE 3: Max-Pressure Controller Decision & Actuator Controls */}
+        {/* MODULE 3: queue pressure (max-pressure reference) & actuator controls */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
             <Sliders color="#0284c7" size={20} />
             <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-              Phân Tích Max-Pressure Controller & Lệnh Actuator ({nodeId})
+              Áp Lực Hàng Chờ & Lệnh Actuator ({nodeId})
             </h3>
           </div>
 
@@ -814,7 +805,7 @@ const IntersectionDetail = () => {
 
             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Info size={14} color="#0284c7" />
-              <span>Chênh lệch áp lực (ΔW): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Thuật toán khuyên dùng: <strong style={{ color: '#0284c7' }}>{pressureAnalysis.recommendedPhase}</strong></span>
+              <span>Chênh lệch áp lực (ΔW): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Max-pressure sẽ chọn (tham khảo, không phải thuật toán đang chạy): <strong style={{ color: '#0284c7' }}>{pressureAnalysis.recommendedPhase}</strong></span>
             </div>
           </div>
 
@@ -828,7 +819,7 @@ const IntersectionDetail = () => {
                 <button
                   key={phase.phase_id}
                   onClick={() => handleTriggerOverride(phase.phase_id)}
-                  disabled={clearanceStep !== null}
+                  disabled={overrideBusy}
                   style={{
                     flex: 1,
                     minWidth: '140px',
@@ -839,7 +830,7 @@ const IntersectionDetail = () => {
                     borderRadius: '8px',
                     fontWeight: 700,
                     fontSize: '0.82rem',
-                    cursor: clearanceStep ? 'not-allowed' : 'pointer',
+                    cursor: overrideBusy ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -853,6 +844,12 @@ const IntersectionDetail = () => {
             </div>
           </div>
 
+          {/* Timing and safe modes live in the ESP32 firmware (yellow 3 s, all-red 2 s; safe-stop = GPIO4 button).
+              These controls only changed an API value, so they are disabled rather than shown as acting on the lights. */}
+          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            Vàng 3 s / đỏ toàn bộ 2 s cố định trong firmware ESP32. Lệnh tay chỉ được ESP32 nhận khi hướng đang xanh đã đủ 5 s; pha được ép giữ xanh 15 s rồi thuật toán điều khiển lại. Safe-stop (chớp vàng) bằng nút cứng GPIO4 trên mạch; dashboard không điều khiển được.
+          </div>
+
           {/* Clearance Timing Sliders */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -862,6 +859,7 @@ const IntersectionDetail = () => {
               </div>
               <input
                 type="range"
+                disabled
                 min="1"
                 max="8"
                 value={yellowDuration}
@@ -881,6 +879,7 @@ const IntersectionDetail = () => {
               </div>
               <input
                 type="range"
+                disabled
                 min="1"
                 max="8"
                 value={allRedDuration}
@@ -901,6 +900,7 @@ const IntersectionDetail = () => {
             </label>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
+                disabled
                 onClick={() => handleUpdateActuatorConfig({ mode: 'NORMAL' })}
                 style={{
                   flex: 1,
@@ -911,13 +911,14 @@ const IntersectionDetail = () => {
                   color: actuatorMode === 'NORMAL' ? '#ffffff' : '#16a34a',
                   fontWeight: 700,
                   fontSize: '0.78rem',
-                  cursor: 'pointer'
+                  cursor: 'not-allowed', opacity: 0.6
                 }}
               >
                 Normal Auto
               </button>
 
               <button
+                disabled
                 onClick={() => handleUpdateActuatorConfig({ mode: 'FLASHING_YELLOW' })}
                 style={{
                   flex: 1,
@@ -928,13 +929,14 @@ const IntersectionDetail = () => {
                   color: actuatorMode === 'FLASHING_YELLOW' ? '#ffffff' : '#d97706',
                   fontWeight: 700,
                   fontSize: '0.78rem',
-                  cursor: 'pointer'
+                  cursor: 'not-allowed', opacity: 0.6
                 }}
               >
                 Chớp Vàng (Safe-Stop)
               </button>
 
               <button
+                disabled
                 onClick={() => handleUpdateActuatorConfig({ mode: 'ALL_RED' })}
                 style={{
                   flex: 1,
@@ -945,7 +947,7 @@ const IntersectionDetail = () => {
                   color: actuatorMode === 'ALL_RED' ? '#ffffff' : '#dc2626',
                   fontWeight: 700,
                   fontSize: '0.78rem',
-                  cursor: 'pointer'
+                  cursor: 'not-allowed', opacity: 0.6
                 }}
               >
                 Đỏ Toàn Bộ (All-Red)

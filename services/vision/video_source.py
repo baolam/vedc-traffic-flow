@@ -6,7 +6,7 @@ Supports File streams, Webcams, Raspberry Pi Camera Module 3 / V4L2 devices, and
 import time
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
 import cv2
 
@@ -168,19 +168,57 @@ class WebcamVideoSource(BaseVideoSource):
 
 
 class FileVideoSource(BaseVideoSource):
-    """Video source for pre-recorded road traffic video files (mp4, avi, mkv)."""
-    def __init__(self, file_path: str):
+    """
+    Video source for pre-recorded road traffic video files (mp4, avi, mkv).
+
+    With realtime=True (default) the file plays at the speed of its own fps, like a camera would: a caller that
+    reads faster is made to wait, a caller that reads slower (slow inference) skips frames instead of watching
+    the traffic in slow motion. The file loops when it ends. realtime=False reads one frame per call.
+    """
+    def __init__(self, file_path: str, realtime: bool = True,
+                 clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep):
         self.file_path = file_path
+        self.realtime = realtime
+        self._clock = clock
+        self._sleep = sleep
         self.cap = cv2.VideoCapture(file_path)
+        fps = self.cap.get(cv2.CAP_PROP_FPS) if self.cap.isOpened() else 0.0
+        self.fps = fps if fps and fps > 0 else 0.0
+        self._started_at: Optional[float] = None
+        self._index = 0          # frames of the current pass already consumed (read or skipped)
+
+    def _restart(self) -> None:
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        self._index = 0
+        self._started_at = self._clock()
+
+    def _pace(self) -> None:
+        now = self._clock()
+        if self._started_at is None:
+            self._started_at = now
+        elapsed = now - self._started_at
+        due = int(elapsed * self.fps)
+        while self._index < due:                      # behind the clock: drop frames
+            if not self.cap.grab():
+                self._restart()
+                return
+            self._index += 1
+        ahead = self._index / self.fps - elapsed
+        if ahead > 0:                                 # ahead of the clock: wait for the frame's time
+            self._sleep(ahead)
 
     def read_frame(self) -> Tuple[bool, Optional[np.ndarray]]:
         if not self.cap or not self.cap.isOpened():
             return False, None
+        if self.realtime and self.fps > 0:
+            self._pace()
         ret, frame = self.cap.read()
         if not ret:
             # Loop video file for continuous tabletop simulation
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            self._restart()
             ret, frame = self.cap.read()
+        if ret:
+            self._index += 1
         return ret, frame
 
     def release(self) -> None:

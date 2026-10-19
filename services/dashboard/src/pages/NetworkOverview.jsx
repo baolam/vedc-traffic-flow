@@ -9,6 +9,10 @@ import {
   Pause, Play, Filter, Layers, Cpu, Server, ExternalLink, HelpCircle
 } from 'lucide-react';
 
+// Queue above 12 vehicles or any status other than ONLINE (camera fault, heartbeat lost, fallback, ...)
+const ATTENTION_QUEUE_VEH = 12;
+const needsAttention = (d) => (d.total_queue || 0) > ATTENTION_QUEUE_VEH || Boolean(d.status && d.status !== 'ONLINE');
+
 const NetworkOverview = () => {
   const navigate = useNavigate();
 
@@ -86,6 +90,19 @@ const NetworkOverview = () => {
     return mapping[ctrl.toLowerCase()] || ctrl.replace('_', ' ').toUpperCase();
   };
 
+  // 0. Open on the topology the running system uses (API EDGEFLOW_TOPOLOGY), not a stale browser default
+  useEffect(() => {
+    fetch(`${apiBase}/health`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.active_topology) {
+          setActiveScenarioId(data.active_topology);
+          localStorage.setItem('edgeflow_active_scenario', data.active_topology);
+        }
+      })
+      .catch(() => {});
+  }, [apiBase]);
+
   // 1. Fetch available scenarios
   useEffect(() => {
     fetch(`${apiBase}/api/v1/scenarios`)
@@ -112,24 +129,25 @@ const NetworkOverview = () => {
             const nodeId = n.node_id;
             const phases = n.phases || [];
             const firstPhaseId = phases.length ? phases[0].phase_id : `${nodeId}_PHASE_1`;
+            // Placeholder until live state arrives: nothing observed yet, so no speed and no confidence
             initialNodes[nodeId] = {
               node_id: nodeId,
               name: n.name || nodeId,
               current_phase_id: firstPhaseId,
               total_queue: 0,
-              speed: 13.9,
+              speed: 0,
               flow: 0.0,
               occupancy: 0.0,
-              confidence: 100,
+              confidence: 0,
               source_type: 'system',
-              status: 'ONLINE',
+              status: 'WAITING_FOR_TELEMETRY',
               approaches: (n.approaches || []).map(appId => ({
                 approach_id: appId,
                 queue_vehicles: 0,
                 flow_veh_per_s: 0,
-                mean_speed_mps: 13.89,
+                mean_speed_mps: 0,
                 occupancy_ratio: 0.0,
-                confidence: 1.0
+                confidence: 0.0
               }))
             };
           });
@@ -215,23 +233,17 @@ const NetworkOverview = () => {
     ? (nodeEntries.reduce((acc, [_, d]) => acc + (d.speed || 0), 0) / nodeEntries.length).toFixed(1)
     : '13.9';
 
-  // Identify nodes requiring attention (Queue > 12 veh OR non-ONLINE status OR speed < 5 m/s)
-  const attentionNodes = useMemo(() => {
-    return nodeEntries.filter(([_, d]) => {
-      const isHighQueue = (d.total_queue || 0) > 12;
-      const isLowSpeed = (d.speed != null && d.speed < 5.0 && (d.total_queue || 0) > 4);
-      const isNotOnline = d.status && d.status !== 'ONLINE';
-      return isHighQueue || isLowSpeed || isNotOnline;
-    });
-  }, [nodeEntries]);
+  // Nodes requiring attention: one rule for the KPI, the tabs, the sort order and the cards. A speed rule
+  // (< 5 m/s) was dropped: it was set for real roads, and the tabletop video speeds are always below it.
+  const attentionNodes = useMemo(() => nodeEntries.filter(([_, d]) => needsAttention(d)), [nodeEntries]);
 
   // Priority Sorting: Nodes requiring attention appear FIRST, followed by normal junctions
   const sortedNodes = useMemo(() => {
     return [...nodeEntries].sort((a, b) => {
       const aQueue = a[1].total_queue || 0;
       const bQueue = b[1].total_queue || 0;
-      const aAttn = aQueue > 12 || a[1].status !== 'ONLINE';
-      const bAttn = bQueue > 12 || b[1].status !== 'ONLINE';
+      const aAttn = needsAttention(a[1]);
+      const bAttn = needsAttention(b[1]);
 
       if (aAttn && !bAttn) return -1;
       if (!aAttn && bAttn) return 1;
@@ -246,7 +258,7 @@ const NetworkOverview = () => {
                           (data.name && data.name.toLowerCase().includes(searchQuery.toLowerCase()));
       if (!matchSearch) return false;
 
-      const isAttn = (data.total_queue || 0) > 12 || data.status !== 'ONLINE';
+      const isAttn = needsAttention(data);
       if (stationFilter === 'ATTENTION') return isAttn;
       if (stationFilter === 'NORMAL') return !isAttn;
       return true;
@@ -528,10 +540,10 @@ const NetworkOverview = () => {
               color: '#065f46',
               border: '1px solid #a7f3d0'
             }}>
-              Safety Compliance 100%
+              Interlock on ESP32
             </span>
-            <span title="Zero conflicting green states verified by ActuatorStateMachine" style={{ color: '#64748b', cursor: 'help' }}>
-              (0 conflicts)
+            <span title="Firmware switches green only after yellow 3 s + all-red 2 s; evidence: TRACE log checked by src/hardware/verify_trace.py" style={{ color: '#64748b', cursor: 'help' }}>
+              (Y 3s + all-red 2s)
             </span>
           </div>
         </div>
@@ -648,7 +660,7 @@ const NetworkOverview = () => {
 
             {filteredNodes.map(([nodeId, data]) => {
               const isSelected = selectedNodeId === nodeId;
-              const isAttn = (data.total_queue || 0) > 12 || data.status !== 'ONLINE';
+              const isAttn = needsAttention(data);
 
               return (
                 <div
@@ -682,6 +694,8 @@ const NetworkOverview = () => {
                         <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>CAM FAULT</span>
                       ) : data.status === 'ACTUATOR_FAULT' ? (
                         <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>ACTUATOR ERR</span>
+                      ) : data.status === 'FALLBACK' ? (
+                        <span className="badge badge-yellow" title="ESP32 has had no command for > 5 s: fixed 15 s/phase cycle" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>FALLBACK 15s</span>
                       ) : (
                         <span className="badge badge-green" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>ONLINE</span>
                       )}

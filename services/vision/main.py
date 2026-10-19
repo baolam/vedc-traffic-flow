@@ -242,6 +242,7 @@ def main(argv: Optional[List[str]] = None):
         "board_model": read_board_model(),
         "backend": engine.detector.backend,
         "model_sha256": engine.detector.model_sha256,
+        "model": Path(cfg.detection_model_path).name if cfg.detection_model_path else None,
         "detector_input_size": cfg.detector_input_size,
         "video_source": cfg.video_source,
         "active_nodes": node_ids,

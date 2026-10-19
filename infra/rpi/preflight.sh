@@ -62,12 +62,18 @@ fi
 FREE_MB="$(df -Pm / | awk 'NR == 2 { print $4 }')"
 if (( FREE_MB >= 1024 )); then pass "${FREE_MB} MB free on /"; else warn "only ${FREE_MB} MB free on / (logs, dataset frames)"; fi
 
+# Video-file demo (no CSI camera): decided from the env file the same way the service reads it
+VIDEO_FILE_MODE=0
+if [[ -f "$ENV_FILE" && "$(env_get VIDEO_SOURCE synthetic)" =~ \.(mp4|avi|mkv|mov)$ ]]; then VIDEO_FILE_MODE=1; fi
+
 echo "== Python environment ($VENV_DIR)"
 if [[ ! -x "$PY" ]]; then
   fail "no venv at $VENV_DIR: run bash infra/rpi/setup_pi.sh"
 else
   for module in picamera2 numpy paho.mqtt.client pydantic_settings jsonschema; do
-    if "$PY" -c "import $module" 2>/dev/null; then pass "import $module"; else fail "import $module (re-run setup_pi.sh)"; fi
+    if "$PY" -c "import $module" 2>/dev/null; then pass "import $module"
+    elif [[ "$module" = picamera2 && "$VIDEO_FILE_MODE" = 1 ]]; then warn "import picamera2 failed (not needed with a video file)"
+    else fail "import $module (re-run setup_pi.sh)"; fi
   done
   CV="$("$PY" -c 'import cv2; print(cv2.__version__)' 2>/dev/null || true)"
   if [[ -z "$CV" ]]; then
@@ -80,7 +86,9 @@ else
 fi
 
 echo "== Camera"
-if have rpicam-hello; then
+if [[ "$VIDEO_FILE_MODE" = 1 ]]; then
+  pass "VIDEO_SOURCE is a video file: no CSI camera needed"
+elif have rpicam-hello; then
   CAMERAS="$(rpicam-hello --list-cameras 2>&1 || true)"
   if grep -q "imx708_wide" <<<"$CAMERAS"; then
     pass "Camera Module 3 Wide detected (imx708_wide)"
@@ -136,8 +144,24 @@ PY
     fi
   fi
   VIDEO="$(env_get VIDEO_SOURCE synthetic)"
-  if [[ "$VIDEO" =~ ^(picamera|picamera2|csi)$ ]]; then pass "VIDEO_SOURCE=$VIDEO"; else warn "VIDEO_SOURCE=$VIDEO (the CSI camera needs picamera)"; fi
-  if [[ -n "$(env_get CAMERA_LENS_POSITION)" ]]; then
+  VIDEO_FILE=""
+  if [[ "$VIDEO" =~ ^(picamera|picamera2|csi)$ ]]; then
+    pass "VIDEO_SOURCE=$VIDEO"
+  elif [[ "$VIDEO" =~ \.(mp4|avi|mkv|mov)$ ]]; then
+    # Video-file demo (no physical camera): the file must exist; it is played at its own fps and looped
+    VIDEO_FILE="$VIDEO"
+    [[ "$VIDEO_FILE" = /* ]] || VIDEO_FILE="$REPO_DIR/$VIDEO_FILE"
+    if [[ -r "$VIDEO_FILE" ]]; then
+      pass "VIDEO_SOURCE is a video file ($(basename "$VIDEO_FILE"), $(du -h "$VIDEO_FILE" | cut -f1)): demo input, no camera"
+    else
+      fail "VIDEO_SOURCE=$VIDEO not found or unreadable (sync_to_pi.sh sends data/demo_video/)"
+    fi
+  else
+    warn "VIDEO_SOURCE=$VIDEO (the CSI camera needs picamera; a video file needs a .mp4/.avi/.mkv/.mov path)"
+  fi
+  if [[ -n "$VIDEO_FILE" ]]; then
+    :   # focus lock only applies to the CSI camera
+  elif [[ -n "$(env_get CAMERA_LENS_POSITION)" ]]; then
     pass "focus locked (CAMERA_LENS_POSITION=$(env_get CAMERA_LENS_POSITION))"
   else
     warn "CAMERA_LENS_POSITION empty: autofocus breathing shifts vehicles relative to the ROIs"
