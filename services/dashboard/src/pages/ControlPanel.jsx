@@ -37,7 +37,11 @@ const ControlPanel = () => {
       .then(res => res.json())
       .then(data => {
         const running = data && (data.applied_controller || data.active_controller);
-        if (running) setControllerMode(running);
+        if (running && running !== 'edgeflow') {
+          setControllerMode(running);
+        } else {
+          setControllerMode('max_pressure');
+        }
       })
       .catch(() => {});
   }, [apiBase]);
@@ -248,7 +252,6 @@ const ControlPanel = () => {
                   fontSize: '0.9rem'
                 }}
               >
-                <option value="edgeflow">EdgeFlow Candidate (Downstream & Quality Aware)</option>
                 <option value="max_pressure">Max-Pressure Controller (Movement Reference)</option>
                 <option value="max_queue">Max-Queue Controller (Queue-Sum Baseline)</option>
                 <option value="fixed_time">Fixed-Time Controller (Clock-Driven Baseline)</option>

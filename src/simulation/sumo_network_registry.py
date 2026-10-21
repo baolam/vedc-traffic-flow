@@ -119,6 +119,7 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         ],
         "topo_rel_path": "contracts/topology/hcm_corridor.json",
         "expected_topo_sha256": [
+            "ab242b1e56603b1a93ea2a10821118dbdeddb79fbf462f10d8031100ca5d3d3a",  # Enriched with GPS/Leaflet (LF & CRLF)
             "bbea84ac877f2e52a5f33e9d226ede2c09ec7397f53a7107675bc90d265c8954",  # Canonical (LF)
             "06f895b3e6bf315d0bada97de05a1eec9e5124b1a27b6a5cdb4804e9a305f210",  # Windows (CRLF)
         ],

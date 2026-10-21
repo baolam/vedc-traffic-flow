@@ -176,3 +176,49 @@ def test_network_state_device_health_and_staleness():
     assert data4["device_health"]["actuator"]["status"] == "ACTIVE"
 
 
+def test_get_benchmarks_list():
+    response = client.get("/api/v1/benchmarks")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_campaigns" in data
+    assert "campaigns" in data
+    assert data["total_campaigns"] > 0
+    first = data["campaigns"][0]
+    assert "campaign_id" in first
+    assert first["has_report"] is True
+
+
+def test_get_latest_benchmark_report():
+    response = client.get("/api/v1/benchmarks/latest")
+    assert response.status_code == 200
+    data = response.json()
+    assert "controllers" in data
+    assert "topologies" in data
+    assert "topology_aggregates" in data
+    assert "flow_theory" in data["controllers"]
+
+
+def test_get_benchmark_campaign_detail_and_not_found():
+    # 1. Test get detail of existing campaign
+    list_res = client.get("/api/v1/benchmarks")
+    assert list_res.status_code == 200
+    campaigns = list_res.json().get("campaigns", [])
+    if campaigns:
+        first_id = campaigns[0]["campaign_id"]
+        detail_res = client.get(f"/api/v1/benchmarks/{first_id}")
+        assert detail_res.status_code == 200
+        detail_data = detail_res.json()
+        assert detail_data["campaign_id"] == first_id
+        assert "controllers" in detail_data
+
+    # 2. Test 404 for non-existent campaign
+    missing_res = client.get("/api/v1/benchmarks/sumo_benchmark_nonexistent_99999999")
+    assert missing_res.status_code == 404
+
+    # 3. Test path traversal rejection (must return 400 or 404, never 200 or 500)
+    traversal_res = client.get("/api/v1/benchmarks/..%2F..%2Fetc")
+    assert traversal_res.status_code in (400, 404)
+
+
+
+

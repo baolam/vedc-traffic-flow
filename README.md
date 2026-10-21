@@ -104,7 +104,7 @@ docker-compose up -d
 # Hoặc khởi chạy bằng Python cục bộ:
 make run-server
 ```
-Truy cập Dashboard điều hành tại: `http://localhost:3000` (hoặc `http://localhost:8000/dashboard`).
+Truy cập Dashboard điều hành tại: `http://localhost:3000`.
 
 ### 2. Khởi chạy Tầng Nhận Thức trên Raspberry Pi 5 (Docker hoặc Python)
 Xem chi tiết hướng dẫn đầy đủ tại [`docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).

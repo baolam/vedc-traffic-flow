@@ -4,8 +4,8 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import NetworkOverview from './pages/NetworkOverview';
 import IntersectionDetail from './pages/IntersectionDetail';
-import PerformanceAnalytics from './pages/PerformanceAnalytics';
 import ControlPanel from './pages/ControlPanel';
+import BenchmarkSummary from './pages/BenchmarkSummary';
 import './App.css';
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
           <Routes>
             <Route path="/" element={<NetworkOverview />} />
             <Route path="/intersections/:nodeId" element={<IntersectionDetail />} />
-            <Route path="/analytics" element={<PerformanceAnalytics />} />
+            <Route path="/benchmark" element={<BenchmarkSummary />} />
             <Route path="/experiments" element={<ControlPanel />} />
           </Routes>
         </div>

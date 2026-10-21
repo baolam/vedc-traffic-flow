@@ -4,7 +4,7 @@ import sys
 import time
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -351,25 +351,27 @@ try:
 except Exception:
     pass
 
-DASHBOARD_HTML_FILE = Path(__file__).resolve().parent / "templates" / "dashboard.html"
-REACT_BUILD_DIR = Path(__file__).resolve().parent.parent / "dashboard" / "build"
-
-if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / "static").exists():
-    app.mount("/static", StaticFiles(directory=str(REACT_BUILD_DIR / "static")), name="react_static")
-
 @app.get("/", response_class=HTMLResponse)
 @app.get("/dashboard", response_class=HTMLResponse)
 def get_dashboard():
     """
-    Serves the React Web Dashboard if built, or falls back to standalone dashboard.html.
+    Redirects to the single unified React Web Dashboard at http://localhost:3000.
     """
-    if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / "index.html").exists():
-        with open(REACT_BUILD_DIR / "index.html", "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200)
-    if DASHBOARD_HTML_FILE.exists():
-        with open(DASHBOARD_HTML_FILE, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200)
-    return HTMLResponse("<h2>EdgeFlow AI Dashboard Initializing...</h2>")
+    html_content = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=http://localhost:3000" />
+    <title>Redirecting to EdgeFlow Dashboard...</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <div style="text-align: center;">
+        <h2 style="font-weight: 700; margin-bottom: 12px;">Đang chuyển hướng sang EdgeFlow Dashboard...</h2>
+        <p style="color: #94a3b8;">Nếu trình duyệt không tự chuyển, vui lòng nhấn: <a href="http://localhost:3000" style="color: #38bdf8; text-decoration: underline;">http://localhost:3000</a></p>
+    </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content, status_code=200)
 
 @app.get("/api")
 def api_root():
@@ -377,7 +379,7 @@ def api_root():
         "service": "edgeflow-api",
         "status": "running",
         "version": "1.2.0",
-        "dashboard_ui": "/dashboard",
+        "dashboard_ui": "http://localhost:3000",
         "endpoints": [
             "/health",
             "/api/v1/network/state",
@@ -405,16 +407,40 @@ def health():
     }
 
 @app.post("/api/v1/telemetry")
-def ingest_telemetry(payload: Dict[str, Any]):
+def ingest_telemetry(payload: Union[Dict[str, Any], List[Dict[str, Any]]]):
     """
     Ingests live station telemetry payload sent from system services (vision, sensors, actuators).
+    Supports single node dict or list of node telemetry dicts for high-speed batch ingestion.
     """
+    now_ms = int(time.time() * 1000)
+    if isinstance(payload, list):
+        for item in payload:
+            nid = item.get("node_id")
+            if nid:
+                item["_ingested_at_ms"] = now_ms
+                LIVE_STATE["nodes"][nid] = item
+        if payload:
+            topo_id = payload[0].get("topology_id")
+            if topo_id and LIVE_STATE.get("active_topology_id") != topo_id:
+                LIVE_STATE["active_topology_id"] = topo_id
+            src = payload[0].get("source_type")
+            if src:
+                LIVE_STATE["source_mode"] = src
+        LIVE_STATE["last_updated_ms"] = now_ms
+        return {"status": "SUCCESS", "count": len(payload), "timestamp_ms": now_ms}
+
     node_id = payload.get("node_id")
     if not node_id:
         raise HTTPException(status_code=400, detail="Missing required 'node_id' in telemetry payload.")
-    payload["_ingested_at_ms"] = int(time.time() * 1000)
+    topo_id = payload.get("topology_id")
+    if topo_id and LIVE_STATE.get("active_topology_id") != topo_id:
+        LIVE_STATE["active_topology_id"] = topo_id
+    src = payload.get("source_type")
+    if src:
+        LIVE_STATE["source_mode"] = src
+    payload["_ingested_at_ms"] = now_ms
     LIVE_STATE["nodes"][node_id] = payload
-    LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
+    LIVE_STATE["last_updated_ms"] = now_ms
     return {"status": "SUCCESS", "node_id": node_id, "timestamp_ms": LIVE_STATE["last_updated_ms"]}
 
 @app.post("/api/v1/control_ack")
@@ -449,26 +475,56 @@ def _placeholder_approaches(approach_ids: List[str]) -> List[Dict[str, Any]]:
              "occupancy_ratio": 0.0, "confidence": 0.0} for app_id in approach_ids]
 
 
-TELEMETRY_STALE_TIMEOUT_MS = 3500  # 3.5s without telemetry -> SIGNAL_LOST
+TELEMETRY_STALE_TIMEOUT_MS = 3500  # 3.5s without telemetry -> SIGNAL_LOST (for hardware/vision sensors)
 ACTUATOR_HEARTBEAT_TIMEOUT_MS = 6000  # 6.0s without heartbeat -> HEARTBEAT_LOST
 
 def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], now_ms: int) -> Dict[str, Any]:
-    approaches = (node_live or {}).get("approaches", [])
-    telemetry_time = (node_live or {}).get("_ingested_at_ms") or (node_live or {}).get("timestamp_ms") or 0
-    age_ms = (now_ms - telemetry_time) if (telemetry_time and node_live) else None
+    if not node_live:
+        return {
+            "overall_status": "WAITING_FOR_TELEMETRY",
+            "camera": {
+                "status": "WAITING",
+                "confidence": 0.0,
+                "last_seen_ms_ago": None,
+                "zero_confidence": False
+            },
+            "actuator": {
+                "status": "ACTIVE",
+                "last_heartbeat_ms_ago": None,
+                "clearance": "GREEN"
+            }
+        }
 
+    approaches = node_live.get("approaches", [])
+    telemetry_time = node_live.get("_ingested_at_ms") or node_live.get("timestamp_ms") or 0
+    age_ms = (now_ms - telemetry_time) if telemetry_time else None
+    source_type = node_live.get("source_type", "")
     all_zero_conf = bool(approaches) and all(a.get("confidence", 1.0) <= 0.0 for a in approaches)
+    avg_conf = (sum(a.get("confidence", 1.0) for a in approaches) / len(approaches)) if approaches else 0.0
 
-    if not node_live or age_ms is None:
-        camera_status = "WAITING"
-    elif age_ms > TELEMETRY_STALE_TIMEOUT_MS:
+    # Simulation mode: fully simulated, never degrades to hardware SIGNAL_LOST or ACTUATOR_FAULT
+    if source_type == "simulation":
+        return {
+            "overall_status": node_live.get("status", "ONLINE"),
+            "camera": {
+                "status": "ACTIVE",
+                "confidence": round(avg_conf, 2),
+                "last_seen_ms_ago": age_ms,
+                "zero_confidence": all_zero_conf
+            },
+            "actuator": {
+                "status": "ACTIVE",
+                "last_heartbeat_ms_ago": 0,
+                "clearance": "GREEN"
+            }
+        }
+
+    if age_ms is None or age_ms > TELEMETRY_STALE_TIMEOUT_MS:
         camera_status = "SIGNAL_LOST"
     elif all_zero_conf:
         camera_status = "ZERO_CONFIDENCE"
     else:
         camera_status = "ACTIVE"
-
-    avg_conf = (sum(a.get("confidence", 1.0) for a in approaches) / len(approaches)) if approaches else 0.0
 
     actuator_data = (
         LIVE_STATE.get("health", {}).get(nid)
@@ -479,22 +535,20 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
     actuator_age_ms = None
     clearance = "GREEN"
     if actuator_data:
-        # Receive time first: the device clock (SNTP) may be unsynced or wrong (G3)
         h_time = actuator_data.get("_ingested_at_ms") or actuator_data.get("timestamp_ms") or 0
         actuator_age_ms = (now_ms - h_time) if h_time else None
         clearance = actuator_data.get("clearance", "GREEN")
         device_status = actuator_data.get("status")
-        # YELLOW / ALL_RED are the normal 5 s clearance of every phase change, not a safe-stop (G2)
         safe_stop = bool(actuator_data.get("safe_stop")) or device_status == "SAFE_STOP"
 
         if device_status == "OFFLINE" or (actuator_age_ms is not None and actuator_age_ms > ACTUATOR_HEARTBEAT_TIMEOUT_MS):
-            actuator_status = "HEARTBEAT_LOST"   # OFFLINE = the ESP32's MQTT last will
+            actuator_status = "HEARTBEAT_LOST"
         elif safe_stop:
             actuator_status = "SAFE_STOP"
         elif device_status in ("DEGRADED", "UNHEALTHY"):
             actuator_status = device_status
         elif device_status == "FALLBACK_AUTONOMOUS":
-            actuator_status = "FALLBACK"         # no command for > 5 s: fixed 15 s/phase cycle on the ESP32
+            actuator_status = "FALLBACK"
         else:
             actuator_status = "ACTIVE"
 
@@ -504,10 +558,8 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
         overall_status = "CAMERA_FAULT"
     elif actuator_status in ("HEARTBEAT_LOST", "SAFE_STOP"):
         overall_status = "ACTUATOR_FAULT"
-    elif actuator_status == "FALLBACK" and node_live:
+    elif actuator_status == "FALLBACK":
         overall_status = "FALLBACK"
-    elif not node_live:
-        overall_status = "WAITING_FOR_TELEMETRY"
     else:
         overall_status = node_live.get("status", "ONLINE")
 
@@ -542,6 +594,11 @@ def get_network_state():
             if node_live:
                 node_data = dict(node_live)
                 node_data["name"] = n.get("name", nid)
+                node_data["street_name"] = n.get("street_name", "")
+                node_data["x"] = n.get("x")
+                node_data["y"] = n.get("y")
+                node_data["lat"] = n.get("lat")
+                node_data["lng"] = n.get("lng")
                 node_data["status"] = health_meta["overall_status"]
                 node_data["device_health"] = health_meta
                 nodes_info.append(node_data)
@@ -550,6 +607,11 @@ def get_network_state():
                 nodes_info.append({
                     "node_id": nid,
                     "name": n.get("name", nid),
+                    "street_name": n.get("street_name", ""),
+                    "x": n.get("x"),
+                    "y": n.get("y"),
+                    "lat": n.get("lat"),
+                    "lng": n.get("lng"),
                     "current_phase_id": phases[0]["phase_id"] if phases else f"{nid}_PHASE_NS",
                     "source_type": LIVE_STATE["source_mode"],
                     "status": health_meta["overall_status"],
@@ -635,7 +697,7 @@ def set_control_policy(req: PolicyChangeRequest):
     """
     # RL policies need a trained model file on the graph-control host; accepting them here would only
     # change the dashboard label while graph-control keeps the previous controller.
-    valid_controllers = ["fixed_time", "max_queue", "max_pressure", "edgeflow"]
+    valid_controllers = ["fixed_time", "max_queue", "max_pressure", "edgeflow", "flow_theory", "actuated"]
     req_ctrl = req.controller.lower()
     if req_ctrl not in valid_controllers:
         raise HTTPException(
@@ -924,6 +986,97 @@ def get_experiment_detail(experiment_id: str):
             result["environment"] = json.load(f)
 
     return result
+
+@app.get("/api/v1/benchmarks")
+def list_benchmark_campaigns():
+    """
+    Scans the artifacts directory and returns all benchmark campaign directories with reports,
+    sorted by creation/modification timestamp descending.
+    """
+    if not artifacts_dir.exists():
+        return {"total_campaigns": 0, "campaigns": []}
+
+    candidate_folders = [
+        folder for folder in artifacts_dir.iterdir()
+        if folder.is_dir() and folder.name.startswith("sumo_benchmark_")
+    ]
+    candidate_folders.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+    campaigns = []
+    for folder in candidate_folders:
+        report_file = folder / "benchmark_comparison_report.json"
+        summary_md = folder / "benchmark_summary.md"
+        test_md = folder / "test_results.md"
+        if report_file.exists():
+            campaigns.append({
+                "campaign_id": folder.name,
+                "has_report": True,
+                "has_summary_md": summary_md.exists(),
+                "has_test_results": test_md.exists(),
+                "created_at": folder.stat().st_mtime,
+            })
+    return {"total_campaigns": len(campaigns), "campaigns": campaigns}
+
+@app.get("/api/v1/benchmarks/latest")
+def get_latest_benchmark_report():
+    """
+    Returns the latest benchmark comparison report.
+    """
+    campaigns = list_benchmark_campaigns().get("campaigns", [])
+    if not campaigns:
+        fallback = artifacts_dir / "benchmark_comparison_report.json"
+        if fallback.exists():
+            with open(fallback, "r", encoding="utf-8") as f:
+                return json.load(f)
+        raise HTTPException(status_code=404, detail="No benchmark campaign report found.")
+
+    latest_id = campaigns[0]["campaign_id"]
+    return get_benchmark_campaign_report(latest_id)
+
+@app.get("/api/v1/benchmarks/{campaign_id}")
+def get_benchmark_campaign_report(campaign_id: str):
+    """
+    Returns the full benchmark comparison report, summary markdown, and verification status for a campaign ID.
+    Guards against path traversal and validates directory existence.
+    """
+    try:
+        resolved_artifacts = artifacts_dir.resolve()
+        camp_dir = (artifacts_dir / campaign_id).resolve()
+        if not camp_dir.is_relative_to(resolved_artifacts):
+            raise HTTPException(status_code=400, detail="Invalid campaign ID path.")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=400, detail="Malformed campaign ID.")
+
+    if not camp_dir.exists() or not camp_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Campaign '{campaign_id}' not found.")
+
+    report_file = camp_dir / "benchmark_comparison_report.json"
+    summary_md_file = camp_dir / "benchmark_summary.md"
+    test_results_md_file = camp_dir / "test_results.md"
+
+    if not report_file.exists():
+        raise HTTPException(status_code=404, detail=f"No benchmark_comparison_report.json in '{campaign_id}'.")
+
+    with open(report_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    data["campaign_id"] = campaign_id
+    if summary_md_file.exists():
+        try:
+            with open(summary_md_file, "r", encoding="utf-8") as f:
+                data["summary_markdown"] = f.read()
+        except Exception as e:
+            logger.warning(f"Could not read benchmark summary markdown for {campaign_id}: {e}")
+    if test_results_md_file.exists():
+        try:
+            with open(test_results_md_file, "r", encoding="utf-8") as f:
+                data["test_results_markdown"] = f.read()
+        except Exception as e:
+            logger.warning(f"Could not read test results markdown for {campaign_id}: {e}")
+
+    return data
 
 @app.get("/api/v1/scenarios")
 def list_scenarios():

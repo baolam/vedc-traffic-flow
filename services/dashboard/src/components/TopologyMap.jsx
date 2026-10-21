@@ -1,18 +1,23 @@
-import React, { useState, useMemo } from 'react';
-import { Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw, Navigation, CheckCircle, Info, ExternalLink } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw, Navigation, CheckCircle, Info, ExternalLink, MapPin } from 'lucide-react';
+import LeafletStreetMap from './LeafletStreetMap';
 
 const TopologyMap = ({ 
   nodesData = {}, 
   topology = null, 
   selectedNodeId = null,
   onSelectNode,
-  onNavigateDetail
+  onNavigateDetail,
+  height = 540
 }) => {
+  const [mapType, setMapType] = useState('STREET'); // 'STREET' (OpenStreetMap) or 'VECTOR' (SVG)
   const [showEdges, setShowEdges] = useState(true);
   const [showQueueBadges, setShowQueueBadges] = useState(true);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // Extract raw nodes and edges from topology prop or nodesData keys
   const rawNodes = useMemo(() => {
@@ -38,22 +43,64 @@ const TopologyMap = ({
     ];
   }, [topology]);
 
-  // Calculate dynamic positions for all nodes
-  const nodePositions = useMemo(() => {
+  // Calculate dynamic positions for all nodes and projection metadata for road shapes
+  const { nodePositions, projectionMeta } = useMemo(() => {
     const posMap = {};
     const total = rawNodes.length;
+    let proj = null;
 
     // 1. Standard positions for default 4-node topology J1-J4
     if (total === 4 && rawNodes.every(n => ['J1', 'J2', 'J3', 'J4'].includes(n.node_id))) {
       return {
-        J1: { x: 220, y: 150, name: "Intersection 1 (NW)" },
-        J2: { x: 540, y: 150, name: "Intersection 2 (NE)" },
-        J3: { x: 220, y: 370, name: "Intersection 3 (SW)" },
-        J4: { x: 540, y: 370, name: "Intersection 4 (SE)" }
+        nodePositions: {
+          J1: { x: 220, y: 150, name: "Intersection 1 (NW)", street_name: "Corridor NW" },
+          J2: { x: 540, y: 150, name: "Intersection 2 (NE)", street_name: "Corridor NE" },
+          J3: { x: 220, y: 370, name: "Intersection 3 (SW)", street_name: "Corridor SW" },
+          J4: { x: 540, y: 370, name: "Intersection 4 (SE)", street_name: "Corridor SE" }
+        },
+        projectionMeta: null
       };
     }
 
-    // 2. Smart Layout for grid4x4 (32 nodes: 4x4 core + 16 boundary nodes)
+    // 2. Exact SUMO XY coordinate projection (used for hcm_corridor and other real maps)
+    const hasXY = rawNodes.some(n => n.x != null && n.y != null);
+    if (hasXY && total > 0) {
+      const xs = rawNodes.map(n => n.x != null ? Number(n.x) : 0);
+      const ys = rawNodes.map(n => n.y != null ? Number(n.y) : 0);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const spanX = (maxX - minX) || 1;
+      const spanY = (maxY - minY) || 1;
+
+      // Fit into canvas (760 x 500) with padding
+      const padX = 65, padY = 55;
+      const availW = 760 - 2 * padX;
+      const availH = 500 - 2 * padY;
+      const scale = Math.min(availW / spanX, availH / spanY);
+      const offsetX = padX + (availW - spanX * scale) / 2;
+      const offsetY = padY + (availH - spanY * scale) / 2;
+
+      proj = { minX, maxX, minY, maxY, scale, offsetX, offsetY };
+
+      rawNodes.forEach(n => {
+        const nx = n.x != null ? Number(n.x) : minX;
+        const ny = n.y != null ? Number(n.y) : minY;
+        const x = offsetX + (nx - minX) * scale;
+        // Invert Y because SUMO origin (0,0) is bottom-left whereas SVG is top-left
+        const y = offsetY + (maxY - ny) * scale;
+        posMap[n.node_id] = {
+          x: Math.round(x),
+          y: Math.round(y),
+          name: n.name || n.node_id,
+          street_name: n.street_name || '',
+          type: n.type || 'junction'
+        };
+      });
+
+      return { nodePositions: posMap, projectionMeta: proj };
+    }
+
+    // 3. Smart Layout for grid4x4 (32 nodes: 4x4 core + 16 boundary nodes)
     const isGrid4x4 = rawNodes.some(n => n.node_id === 'A0') && rawNodes.some(n => n.node_id === 'D3');
     if (isGrid4x4) {
       const gridMap = {
@@ -78,17 +125,18 @@ const TopologyMap = ({
           posMap[n.node_id] = {
             x: startX + g.col * stepX,
             y: startY + g.row * stepY,
-            name: n.name || n.node_id
+            name: n.name || n.node_id,
+            street_name: ''
           };
         }
       });
 
       if (Object.keys(posMap).length === total) {
-        return posMap;
+        return { nodePositions: posMap, projectionMeta: null };
       }
     }
 
-    // 3. Geographic lat/lng mapping if available
+    // 4. Geographic lat/lng mapping if available
     const hasLatLng = rawNodes.every(n => n.lat != null && n.lng != null);
     if (hasLatLng && total > 0) {
       const lats = rawNodes.map(n => n.lat);
@@ -101,12 +149,12 @@ const TopologyMap = ({
       rawNodes.forEach(n => {
         const x = 80 + ((n.lng - minLng) / lngSpan) * 600;
         const y = 440 - ((n.lat - minLat) / latSpan) * 370;
-        posMap[n.node_id] = { x: Math.round(x), y: Math.round(y), name: n.name || n.node_id };
+        posMap[n.node_id] = { x: Math.round(x), y: Math.round(y), name: n.name || n.node_id, street_name: '' };
       });
-      return posMap;
+      return { nodePositions: posMap, projectionMeta: null };
     }
 
-    // 4. Automatic Responsive Grid Layout Algorithm
+    // 5. Automatic Responsive Grid Layout Algorithm
     const aspect = 760 / 500;
     const cols = Math.ceil(Math.sqrt(total * aspect));
     const rows = Math.ceil(total / cols);
@@ -120,28 +168,44 @@ const TopologyMap = ({
       const c = idx % cols;
       const x = cols === 1 ? 380 : Math.round(marginX + c * stepX);
       const y = rows === 1 ? 250 : Math.round(marginY + r * stepY);
-      posMap[n.node_id] = { x, y, name: n.name || n.node_id };
+      posMap[n.node_id] = { x, y, name: n.name || n.node_id, street_name: '' };
     });
 
-    return posMap;
+    return { nodePositions: posMap, projectionMeta: null };
   }, [rawNodes]);
 
   const edgesToDraw = useMemo(() => {
     const list = [];
-    rawEdges.forEach(e => {
+    rawEdges.forEach((e, idx) => {
       const src = e.source || e.from || e.from_node;
       const tgt = e.target || e.to || e.to_node;
       if (src && tgt && nodePositions[src] && nodePositions[tgt] && src !== tgt) {
-        list.push({ src, tgt, label: e.edge_id || `${src}->${tgt}` });
+        let pathD = null;
+        if (e.shape && projectionMeta) {
+          const pts = String(e.shape).split(' ').map(p => {
+            const coords = p.split(',').map(Number);
+            return coords;
+          }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+
+          if (pts.length >= 2) {
+            const svgPts = pts.map(([px, py]) => {
+              const sx = projectionMeta.offsetX + (px - projectionMeta.minX) * projectionMeta.scale;
+              const sy = projectionMeta.offsetY + (projectionMeta.maxY - py) * projectionMeta.scale;
+              return `${Math.round(sx * 10) / 10},${Math.round(sy * 10) / 10}`;
+            });
+            pathD = `M ${svgPts.join(' L ')}`;
+          }
+        }
+        list.push({ src, tgt, label: e.edge_id || `${src}->${tgt}`, pathD, key: `edge-${idx}-${src}-${tgt}` });
       }
     });
-    return list.slice(0, 100);
-  }, [rawEdges, nodePositions]);
+    return list;
+  }, [rawEdges, nodePositions, projectionMeta]);
 
   // Dynamic node sizing based on total count
   const totalCount = rawNodes.length;
-  const nodeRadius = totalCount > 40 ? 14 : totalCount > 20 ? 18 : totalCount > 8 ? 23 : 30;
-  const outerRadius = totalCount > 40 ? 18 : totalCount > 20 ? 23 : totalCount > 8 ? 30 : 38;
+  const nodeRadius = totalCount > 40 ? 12 : totalCount > 20 ? 17 : totalCount > 8 ? 22 : 30;
+  const outerRadius = totalCount > 40 ? 16 : totalCount > 20 ? 22 : totalCount > 8 ? 28 : 38;
 
   const formatNodeLabel = (id) => {
     if (!id) return '';
@@ -158,13 +222,69 @@ const TopologyMap = ({
     return len > 5 ? "11" : "13.5";
   };
 
-  // Zoom handlers
-  const handleZoomIn = () => setZoom(z => Math.min(2.2, Math.round((z + 0.15) * 100) / 100));
-  const handleZoomOut = () => setZoom(z => Math.max(0.7, Math.round((z - 0.15) * 100) / 100));
+  // Zoom & Pan handlers for Vector SVG Map
+  const handleZoomIn = () => setZoom(z => Math.min(3.0, Math.round((z + 0.2) * 100) / 100));
+  const handleZoomOut = () => setZoom(z => Math.max(0.5, Math.round((z - 0.2) * 100) / 100));
   const handleResetZoom = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
   };
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  };
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  };
+  const handleMouseUp = () => setIsDragging(false);
+  const handleWheel = (e) => {
+    const delta = e.deltaY < 0 ? 0.15 : -0.15;
+    setZoom(z => Math.max(0.5, Math.min(3.5, Math.round((z + delta) * 100) / 100)));
+  };
+
+  const hasGeoCoords = useMemo(() => {
+    return rawNodes.some(n => n.lat != null && n.lng != null);
+  }, [rawNodes]);
+
+  // If map has real-world GPS coordinates (HCM Corridor) and STREET mode is chosen: Render LeafletStreetMap!
+  if (hasGeoCoords && mapType === 'STREET') {
+    return (
+      <div style={{ position: 'relative', width: '100%' }}>
+        <LeafletStreetMap
+          nodesData={nodesData}
+          topology={topology}
+          selectedNodeId={selectedNodeId}
+          onSelectNode={onSelectNode}
+          onNavigateDetail={onNavigateDetail}
+          height={height}
+        />
+        <div style={{ position: 'absolute', bottom: '38px', right: '12px', zIndex: 1000 }}>
+          <button
+            onClick={() => setMapType('VECTOR')}
+            title="Chuyển sang sơ đồ Logic Vector C++"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid #cbd5e1',
+              borderRadius: '6px',
+              padding: '5px 12px',
+              fontSize: '0.74rem',
+              fontWeight: 700,
+              color: '#334155',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          >
+            📐 Xem Sơ đồ Vector C++
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const activeFocusNode = selectedNodeId || hoveredNode;
   const activeFocusData = activeFocusNode ? (nodesData[activeFocusNode] || null) : null;
@@ -213,6 +333,28 @@ const TopologyMap = ({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Switch to Street Map */}
+          {hasGeoCoords && (
+            <button
+              onClick={() => setMapType('STREET')}
+              style={{
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                border: 'none',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              🗺️ Mở OpenStreetMap
+            </button>
+          )}
+
           {/* Zoom controls */}
           <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden' }}>
             <button
@@ -310,8 +452,22 @@ const TopologyMap = ({
         </div>
       </div>
 
-      {/* Main Interactive SVG Canvas */}
-      <div style={{ position: 'relative', width: '100%', height: '520px', backgroundColor: '#f8fafc' }}>
+      {/* Main Interactive SVG Canvas with Mouse Dragging & Scroll Zoom */}
+      <div 
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+        style={{ 
+          position: 'relative', 
+          width: '100%', 
+          height: `${height}px`, 
+          backgroundColor: '#f8fafc',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          userSelect: 'none'
+        }}
+      >
         <svg 
           width="100%" 
           height="100%" 
@@ -358,17 +514,47 @@ const TopologyMap = ({
           {/* Transform group for Pan & Zoom */}
           <g transform={`translate(${pan.x + (1 - zoom) * 380}, ${pan.y + (1 - zoom) * 250}) scale(${zoom})`}>
             
-            {/* Draw Directed Edges */}
-            {showEdges && edgesToDraw.map((edge, idx) => {
+            {/* Draw Directed Edges & SUMO Roads */}
+            {showEdges && edgesToDraw.map((edge) => {
               const p1 = nodePositions[edge.src];
               const p2 = nodePositions[edge.tgt];
               if (!p1 || !p2) return null;
 
               const isConnectedToFocus = activeFocusNode === edge.src || activeFocusNode === edge.tgt;
               const hasActiveFocus = Boolean(activeFocusNode);
+              const srcData = nodesData[edge.src];
+              const hasQueueOnSrc = (srcData?.total_queue || 0) > 0;
+
+              if (edge.pathD) {
+                return (
+                  <g key={edge.key}>
+                    {/* Realistic asphalt road base */}
+                    <path
+                      d={edge.pathD}
+                      stroke={isConnectedToFocus ? "#0284c7" : "#cbd5e1"}
+                      strokeWidth={isConnectedToFocus ? "5.5" : "3.5"}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity={isConnectedToFocus ? 1.0 : hasActiveFocus ? 0.35 : 0.75}
+                    />
+                    {/* Road lane centerline with direction */}
+                    <path
+                      d={edge.pathD}
+                      stroke={isConnectedToFocus ? "#38bdf8" : hasQueueOnSrc ? "#f59e0b" : "#94a3b8"}
+                      strokeWidth="1.2"
+                      strokeDasharray="4,3"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity={isConnectedToFocus ? 1.0 : hasActiveFocus ? 0.4 : 0.85}
+                    />
+                  </g>
+                );
+              }
 
               return (
-                <g key={`edge-${idx}`}>
+                <g key={edge.key}>
                   {/* Subtle edge road bed */}
                   <line
                     x1={p1.x}
@@ -376,7 +562,7 @@ const TopologyMap = ({
                     x2={p2.x}
                     y2={p2.y}
                     stroke={isConnectedToFocus ? "#38bdf8" : "#cbd5e1"}
-                    strokeWidth={isConnectedToFocus ? "3" : totalCount > 30 ? "1" : "1.6"}
+                    strokeWidth={isConnectedToFocus ? "3.5" : totalCount > 30 ? "1.4" : "1.8"}
                     opacity={isConnectedToFocus ? 0.95 : hasActiveFocus ? 0.25 : 0.55}
                   />
                   {/* Directional flow lane with marker */}
@@ -521,21 +707,28 @@ const TopologyMap = ({
             zIndex: 15
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#38bdf8', fontFamily: 'JetBrains Mono, monospace' }}>
-                  Station {activeFocusNode}
-                </span>
-                <span style={{
-                  fontSize: '0.68rem',
-                  padding: '1px 6px',
-                  borderRadius: '4px',
-                  backgroundColor: '#1e293b',
-                  color: '#4ade80',
-                  fontWeight: 700,
-                  border: '1px solid #334155'
-                }}>
-                  {activeFocusData?.status || 'ONLINE'}
-                </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#38bdf8', fontFamily: 'JetBrains Mono, monospace' }}>
+                    Station {activeFocusNode}
+                  </span>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: '#1e293b',
+                    color: '#4ade80',
+                    fontWeight: 700,
+                    border: '1px solid #334155'
+                  }}>
+                    {activeFocusData?.status || 'ONLINE'}
+                  </span>
+                </div>
+                {nodePositions[activeFocusNode]?.street_name && (
+                  <span style={{ fontSize: '0.74rem', color: '#cbd5e1', fontWeight: 600 }}>
+                    📍 {nodePositions[activeFocusNode].street_name}
+                  </span>
+                )}
               </div>
 
               {onNavigateDetail && (

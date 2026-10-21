@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Network, BarChart3, Sliders, Cpu, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Activity, Trophy } from 'lucide-react';
 
 const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
@@ -55,7 +55,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
   const navItems = [
     { to: '/', label: 'Overview Operations', icon: LayoutDashboard },
     { to: `/intersections/${firstNode}`, label: 'Station Details', icon: Network },
-    { to: '/analytics', label: 'Benchmark Analytics', icon: BarChart3 },
+    { to: '/benchmark', label: 'Benchmark Campaign', icon: Trophy },
     { to: '/experiments', label: 'Control & Tuning', icon: Sliders },
   ];
 

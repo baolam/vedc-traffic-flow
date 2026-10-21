@@ -63,10 +63,12 @@ services:
       - DETECTION_MODEL_PATH=${DETECTION_MODEL_PATH:-models/yolov8n.onnx}
       - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD:-0.4}
       - ENABLE_HARDWARE_TELEMETRY=true
+      - PYTHONPATH=/app:/contracts:/app/contracts
     devices:
       - "/dev/video0:/dev/video0"
     volumes:
       - ./contracts:/contracts:ro
+      - ./contracts:/app/contracts:ro
       - ./models:/models:ro
       - /sys/class/thermal:/sys/class/thermal:ro
     profiles:

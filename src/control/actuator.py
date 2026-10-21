@@ -14,8 +14,12 @@ from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger("actuator")
 
-from contracts.contracts_sdk import load_schema
-from contracts.research import SIGNAL_STATES
+try:
+    from contracts.contracts_sdk import load_schema
+    from contracts.research import SIGNAL_STATES
+except ImportError:
+    from contracts_sdk import load_schema
+    from research import SIGNAL_STATES
 from jsonschema import Draft7Validator
 
 _CONTROL_COMMAND_VALIDATOR = Draft7Validator(load_schema("control_command"))

@@ -143,7 +143,7 @@ def run_demo_simulation(
     duration_s: int,
     seed: int,
     sumo_gui_bin: str,
-    delay_ms: int = 20,
+    delay_ms: int = 0,
 ):
     """Execute live TraCI simulation for canonical topologies."""
     import traci
@@ -238,10 +238,24 @@ def run_demo_simulation(
         "ctm": lambda: FlowTheoryController(),
     }
     ctrl_key = controller_name.lower()
-    controller = CONTROLLERS.get(ctrl_key, CONTROLLERS["edgeflow"])()
+    controller = CONTROLLERS.get(ctrl_key, CONTROLLERS.get("max_pressure", CONTROLLERS["edgeflow"]))()
     actuator = ActuatorStateMachine(yellow_duration_s=3.0, all_red_duration_s=2.0)
 
-    # SUMO GUI Command with gui-settings & visual delay (100ms)
+    # Sync active topology and controller to Dashboard API
+    try:
+        import urllib.request
+        sync_req = urllib.request.Request(
+            "http://localhost:8000/api/v1/control/policy",
+            data=json.dumps({"controller": ctrl_key, "topology_id": topology_id}).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(sync_req, timeout=1.0) as _:
+            pass
+        print(f"[✓] Dashboard synchronized with topology '{topology_id}' and controller '{ctrl_key}'.")
+    except Exception as exc:
+        print(f"[ℹ] Dashboard sync notice (API might be offline): {exc}")
+
+    # SUMO GUI Command with gui-settings & visual delay
     sumo_cmd = [
         sumo_gui_bin,
         "-c", str(sumocfg_path),
@@ -275,10 +289,12 @@ def run_demo_simulation(
 
     import queue
     import threading
+    import http.client
 
-    telemetry_queue = queue.Queue(maxsize=2000)
+    telemetry_queue = queue.Queue(maxsize=3000)
 
     def _telemetry_worker():
+        conn = None
         while True:
             try:
                 item = telemetry_queue.get(timeout=0.5)
@@ -286,15 +302,30 @@ def run_demo_simulation(
                     break
                 endpoint, payload = item
                 try:
-                    import urllib.request
-                    req = urllib.request.Request(
-                        f"http://localhost:8000/api/v1/{endpoint}",
-                        data=json.dumps(payload).encode("utf-8"),
-                        headers={"Content-Type": "application/json"}
-                    )
-                    urllib.request.urlopen(req, timeout=0.2)
+                    if conn is None:
+                        conn = http.client.HTTPConnection("localhost", 8000, timeout=0.5)
+                    body = json.dumps(payload)
+                    conn.request("POST", f"/api/v1/{endpoint}", body=body, headers={"Content-Type": "application/json"})
+                    resp = conn.getresponse()
+                    resp.read()
                 except Exception:
-                    pass
+                    if conn:
+                        try:
+                            conn.close()
+                        except Exception:
+                            pass
+                    conn = None
+                    try:
+                        import urllib.request
+                        req = urllib.request.Request(
+                            f"http://localhost:8000/api/v1/{endpoint}",
+                            data=json.dumps(payload).encode("utf-8"),
+                            headers={"Content-Type": "application/json"}
+                        )
+                        with urllib.request.urlopen(req, timeout=0.2) as _:
+                            pass
+                    except Exception:
+                        pass
                 finally:
                     telemetry_queue.task_done()
             except queue.Empty:
@@ -319,6 +350,7 @@ def run_demo_simulation(
             actuator.step(now=t)
             current_phases = []
             node_queues = []
+            step_telemetries = []
 
             for node in topology.get("nodes", []):
                 nid = node["node_id"]
@@ -328,25 +360,29 @@ def run_demo_simulation(
                 canonical_approaches = []
                 for app_id in node.get("approaches", []):
                     q = 0.0
+                    veh_count = 0
                     spd = 13.89
                     if app_id in edge_ids:
                         try:
                             q = float(traci.edge.getLastStepHaltingNumber(app_id))
+                            veh_count = int(traci.edge.getLastStepVehicleNumber(app_id))
                             spd = max(0.1, float(traci.edge.getLastStepMeanSpeed(app_id)))
                         except Exception:
                             pass
+                    flow = round(max(0.15 * q, veh_count * 0.25), 2)
                     canonical_approaches.append({
                         "approach_id": app_id,
                         "queue_vehicles": round(q, 1),
-                        "flow_veh_per_s": round(0.15 * q, 2),
+                        "flow_veh_per_s": flow,
                         "mean_speed_mps": round(spd, 2),
-                        "occupancy_ratio": round(min(q / 20.0, 1.0), 2),
+                        "occupancy_ratio": round(min(max(q, veh_count) / 20.0, 1.0), 2),
                         "confidence": 1.0
                     })
                     node_queues.append(q)
 
                 telemetry = {
                     "node_id": nid,
+                    "topology_id": topology_id,
                     "source_type": "simulation",
                     "simulation_time_s": t,
                     "timestamp_ms": int(time.time() * 1000),
@@ -354,12 +390,7 @@ def run_demo_simulation(
                     "status": "ONLINE",
                     "approaches": canonical_approaches,
                 }
-
-                # Push telemetry payload asynchronously to background worker (0ms overhead)
-                try:
-                    telemetry_queue.put_nowait(("telemetry", telemetry))
-                except queue.Full:
-                    pass
+                step_telemetries.append(telemetry)
 
                 cmd = controller.compute_command(
                     node_id=nid,
@@ -369,7 +400,8 @@ def run_demo_simulation(
                 )
                 if cmd:
                     ack = actuator.process_command(cmd, now=t)
-                    if ack:
+                    # Only record control ACK on actual phase transition to avoid flooding HTTP queue
+                    if ack and getattr(node_state, "state_start_time", -1.0) == t:
                         try:
                             ack_payload = ack.to_dict() if hasattr(ack, "to_dict") else {
                                 "command_id": getattr(ack, "command_id", f"cmd-{nid}-{t}"),
@@ -394,6 +426,13 @@ def run_demo_simulation(
 
                 current_phases.append(f"{nid}:{active_phase.split('_')[-1]}")
 
+            # Send high-speed batch telemetry of all nodes to Dashboard API
+            if step_telemetries:
+                try:
+                    telemetry_queue.put_nowait(("telemetry", step_telemetries))
+                except queue.Full:
+                    pass
+
             mean_q = sum(node_queues) / len(node_queues) if node_queues else 0.0
             total_queue_sum += mean_q
             samples += 1
@@ -404,13 +443,22 @@ def run_demo_simulation(
                     phases_str += f" (+{len(current_phases)-4} nodes)"
                 print(f" t={step:<5} | {phases_str:<35} | {mean_q:.2f} veh")
 
-            time.sleep(0.02)
+            if delay_ms > 0:
+                time.sleep(delay_ms / 1000.0)
+            else:
+                # 20ms pace yields CPU for smooth WebSocket streaming to React Dashboard (~50 fps)
+                time.sleep(0.02)
 
     except traci.exceptions.FatalTraCIError:
         print("[ℹ] SUMO-GUI window closed by user.")
     except Exception as err:
         print(f"[!] Error during TraCI loop: {err}")
     finally:
+        try:
+            # Drain telemetry queue to ensure all steps are sent to the Dashboard
+            telemetry_queue.join()
+        except Exception:
+            pass
         try:
             traci.close()
         except Exception:
@@ -480,10 +528,10 @@ def main():
     parser = argparse.ArgumentParser(description="EdgeFlow AI — Canonical SUMO-GUI Live Demo Launcher")
     parser.add_argument("--topology", type=str, default="hcm_corridor", help="Topology ID (hcm_corridor, corridor, junction, grid16, cologne)")
     parser.add_argument("--scenario", type=str, default="hcm_corridor", help="Scenario profile (hcm_corridor, directional_surge, balanced)")
-    parser.add_argument("--controller", type=str, default="edgeflow", help="Controller type (edgeflow, max_pressure, actuated, fixed_time)")
+    parser.add_argument("--controller", type=str, default="max_pressure", help="Controller type (max_pressure, actuated, fixed_time, flow_theory)")
     parser.add_argument("--duration", type=int, default=300, help="Demo duration in seconds")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--delay", type=int, default=20, help="SUMO-GUI step delay in milliseconds (0 for max speed, 20 for fast/smooth, 100 for slow)")
+    parser.add_argument("--delay", type=int, default=0, help="SUMO-GUI step delay in milliseconds (0 for max speed / instant, 20 for fast/smooth, 100 for slow)")
     parser.add_argument("--skip-docker", action="store_true", help="Skip Docker compose initialization")
 
     args = parser.parse_args()

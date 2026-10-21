@@ -149,11 +149,13 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - MQTT_HOST=mqtt
       - MQTT_PORT=1883
+      - PYTHONPATH=/app:/contracts:/app/contracts:/
     depends_on:
       mqtt:
         condition: service_healthy
     volumes:
       - ./contracts:/contracts
+      - ./contracts:/app/contracts
       - ./src:/app/src
     # Not in "hardware": the real ESP32 J1/J2 answer the commands there, and this virtual actuator
     # would ACK the same commands a second time.

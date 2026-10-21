@@ -41,8 +41,9 @@ python services/graph-control/main.py
 # Terminal 3: Chạy Control Plane REST API
 python services/api/main.py
 
-# Terminal 4: Mở Dashboard điều hành Web
-# Truy cập http://localhost:8000/dashboard hoặc chạy services/dashboard (npm start)
+# Terminal 4: Mở Dashboard điều hành Web (React)
+cd services/dashboard && npm start
+# Truy cập giao diện tại: http://localhost:3000
 ```
 
 ---

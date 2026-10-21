@@ -39,6 +39,8 @@ const NetworkOverview = () => {
   
   // Dashboard View Mode: 'OPERATIONS' (Traffic Operations Center) or 'DIAGNOSTICS' (Engineering)
   const [viewMode, setViewMode] = useState('OPERATIONS');
+  // Layout mode: 'SPLIT' (Map + List), 'MAP_ONLY' (Fullscreen Map), 'LIST_ONLY' (Fullscreen List)
+  const [viewLayout, setViewLayout] = useState('SPLIT');
 
   // Collapsible Log Drawer State
   const [isLogExpanded, setIsLogExpanded] = useState(false);
@@ -133,6 +135,9 @@ const NetworkOverview = () => {
             initialNodes[nodeId] = {
               node_id: nodeId,
               name: n.name || nodeId,
+              street_name: n.street_name || '',
+              x: n.x,
+              y: n.y,
               current_phase_id: firstPhaseId,
               total_queue: 0,
               speed: 0,
@@ -151,7 +156,17 @@ const NetworkOverview = () => {
               }))
             };
           });
-          setNodes(initialNodes);
+          setNodes(prev => {
+            const merged = { ...initialNodes };
+            if (prev && Object.keys(prev).length > 0) {
+              Object.keys(merged).forEach(k => {
+                if (prev[k] && prev[k].status !== 'WAITING_FOR_TELEMETRY') {
+                  merged[k] = { ...merged[k], ...prev[k] };
+                }
+              });
+            }
+            return merged;
+          });
           if (data.nodes.length > 0 && !selectedNodeId) {
             setSelectedNodeId(data.nodes[0].node_id);
           }
@@ -182,6 +197,10 @@ const NetworkOverview = () => {
     if (wsData && !isStreamPaused) {
       if (wsData.controller) setActiveController(wsData.controller);
       if (wsData.source_mode) setSourceMode(wsData.source_mode);
+      if (wsData.topology_id && wsData.topology_id !== activeScenarioId) {
+        setActiveScenarioId(wsData.topology_id);
+        localStorage.setItem('edgeflow_active_scenario', wsData.topology_id);
+      }
       if (wsData.nodes && wsData.nodes.length > 0) {
         const updated = {};
         wsData.nodes.forEach(n => {
@@ -201,6 +220,9 @@ const NetworkOverview = () => {
           updated[n.node_id] = {
             node_id: n.node_id,
             name: n.name || n.node_id,
+            street_name: n.street_name || '',
+            x: n.x,
+            y: n.y,
             current_phase_id: n.current_phase_id || `${n.node_id}_PHASE_1`,
             total_queue: Math.round(totalQ * 10) / 10,
             speed: Math.round(avgSpd * 10) / 10,
@@ -549,40 +571,124 @@ const NetworkOverview = () => {
         </div>
       </div>
 
-      {/* 3. Main Operational View: 62% Topology Map vs 38% Priority Station List */}
-      <div className="overview-main-grid">
-        {/* Column 1: Enhanced Topology Map */}
-        <div className="card" style={{ padding: '18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div>
-              <h3 style={{ fontSize: '1.1rem', margin: '0 0 2px 0', fontWeight: 800, color: '#0f172a' }}>
-                Traffic Network Topology ({totalNodesCount} Junctions)
-              </h3>
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                Click any junction node to inspect telemetry, phase status, and controller reasoning
-              </span>
-            </div>
-            {loading && <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600 }}>Syncing graph...</span>}
+      {/* 3. Main Operational View Controls: Layout Switcher & Status */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Chế độ hiển thị:</span>
+          <div style={{ display: 'flex', backgroundColor: '#e2e8f0', padding: '2px', borderRadius: '7px' }}>
+            <button
+              onClick={() => setViewLayout('SPLIT')}
+              style={{
+                border: 'none',
+                padding: '5px 12px',
+                borderRadius: '5px',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                backgroundColor: viewLayout === 'SPLIT' ? '#ffffff' : 'transparent',
+                color: viewLayout === 'SPLIT' ? '#0284c7' : '#64748b',
+                boxShadow: viewLayout === 'SPLIT' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              Chia đôi (Bản đồ + Trạm)
+            </button>
+            <button
+              onClick={() => setViewLayout('MAP_ONLY')}
+              style={{
+                border: 'none',
+                padding: '5px 12px',
+                borderRadius: '5px',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                backgroundColor: viewLayout === 'MAP_ONLY' ? '#ffffff' : 'transparent',
+                color: viewLayout === 'MAP_ONLY' ? '#0284c7' : '#64748b',
+                boxShadow: viewLayout === 'MAP_ONLY' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              🗺️ Bản đồ SUMO toàn màn hình
+            </button>
+            <button
+              onClick={() => setViewLayout('LIST_ONLY')}
+              style={{
+                border: 'none',
+                padding: '5px 12px',
+                borderRadius: '5px',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                backgroundColor: viewLayout === 'LIST_ONLY' ? '#ffffff' : 'transparent',
+                color: viewLayout === 'LIST_ONLY' ? '#0284c7' : '#64748b',
+                boxShadow: viewLayout === 'LIST_ONLY' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              📋 Danh sách trạm
+            </button>
           </div>
-
-          <TopologyMap
-            nodesData={nodes}
-            topology={topology}
-            selectedNodeId={selectedNodeId}
-            onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
-            onNavigateDetail={(nodeId) => navigate(`/intersections/${nodeId}`)}
-          />
         </div>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: '0.72rem',
+            padding: '3px 8px',
+            borderRadius: '5px',
+            backgroundColor: '#f0fdf4',
+            color: '#16a34a',
+            fontWeight: 700,
+            border: '1px solid #bbf7d0',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span>
+            Khớp tọa độ 1:1 với SUMO-GUI (10.882°N, 106.822°E - TP.HCM)
+          </span>
+        </div>
+      </div>
+
+      {/* Main Operational View: Dynamic Layout based on viewLayout */}
+      <div 
+        className="overview-main-grid"
+        style={{
+          gridTemplateColumns: viewLayout === 'MAP_ONLY' ? '1fr' : viewLayout === 'LIST_ONLY' ? '1fr' : '1.62fr 1fr'
+        }}
+      >
+        {/* Column 1: Enhanced Topology Map */}
+        {(viewLayout === 'SPLIT' || viewLayout === 'MAP_ONLY') && (
+          <div className="card" style={{ padding: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', margin: '0 0 2px 0', fontWeight: 800, color: '#0f172a' }}>
+                  Bản đồ Mạng lưới Giao thông SUMO ({totalNodesCount} Junctions)
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  Tọa độ và cung đường trích xuất trực tiếp từ SUMO C++ Engine; nhấp vào trạm để xem chi tiết
+                </span>
+              </div>
+              {loading && <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600 }}>Syncing graph...</span>}
+            </div>
+
+            <TopologyMap
+              nodesData={nodes}
+              topology={topology}
+              selectedNodeId={selectedNodeId}
+              onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
+              onNavigateDetail={(nodeId) => navigate(`/intersections/${nodeId}`)}
+              height={viewLayout === 'MAP_ONLY' ? 680 : 540}
+            />
+          </div>
+        )}
+
         {/* Column 2: Prioritized Intersection Attention List */}
-        <div className="card" style={{ padding: '18px', display: 'flex', flexDirection: 'column', height: '620px' }}>
-          {/* Station List Header & Search */}
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-                Junction Monitoring
-              </h3>
-              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+        {(viewLayout === 'SPLIT' || viewLayout === 'LIST_ONLY') && (
+          <div className="card" style={{ padding: '18px', display: 'flex', flexDirection: 'column', height: viewLayout === 'LIST_ONLY' ? 'auto' : '620px' }}>
+            {/* Station List Header & Search */}
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
+                  Junction Monitoring
+                </h3>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
                 {filteredNodes.length} of {totalNodesCount} stations
               </span>
             </div>
@@ -680,37 +786,46 @@ const NetworkOverview = () => {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 800, fontSize: '0.88rem', color: isSelected ? '#0284c7' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
-                        Station {nodeId}
-                      </span>
-                      
-                      {/* Health Status */}
-                      {data.status === 'WAITING_FOR_TELEMETRY' ? (
-                        <span className="badge badge-yellow" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>WAITING</span>
-                      ) : data.status === 'SIGNAL_LOST' ? (
-                        <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>SIGNAL LOST</span>
-                      ) : data.status === 'CAMERA_FAULT' ? (
-                        <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>CAM FAULT</span>
-                      ) : data.status === 'ACTUATOR_FAULT' ? (
-                        <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>ACTUATOR ERR</span>
-                      ) : data.status === 'FALLBACK' ? (
-                        <span className="badge badge-yellow" title="ESP32 has had no command for > 5 s: fixed 15 s/phase cycle" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>FALLBACK 15s</span>
-                      ) : (
-                        <span className="badge badge-green" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>ONLINE</span>
-                      )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 800, fontSize: '0.88rem', color: isSelected ? '#0284c7' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
+                          Station {nodeId}
+                        </span>
+                        
+                        {/* Health Status */}
+                        {data.status === 'WAITING_FOR_TELEMETRY' ? (
+                          <span className="badge badge-yellow" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>WAITING</span>
+                        ) : data.status === 'SIGNAL_LOST' ? (
+                          <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>SIGNAL LOST</span>
+                        ) : data.status === 'CAMERA_FAULT' ? (
+                          <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>CAM FAULT</span>
+                        ) : data.status === 'ACTUATOR_FAULT' ? (
+                          <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>ACTUATOR ERR</span>
+                        ) : data.status === 'FALLBACK' ? (
+                          <span className="badge badge-yellow" title="ESP32 has had no command for > 5 s: fixed 15 s/phase cycle" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>FALLBACK 15s</span>
+                        ) : (
+                          <span className="badge badge-green" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>ONLINE</span>
+                        )}
 
-                      {/* Congestion Advisory Badge */}
-                      {isAttn && (
-                        <span style={{
-                          backgroundColor: '#fee2e2',
-                          color: '#b91c1c',
-                          fontSize: '0.65rem',
-                          fontWeight: 800,
-                          padding: '1px 6px',
-                          borderRadius: '4px'
-                        }}>
-                          ATTENTION
+                        {/* Congestion Advisory Badge */}
+                        {isAttn && (
+                          <span style={{
+                            backgroundColor: '#fee2e2',
+                            color: '#b91c1c',
+                            fontSize: '0.65rem',
+                            fontWeight: 800,
+                            padding: '1px 6px',
+                            borderRadius: '4px'
+                          }}>
+                            ATTENTION
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Real Street Name mapping from OpenStreetMap */}
+                      {data.street_name && (
+                        <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>
+                          📍 {data.street_name}
                         </span>
                       )}
                     </div>
@@ -755,6 +870,7 @@ const NetworkOverview = () => {
             })}
           </div>
         </div>
+      )}
       </div>
 
       {/* 4. Collapsible Event & Execution Stream Panel */}

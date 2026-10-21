@@ -17,8 +17,15 @@ from pathlib import Path
 CURR_DIR = Path(__file__).resolve().parent
 REPO_ROOT = next((p for p in [CURR_DIR, *CURR_DIR.parents] if (p / "src" / "control").is_dir()), CURR_DIR.parent.parent)
 
-for p in [REPO_ROOT / "contracts", REPO_ROOT]:
-    if str(p) not in sys.path and p.exists():
+for p in [
+    REPO_ROOT / "contracts",
+    REPO_ROOT,
+    Path(os.environ.get("CONTRACTS_DIR", "/contracts")),
+    Path(os.environ.get("CONTRACTS_DIR", "/contracts")).parent,
+    Path("/contracts"),
+    Path("/"),
+]:
+    if p.exists() and str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
 try:
@@ -26,6 +33,22 @@ try:
     import topics
 except ImportError:
     from contracts import contracts_sdk, topics
+
+# Ensure 'contracts' namespace is available as a top-level module
+if "contracts" not in sys.modules:
+    try:
+        import contracts
+    except ImportError:
+        import types
+        _contracts_mod = types.ModuleType("contracts")
+        _contracts_mod.contracts_sdk = contracts_sdk
+        _contracts_mod.topics = topics
+        try:
+            import research
+            _contracts_mod.research = research
+        except ImportError:
+            pass
+        sys.modules["contracts"] = _contracts_mod
 
 from config import settings
 from src.control.actuator import ActuatorStateMachine

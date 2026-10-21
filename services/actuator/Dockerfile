@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
 ENV CONTRACTS_DIR=/contracts
-ENV PYTHONPATH=/app:/contracts
+ENV PYTHONPATH=/app:/contracts:/app/contracts:/
 
 RUN pip install --no-cache-dir \
     paho-mqtt==1.6.1 \
@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir \
 
 COPY services/actuator /app
 COPY contracts /contracts
+COPY contracts /app/contracts
 COPY src /app/src
 
 CMD ["python", "main.py"]
