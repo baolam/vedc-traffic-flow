@@ -1,0 +1,21 @@
+EdgeFlow closed-loop report: /Users/dominhhien/Documents/AI/VEDC/bang_chung_2026-10-21/run_pi_esp32_that.log (1225 messages, 180.0 s)
+[PASS] J1  telemetry        180 msgs, 1.00 Hz, 0 gap(s) > 3 s
+[PASS] J1  commands         180 commands for 180 confident telemetry
+[PASS] J1  acks             {'APPLIED': 119, 'ACCEPTED': 74, 'REJECTED': 1}; unanswered=0
+[PASS] J1  switch_timing    13 switch(es), ACCEPTED->APPLIED 4.92-5.04 s (expect 3.5-6.5)
+[PASS] J1  fallback         0 fallback entr(y/ies)
+[PASS] J1  blind_commands   0 of 0 blind telemetry (camera lost) answered with a command
+[PASS] J1  phase_agreement  telemetry current_phase_id == ESP32 phase in 165/165
+[PASS] J1  device_status    no SAFE_STOP/OFFLINE
+[PASS] J2  telemetry        180 msgs, 1.00 Hz, 0 gap(s) > 3 s
+[PASS] J2  commands         180 commands for 180 confident telemetry
+[PASS] J2  acks             {'APPLIED': 117, 'ACCEPTED': 76}; unanswered=0
+[PASS] J2  switch_timing    13 switch(es), ACCEPTED->APPLIED 4.92-5.06 s (expect 3.5-6.5)
+[PASS] J2  fallback         0 fallback entr(y/ies)
+[PASS] J2  blind_commands   0 of 0 blind telemetry (camera lost) answered with a command
+[PASS] J2  phase_agreement  telemetry current_phase_id == ESP32 phase in 162/162
+[PASS] J2  device_status    no SAFE_STOP/OFFLINE
+J1: green s per phase {'J1_PHASE_NS': 63.3, 'J1_PHASE_EW': 50.9} (14 green starts), fallback entries at [] s
+J2: green s per phase {'J2_PHASE_EW': 59.5, 'J2_PHASE_NS': 51.6} (14 green starts), fallback entries at [] s
+vision health (last): {'status': 'HEALTHY', 'mode': None, 'phase_source': {'J1': 'esp32_health', 'J2': 'esp32_health'}, 'active_nodes': ['J1', 'J2'], 'final_status': 'HEALTHY'}
+RESULT: PASS

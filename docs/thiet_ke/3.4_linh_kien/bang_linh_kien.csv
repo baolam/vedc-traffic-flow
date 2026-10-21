@@ -1,0 +1,27 @@
+nhom,stt,linh_kien,ma_thong_so,so_luong,vai_tro
+Khối AI tại biên,1,Raspberry Pi 5 (4 GB RAM),"BCM2712, 4× Cortex-A76 2,4 GHz; Wi-Fi 2.4/5 GHz, Gigabit Ethernet",1,"Chạy YOLO11n, gán xe vào ROI, gửi telemetry qua MQTT"
+Khối AI tại biên,2,Camera Module 3 Wide (SC0874),Sony IMX708 12 MP; góc nhìn chéo 120° (102° × 67°); lấy nét tự động; giao tiếp CSI,2,"Mỗi trụ giao thông một camera, nhìn thẳng xuống ngã tư của mình"
+Khối AI tại biên,3,Cáp camera cho Pi 5 (22 → 15 pin),"FPC 0,5 mm → 1 mm; dài 1 m (đường cáp thực tế ~0,8 m mỗi bên)",2,"Nối 2 camera với 2 cổng CAM0 / CAM1 của Pi 5 (cáp kèm theo camera là loại 15–15, không cắm được)"
+Khối AI tại biên,4,Thẻ nhớ microSD 64 GB,ACER,1,"Raspberry Pi OS, mã nguồn vision, model ONNX"
+Khối AI tại biên,5,Tản nhiệt nhôm kèm quạt cho Pi 5,"5 V DC, 0,65 W",1,Tránh hạ xung khi suy luận liên tục
+Khối AI tại biên,6,Vỏ ABS cho Pi 5,35 × 91 × 62 mm,1,Bảo vệ bo mạch; đặt ven đường giữa hai trụ như tủ điều khiển
+Khối AI tại biên,7,Nguồn USB-C cho Pi 5,"5,1 V / 5 A (27 W), USB-C PD",1,Nguồn riêng cho Pi
+Khối chấp hành,8,ESP32 NodeMCU-32S (Ai-Thinker),"ESP-WROOM-32, 2 nhân 240 MHz, Wi-Fi 2.4 GHz; USB–UART CH340, cổng micro-USB",3 (2 dùng + 1 dự phòng),Bộ điều khiển đèn cục bộ cho nút J1 và J2
+Khối chấp hành,9,Module đèn giao thông LED R/Y/G,"4 chân R-Y-G-GND, có sẵn trở hạn dòng, mức 3,3–5 V",10 (8 dùng + 2 dự phòng),"4 module mỗi nút ghép thành cụm đèn 4 mặt treo trên trụ; Bắc và Nam mắc song song trên 3 chân, Đông và Tây cũng vậy"
+Khối chấp hành,10,Nút nhấn tự giữ (safe-stop),"Thường mở, nối GPIO 4 ↔ GND (INPUT_PULLUP)",3 (2 dùng + 1 dự phòng),"Dừng an toàn tại chỗ: vàng nhấp nháy, từ chối lệnh"
+Khối chấp hành,11,Breadboard 830 lỗ,165 × 55 mm,4,"Mỗi nút ghép 2 tấm, vì ESP32 rộng 25,4 mm"
+Khối chấp hành,12,Dây dupont 40 sợi,"M-M, M-F, F-F; dài 20 cm và 30 cm",5 bộ,Nối ESP32 với module đèn và nút
+Khối chấp hành,13,Cáp 8 lõi lên trụ (vd. cáp mạng CAT5e),"Dài ~1,2 m mỗi nút; dùng 7 lõi: R/Y/G Bắc–Nam, R/Y/G Đông–Tây, GND",2,Nối breadboard ESP32 với cụm đèn: đi dưới mặt sa bàn rồi theo trụ và cần đèn
+Khối chấp hành,14,Cáp micro-USB truyền dữ liệu,Loại có đường dữ liệu (không phải cáp chỉ sạc),3,"Nạp firmware, đọc log TRACE làm bằng chứng thời gian"
+Nguồn và bảo vệ,15,Adapter 5 V / 4 A,Đầu DC 5.5 × 2.1 mm,1,Cấp nguồn cho 2 ESP32 và 8 module đèn
+Nguồn và bảo vệ,16,Jack DC cái ra domino,5.5 × 2.1 mm,2 (1 + 1 dự phòng),Lấy 5 V ra đường nguồn chung
+Nguồn và bảo vệ,17,Diode Schottky 1N5819,"1 A, sụt áp ~0,3 V",5,Chống cắm ngược cực trên đường 5 V
+Nguồn và bảo vệ,18,Cầu chì tự phục hồi PTC,"0,5–1 A",4,Bảo vệ quá dòng
+Mạng và điều phối,19,Router Wi-Fi 2.4 GHz,"WPA2, DHCP reservation, tắt client isolation",1,LAN riêng cho MQTT; demo không cần Internet
+Mạng và điều phối,20,Cáp mạng LAN,1–2 m,1,Nối Pi với router (ổn định hơn Wi-Fi trong hội trường)
+Mạng và điều phối,21,Laptop của đội,"Docker Compose: Mosquitto, Graph-Control, API, Dashboard",1,"Điều phối, giám sát, ghi log"
+Sa bàn và đo kiểm,22,Tấm foam PVC A0 + decal mặt đường,"1189 × 841 mm, in 2 ngã tư J1–J2",1,Mặt bằng thí nghiệm
+Sa bàn và đo kiểm,23,Xe mô hình tỉ lệ 1:64,Dài khoảng 70–75 mm,20–30,Tạo hàng đợi có kiểm soát
+Sa bàn và đo kiểm,24,Trụ giao thông (giá camera + cụm đèn),"Đề xuất: nhôm định hình 20 × 20; trụ cao ~440 mm, cần vươn ~140 mm; ống kính cao 400 mm, cụm đèn cao ~110 mm",2,Mỗi ngã tư một trụ: giữ camera cố định (camera rung thì ROI trôi) và treo cụm đèn 4 mặt
+Sa bàn và đo kiểm,25,Logic analyzer USB 8 kênh (tùy chọn),"24 MHz, dùng với PulseView",1,"Bằng chứng độc lập: vàng ≥ 3 s, đỏ toàn phần ≥ 2 s, không có hai hướng cùng xanh"
+Sa bàn và đo kiểm,26,Đèn LED chiếu sa bàn (nên có),Loại không nhấp nháy,1,Giữ ánh sáng ổn định giữa lúc thu dữ liệu và lúc thi

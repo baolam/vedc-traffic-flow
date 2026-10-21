@@ -1,0 +1,238 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Bảng giới thiệu</title>
+<style>
+@page { size: A3; margin: 0 }
+* { box-sizing: border-box }
+html, body { margin: 0 }
+body { font-family: 'Avenir Next', Arial, sans-serif; color: #1E2329; background: #F4F1EA }
+.page { width: 297mm; height: 420mm; position: relative; overflow: hidden; background: #F4F1EA }
+.hero { background: #2E3034; color: #F4F1EA; height: 124mm; padding: 14mm 18mm 0; position: relative }
+.kicker { font-family: 'Avenir Next Condensed', sans-serif; font-weight: 600; font-size: 12pt; letter-spacing: 2.4pt;
+          text-transform: uppercase; color: #FCC419 }
+.title { font-family: 'Avenir Next Condensed', sans-serif; font-weight: 800; font-size: 104pt; line-height: .92;
+         letter-spacing: -1pt; margin: 6mm 0 5mm }
+.lead { font-size: 17pt; line-height: 1.3; max-width: 190mm; color: #E9E5DC; font-weight: 500 }
+.road { position: absolute; left: 0; right: 0; bottom: 12mm; height: 2.2mm;
+        background: repeating-linear-gradient(90deg, #F4F1EA 0 22mm, transparent 22mm 36mm) }
+.head-signal { position: absolute; right: 22mm; top: 22mm; width: 26mm; height: 72mm; background: #17181B;
+               border-radius: 6mm; display: flex; flex-direction: column; justify-content: space-around;
+               align-items: center; padding: 3mm 0; box-shadow: 0 2mm 0 #0E0F11 }
+.lamp { width: 17mm; height: 17mm; border-radius: 50% }
+.body { display: grid; grid-template-columns: 124mm 1fr; gap: 10mm; padding: 13mm 18mm 0 }
+.sec { font-family: 'Avenir Next Condensed', sans-serif; font-weight: 700; font-size: 11pt; letter-spacing: 1.6pt;
+       text-transform: uppercase; color: #5B6470; margin: 0 0 5mm; display: flex; gap: 2.5mm; align-items: baseline }
+.sec b { color: #1E2329; font-size: 19pt; letter-spacing: 0; text-transform: none }
+.route { position: relative; padding-left: 11mm }
+.route::before { content: ''; position: absolute; left: 3.6mm; top: 3mm; bottom: 12mm; width: 2.2mm;
+                 background: #3E4044; border-radius: 1mm }
+.stop { position: relative; margin-bottom: 7.4mm }
+.dot { position: absolute; left: -11mm; top: .6mm; width: 9.4mm; height: 9.4mm; border-radius: 50%;
+       background: #F4F1EA; border: 2.2mm solid; display: flex; align-items: center; justify-content: center;
+       font-family: 'Avenir Next Condensed', sans-serif; font-weight: 700; font-size: 0 }
+.stop h3 { font-family: 'Avenir Next Condensed', sans-serif; font-weight: 700; font-size: 18pt; margin: 0;
+           line-height: 1.15 }
+.stop p { margin: 1mm 0 1.6mm; font-size: 11.6pt; line-height: 1.35; color: #3B424B }
+.hw { list-style: none; margin: 5mm 0 0; padding: 0; font-size: 10.4pt; line-height: 1.3 }
+.hw li { display: flex; justify-content: space-between; gap: 4mm; border-bottom: .5pt solid #D8D2C4; padding: 1.6mm 0 }
+.hw li span:last-child { color: #5B6470; text-align: right }
+.wide { padding: 0 18mm }
+.mono { font-family: Menlo, monospace; font-size: 8.2pt; background: #E6E1D6; padding: .5mm 1.6mm;
+        border-radius: 1mm; color: #1E2329 }
+.plan { background: #fff; border-radius: 3mm; padding: 4mm; box-shadow: 0 .8mm 0 #E0DBCF }
+.legend { list-style: none; margin: 4mm 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2.4mm 5mm;
+          font-size: 10pt; line-height: 1.3 }
+.legend li { display: flex; gap: 2mm }
+.legend .k { flex: none; width: 6.2mm; height: 6.2mm; border-radius: 50%; background: #1E2329; color: #fff;
+             font-family: 'Avenir Next Condensed', sans-serif; font-weight: 700; font-size: 10pt;
+             display: flex; align-items: center; justify-content: center }
+.modular { margin-top: 4mm; font-family: 'Avenir Next Condensed', sans-serif; font-weight: 600; font-size: 13pt;
+           border-left: 1.6mm solid #FCC419; padding: 1mm 0 1mm 3mm }
+.safe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.4mm; margin-top: 3mm }
+.tile { background: #fff; border-radius: 2.4mm; padding: 3.4mm 3.4mm; border-top: 2.4mm solid; min-height: 30mm }
+.tile b { display: block; font-family: 'Avenir Next Condensed', sans-serif; font-weight: 800; font-size: 30pt;
+          line-height: 1; white-space: nowrap }
+.tile span { display: block; font-size: 10.4pt; line-height: 1.3; margin-top: 2mm; color: #3B424B }
+.fine { font-size: 10.4pt; color: #3B424B; margin-top: 3mm; line-height: 1.4 }
+.foot { position: absolute; left: 18mm; right: 18mm; bottom: 12mm; border-top: 1pt solid #1E2329; padding-top: 3.4mm;
+        display: flex; justify-content: space-between; align-items: baseline }
+.foot b { font-family: 'Avenir Next Condensed', sans-serif; font-size: 17pt }
+.foot span { font-size: 10pt; color: #5B6470; max-width: 150mm; text-align: right; line-height: 1.35 }
+</style></head><body><section class="page">
+<header class="hero">
+  <div class="kicker">VEDC 2026 · AI nhúng cho hệ thống IoT thông minh</div>
+  <div class="title">EdgeFlow AI</div>
+  <div class="lead">Điều khiển đèn giao thông thích ứng trên đồ thị mạng lưới đường: AI thị giác đếm xe ngay tại biên,
+    máy chủ điều phối nhiều ngã tư cùng lúc, đèn tự giữ an toàn.</div>
+  <div class="head-signal">
+    <div class="lamp" style="background:#5C1F1F"></div>
+    <div class="lamp" style="background:#5C4A12"></div>
+    <div class="lamp" style="background:#51CF66;box-shadow:0 0 8mm 2mm rgba(81,207,102,.55)"></div>
+  </div>
+  <div class="road"></div>
+</header>
+<main class="body">
+  <section>
+    <div class="sec"><b>Luồng dữ liệu</b></div>
+    <div class="route"><div class="stop"><div class="dot" style="border-color:#1C7ED6"></div><h3>Video giao thông</h3><p>Render 3D mô phỏng, nhìn bao quát cả hai ngã tư J1 và J2</p><span class="mono">VIDEO_SOURCE = file</span></div><div class="stop"><div class="dot" style="border-color:#1C7ED6"></div><h3>Raspberry Pi 5 · YOLO11n</h3><p>Phát hiện xe và đếm hàng đợi theo từng làn (ROI) ngay trên thiết bị biên</p><span class="mono">ONNX · OpenCV</span></div><div class="stop"><div class="dot" style="border-color:#B7791F"></div><h3>MQTT · telemetry</h3><p>Gửi hàng đợi từng hướng của J1, J2 trong mạng LAN</p><span class="mono">edgeflow/v1/telemetry/{nút}</span></div><div class="stop"><div class="dot" style="border-color:#6B46C1"></div><h3>Graph-Control</h3><p>Máy chủ điều phối chọn pha cho cả hai nút trên đồ thị mạng lưới (MaxPressure / EdgeFlow)</p><span class="mono">edgeflow/v1/control/{nút}/command</span></div><div class="stop"><div class="dot" style="border-color:#2B8A3E"></div><h3>ESP32 J1, J2</h3><p>Kiểm giới hạn an toàn rồi mới đổi đèn, báo lại trạng thái lệnh</p><span class="mono">…/ack · ACCEPTED → APPLIED</span></div><div class="stop"><div class="dot" style="border-color:#2B8A3E"></div><h3>Đèn LED 4 hướng</h3><p>Cụm 4 mặt R/Y/G treo giữa mỗi ngã tư trên sa bàn</p><span class="mono">GPIO 23 22 21 · 19 18 5</span></div></div>
+  </section>
+  <section>
+    <div class="sec"><b>Trên sa bàn</b></div>
+    <div class="plan"><svg xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block" viewBox="-600.0 -300.0 1200.0 600.0"><rect x="-600.00" y="-300.00" width="1200.00" height="600.00" fill="#80A568" /><g transform="translate(-300.0,0)"><rect x="-300.00" y="-300.00" width="600.00" height="600.00" fill="#80A568" />
+<rect x="-300.00" y="-76.00" width="600.00" height="152.00" fill="#D6D2C8" />
+<rect x="-76.00" y="-300.00" width="152.00" height="600.00" fill="#D6D2C8" />
+<rect x="-300.00" y="-60.00" width="600.00" height="120.00" fill="#3E4044" />
+<rect x="-60.00" y="-300.00" width="120.00" height="600.00" fill="#3E4044" />
+<rect x="-290.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-240.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-190.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-140.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="110.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="160.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="210.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="260.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-1.50" y="260.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="210.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="160.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="110.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-140.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-190.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-240.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-290.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-90.00" y="49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-56.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-42.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-28.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-14.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="0.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="14.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="28.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="42.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="60.00" y="49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-56.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-42.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-28.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-14.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="0.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="14.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="28.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="42.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-60.00" y="-100.00" width="60.00" height="4.00" fill="#F0F0EC" />
+<rect x="0.00" y="96.00" width="60.00" height="4.00" fill="#F0F0EC" />
+<rect x="96.00" y="-60.00" width="4.00" height="60.00" fill="#F0F0EC" />
+<rect x="-100.00" y="0.00" width="4.00" height="60.00" fill="#F0F0EC" />
+<rect x="127.40" y="83.90" width="121.20" height="177.10" fill="#C9C5BC" rx="4" stroke="#8F8B83" stroke-width="0.6"/>
+<text x="188.00" y="86.90" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="4.2" font-weight="600" fill="#4A4741" text-anchor="middle" dominant-baseline="central" letter-spacing="0.4">ESP32 · J1</text>
+<rect x="97.40" y="217.00" width="28.00" height="44.00" fill="#C9C5BC" rx="4" stroke="#8F8B83" stroke-width="0.6"/>
+<text x="111.40" y="220.00" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="4.2" font-weight="600" fill="#4A4741" text-anchor="middle" dominant-baseline="central" letter-spacing="0.4">X1</text>
+<rect x="-160.00" y="-136.00" width="64.00" height="40.00" fill="#FAFAF8" rx="8" stroke="#282828" stroke-width="1.2"/>
+<text x="-128.00" y="-115.50" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="27" font-weight="700" fill="#1E1E1E" text-anchor="middle" dominant-baseline="central" >J1</text>
+<path d="M-176.00 -129.00l5 11h-10z" fill="#F7F7F2"/>
+<text x="-176.00" y="-110.00" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="8" font-weight="700" fill="#F7F7F2" text-anchor="middle" dominant-baseline="central" >B</text>
+<text x="-286.00" y="270.00" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="9" font-weight="700" fill="#F7F7F2" text-anchor="start" dominant-baseline="central" >EdgeFlow AI · VEDC 2026 · đội 31µF</text>
+<rect x="-286.00" y="285.00" width="100.00" height="2.00" fill="#F7F7F2" />
+<rect x="-286.25" y="282.50" width="0.50" height="3.50" fill="#F7F7F2" />
+<rect x="-276.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-266.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-256.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-246.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-236.25" y="282.50" width="0.50" height="3.50" fill="#F7F7F2" />
+<rect x="-226.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-216.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-206.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-196.25" y="284.00" width="0.50" height="2.00" fill="#F7F7F2" />
+<rect x="-186.25" y="282.50" width="0.50" height="3.50" fill="#F7F7F2" />
+<text x="-182.00" y="285.50" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="5.5" font-weight="600" fill="#F7F7F2" text-anchor="start" dominant-baseline="central" >100 mm</text></g><g transform="translate(300.0,0)"><rect x="-300.00" y="-300.00" width="600.00" height="600.00" fill="#80A568" />
+<rect x="-300.00" y="-76.00" width="600.00" height="152.00" fill="#D6D2C8" />
+<rect x="-76.00" y="-300.00" width="152.00" height="600.00" fill="#D6D2C8" />
+<rect x="-300.00" y="-60.00" width="600.00" height="120.00" fill="#3E4044" />
+<rect x="-60.00" y="-300.00" width="120.00" height="600.00" fill="#3E4044" />
+<rect x="-290.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-240.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-190.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-140.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="110.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="160.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="210.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="260.00" y="-1.50" width="30.00" height="3.00" fill="#F0F0EC" />
+<rect x="-1.50" y="260.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="210.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="160.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="110.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-140.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-190.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-240.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-1.50" y="-290.00" width="3.00" height="30.00" fill="#F0F0EC" />
+<rect x="-90.00" y="49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-90.00" y="-49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-56.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-42.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-28.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-14.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="0.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="14.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="28.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="42.00" y="60.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="60.00" y="49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-7.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-21.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-35.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="60.00" y="-49.00" width="30.00" height="7.00" fill="#F0F0EC" />
+<rect x="-56.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-42.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-28.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-14.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="0.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="14.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="28.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="42.00" y="-90.00" width="7.00" height="30.00" fill="#F0F0EC" />
+<rect x="-60.00" y="-100.00" width="60.00" height="4.00" fill="#F0F0EC" />
+<rect x="0.00" y="96.00" width="60.00" height="4.00" fill="#F0F0EC" />
+<rect x="96.00" y="-60.00" width="4.00" height="60.00" fill="#F0F0EC" />
+<rect x="-100.00" y="0.00" width="4.00" height="60.00" fill="#F0F0EC" />
+<rect x="-248.60" y="83.90" width="121.20" height="177.10" fill="#C9C5BC" rx="4" stroke="#8F8B83" stroke-width="0.6"/>
+<text x="-188.00" y="86.90" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="4.2" font-weight="600" fill="#4A4741" text-anchor="middle" dominant-baseline="central" letter-spacing="0.4">ESP32 · J2</text>
+<rect x="134.50" y="149.50" width="107.00" height="77.00" fill="#C9C5BC" rx="4" stroke="#8F8B83" stroke-width="0.6"/>
+<text x="188.00" y="152.50" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="4.2" font-weight="600" fill="#4A4741" text-anchor="middle" dominant-baseline="central" letter-spacing="0.4">AI BIÊN · PI 5</text>
+<rect x="96.00" y="-136.00" width="64.00" height="40.00" fill="#FAFAF8" rx="8" stroke="#282828" stroke-width="1.2"/>
+<text x="128.00" y="-115.50" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="27" font-weight="700" fill="#1E1E1E" text-anchor="middle" dominant-baseline="central" >J2</text>
+<path d="M176.00 -129.00l5 11h-10z" fill="#F7F7F2"/>
+<text x="176.00" y="-110.00" font-family="'Avenir Next Condensed', 'Avenir Next', Arial, sans-serif" font-size="8" font-weight="700" fill="#F7F7F2" text-anchor="middle" dominant-baseline="central" >B</text></g><path d="M-200.0 -100.0L-300.0 0" stroke="#17181B" stroke-width="14" stroke-linecap="square"/><rect x="-210.0" y="-110.0" width="20.0" height="20.0" fill="#17181B" /><rect x="-322.0" y="-22" width="44" height="44" rx="5" fill="#17181B"/><circle cx="-300.0" cy="-13" r="5.5" fill="#E03131"/><circle cx="-287.0" cy="0" r="5.5" fill="#2F9E44"/><circle cx="-300.0" cy="13" r="5.5" fill="#E03131"/><circle cx="-313.0" cy="0" r="5.5" fill="#2F9E44"/><rect x="-166.6" y="89.9" width="109.2" height="165.1" fill="#FBFBF8" stroke="#B8BEC6" stroke-width="1.5" rx="3"/><rect x="-124.7" y="201.6" width="25.4" height="51.4" fill="#1E2329" rx="2"/><path d="M200.0 -100.0L300.0 0" stroke="#17181B" stroke-width="14" stroke-linecap="square"/><rect x="190.0" y="-110.0" width="20.0" height="20.0" fill="#17181B" /><rect x="278.0" y="-22" width="44" height="44" rx="5" fill="#17181B"/><circle cx="300.0" cy="-13" r="5.5" fill="#E03131"/><circle cx="313.0" cy="0" r="5.5" fill="#2F9E44"/><circle cx="300.0" cy="13" r="5.5" fill="#E03131"/><circle cx="287.0" cy="0" r="5.5" fill="#2F9E44"/><rect x="57.4" y="89.9" width="109.2" height="165.1" fill="#FBFBF8" stroke="#B8BEC6" stroke-width="1.5" rx="3"/><rect x="99.3" y="201.6" width="25.4" height="51.4" fill="#1E2329" rx="2"/><rect x="440.5" y="155.5" width="95.0" height="65.0" fill="#C8102E" rx="6"/><rect x="-196.6" y="223.0" width="16.0" height="32.0" fill="#1E2329" rx="2"/><circle cx="-166" cy="-132" r="19" fill="#1E2329" stroke="#fff" stroke-width="4"/><text x="-166" y="-132" fill="#fff" font-family="Avenir Next Condensed" font-weight="700" font-size="24" text-anchor="middle" dominant-baseline="central">1</text><circle cx="-38" cy="172" r="19" fill="#1E2329" stroke="#fff" stroke-width="4"/><text x="-38" y="172" fill="#fff" font-family="Avenir Next Condensed" font-weight="700" font-size="24" text-anchor="middle" dominant-baseline="central">2</text><circle cx="488.0" cy="126.0" r="19" fill="#1E2329" stroke="#fff" stroke-width="4"/><text x="488.0" y="126.0" fill="#fff" font-family="Avenir Next Condensed" font-weight="700" font-size="24" text-anchor="middle" dominant-baseline="central">3</text><circle cx="0" cy="0" r="19" fill="#1E2329" stroke="#fff" stroke-width="4"/><text x="0" y="0" fill="#fff" font-family="Avenir Next Condensed" font-weight="700" font-size="24" text-anchor="middle" dominant-baseline="central">4</text></svg></div>
+    <ul class="legend"><li><span class="k">1</span><span>Trụ đèn + cụm đèn 4 mặt treo giữa ngã tư</span></li><li><span class="k">2</span><span>ESP32 trên breadboard, nút dừng S1</span></li><li><span class="k">3</span><span>Raspberry Pi 5 chạy YOLO11n</span></li><li><span class="k">4</span><span>Đoạn nối J1 – J2: xe rời nút này đi vào hàng đợi nút kia</span></li></ul>
+    <div class="modular">Thêm một ngã tư = nối dài bạt, thêm một ESP32 và khai báo nút trong topology.</div>
+    <ul class="hw"><li><span>Thiết bị biên</span><span>Raspberry Pi 5 · YOLO11n ONNX</span></li><li><span>Nút chấp hành</span><span>2 × ESP32 NodeMCU-32S</span></li><li><span>Đèn</span><span>8 module R/Y/G, 4 mặt mỗi ngã tư</span></li><li><span>Mạng</span><span>MQTT qua Wi-Fi 2,4 GHz trong LAN</span></li></ul>
+  </section>
+</main>
+<section class="wide" style="margin-top:4mm">
+  <div class="sec" style="margin-bottom:1mm"><b>An toàn do đèn tự quyết</b>
+    <span style="text-transform:none;letter-spacing:0;font-weight:500;font-family:'Avenir Next'">giới hạn nằm trong
+    firmware ESP32, lệnh từ máy chủ không vượt qua được</span></div>
+  <div class="safe"><div class="tile" style="border-color:#E09F00"><b>3 s</b><span>vàng</span></div><div class="tile" style="border-color:#E03131"><b>2 s</b><span>đỏ toàn phần giữa hai pha</span></div><div class="tile" style="border-color:#2F9E44"><b>5–60 s</b><span>xanh tối thiểu – tối đa</span></div><div class="tile" style="border-color:#3E4044"><b>5 s</b><span>mất lệnh: tự chạy dự phòng 15 s mỗi pha</span></div><div class="tile" style="border-color:#C92A2A"><b>S1</b><span>nút dừng an toàn: vàng nhấp nháy</span></div></div>
+  <p class="fine">Trong phần trình diễn, đầu vào thị giác là video render 3D mô phỏng, không phải ảnh camera thật;
+    xe trong video không dừng theo đèn trên sa bàn (vòng hở). Tốc độ, lưu lượng hiển thị là ước lượng.</p>
+</section>
+<footer class="foot"><b>Đội 31µF · Trường Đại học FPT TP.HCM</b>
+  <span>Sa bàn 120 × 60 cm · 2 nút J1, J2 · ESP32 NodeMCU-32S · Raspberry Pi 5</span>
+</footer>
+</section></body></html>
