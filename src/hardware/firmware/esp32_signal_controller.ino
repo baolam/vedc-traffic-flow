@@ -63,8 +63,17 @@ const int PIN_EW_YELLOW   = 18;
 const int PIN_EW_GREEN    = 5;
 
 // Status LED & Emergency Safe-Stop Input
+// SAFE_STOP_GPIO can be overridden per board in platformio.ini (J1 is soldered to GPIO 16)
+#ifndef SAFE_STOP_GPIO
+#define SAFE_STOP_GPIO 4
+#endif
+// Input level that means "pressed": LOW for a normally-open contact to GND (default),
+// HIGH for a normally-closed contact (J1 and J2 buttons are wired on their NC contact)
+#ifndef SAFE_STOP_PRESSED_LEVEL
+#define SAFE_STOP_PRESSED_LEVEL LOW
+#endif
 const int PIN_STATUS_LED  = 2;  // Onboard blue LED
-const int PIN_SAFE_STOP   = 4;  // Active-LOW emergency button (use a latching button)
+const int PIN_SAFE_STOP   = SAFE_STOP_GPIO;  // Active-LOW emergency button (use a latching button)
 
 // ====================================================================
 // 3. SAFETY TIMING INVARIANTS (Milliseconds)
@@ -394,9 +403,9 @@ void maintainMqttConnection(unsigned long now) {
 // ====================================================================
 // 10. SAFE-STOP INPUT
 // ====================================================================
-// Returns the debounced level of the active-LOW safe-stop input (true = pressed).
+// Returns the debounced state of the safe-stop input (true = pressed).
 bool readSafeStop(unsigned long now) {
-  bool raw = (digitalRead(PIN_SAFE_STOP) == LOW);
+  bool raw = (digitalRead(PIN_SAFE_STOP) == SAFE_STOP_PRESSED_LEVEL);
   if (raw != safeStopRawLast) {
     safeStopRawLast = raw;
     safeStopRawSince = now;

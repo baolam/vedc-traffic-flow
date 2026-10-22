@@ -21,7 +21,7 @@ Mỗi nút giao ngã tư gồm 4 hướng tiếp cận (**Bắc - N, Nam - S, Đ
 | **Đông & Tây (EW)** | 🟡 Vàng (Yellow) | `GPIO 18` | HIGH (3.3V / 5V) | 220 Ω |
 | **Đông & Tây (EW)** | 🟢 Xanh (Green) | `GPIO 5` | HIGH (3.3V / 5V) | 220 Ω |
 | **Chẩn đoán / Trạng thái** | 🔵 LED Status | `GPIO 2` (Onboard) | Nhấp nháy theo nhịp | - |
-| **Nút ngắt khẩn cấp (Safe-Stop)** | Nút nhấn cơ | `GPIO 4` | Pull-up (Active LOW) | 10 kΩ |
+| **Nút ngắt khẩn cấp (Safe-Stop)** | Nút nấm tự giữ, tiếp điểm **NC** | **J1: `GPIO 16`**, **J2: `GPIO 4`** | Pull-up trong chip; **HIGH = đang ấn** (NC hở) | - |
 
 ---
 
@@ -43,7 +43,7 @@ Mỗi nút giao ngã tư gồm 4 hướng tiếp cận (**Bắc - N, Nam - S, Đ
        |  GPIO 18 +---+--[ 220Ω ]----------------> [ LED Vàng EW ]
        |  GPIO 5  +---+--[ 220Ω ]----------------> [ LED Xanh EW ]
        |          |
-       |  GPIO 4  +------[ Nút Safe-Stop ]-----> GND
+       |  GPIO 4* +--[ NC Nút Safe-Stop ]------> GND   (* J1: GPIO 16)
        |  GND     +-----------------------------> GND
        +----------+
 ```
@@ -54,16 +54,16 @@ Mỗi nút giao ngã tư gồm 4 hướng tiếp cận (**Bắc - N, Nam - S, Đ
 
 1. **Bảo vệ chống dòng ngược & quá áp**: Dùng diode Schottky 1N5819 (sụt áp ~0,3 V) trên đường nguồn 5V vào chân 5V/VIN của ESP32 để chống cắm ngược cực, kèm cầu chì tự phục hồi (PTC) 0,5–1 A. Không dùng 1N4007: sụt ~0,8 V làm VIN chỉ còn ~4,2 V. Rút nguồn 5V ngoài khi cắm cáp micro-USB để nạp firmware.
 2. **Điện trở hạn dòng cho LED**: Toàn bộ các ngõ ra điều khiển LED đều được nối qua điện trở hạn dòng $220\ \Omega$ (giới hạn dòng điện dưới $15\text{mA}$ cho mỗi chân GPIO).
-3. **Cơ chế kéo chân (Pull-Up)**: Chân Safe-Stop (`GPIO 4`) sử dụng điện trở kéo lên nội bộ `INPUT_PULLUP` để chống nhiễu trường điện từ xung quanh mô hình.
+3. **Cơ chế kéo chân (Pull-Up)**: Chân Safe-Stop (`GPIO 4` ở J2, `GPIO 16` ở J1, đặt bằng cờ `SAFE_STOP_GPIO` trong `platformio.ini`) sử dụng điện trở kéo lên nội bộ `INPUT_PULLUP` để chống nhiễu trường điện từ xung quanh mô hình.
 4. **Module đèn mắc song song**: Module hướng Bắc và Nam dùng chung 3 chân (GPIO 23/22/21), Đông và Tây dùng chung 3 chân (GPIO 19/18/5). Module đèn có sẵn điện trở hạn dòng, dòng ~5–6 mA/LED ở 3,3 V, nên mỗi chân GPIO kéo ~12 mA. Không cần thêm trở 220 Ω hay ULN2803 khi dùng module.
-5. **Nút Safe-Stop**: Dùng nút nhấn tự giữ. Firmware đọc theo mức (có chống dội 50 ms): giữ ở LOW thì vàng nhấp nháy và từ chối lệnh; thả ra thì ALL_RED 2 s rồi mới xanh lại.
+5. **Nút Safe-Stop**: Nút nấm tự giữ, nối qua tiếp điểm **NC** nên nhả nút thì chân ở LOW, ấn nút thì chân lên HIGH (cờ `SAFE_STOP_PRESSED_LEVEL=HIGH`). Đứt dây cũng thành HIGH, tức tự vào dừng khẩn. Firmware đọc theo mức (có chống dội 50 ms): đang ấn thì vàng nhấp nháy và từ chối lệnh; nhả ra thì ALL_RED 2 s rồi mới xanh lại. Đổi sang tiếp điểm NO thì bỏ cờ đó. Chi tiết: `HUONG_DAN_LAP_RAP.md` mục 3a.
 
 ---
 
 ## 📈 4. Bằng Chứng Thời Gian Tín Hiệu (Output Trace)
 
 - **Serial trace từ MCU**: Mỗi lần đầu ra đổi, firmware in một dòng `TRACE,<millis>,<node>,<ns>,<ew>,<label>` (`ns`/`ew` ∈ `R`,`Y`,`G`,`-`). Ghi lại bằng: `pio device monitor -e J1 | tee trace_J1.csv`.
-- **Logic analyzer 8 kênh (PulseView)**: CH0–CH5 → GPIO 23, 22, 21, 19, 18, 5; CH6 → GPIO 4 (safe-stop); GND chung. Dùng để chứng minh độc lập: không có lúc nào hai hướng cùng xanh, vàng ≥ 3 s, all-red ≥ 2 s.
+- **Logic analyzer 8 kênh (PulseView)**: CH0–CH5 → GPIO 23, 22, 21, 19, 18, 5; CH6 → chân safe-stop (GPIO 4 ở J2, GPIO 16 ở J1); GND chung. Dùng để chứng minh độc lập: không có lúc nào hai hướng cùng xanh, vàng ≥ 3 s, all-red ≥ 2 s.
 
 ## 🔧 5. Build & Nạp Firmware (PlatformIO)
 
