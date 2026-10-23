@@ -605,7 +605,7 @@ const IntersectionDetail = () => {
                 {isSafeStop
                   ? 'Nút an toàn trên board đang bị giữ: cả hai hướng đèn nhấp nháy vàng, mọi ControlCommand (tự động hoặc tay) đều bị ESP32 từ chối. Đây là hành động chủ ý của người vận hành, không phải lỗi thiết bị. Nhả nút → ALL_RED 2 s → trở lại xanh bình thường.'
                   : deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                  ? 'Không nhận nhịp tim thiết bị quá 6 s (mất nguồn hoặc mạng). Nếu thiết bị vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
+                  ? 'Không nhận nhịp tim thiết bị quá 30 s (mất nguồn hoặc mạng). Nếu thiết bị vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
                   ? 'Camera/video không cho quan sát (độ tin cậy 0). Graph-control ngừng gửi lệnh cho nút này; sau 5 s thiết bị tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'SIGNAL_LOST' || nodeTelemetry?.status === 'SIGNAL_LOST')
@@ -670,7 +670,7 @@ const IntersectionDetail = () => {
             <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Nhịp Tim Thiết Bị</span>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
               {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                ? 'LOST (>6s)'
+                ? 'LOST (>30s)'
                 : deviceHealth?.actuator?.last_heartbeat_ms_ago != null
                 ? `${(deviceHealth.actuator.last_heartbeat_ms_ago / 1000).toFixed(1)} s trước`
                 : 'Chưa nhận'}
@@ -683,7 +683,7 @@ const IntersectionDetail = () => {
               marginTop: '2px'
             }}>
               {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                ? '● Mất Nhịp Tim Thiết Bị (>6s)'
+                ? '● Mất Nhịp Tim Thiết Bị (>30s)'
                 : deviceHealth?.actuator?.status === 'SAFE_STOP'
                 ? '● Actuator Safe-Stop'
                 : deviceHealth?.actuator?.status === 'FALLBACK'

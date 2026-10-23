@@ -106,7 +106,7 @@ def test_heartbeat_age_uses_receive_time_not_device_clock():
 
 
 def test_silent_esp32_is_lost():
-    _esp32(_ingested_at_ms=NOW_MS - 7000)
+    _esp32(_ingested_at_ms=NOW_MS - 31000)
     health = compute_node_device_health("J1", _telemetry(), NOW_MS)
     assert health["actuator"]["status"] == "HEARTBEAT_LOST"
 

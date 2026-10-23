@@ -497,7 +497,7 @@ def _placeholder_approaches(approach_ids: List[str]) -> List[Dict[str, Any]]:
 
 
 TELEMETRY_STALE_TIMEOUT_MS = 3500  # 3.5s without telemetry -> SIGNAL_LOST (for hardware/vision sensors)
-ACTUATOR_HEARTBEAT_TIMEOUT_MS = 6000  # 6.0s without heartbeat -> HEARTBEAT_LOST
+ACTUATOR_HEARTBEAT_TIMEOUT_MS = 30000  # 30.0s without heartbeat -> HEARTBEAT_LOST (device disconnect diagnosis)
 
 def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], now_ms: int) -> Dict[str, Any]:
     if not node_live:
@@ -512,7 +512,8 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
             "actuator": {
                 "status": "ACTIVE",
                 "last_heartbeat_ms_ago": None,
-                "clearance": "GREEN"
+                "clearance": "GREEN",
+                "raw_safe_stop": False
             }
         }
 
@@ -545,12 +546,20 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
     actuator_status = "ACTIVE"
     actuator_age_ms = None
     clearance = "GREEN"
+    # Raw, undebounced safe_stop as last reported by the board -- deliberately NOT gated by
+    # ACTUATOR_HEARTBEAT_TIMEOUT_MS below. actuator_status/overall_status answer "can we trust this
+    # device right now" (a stale heartbeat near the 5s health period can briefly read as
+    # HEARTBEAT_LOST instead of SAFE_STOP); this answers "what did it last say", which is what a
+    # UI following the physical button must use so it only clears on a real RELEASED health message,
+    # never on a single missed/delayed one.
+    raw_safe_stop = False
     if actuator_data:
         h_time = actuator_data.get("_ingested_at_ms") or actuator_data.get("timestamp_ms") or 0
         actuator_age_ms = (now_ms - h_time) if h_time else None
         clearance = actuator_data.get("clearance", "GREEN")
         device_status = actuator_data.get("status")
         safe_stop = bool(actuator_data.get("safe_stop")) or device_status == "SAFE_STOP"
+        raw_safe_stop = safe_stop
 
         if device_status == "OFFLINE" or (actuator_age_ms is not None and actuator_age_ms > ACTUATOR_HEARTBEAT_TIMEOUT_MS):
             actuator_status = "HEARTBEAT_LOST"
@@ -585,7 +594,8 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
         "actuator": {
             "status": actuator_status,
             "last_heartbeat_ms_ago": actuator_age_ms,
-            "clearance": clearance
+            "clearance": clearance,
+            "raw_safe_stop": raw_safe_stop
         }
     }
 
@@ -1395,13 +1405,14 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
 
 if __name__ == "__main__":
     import uvicorn
-    # docker-compose bind-mounts this file straight into the container (./services/api/main.py ->
-    # /app/main.py), but a plain `uvicorn.run(app, ...)` loads the module once at process start --
-    # editing the file on the host has NO effect until the container is restarted. reload=True (dev
-    # env only) watches the file and respawns the worker automatically, which is what this project
-    # needs since services/api/main.py is iterated on constantly during this build-out.
-    if settings.edgeflow_env == "dev":
-        uvicorn.run("main:app", host=settings.api_host, port=settings.api_port, reload=True)
-    else:
-        uvicorn.run(app, host=settings.api_host, port=settings.api_port)
+    # NOTE: reload=True was tried here and reverted -- it makes uvicorn re-import this module in a
+    # second (worker) process while the original process is also still alive for a moment, and
+    # since the background MQTT listener is started unconditionally at module import time (not
+    # inside this __main__ guard), BOTH processes open their own client with the same hardcoded
+    # client_id "api-telemetry-ingest" and continuously kick each other off the broker -- a
+    # permanent reconnect storm, not a one-time race, that drops health/telemetry/ACK messages.
+    # Fixing this properly needs the MQTT listener moved into a FastAPI startup event instead of a
+    # module-level thread; until then, after editing this file: `docker compose --profile hardware
+    # up -d --force-recreate api` (the file is bind-mounted, so no image rebuild is needed).
+    uvicorn.run(app, host=settings.api_host, port=settings.api_port)
 
