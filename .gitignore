@@ -176,3 +176,6 @@ src/hardware/secrets.ini
 # Test scenario temporary outputs
 services/simulator/sumo_configs/test_*
 
+
+# Presentations & Large Media
+presentation/

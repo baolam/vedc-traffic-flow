@@ -8,8 +8,11 @@ import React from 'react';
  */
 const PhaseIndicator = ({ activePhase = "J1_PHASE_NS", state = "GREEN", compact = false }) => {
   const phaseUpper = String(activePhase || "").toUpperCase();
-  const isNS = phaseUpper.includes("NS") || phaseUpper.includes("PHASE_1") || phaseUpper.endsWith("_1");
-  const isEW = phaseUpper.includes("EW") || phaseUpper.includes("PHASE_2") || phaseUpper.endsWith("_2");
+  // Only the literal NS/EW convention (four_intersection_v1, hcm_realworld_v1) is trustworthy here.
+  // Topologies with many phases per node (grid4x4, cologne8: PHASE_1..PHASE_10) fall through to the
+  // generic badge below instead of being mislabeled N-S/E-W off a "_1"/"_2" suffix match.
+  const isNS = phaseUpper.includes("NS");
+  const isEW = phaseUpper.includes("EW");
 
   // If in transitional clearance state (YELLOW or ALL_RED)
   if (state === 'YELLOW') {
@@ -58,10 +61,16 @@ const PhaseIndicator = ({ activePhase = "J1_PHASE_NS", state = "GREEN", compact 
     );
   }
 
-  // Multi-phase general display if neither NS nor EW explicitly
+  // Multi-phase general display if neither NS nor EW explicitly. In compact contexts (station
+  // list rows) this used to dump the whole raw phase_id -- for OSM-derived node IDs that's a
+  // 40+ character string (e.g. "cluster_2938641203_366431367_5750600582_PHASE_2") that blew out
+  // the row layout. Compact mode now shows just the phase number, full id still on hover.
   if (!isNS && !isEW) {
+    const shortLabel = phaseUpper.includes('_PHASE_')
+      ? `PHASE ${activePhase.split(/_PHASE_/i).pop()}`
+      : 'ACTIVE';
     return (
-      <div 
+      <div
         title={`Active Signal Phase: ${activePhase}`}
         style={{
           display: 'inline-flex',
@@ -73,11 +82,15 @@ const PhaseIndicator = ({ activePhase = "J1_PHASE_NS", state = "GREEN", compact 
           border: '1px solid #a7f3d0',
           fontSize: '0.72rem',
           fontWeight: 600,
-          color: '#065f46'
+          color: '#065f46',
+          maxWidth: compact ? '110px' : 'none',
+          overflow: 'hidden'
         }}
       >
-        <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981' }} />
-        <span>{activePhase || 'ACTIVE GREEN'}</span>
+        <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }} />
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {compact ? shortLabel : (activePhase || 'ACTIVE GREEN')}
+        </span>
       </div>
     );
   }

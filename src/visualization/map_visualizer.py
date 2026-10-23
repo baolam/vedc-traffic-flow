@@ -66,11 +66,13 @@ def generate_camera_map(
 
     print("Generating Light Theme Interactive Folium Map for HCM Real-world SUMO Scenario...")
     
+    # CARTO's anonymous basemaps.cartocdn.com tiles now require a registered API key (every tile
+    # renders an "API KEY REQUIRED" watermark without one) -- use the standard OSM raster tiles,
+    # which stay free and keyless.
     m = folium.Map(
         location=[center_lat, center_lng],
         zoom_start=12,
-        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        tiles='OpenStreetMap',
     )
 
     edges_group = folium.FeatureGroup(name="Road Connections (OSRM / Delaunay)", show=True)

@@ -125,6 +125,15 @@ body {
   gap: 16px;
 }
 
+/* A grid track's default min-width is its content's min-content size, so one unbreakable long
+   string (long OSM node IDs, raw SUMO phase-state text) can force a whole column wider than its
+   1fr share and push the page into horizontal overflow. min-width: 0 lets tracks shrink to the
+   grid's own sizing and rely on text wrapping inside instead. */
+.grid-cols-2 > *,
+.grid-cols-4 > * {
+  min-width: 0;
+}
+
 /* Overview Main 62% / 38% Split Layout */
 .overview-main-grid {
   display: grid;
@@ -132,6 +141,10 @@ body {
   gap: 20px;
   margin-bottom: 20px;
   align-items: start;
+}
+
+.overview-main-grid > * {
+  min-width: 0;
 }
 
 @media (max-width: 1200px) {

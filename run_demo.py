@@ -59,6 +59,21 @@ from controller import (
 )
 from state_machine import ActuatorStateMachine
 
+import struct
+
+
+def _png_dimensions(path: Path) -> Optional[tuple]:
+    """Reads (width, height) straight out of a PNG's IHDR chunk -- no Pillow dependency."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(26)
+        if head[:8] != b"\x89PNG\r\n\x1a\n":
+            return None
+        width, height = struct.unpack(">II", head[16:24])
+        return width, height
+    except Exception:
+        return None
+
 
 def print_banner(topology_id: str, scenario_id: str, controller_name: str, duration_s: int):
     print("=" * 75)
@@ -199,7 +214,6 @@ def run_demo_simulation(
     <input>
         <net-file value="{net_file}"/>
         <route-files value="{route_path}"/>
-        <gui-settings-file value="{gui_settings_path}"/>
     </input>
     <gui_only>
         <gui-settings-file value="{gui_settings_path}"/>
@@ -338,6 +352,28 @@ def run_demo_simulation(
     total_queue_sum = 0.0
     samples = 0
 
+    # Periodic SUMO-GUI snapshot for the dashboard's per-node "Edge Vision Perception Canvas":
+    # a read-only screenshot of the SAME view the operator is already watching (never changes
+    # its zoom/offset/boundary -- so the live SUMO-GUI window on screen is never disturbed).
+    # Each node's pixel position is computed from the view's own boundary so the dashboard can
+    # crop/zoom to one intersection client-side, no Pillow/video-encoding dependency needed here.
+    SNAPSHOT_INTERVAL_S = 2.0
+    snapshot_dir = repo_root / "output" / "sumo_snapshots"
+    last_snapshot_wall_s = 0.0
+    snapshot_due_next_step = False
+    pending_boundary = None
+    snapshot_png_path = snapshot_dir / f"{topology_id}.png"
+    snapshot_meta_path = snapshot_dir / f"{topology_id}_meta.json"
+
+    # Reverse view sync: the dashboard can ask the live sumo-gui window to pan/zoom to a node
+    # (POST /api/v1/vision/sumo-focus writes this request file). Unlike the read-only snapshot
+    # above, this DOES move the operator's actual camera -- only happens on an explicit request.
+    FOCUS_CHECK_INTERVAL_S = 1.0
+    FOCUS_RADIUS_M = 80.0
+    focus_request_path = snapshot_dir / f"{topology_id}_focus_request.json"
+    last_focus_check_wall_s = 0.0
+    last_applied_focus_ms = 0
+
     print("Step (s) | Active Phases                       | Mean Queue (veh)")
     print("-" * 65)
 
@@ -346,6 +382,69 @@ def run_demo_simulation(
             traci.simulationStep()
             t = traci.simulation.getTime()
             step = int(t)
+
+            now_wall_s = time.time()
+            if now_wall_s - last_snapshot_wall_s >= SNAPSHOT_INTERVAL_S:
+                try:
+                    snapshot_dir.mkdir(parents=True, exist_ok=True)
+                    pending_boundary = traci.gui.getBoundary(traci.gui.DEFAULT_VIEW)
+                    traci.gui.screenshot(traci.gui.DEFAULT_VIEW, str(snapshot_png_path))
+                    last_snapshot_wall_s = now_wall_s
+                    snapshot_due_next_step = True
+                except Exception:
+                    pass
+            elif snapshot_due_next_step:
+                # screenshot() writes its file on the NEXT simulationStep -- that has now
+                # happened, so the PNG should be on disk.
+                snapshot_due_next_step = False
+                try:
+                    dims = _png_dimensions(snapshot_png_path)
+                    if dims and pending_boundary:
+                        img_w, img_h = dims
+                        (xmin, ymin), (xmax, ymax) = pending_boundary
+                        span_x = max(1e-6, xmax - xmin)
+                        span_y = max(1e-6, ymax - ymin)
+                        nodes_px = {}
+                        for node in topology.get("nodes", []):
+                            nid = node["node_id"]
+                            try:
+                                wx, wy = traci.junction.getPosition(nid)
+                                nodes_px[nid] = {
+                                    "x": round((wx - xmin) / span_x * img_w, 1),
+                                    "y": round(img_h - (wy - ymin) / span_y * img_h, 1),
+                                }
+                            except Exception:
+                                continue
+                        snapshot_meta_path.write_text(json.dumps({
+                            "topology_id": topology_id,
+                            "timestamp_ms": int(time.time() * 1000),
+                            "image_width": img_w,
+                            "image_height": img_h,
+                            "boundary": {"xmin": xmin, "ymin": ymin, "xmax": xmax, "ymax": ymax},
+                            "nodes": nodes_px,
+                        }), encoding="utf-8")
+                except Exception:
+                    pass
+
+            if now_wall_s - last_focus_check_wall_s >= FOCUS_CHECK_INTERVAL_S:
+                last_focus_check_wall_s = now_wall_s
+                try:
+                    if focus_request_path.is_file():
+                        req = json.loads(focus_request_path.read_text(encoding="utf-8"))
+                        req_ms = req.get("requested_ms") or 0
+                        req_node = req.get("node_id")
+                        if req_node and req_ms and req_ms != last_applied_focus_ms:
+                            cx, cy = traci.junction.getPosition(req_node)
+                            traci.gui.setBoundary(
+                                traci.gui.DEFAULT_VIEW,
+                                cx - FOCUS_RADIUS_M, cy - FOCUS_RADIUS_M,
+                                cx + FOCUS_RADIUS_M, cy + FOCUS_RADIUS_M,
+                            )
+                            last_applied_focus_ms = req_ms
+                            logger_print = f"[🎯] sumo-gui camera focused on node '{req_node}' (dashboard request)"
+                            print(logger_print)
+                except Exception:
+                    pass
 
             actuator.step(now=t)
             current_phases = []

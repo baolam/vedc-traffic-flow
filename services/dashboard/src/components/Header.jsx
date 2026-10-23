@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, ShieldCheck, Clock, Server, Layers, Wifi, Radio } from 'lucide-react';
+import { useActiveScenario } from '../hooks/useActiveScenario';
 
 const Header = () => {
   const [timeStr, setTimeStr] = useState('');
   const [timeZoneStr, setTimeZoneStr] = useState('');
-  const [activeScenario, setActiveScenario] = useState(
-    localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
-  );
+  const [activeScenario, setActiveScenario] = useActiveScenario();
   const [activeController, setActiveController] = useState('max_pressure');
   const [systemStatus, setSystemStatus] = useState('ONLINE');
   const [lastSyncSec, setLastSyncSec] = useState(0);
@@ -48,7 +47,6 @@ const Header = () => {
             }
             if (data.active_topology) {
               setActiveScenario(data.active_topology);
-              localStorage.setItem('edgeflow_active_scenario', data.active_topology);
             }
             if (data.status) {
               setSystemStatus(data.status.toUpperCase());
@@ -58,8 +56,6 @@ const Header = () => {
         })
         .catch(() => {
           setSystemStatus('DISCONNECTED');
-          const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
-          setActiveScenario(current);
         });
     };
 

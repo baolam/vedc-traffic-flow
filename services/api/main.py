@@ -62,6 +62,18 @@ def _get_artifacts_dir() -> Path:
 
 artifacts_dir = _get_artifacts_dir()
 
+
+def _get_output_dir() -> Path:
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "output").is_dir():
+            return p / "output"
+    return curr / "output"
+
+# run_demo.py (SUMO-GUI live demo, run outside Docker) drops periodic per-topology
+# screenshots + node pixel positions here; see "Periodic SUMO-GUI snapshot" in run_demo.py.
+sumo_snapshot_dir = _get_output_dir() / "sumo_snapshots"
+
 try:
     import contracts_sdk
     import topics
@@ -1200,11 +1212,30 @@ class VisionRunRequest(BaseModel):
     frames: Optional[int] = 30
     controller: Optional[str] = "max_pressure"
     node_id: Optional[str] = "J1"
+    # Defaults to the currently active topology (LIVE_STATE) when omitted, so the demo runs
+    # against the node's real contract (phases/approaches) instead of a hard-coded scenario.
+    topology_id: Optional[str] = None
+
+
+def _vision_artifact_paths(topology_id: str, node_id: str):
+    """Per (topology_id, node_id) demo artifacts, so running the demo for one node never gets
+    displayed under another node/scenario (it used to be a single global file for everyone)."""
+    safe = lambda s: "".join(c if c.isalnum() or c in "-_" else "_" for c in str(s))
+    vision_dir = artifacts_dir / "vision_demo"
+    stem = f"{safe(topology_id)}__{safe(node_id)}"
+    return vision_dir / f"{stem}_video.mp4", vision_dir / f"{stem}_report.json"
 
 
 @app.get("/api/v1/vision/demo-video")
-def get_vision_demo_video():
-    """Serves the annotated video output produced by demo_video_pipeline.py."""
+def get_vision_demo_video(node_id: Optional[str] = None, topology_id: Optional[str] = None):
+    """Serves the annotated video output produced by demo_video_pipeline.py for one node/topology."""
+    if node_id and topology_id:
+        video_path, _ = _vision_artifact_paths(topology_id, node_id)
+        if video_path.is_file():
+            return FileResponse(str(video_path), media_type="video/mp4", filename=video_path.name)
+        raise HTTPException(status_code=404, detail=f"No demo video for node '{node_id}' in '{topology_id}' yet. Run the demo for it first.")
+
+    # Legacy global artifact (no node_id/topology_id given)
     candidates = [
         artifacts_dir / "yolo_demo_annotated.mp4",
         curr_dir.parent.parent / "artifacts" / "yolo_demo_annotated.mp4",
@@ -1229,11 +1260,72 @@ def get_vision_demo_report():
     raise HTTPException(status_code=404, detail="No demo report found.")
 
 
+@app.get("/api/v1/vision/sumo-snapshot")
+def get_sumo_snapshot(topology_id: str):
+    """
+    Read-only screenshot of the live sumo-gui window for this topology, refreshed every ~2s by
+    run_demo.py while it's running. Same view the operator already sees -- never moved/zoomed.
+    """
+    png_path = sumo_snapshot_dir / f"{topology_id}.png"
+    if not png_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=f"No SUMO-GUI snapshot yet for '{topology_id}'. Is run_demo.py running sumo-gui on this topology?"
+        )
+    return FileResponse(str(png_path), media_type="image/png")
+
+
+@app.get("/api/v1/vision/sumo-snapshot-meta")
+def get_sumo_snapshot_meta(topology_id: str):
+    """Pixel position of every node within the current sumo-snapshot image, so the dashboard
+    can crop/zoom to one intersection client-side without any server-side image processing."""
+    meta_path = sumo_snapshot_dir / f"{topology_id}_meta.json"
+    if not meta_path.is_file():
+        raise HTTPException(status_code=404, detail=f"No SUMO-GUI snapshot metadata yet for '{topology_id}'.")
+    with open(meta_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+class SumoFocusRequest(BaseModel):
+    node_id: str
+    topology_id: Optional[str] = None
+
+
+@app.post("/api/v1/vision/sumo-focus")
+def request_sumo_focus(req: SumoFocusRequest):
+    """
+    Reverse view sync: asks run_demo.py's live sumo-gui loop to pan/zoom its camera to a node.
+    Unlike the read-only snapshot above, this DOES move the operator's actual sumo-gui window --
+    only ever happens on this explicit request, picked up by run_demo.py's own polling (~1s).
+    """
+    topology_id = req.topology_id or LIVE_STATE["active_topology_id"]
+    sumo_snapshot_dir.mkdir(parents=True, exist_ok=True)
+    request_path = sumo_snapshot_dir / f"{topology_id}_focus_request.json"
+    now_ms = int(time.time() * 1000)
+    request_path.write_text(json.dumps({"node_id": req.node_id, "requested_ms": now_ms}), encoding="utf-8")
+    return {
+        "status": "SENT",
+        "node_id": req.node_id,
+        "topology_id": topology_id,
+        "requested_ms": now_ms,
+        "detail": "run_demo.py polls this request about once a second; it only applies if sumo-gui is running this topology."
+    }
+
+
 @app.get("/api/v1/vision/status")
-def get_vision_demo_status():
-    """Returns status and availability of the vision demo video & report."""
-    video_path = artifacts_dir / "yolo_demo_annotated.mp4"
-    report_path = artifacts_dir / "yolo_demo_report.json"
+def get_vision_demo_status(node_id: Optional[str] = None, topology_id: Optional[str] = None):
+    """
+    Returns status and availability of the vision demo video & report for one node/topology.
+    Without node_id/topology_id, falls back to whichever demo ran last globally (legacy).
+    """
+    if node_id and topology_id:
+        video_path, report_path = _vision_artifact_paths(topology_id, node_id)
+        video_url_params = f"?node_id={node_id}&topology_id={topology_id}"
+    else:
+        video_path = artifacts_dir / "yolo_demo_annotated.mp4"
+        report_path = artifacts_dir / "yolo_demo_report.json"
+        video_url_params = ""
+
     has_video = video_path.is_file()
     has_report = report_path.is_file()
 
@@ -1247,7 +1339,7 @@ def get_vision_demo_status():
 
     return {
         "has_video": has_video,
-        "video_url": "/api/v1/vision/demo-video" if has_video else None,
+        "video_url": f"/api/v1/vision/demo-video{video_url_params}" if has_video else None,
         "video_size_bytes": video_path.stat().st_size if has_video else 0,
         "has_report": has_report,
         "report": report_data,
@@ -1265,8 +1357,8 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
     if not script_path.is_file():
         raise HTTPException(status_code=500, detail="demo_video_pipeline.py not found.")
 
-    out_video = artifacts_dir / "yolo_demo_annotated.mp4"
-    out_report = artifacts_dir / "yolo_demo_report.json"
+    topology_id = req.topology_id or LIVE_STATE["active_topology_id"]
+    out_video, out_report = _vision_artifact_paths(topology_id, req.node_id)
 
     cmd = [
         py_exec, str(script_path),
@@ -1274,6 +1366,7 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
         "--frames", str(req.frames),
         "--controller", req.controller,
         "--node-id", req.node_id,
+        "--topology", topology_id,
         "--output-video", str(out_video),
         "--output-report", str(out_report),
     ]
@@ -1281,7 +1374,7 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         if proc.returncode != 0:
             logger.error(f"Vision demo run failed: {proc.stderr}")
-            raise HTTPException(status_code=500, detail=f"Pipeline failed: {proc.stderr[-300:]}")
+            raise HTTPException(status_code=500, detail=f"Pipeline failed: {proc.stderr[-500:]}")
 
         with open(out_report, "r", encoding="utf-8") as f:
             report_data = json.load(f)
@@ -1289,8 +1382,10 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
             "status": "SUCCESS",
             "message": "Vision demo completed successfully",
             "report": report_data,
-            "video_url": "/api/v1/vision/demo-video"
+            "video_url": f"/api/v1/vision/demo-video?node_id={req.node_id}&topology_id={topology_id}"
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

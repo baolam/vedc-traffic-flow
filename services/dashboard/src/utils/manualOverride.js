@@ -15,17 +15,17 @@ const TONES = {
 export function describeOverride(override) {
   if (!override) return null;
   const target = override.target_phase_id;
-  const reason = override.last_reason ? `ESP32: "${override.last_reason}". ` : '';
+  const reason = override.last_reason ? `Thiết bị: "${override.last_reason}". ` : '';
   const views = {
-    SENT: ['info', `Đã gửi lệnh ${target}`, 'Đang chờ ESP32 trả lời…'],
-    WAITING: ['warn', `ESP32 chưa đổi sang ${target}`,
+    SENT: ['info', `Đã gửi lệnh ${target}`, 'Đang chờ thiết bị trả lời…'],
+    WAITING: ['warn', `Chưa đổi sang ${target}`,
       `${reason}Graph-control gửi lại mỗi giây cho tới khi luật an toàn (xanh tối thiểu 5 s, không cắt ngang vàng/đỏ) cho phép.`],
-    CLEARING: ['warn', `Đang chuyển sang ${target}`, 'ESP32 đã nhận lệnh: vàng 3 s → đỏ toàn bộ 2 s → xanh.'],
+    CLEARING: ['warn', `Đang chuyển sang ${target}`, 'Đã nhận lệnh: vàng 3 s → đỏ toàn bộ 2 s → xanh.'],
     APPLIED: ['ok', `${target} đang xanh theo lệnh tay`,
       `Giữ ưu tiên thêm ${override.hold_remaining_s ?? '?'} s, sau đó thuật toán điều khiển lại.`],
     ENDED: ['neutral', `Đã hết ưu tiên ${target}`, 'Thuật toán đã điều khiển lại nút này.'],
     NOT_APPLIED: ['error', `Không đổi được sang ${target}`,
-      `${reason || 'ESP32 không trả lời (mất kết nối, safe-stop, hoặc graph-control không chạy). '}Lệnh đã bị bỏ.`]
+      `${reason || 'Thiết bị không trả lời (mất kết nối, safe-stop, hoặc graph-control không chạy). '}Lệnh đã bị bỏ.`]
   };
   const view = views[override.status];
   if (!view) return null;

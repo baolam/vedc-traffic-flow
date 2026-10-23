@@ -1,19 +1,22 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import PhaseIndicator from '../components/PhaseIndicator';
 import { describeOverride, overrideRequestError, OVERRIDE_IN_PROGRESS } from '../utils/manualOverride';
+import { useActiveScenario } from '../hooks/useActiveScenario';
+import { cleanPhaseName } from '../utils/phaseName';
 import { 
-  ArrowLeft, Cpu, Activity, ShieldCheck, Gauge, Car, AlertTriangle, Play, 
-  ShieldAlert, Radio, Video, Sliders, CheckCircle2, Clock, RefreshCw, 
-  Compass, Layers, Zap, BarChart3, Eye, TrendingUp, Check, Info, Server, Wifi
+  ArrowLeft, Cpu, Activity, ShieldCheck, Gauge, Car, AlertTriangle, Play,
+  ShieldAlert, Radio, Video, Sliders, CheckCircle2, Clock, RefreshCw,
+  Compass, Layers, Zap, BarChart3, Eye, TrendingUp, Check, Info, Server, Wifi,
+  Crosshair
 } from 'lucide-react';
 
 const APPROACH_COLORS = ['#0284c7', '#16a34a', '#ca8a04', '#dc2626', '#9333ea', '#06b6d4'];
 
 const IntersectionDetail = () => {
   const { nodeId = 'J1' } = useParams();
-  const activeScenarioId = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
+  const [activeScenarioId] = useActiveScenario();
 
   const [nodeDetail, setNodeDetail] = useState(null);
   const [approaches, setApproaches] = useState([]);
@@ -24,7 +27,13 @@ const IntersectionDetail = () => {
   const [lastPingMs, setLastPingMs] = useState(12);
   const [visionMode, setVisionMode] = useState('video'); // 'video', 'roi', 'bbox', 'heatmap'
   const [visionReport, setVisionReport] = useState(null);
+  const [visionError, setVisionError] = useState(null);
   const [isRunningVision, setIsRunningVision] = useState(false);
+  // Live SUMO-GUI screenshot (from run_demo.py), only meaningful while source_type is
+  // "simulation" -- for a real device node, the canned/real vision report below applies instead.
+  const [sumoSnapshotMeta, setSumoSnapshotMeta] = useState(null);
+  const [isFocusingSumo, setIsFocusingSumo] = useState(false);
+  const [sumoFocusMessage, setSumoFocusMessage] = useState(null);
   const [deviceHealth, setDeviceHealth] = useState(null);
   const [visionHealth, setVisionHealth] = useState(null); // measured by the vision service (health topic)
   const [isServerDisconnected, setIsServerDisconnected] = useState(false);
@@ -131,68 +140,77 @@ const IntersectionDetail = () => {
     return () => clearInterval(interval);
   }, [fetchNodeState]);
 
-  // Fetch Vision Demo Status & Report
+  // Fetch Vision Demo Status & Report -- scoped to THIS node + scenario, so switching node
+  // never shows a report/video that was actually generated for a different node or topology.
   useEffect(() => {
-    fetch(`${apiBase}/api/v1/vision/status`)
+    setVisionReport(null);
+    setVisionError(null);
+    fetch(`${apiBase}/api/v1/vision/status?node_id=${encodeURIComponent(nodeId)}&topology_id=${encodeURIComponent(activeScenarioId)}`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.report) {
-          setVisionReport(data.report);
-        }
+        setVisionReport(data && data.has_report ? data.report : null);
       })
       .catch(() => {});
-  }, [apiBase]);
+  }, [apiBase, nodeId, activeScenarioId]);
 
   const handleRunVisionDemo = async () => {
     setIsRunningVision(true);
+    setVisionError(null);
     try {
       const res = await fetch(`${apiBase}/api/v1/vision/run-demo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ video: 'synthetic', frames: 30, controller: 'max_pressure', node_id: nodeId || 'J1' })
+        body: JSON.stringify({
+          video: 'synthetic', frames: 30, controller: 'max_pressure',
+          node_id: nodeId || 'J1', topology_id: activeScenarioId
+        })
       });
       const data = await res.json();
+      if (!res.ok) {
+        setVisionError(data?.detail || 'Chạy demo thất bại.');
+        return;
+      }
       if (data && data.report) {
         setVisionReport(data.report);
       }
     } catch (e) {
-      console.error("Run vision demo failed:", e);
+      setVisionError('Không gọi được API chạy demo.');
     } finally {
       setIsRunningVision(false);
     }
   };
 
+  // Reverse view sync: asks run_demo.py's live sumo-gui window to pan/zoom its camera to this
+  // node. Moves the operator's actual SUMO window -- fine here because it only ever happens
+  // because the operator themselves just opened/selected this exact node.
+  const sendSumoFocus = useCallback(async (silent) => {
+    if (!silent) { setIsFocusingSumo(true); setSumoFocusMessage(null); }
+    try {
+      const res = await fetch(`${apiBase}/api/v1/vision/sumo-focus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node_id: nodeId, topology_id: activeScenarioId })
+      });
+      const data = await res.json();
+      if (!silent) {
+        setSumoFocusMessage(res.ok
+          ? 'Đã gửi yêu cầu — sumo-gui sẽ chuyển khung nhìn trong tối đa 1s.'
+          : (data?.detail || 'Gửi yêu cầu thất bại.'));
+      }
+    } catch (e) {
+      if (!silent) setSumoFocusMessage('Không gọi được API.');
+    } finally {
+      if (!silent) {
+        setIsFocusingSumo(false);
+        setTimeout(() => setSumoFocusMessage(null), 4000);
+      }
+    }
+  }, [apiBase, nodeId, activeScenarioId]);
 
-  // 3. Update Actuator State Machine Parameters via API
-  const handleUpdateActuatorConfig = (updates) => {
-    const payload = {
-      node_id: nodeId,
-      yellow_duration_s: updates.yellow_duration_s !== undefined ? updates.yellow_duration_s : yellowDuration,
-      all_red_duration_s: updates.all_red_duration_s !== undefined ? updates.all_red_duration_s : allRedDuration,
-      min_green_s: updates.min_green_s !== undefined ? updates.min_green_s : minGreen,
-      max_green_s: updates.max_green_s !== undefined ? updates.max_green_s : maxGreen,
-      mode: updates.mode || actuatorMode
-    };
+  const handleFocusSumo = () => sendSumoFocus(false);
+  const autoFocusedKeyRef = useRef(null);
 
-    fetch(`${apiBase}/api/v1/actuator/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.actuator_config) {
-          if (data.actuator_config.yellow_duration_s) setYellowDuration(data.actuator_config.yellow_duration_s);
-          if (data.actuator_config.all_red_duration_s) setAllRedDuration(data.actuator_config.all_red_duration_s);
-          if (data.actuator_config.min_green_s) setMinGreen(data.actuator_config.min_green_s);
-          if (data.actuator_config.max_green_s) setMaxGreen(data.actuator_config.max_green_s);
-          if (data.actuator_config.mode) setActuatorMode(data.actuator_config.mode);
-        }
-      })
-      .catch(() => {});
-  };
-
-  // 4. Manual phase override: the ESP32 decides when it is safe; the banner follows its ACKs via the API
+  // 3. Manual phase override: the ESP32 decides when it is safe; the banner follows its ACKs via the API
   const handleTriggerOverride = (targetPhaseId) => {
     const target = targetPhaseId || overrideTargetPhase;
     setOverrideError(null);
@@ -209,7 +227,7 @@ const IntersectionDetail = () => {
         }
         fetchNodeState();
       })
-      .catch(() => setOverrideError(overrideRequestError('Không gọi được API: lệnh chưa tới ESP32.')));
+      .catch(() => setOverrideError(overrideRequestError('Không gọi được API: lệnh chưa tới thiết bị.')));
   };
 
   const overrideBanner = overrideError || describeOverride(manualOverride);
@@ -219,6 +237,88 @@ const IntersectionDetail = () => {
   const appStats = useMemo(() => nodeTelemetry?.approaches || [], [nodeTelemetry]);
   const sourceType = nodeTelemetry?.source_type || 'system';
   const status = nodeTelemetry?.status || 'ONLINE';
+
+  // Auto-trigger once per (scenario, node): the moment we learn this node is simulation-sourced
+  // (right after opening its detail page / navigating here from a map click), snap sumo-gui to
+  // it automatically -- no extra button press needed. Guarded so it fires once, not on every
+  // 1.5s telemetry poll.
+  useEffect(() => {
+    if (sourceType !== 'simulation') return;
+    const key = `${activeScenarioId}:${nodeId}`;
+    if (autoFocusedKeyRef.current === key) return;
+    autoFocusedKeyRef.current = key;
+    sendSumoFocus(true);
+  }, [sourceType, activeScenarioId, nodeId, sendSumoFocus]);
+
+  // Crops/zooms the periodic SUMO-GUI screenshot to roughly SUMO_WORLD_RADIUS_M meters around
+  // this node, via CSS background-position/-size -- no server-side image work needed.
+  const SUMO_VIEWPORT_PX = 280;
+  const SUMO_WORLD_RADIUS_M = 80;
+  // run_demo.py only screenshots whatever the operator currently has the sumo-gui camera
+  // pointed at, so a node can legitimately be outside that view (status 'out-of-view') --
+  // distinct from there being no snapshot at all yet.
+  const sumoCrop = useMemo(() => {
+    if (!sumoSnapshotMeta) return { status: 'no-snapshot' };
+    const nodePos = sumoSnapshotMeta.nodes?.[nodeId];
+    const { image_width, image_height, boundary } = sumoSnapshotMeta;
+    if (!image_width || !image_height || !boundary) return { status: 'no-snapshot' };
+    if (!nodePos) return { status: 'no-position' };
+    if (nodePos.x < 0 || nodePos.x > image_width || nodePos.y < 0 || nodePos.y > image_height) {
+      return { status: 'out-of-view' };
+    }
+    const metersPerPixel = (boundary.xmax - boundary.xmin) / image_width;
+    if (!(metersPerPixel > 0) || !isFinite(metersPerPixel)) return { status: 'no-snapshot' };
+    // Zoom to ~SUMO_WORLD_RADIUS_M around the node, but never below what's needed to cover the
+    // viewport -- if the operator's sumo-gui camera is already zoomed in tighter than that
+    // radius, the source image can't be scaled down further without leaving empty space.
+    const desiredZoom = SUMO_VIEWPORT_PX / ((SUMO_WORLD_RADIUS_M / metersPerPixel) * 2);
+    const coverZoom = Math.max(SUMO_VIEWPORT_PX / image_width, SUMO_VIEWPORT_PX / image_height);
+    const zoom = Math.max(desiredZoom, coverZoom);
+    const bgW = image_width * zoom;
+    const bgH = image_height * zoom;
+    // Center the crop on the node, but clamp to the image's own edges -- a node near the border
+    // of the captured sumo-gui frame would otherwise need pixels that don't exist, leaving the
+    // box partly empty. Clamping keeps the box always fully covered (node just isn't perfectly
+    // centered in that edge case).
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const bgX = clamp(-(nodePos.x * zoom - SUMO_VIEWPORT_PX / 2), SUMO_VIEWPORT_PX - bgW, 0);
+    const bgY = clamp(-(nodePos.y * zoom - SUMO_VIEWPORT_PX / 2), SUMO_VIEWPORT_PX - bgH, 0);
+    return {
+      status: 'ok',
+      style: {
+        backgroundImage: `url(${apiBase}/api/v1/vision/sumo-snapshot?topology_id=${encodeURIComponent(activeScenarioId)}&t=${sumoSnapshotMeta.timestamp_ms})`,
+        backgroundSize: `${bgW}px ${bgH}px`,
+        backgroundPosition: `${bgX}px ${bgY}px`,
+        backgroundRepeat: 'no-repeat'
+      }
+    };
+  }, [sumoSnapshotMeta, nodeId, apiBase, activeScenarioId]);
+  const sumoCropStyle = sumoCrop.style || null;
+
+  // Poll the SUMO-GUI snapshot position data only while this node is actually simulation-sourced
+  // (i.e. driven by run_demo.py). Real-device nodes keep the existing vision report/video path.
+  useEffect(() => {
+    if (sourceType !== 'simulation') {
+      setSumoSnapshotMeta(null);
+      return;
+    }
+    let cancelled = false;
+    const poll = () => {
+      fetch(`${apiBase}/api/v1/vision/sumo-snapshot-meta?topology_id=${encodeURIComponent(activeScenarioId)}`)
+        .then(res => {
+          if (cancelled) return;
+          if (!res.ok) { setSumoSnapshotMeta(null); return; }
+          return res.json().then(data => {
+            if (cancelled) return;
+            setSumoSnapshotMeta(data);
+          });
+        })
+        .catch(() => { if (!cancelled) setSumoSnapshotMeta(null); });
+    };
+    poll();
+    const interval = setInterval(poll, 2000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [apiBase, activeScenarioId, sourceType]);
 
   const totalQ = useMemo(() => appStats.reduce((acc, a) => acc + (a.queue_vehicles || 0), 0), [appStats]);
   const avgSpeedMps = useMemo(() => appStats.length
@@ -232,36 +332,58 @@ const IntersectionDetail = () => {
 
   const totalFlowRate = useMemo(() => appStats.reduce((acc, a) => acc + (a.flow_veh_per_s || 0), 0), [appStats]);
 
-  // Max-Pressure Algorithm Analysis calculation for Phase NS vs Phase EW
+  const availablePhases = useMemo(() => {
+    if (nodeDetail?.phases && nodeDetail.phases.length > 0) {
+      return nodeDetail.phases.map(p => ({ ...p, name: cleanPhaseName(p.name, p.phase_id) }));
+    }
+    return [
+      { phase_id: `${nodeId}_PHASE_NS`, name: 'North-South Green', approaches: [`${nodeId}_N_IN`, `${nodeId}_S_IN`] },
+      { phase_id: `${nodeId}_PHASE_EW`, name: 'East-West Green', approaches: [`${nodeId}_E_IN`, `${nodeId}_W_IN`] }
+    ];
+  }, [nodeDetail, nodeId]);
+
+  // Which approaches are green right now, straight from the topology contract's phases[].approaches
+  // (canonical). Needed below instead of guessing direction from the approach_id string.
+  const currentPhaseApproaches = useMemo(() => {
+    const phase = availablePhases.find(p => p.phase_id === activePhase);
+    return phase?.approaches || [];
+  }, [availablePhases, activePhase]);
+
+  // Max-Pressure reference: queue pressure summed per signal phase, using each phase's own
+  // approaches list from the contract. This generalizes beyond the 2-phase NS/EW convention
+  // (four_intersection_v1, hcm_realworld_v1) to topologies with many phases per node
+  // (grid4x4, cologne8), where no approach_id substring reliably encodes a direction.
   const pressureAnalysis = useMemo(() => {
-    let nsQueue = 0;
-    let ewQueue = 0;
-    appStats.forEach(a => {
-      const id = (a.approach_id || '').toUpperCase();
-      if (id.includes('_N_') || id.includes('_S_') || id.includes('NORTH') || id.includes('SOUTH')) {
-        nsQueue += (a.queue_vehicles || 0);
-      } else {
-        ewQueue += (a.queue_vehicles || 0);
-      }
+    const queueByApproach = {};
+    appStats.forEach(a => { queueByApproach[a.approach_id] = a.queue_vehicles || 0; });
+
+    const phases = availablePhases.map(phase => {
+      const queue = (phase.approaches || []).reduce((acc, appId) => acc + (queueByApproach[appId] || 0), 0);
+      return {
+        phase_id: phase.phase_id,
+        name: phase.name || phase.phase_id,
+        queue: Math.round(queue * 10) / 10,
+        approaches: phase.approaches || []
+      };
     });
 
-    const diff = Math.abs(nsQueue - ewQueue);
-    const recommendedPhase = nsQueue >= ewQueue ? `${nodeId}_PHASE_NS` : `${nodeId}_PHASE_EW`;
-    const isSelectedMatch = activePhase.includes('NS') ? nsQueue >= ewQueue : ewQueue >= nsQueue;
+    if (phases.length === 0) {
+      return { phases: [], maxPhase: null, diff: 0, recommendedPhase: activePhase, isSelectedMatch: true };
+    }
+
+    const maxQueue = Math.max(...phases.map(p => p.queue));
+    const minQueue = Math.min(...phases.map(p => p.queue));
+    const maxPhase = phases.find(p => p.queue === maxQueue);
+    const activeQueue = phases.find(p => p.phase_id === activePhase)?.queue;
 
     return {
-      nsQueue: Math.round(nsQueue * 10) / 10,
-      ewQueue: Math.round(ewQueue * 10) / 10,
-      diff: Math.round(diff * 10) / 10,
-      recommendedPhase,
-      isSelectedMatch
+      phases,
+      maxPhase,
+      diff: Math.round((maxQueue - minQueue) * 10) / 10,
+      recommendedPhase: maxPhase.phase_id,
+      isSelectedMatch: activeQueue === maxQueue
     };
-  }, [appStats, nodeId, activePhase]);
-
-  const availablePhases = (nodeDetail?.phases && nodeDetail.phases.length > 0) ? nodeDetail.phases : [
-    { phase_id: `${nodeId}_PHASE_NS`, name: 'North-South Green' },
-    { phase_id: `${nodeId}_PHASE_EW`, name: 'East-West Green' }
-  ];
+  }, [appStats, availablePhases, activePhase]);
 
   const defaultAckLogs = [
     {
@@ -279,6 +401,22 @@ const IntersectionDetail = () => {
     if (approaches.length > 0) return approaches;
     return [`${nodeId}_N_IN`, `${nodeId}_S_IN`, `${nodeId}_E_IN`, `${nodeId}_W_IN`];
   }, [appStats, approaches, nodeId]);
+
+  // Only topologies that actually name approaches "_N_IN/_S_IN/_E_IN/_W_IN" (four_intersection_v1,
+  // hcm_realworld_v1) support the compass-quadrant demo graphic. SUMO-derived topologies
+  // (hcm_corridor, cologne8, grid4x4...) use raw edge IDs, so they get a generic approach list
+  // instead of invented compass directions.
+  const CARDINAL_SUFFIX_RE = /_(N|S|E|W)_IN$/;
+  const isCardinalNode = approachKeys.length > 0 && approachKeys.every(id => CARDINAL_SUFFIX_RE.test(id));
+  const currentPhaseName = availablePhases.find(p => p.phase_id === activePhase)?.name || activePhase;
+
+  // "Phase 1"/"Phase 2" alone doesn't say what actually happens -- this spells out which
+  // approaches (real contract approach_ids) get the green during that phase.
+  const describeApproaches = (ids) => {
+    if (!ids || ids.length === 0) return 'chưa rõ nhánh đường';
+    const shown = ids.slice(0, 4).join(', ');
+    return ids.length > 4 ? `${shown} +${ids.length - 4} nhánh khác` : shown;
+  };
 
   return (
     <div className="page-container" style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '24px' }}>
@@ -407,11 +545,11 @@ const IntersectionDetail = () => {
               </div>
               <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: '#7f1d1d' }}>
                 {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                  ? 'Không nhận nhịp tim ESP32 quá 6 s (mất nguồn hoặc Wi-Fi). Nếu ESP32 vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
+                  ? 'Không nhận nhịp tim thiết bị quá 6 s (mất nguồn hoặc mạng). Nếu thiết bị vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
-                  ? 'Camera/video không cho quan sát (độ tin cậy 0). Graph-control ngừng gửi lệnh cho nút này; sau 5 s ESP32 tự chạy chu kỳ cố định 15 s/pha.'
+                  ? 'Camera/video không cho quan sát (độ tin cậy 0). Graph-control ngừng gửi lệnh cho nút này; sau 5 s thiết bị tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'SIGNAL_LOST' || nodeTelemetry?.status === 'SIGNAL_LOST')
-                  ? 'Không nhận telemetry quá 3,5 s (Pi/vision hoặc mạng). Không có telemetry thì graph-control không ra lệnh; sau 5 s ESP32 tự chạy chu kỳ cố định.'
+                  ? 'Không nhận telemetry quá 3,5 s (dịch vụ vision hoặc mạng). Không có telemetry thì graph-control không ra lệnh; sau 5 s thiết bị tự chạy chu kỳ cố định.'
                   : 'Phần cứng Actuator đang trong chế độ Safe-Stop hoặc chờ xác thực an toàn.'}
               </div>
             </div>
@@ -469,7 +607,7 @@ const IntersectionDetail = () => {
             <Wifi size={26} color={deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626' : '#ca8a04'} />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Nhịp Tim ESP32</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Nhịp Tim Thiết Bị</span>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
               {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
                 ? 'LOST (>6s)'
@@ -485,12 +623,12 @@ const IntersectionDetail = () => {
               marginTop: '2px'
             }}>
               {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                ? '● Mất Nhịp Tim ESP32 (>6s)'
+                ? '● Mất Nhịp Tim Thiết Bị (>6s)'
                 : deviceHealth?.actuator?.status === 'SAFE_STOP'
                 ? '● Actuator Safe-Stop'
                 : deviceHealth?.actuator?.status === 'FALLBACK'
                 ? '● Fallback cố định 15 s/pha'
-                : `● ESP32 ${deviceHealth?.actuator?.clearance || 'GREEN'} | API ${lastPingMs} ms`}
+                : `● Thiết bị ${deviceHealth?.actuator?.clearance || 'GREEN'} | API ${lastPingMs} ms`}
             </div>
           </div>
         </div>
@@ -502,7 +640,7 @@ const IntersectionDetail = () => {
           <div>
             <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Kiểm Duyệt An Toàn</span>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
-              Interlock trên ESP32
+              Interlock Phần Cứng
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
               Vàng: {yellowDuration}s | Đỏ Toàn Bộ: {allRedDuration}s
@@ -518,7 +656,16 @@ const IntersectionDetail = () => {
             <Compass size={20} color="#0284c7" />
             Chi Tiết Hàng Chờ & Thông Số Từng Nhánh Luồng Đường ({nodeId})
           </h3>
-          <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>{appStats.length} Nhánh Đường Đang Kết Nối Telemetry</span>
+          {appStats.length > 0 ? (
+            <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>{appStats.length} Nhánh Đường Đang Kết Nối Telemetry</span>
+          ) : (
+            <span style={{
+              fontSize: '0.74rem', fontWeight: 800, color: '#b45309', backgroundColor: '#fffbeb',
+              border: '1px solid #fde68a', padding: '3px 8px', borderRadius: '5px'
+            }}>
+              ⚠ DỮ LIỆU MINH HỌA — CHƯA CÓ TELEMETRY THẬT
+            </span>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, appStats.length))}, 1fr)`, gap: '16px' }}>
@@ -533,8 +680,7 @@ const IntersectionDetail = () => {
             const occPct = Math.round((app.occupancy_ratio || 0) * 100);
             const confPct = Math.round((app.confidence !== undefined ? app.confidence : 0.95) * 100);
             const isZeroConf = (app.confidence !== undefined && app.confidence <= 0);
-            const isGreenActive = (activePhase.includes('NS') && (app.approach_id.includes('_N_') || app.approach_id.includes('_S_'))) ||
-                                  (activePhase.includes('EW') && (app.approach_id.includes('_E_') || app.approach_id.includes('_W_')));
+            const isGreenActive = currentPhaseApproaches.includes(app.approach_id);
 
             return (
               <div 
@@ -591,7 +737,7 @@ const IntersectionDetail = () => {
                 <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b' }}>
                   <span>Độ tin cậy AI Vision:</span>
                   <strong style={{ color: isZeroConf ? '#dc2626' : '#16a34a' }}>
-                    {isZeroConf ? '0% (Mất Tín Hiệu)' : `${confPct}% YOLO`}
+                    {isZeroConf ? '0% (Mất Tín Hiệu)' : `${confPct}%`}
                   </strong>
                 </div>
               </div>
@@ -615,26 +761,50 @@ const IntersectionDetail = () => {
             
             {/* Vision Display Mode Switcher & Trigger Button */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={handleRunVisionDemo}
-                disabled={isRunningVision}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '4px 10px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  borderRadius: '6px',
-                  border: '1px solid #0284c7',
-                  backgroundColor: isRunningVision ? '#f1f5f9' : '#e0f2fe',
-                  color: isRunningVision ? '#94a3b8' : '#0284c7',
-                  cursor: isRunningVision ? 'not-allowed' : 'pointer'
-                }}
-              >
-                <RefreshCw size={12} className={isRunningVision ? 'spin' : ''} />
-                {isRunningVision ? 'Đang chạy YOLO...' : 'Chạy lại Demo'}
-              </button>
+              {sourceType === 'simulation' ? (
+                <button
+                  onClick={handleFocusSumo}
+                  disabled={isFocusingSumo}
+                  title="Yêu cầu sumo-gui đang chạy pan/zoom camera tới node này (đổi khung nhìn thật trên cửa sổ sumo-gui)"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    borderRadius: '6px',
+                    border: '1px solid #0284c7',
+                    backgroundColor: isFocusingSumo ? '#f1f5f9' : '#e0f2fe',
+                    color: isFocusingSumo ? '#94a3b8' : '#0284c7',
+                    cursor: isFocusingSumo ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <Crosshair size={12} className={isFocusingSumo ? 'spin' : ''} />
+                  {isFocusingSumo ? 'Đang gửi...' : 'Focus SUMO-GUI'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleRunVisionDemo}
+                  disabled={isRunningVision}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    borderRadius: '6px',
+                    border: '1px solid #0284c7',
+                    backgroundColor: isRunningVision ? '#f1f5f9' : '#e0f2fe',
+                    color: isRunningVision ? '#94a3b8' : '#0284c7',
+                    cursor: isRunningVision ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <RefreshCw size={12} className={isRunningVision ? 'spin' : ''} />
+                  {isRunningVision ? 'Đang chạy...' : 'Chạy lại Demo'}
+                </button>
+              )}
 
               <div style={{ display: 'flex', gap: '4px', backgroundColor: '#f1f5f9', padding: '2px', borderRadius: '6px' }}>
                 {['video', 'roi', 'bbox', 'heatmap'].map(m => (
@@ -693,32 +863,86 @@ const IntersectionDetail = () => {
                   {`Inference p50 ${visionHealth.runtime?.latency_ms?.inference_ms?.p50 ?? '--'} ms | ${visionHealth.detector_input_size || '?'} px | ${visionHealth.device || ''}`}
                 </span>
               )}
-              {visionMode === 'video' && (
+              {visionMode === 'video' && sourceType === 'simulation' && (
+                <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: sumoCrop.status === 'ok' ? '#4ade80' : '#f87171', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {sumoCrop.status === 'ok'
+                    ? `● SUMO-GUI Live | cập nhật ${new Date(sumoSnapshotMeta.timestamp_ms).toLocaleTimeString()}`
+                    : sumoCrop.status === 'out-of-view'
+                    ? '○ Node ngoài khung nhìn'
+                    : '○ Chưa có ảnh SUMO-GUI'}
+                </span>
+              )}
+              {visionMode === 'video' && sourceType !== 'simulation' && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
                   Video chú thích ghi sẵn (không phải luồng trực tiếp)
                 </span>
               )}
-              {visionReport?.next_step_controller && (
+              {sourceType !== 'simulation' && visionReport?.node_id === nodeId && visionReport?.next_step_controller && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#f59e0b', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
                   Next Phase: {visionReport?.sample_decision?.target_phase_id || 'HOLD'}
                 </span>
               )}
+              {sourceType !== 'simulation' && !visionReport && (
+                <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#94a3b8', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                  Chưa chạy demo cho node này
+                </span>
+              )}
             </div>
+
+            {visionError && (
+              <div style={{ position: 'absolute', top: '44px', left: '12px', right: '12px', zIndex: 10, backgroundColor: 'rgba(127,29,29,0.92)', border: '1px solid #ef4444', color: '#fecaca', padding: '6px 10px', borderRadius: '6px', fontSize: '0.74rem' }}>
+                {visionError}
+              </div>
+            )}
+
+            {sumoFocusMessage && (
+              <div style={{ position: 'absolute', top: '44px', left: '12px', right: '12px', zIndex: 10, backgroundColor: 'rgba(15,23,42,0.92)', border: '1px solid #0284c7', color: '#93c5fd', padding: '6px 10px', borderRadius: '6px', fontSize: '0.74rem' }}>
+                {sumoFocusMessage}
+              </div>
+            )}
 
             {visionMode === 'video' ? (
               <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '280px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <video
-                  key={visionReport?.frames_processed || 'video-demo'}
-                  controls
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  style={{ width: '100%', maxHeight: '310px', borderRadius: '8px', objectFit: 'contain' }}
-                  src={`${apiBase}/api/v1/vision/demo-video`}
-                >
-                  Trình duyệt không hỗ trợ thẻ video.
-                </video>
+                {sourceType === 'simulation' ? (
+                  sumoCrop.status === 'ok' ? (
+                    <div
+                      title={`Ảnh trực tiếp từ sumo-gui, zoom ~${SUMO_WORLD_RADIUS_M * 2}m quanh node ${nodeId}`}
+                      style={{
+                        width: `${SUMO_VIEWPORT_PX}px`,
+                        height: `${SUMO_VIEWPORT_PX}px`,
+                        maxWidth: '100%',
+                        borderRadius: '8px',
+                        border: '1px solid #334155',
+                        ...sumoCropStyle
+                      }}
+                    />
+                  ) : (
+                    <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '20px' }}>
+                      {sumoCrop.status === 'out-of-view'
+                        ? <>Node <strong>{nodeId}</strong> hiện nằm ngoài khung nhìn của cửa sổ sumo-gui đang mở. Pan/zoom sumo-gui tới nút này để xem.</>
+                        : sumoCrop.status === 'no-position'
+                        ? <>Không tìm thấy vị trí node <strong>{nodeId}</strong> trong dữ liệu sumo-gui.</>
+                        : <>Chưa có ảnh SUMO-GUI cho scenario <strong>{activeScenarioId}</strong>. Cần chạy <code>run_demo.py</code> (sumo-gui) cho scenario này.</>}
+                    </div>
+                  )
+                ) : visionReport?.node_id === nodeId ? (
+                  <video
+                    key={`${nodeId}-${visionReport?.frames_processed || 'video-demo'}`}
+                    controls
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{ width: '100%', maxHeight: '310px', borderRadius: '8px', objectFit: 'contain' }}
+                    src={`${apiBase}/api/v1/vision/demo-video?node_id=${encodeURIComponent(nodeId)}&topology_id=${encodeURIComponent(activeScenarioId)}`}
+                  >
+                    Trình duyệt không hỗ trợ thẻ video.
+                  </video>
+                ) : (
+                  <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '20px' }}>
+                    Chưa có video demo cho node <strong>{nodeId}</strong>. Bấm "Chạy lại Demo" để tạo.
+                  </div>
+                )}
               </div>
             ) : (
               /* Dynamic Road Intersection Canvas Simulation */
@@ -727,44 +951,73 @@ const IntersectionDetail = () => {
                 <div style={{ position: 'absolute', width: '90px', height: '100%', backgroundColor: '#1e293b', borderLeft: '2px dashed #475569', borderRight: '2px dashed #475569' }} />
                 <div style={{ position: 'absolute', width: '100%', height: '90px', backgroundColor: '#1e293b', borderTop: '2px dashed #475569', borderBottom: '2px dashed #475569' }} />
 
-                {/* Center Intersection Box */}
+                {/* Center Intersection Box -- shows the real current phase name/id, not a
+                    guessed "GREEN NS/EW" that's wrong for any non-NS/EW topology. */}
                 <div style={{
                   position: 'absolute',
-                  width: '90px',
+                  width: '120px',
                   height: '90px',
-                  backgroundColor: activePhase.includes('NS') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                  border: `2px solid ${activePhase.includes('NS') ? '#22c55e' : '#38bdf8'}`,
+                  backgroundColor: isCardinalNode && activePhase.includes('NS') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                  border: `2px solid ${isCardinalNode && activePhase.includes('NS') ? '#22c55e' : '#38bdf8'}`,
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '0.75rem',
+                  textAlign: 'center',
+                  fontSize: '0.68rem',
                   fontWeight: 800,
-                  color: activePhase.includes('NS') ? '#4ade80' : '#38bdf8'
+                  padding: '0 4px',
+                  color: isCardinalNode && activePhase.includes('NS') ? '#4ade80' : '#38bdf8'
                 }}>
-                  {activePhase.includes('NS') ? 'GREEN NS' : 'GREEN EW'}
+                  {currentPhaseName}
                 </div>
 
-                {/* Approach ROI Bounding Rectangles with Live Queue Numbers */}
-                {/* North Approach */}
-                <div style={{ position: 'absolute', top: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
-                  N_IN: {Math.round((appStats[0]?.queue_vehicles ?? 0) * 10) / 10} veh
-                </div>
-
-                {/* South Approach */}
-                <div style={{ position: 'absolute', bottom: '15px', border: '1px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>
-                  S_IN: {Math.round((appStats[1]?.queue_vehicles ?? 0) * 10) / 10} veh
-                </div>
-
-                {/* East Approach */}
-                <div style={{ position: 'absolute', right: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
-                  E_IN: {Math.round((appStats[2]?.queue_vehicles ?? 0) * 10) / 10} veh
-                </div>
-
-                {/* West Approach */}
-                <div style={{ position: 'absolute', left: '15px', border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', color: '#7dd3fc', fontWeight: 700 }}>
-                  W_IN: {Math.round((appStats[3]?.queue_vehicles ?? 0) * 10) / 10} veh
-                </div>
+                {isCardinalNode ? (
+                  <>
+                    {/* Approach ROI Bounding Rectangles with Live Queue Numbers, matched by
+                        real approach_id suffix (not array position). */}
+                    {[
+                      { dir: 'N', pos: { top: '15px' } },
+                      { dir: 'S', pos: { bottom: '15px' } },
+                      { dir: 'E', pos: { right: '15px' } },
+                      { dir: 'W', pos: { left: '15px' } },
+                    ].map(({ dir, pos }) => {
+                      const app = appStats.find(a => a.approach_id.endsWith(`_${dir}_IN`));
+                      const isNS = dir === 'N' || dir === 'S';
+                      return (
+                        <div key={dir} style={{
+                          position: 'absolute', ...pos,
+                          border: `1px solid ${isNS ? '#ef4444' : '#38bdf8'}`,
+                          backgroundColor: isNS ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                          padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem',
+                          color: isNS ? '#fca5a5' : '#7dd3fc', fontWeight: 700
+                        }}>
+                          {dir}_IN: {Math.round((app?.queue_vehicles ?? 0) * 10) / 10} veh
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  /* Generic approach list for topologies without a N/S/E/W convention
+                     (SUMO-derived nodes: raw edge IDs, 1-N approaches per node). */
+                  <div style={{
+                    position: 'absolute', bottom: '12px', left: '12px', right: '12px',
+                    display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center'
+                  }}>
+                    {appStats.length === 0 && (
+                      <span style={{ color: '#64748b', fontSize: '0.74rem' }}>Chưa có dữ liệu nhánh đường.</span>
+                    )}
+                    {appStats.map(a => (
+                      <div key={a.approach_id} style={{
+                        border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        padding: '3px 8px', borderRadius: '4px', fontSize: '0.68rem',
+                        color: '#7dd3fc', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace'
+                      }}>
+                        {a.approach_id}: {Math.round((a.queue_vehicles ?? 0) * 10) / 10} veh
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -784,28 +1037,49 @@ const IntersectionDetail = () => {
           <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
-                So Sánh Áp Lực Hàng Chờ (Max-Pressure)
+                So Sánh Áp Lực Hàng Chờ Theo Pha (Max-Pressure)
               </span>
               <span className={`badge ${pressureAnalysis.isSelectedMatch ? 'badge-green' : 'badge-yellow'}`}>
                 {pressureAnalysis.isSelectedMatch ? 'Pha Tối Ưu Active' : 'Chờ Chuyển Pha'}
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
-              <div style={{ backgroundColor: activePhase.includes('NS') ? '#e0f2fe' : '#ffffff', border: '1px solid #bae6fd', padding: '8px 12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700 }}>Pha Bắc-Nam (W_NS)</span>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0c4a6e' }}>{pressureAnalysis.nsQueue} veh</div>
-              </div>
+            {/* Chú thích: "Phase N" là số thứ tự pha trong firmware/ESP32 của riêng node này,
+                không phải hướng Bắc-Nam/Đông-Tây cố định -- mỗi pha cho đi một tổ hợp nhánh
+                đường khác nhau, liệt kê ngay dưới mỗi thẻ. */}
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '10px', fontStyle: 'italic' }}>
+              ⓘ "Phase N" là số thứ tự pha đèn của riêng node này (không phải hướng cố định) — mỗi pha cho đi một tổ hợp nhánh đường khác nhau, xem "Cho đi" bên dưới mỗi thẻ.
+            </div>
 
-              <div style={{ backgroundColor: activePhase.includes('EW') ? '#e0f2fe' : '#ffffff', border: '1px solid #bae6fd', padding: '8px 12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700 }}>Pha Đông-Tây (W_EW)</span>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0c4a6e' }}>{pressureAnalysis.ewQueue} veh</div>
-              </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, pressureAnalysis.phases.length))}, 1fr)`,
+              gap: '12px',
+              marginBottom: '10px'
+            }}>
+              {pressureAnalysis.phases.map(phase => (
+                <div
+                  key={phase.phase_id}
+                  title={`${phase.name} — cho đi: ${describeApproaches(phase.approaches)}`}
+                  style={{
+                    backgroundColor: activePhase === phase.phase_id ? '#e0f2fe' : '#ffffff',
+                    border: '1px solid #bae6fd',
+                    padding: '8px 12px',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700, overflowWrap: 'anywhere' }}>{phase.name}</span>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0c4a6e' }}>{phase.queue} veh</div>
+                  <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px', overflowWrap: 'anywhere' }}>
+                    Cho đi: {describeApproaches(phase.approaches)}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Info size={14} color="#0284c7" />
-              <span>Chênh lệch áp lực (ΔW): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Max-pressure sẽ chọn (tham khảo, không phải thuật toán đang chạy): <strong style={{ color: '#0284c7' }}>{pressureAnalysis.recommendedPhase}</strong></span>
+              <span>Chênh lệch áp lực (ΔW, pha cao nhất − pha thấp nhất): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Max-pressure sẽ chọn (tham khảo, không phải thuật toán đang chạy): <strong style={{ color: '#0284c7' }}>{pressureAnalysis.maxPhase?.name || pressureAnalysis.recommendedPhase}</strong></span>
             </div>
           </div>
 
@@ -818,11 +1092,13 @@ const IntersectionDetail = () => {
               {availablePhases.map((phase) => (
                 <button
                   key={phase.phase_id}
+                  title={`${phase.name} — cho đi: ${describeApproaches(phase.approaches)}`}
                   onClick={() => handleTriggerOverride(phase.phase_id)}
                   disabled={overrideBusy}
                   style={{
-                    flex: 1,
+                    flex: '1 1 140px',
                     minWidth: '140px',
+                    maxWidth: '100%',
                     padding: '10px 14px',
                     backgroundColor: activePhase === phase.phase_id ? '#0284c7' : '#ffffff',
                     color: activePhase === phase.phase_id ? '#ffffff' : '#0f172a',
@@ -835,7 +1111,9 @@ const IntersectionDetail = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word'
                   }}
                 >
                   <Play size={14} /> Chuyển {phase.name || phase.phase_id}
@@ -844,10 +1122,10 @@ const IntersectionDetail = () => {
             </div>
           </div>
 
-          {/* Timing and safe modes live in the ESP32 firmware (yellow 3 s, all-red 2 s; safe-stop = GPIO4 button).
+          {/* Timing and safe modes live on the actuator device (yellow 3 s, all-red 2 s; safe-stop = hardware button).
               These controls only changed an API value, so they are disabled rather than shown as acting on the lights. */}
           <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-            Vàng 3 s / đỏ toàn bộ 2 s cố định trong firmware ESP32. Lệnh tay chỉ được ESP32 nhận khi hướng đang xanh đã đủ 5 s; pha được ép giữ xanh 15 s rồi thuật toán điều khiển lại. Safe-stop (chớp vàng) bằng nút cứng GPIO4 trên mạch; dashboard không điều khiển được.
+            Vàng 3 s / đỏ toàn bộ 2 s cố định trong thiết bị chấp hành. Lệnh tay chỉ được nhận khi hướng đang xanh đã đủ 5 s; pha được ép giữ xanh 15 s rồi thuật toán điều khiển lại. Safe-stop (chớp vàng) bằng nút cứng trên mạch; dashboard không điều khiển được.
           </div>
 
           {/* Clearance Timing Sliders */}
@@ -863,11 +1141,7 @@ const IntersectionDetail = () => {
                 min="1"
                 max="8"
                 value={yellowDuration}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setYellowDuration(val);
-                  handleUpdateActuatorConfig({ yellow_duration_s: val });
-                }}
+                readOnly
                 style={{ accentColor: '#d97706', width: '100%' }}
               />
             </div>
@@ -883,11 +1157,7 @@ const IntersectionDetail = () => {
                 min="1"
                 max="8"
                 value={allRedDuration}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setAllRedDuration(val);
-                  handleUpdateActuatorConfig({ all_red_duration_s: val });
-                }}
+                readOnly
                 style={{ accentColor: '#dc2626', width: '100%' }}
               />
             </div>
@@ -901,7 +1171,6 @@ const IntersectionDetail = () => {
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 disabled
-                onClick={() => handleUpdateActuatorConfig({ mode: 'NORMAL' })}
                 style={{
                   flex: 1,
                   padding: '8px',
@@ -919,7 +1188,6 @@ const IntersectionDetail = () => {
 
               <button
                 disabled
-                onClick={() => handleUpdateActuatorConfig({ mode: 'FLASHING_YELLOW' })}
                 style={{
                   flex: 1,
                   padding: '8px',
@@ -937,7 +1205,6 @@ const IntersectionDetail = () => {
 
               <button
                 disabled
-                onClick={() => handleUpdateActuatorConfig({ mode: 'ALL_RED' })}
                 style={{
                   flex: 1,
                   padding: '8px',

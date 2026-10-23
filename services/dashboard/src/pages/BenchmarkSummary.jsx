@@ -380,69 +380,42 @@ const BenchmarkSummary = () => {
         </div>
       </div>
 
-      {/* 3. Top-Level Leaderboard KPI Cards */}
+      {/* 3. Top-Level Leaderboard KPI Cards -- driven by controllerMacroStats (same numbers as the
+           table below), so switching campaign can never leave these cards showing a stale run. */}
       <div className="grid-cols-4" style={{ marginBottom: '24px' }}>
-        
-        {/* Card 1: Flow Theory */}
-        <div className="card" style={{ borderLeft: '4px solid #10b981', position: 'relative' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#10b981' }}>
-              🥇 Quán Quân Toàn Diện
-            </span>
-            <Trophy size={18} color="#10b981" />
+        {controllerMacroStats.length === 0 && (
+          <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
+            Chưa có dữ liệu cho campaign này.
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            Flow Theory
-          </div>
-          <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>
-            Chờ TB: <strong style={{ color: '#10b981' }}>20.99s</strong> (-81.3%)
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
-            <span>Throughput: <strong>0.744 veh/s</strong></span>
-            <span>Hoàn thành: <strong style={{ color: '#10b981' }}>99.9%</strong></span>
-          </div>
-        </div>
-
-        {/* Card 2: Max-Pressure */}
-        <div className="card" style={{ borderLeft: '4px solid #0284c7' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#0284c7' }}>
-              🥈 Ổn Định Mạng Lưới
-            </span>
-            <Award size={18} color="#0284c7" />
-          </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            Max-Pressure
-          </div>
-          <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>
-            Chờ TB: <strong style={{ color: '#0284c7' }}>42.34s</strong> (-70.6%)
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
-            <span>Throughput: <strong>0.734 veh/s</strong></span>
-            <span>Hoàn thành: <strong style={{ color: '#0284c7' }}>99.2%</strong></span>
-          </div>
-        </div>
-
-        {/* Card 3: Max-Queue */}
-        <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#f59e0b' }}>
-              🥉 Tốc Độ Cục Bộ
-            </span>
-            <Zap size={18} color="#f59e0b" />
-          </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            Max-Queue (Greedy)
-          </div>
-          <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>
-            Chờ TB: <strong style={{ color: '#f59e0b' }}>18.66s</strong> (-83.1%)
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
-            <span>Throughput: <strong>0.709 veh/s</strong></span>
-            <span>Hoàn thành: <strong style={{ color: '#dc2626' }}>93.3%</strong></span>
-          </div>
-        </div>
-
+        )}
+        {controllerMacroStats.slice(0, 3).map((stat, idx) => {
+          const rankMeta = [
+            { emoji: '🥇', label: 'Chờ TB Thấp Nhất', Icon: Trophy },
+            { emoji: '🥈', label: 'Hạng 2', Icon: Award },
+            { emoji: '🥉', label: 'Hạng 3', Icon: Zap }
+          ][idx];
+          return (
+            <div key={stat.controller} className="card" style={{ borderLeft: `4px solid ${stat.color}`, position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: stat.color }}>
+                  {rankMeta.emoji} {rankMeta.label}
+                </span>
+                <rankMeta.Icon size={18} color={stat.color} />
+              </div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
+                {stat.name}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px' }}>
+                Chờ TB: <strong style={{ color: stat.color }}>{stat.meanWait}s</strong>
+                {stat.controller !== 'fixed_time' && ` (-${stat.waitReduction}%)`}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+                <span>Throughput: <strong>{stat.throughput} veh/s</strong></span>
+                <span>Hoàn thành: <strong style={{ color: stat.completion >= 99 ? '#16a34a' : stat.completion >= 90 ? '#d97706' : '#dc2626' }}>{stat.completion}%</strong></span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* 4. Macro-Average Comparison Table */}

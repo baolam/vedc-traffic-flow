@@ -62,6 +62,19 @@ const TopologyMap = ({
       };
     }
 
+    // 1b. Standard positions for the sa ban tabletop corridor (J1 west, J2 east) — the
+    // contract has no x/y, so without this it falls through to the generic auto-grid below.
+    if (total === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id))) {
+      const byId = Object.fromEntries(rawNodes.map(n => [n.node_id, n]));
+      return {
+        nodePositions: {
+          J1: { x: 220, y: 250, name: byId.J1?.name || "Intersection 1", street_name: byId.J1?.street_name || "Sa Ban Corridor (West)" },
+          J2: { x: 540, y: 250, name: byId.J2?.name || "Intersection 2", street_name: byId.J2?.street_name || "Sa Ban Corridor (East)" }
+        },
+        projectionMeta: null
+      };
+    }
+
     // 2. Exact SUMO XY coordinate projection (used for hcm_corridor and other real maps)
     const hasXY = rawNodes.some(n => n.x != null && n.y != null);
     if (hasXY && total > 0) {
@@ -332,7 +345,7 @@ const TopologyMap = ({
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', gap: '8px' }}>
           {/* Switch to Street Map */}
           {hasGeoCoords && (
             <button
@@ -585,7 +598,9 @@ const TopologyMap = ({
             {Object.entries(nodePositions).map(([nodeId, pos]) => {
               const data = nodesData[nodeId] || { current_phase_id: `${nodeId}_PHASE_1`, total_queue: 0, speed: 13.9, status: 'ONLINE' };
               const phaseStr = String(data.current_phase_id || "").toUpperCase();
-              const isNS = phaseStr.includes("NS") || phaseStr.includes("1") || phaseStr.includes("GREEN");
+              // Bare "1"/"GREEN" substrings false-matched node ids like "A1" or phase names that just
+              // happen to contain "GREEN" -- only trust the literal NS convention here.
+              const isNS = phaseStr.includes("NS");
               const totalQueue = data.total_queue || 0;
 
               const isSelected = selectedNodeId === nodeId;

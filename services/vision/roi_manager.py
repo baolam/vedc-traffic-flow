@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
 import numpy as np
 import cv2
 
@@ -12,33 +12,49 @@ class ROIManager:
         self.height = height
         self.rois: Dict[str, Dict[str, Any]] = {}
 
-    def setup_default_node_rois(self, node_id: str = "J1") -> None:
-        """Configures default 4-approach ROIs for a 640x480 frame."""
+    def setup_default_node_rois(self, node_id: str = "J1", approach_ids: Optional[List[str]] = None) -> None:
+        """
+        Configures up to 4 quadrant ROIs for a 640x480 demo frame, one per real approach_id
+        from the node's topology contract (falls back to the synthetic J1-style N/S/E/W IDs
+        only when no real approach list is given, e.g. standalone/offline testing).
+
+        The quadrant *positions* are still a fixed synthetic layout (this is one canned demo
+        video, not real per-node footage); what changed is that each quadrant is now labeled
+        with the node's actual approach_id, so downstream telemetry/reports key on IDs that
+        really exist in the topology contract instead of inventing "{node_id}_N_IN" etc. for
+        every node regardless of its real approach naming (SUMO-derived topologies use raw
+        edge IDs, not a N/S/E/W convention).
+        """
         cx, cy = self.width // 2, self.height // 2
-        
-        # Define 4 quadrant approaches around intersection center
-        self.rois = {
-            f"{node_id}_W_IN": {
+        ids = list(approach_ids) if approach_ids else [
+            f"{node_id}_N_IN", f"{node_id}_S_IN", f"{node_id}_E_IN", f"{node_id}_W_IN"
+        ]
+        ids = ids[:4]
+
+        slots = [
+            {  # west quadrant
                 "polygon": np.array([[0, cy], [cx - 50, cy], [cx - 50, cy + 50], [0, cy + 50]], np.int32),
                 "box": (0, cy, cx - 50, cy + 50),
                 "stop_line_x": cx - 50
             },
-            f"{node_id}_E_IN": {
+            {  # east quadrant
                 "polygon": np.array([[cx + 50, cy - 50], [self.width, cy - 50], [self.width, cy], [cx + 50, cy]], np.int32),
                 "box": (cx + 50, cy - 50, self.width, cy),
                 "stop_line_x": cx + 50
             },
-            f"{node_id}_N_IN": {
+            {  # north quadrant
                 "polygon": np.array([[cx - 50, 0], [cx, 0], [cx, cy - 50], [cx - 50, cy - 50]], np.int32),
                 "box": (cx - 50, 0, cx, cy - 50),
                 "stop_line_y": cy - 50
             },
-            f"{node_id}_S_IN": {
+            {  # south quadrant
                 "polygon": np.array([[cx, cy + 50], [cx + 50, cy + 50], [cx + 50, self.height], [cx, self.height]], np.int32),
                 "box": (cx, cy + 50, cx + 50, self.height),
                 "stop_line_y": cy + 50
             },
-        }
+        ]
+
+        self.rois = {app_id: slots[i] for i, app_id in enumerate(ids)}
 
     def set_node_rois(self, node_id: str, polygons: Dict[str, Any]) -> None:
         """Adds calibrated approach polygons for one node (several nodes may share one camera)."""
@@ -49,9 +65,14 @@ class ROIManager:
             }
 
     def approaches_for_node(self, node_id: str) -> List[str]:
-        """Approach IDs belonging to a node, in insertion order."""
+        """
+        Approach IDs belonging to a node, in insertion order. Real approach_ids (e.g. raw SUMO
+        edge IDs) don't necessarily start with "{node_id}_", so membership is tracked via the
+        "node_id" tag set by set_node_rois, or assumed to all belong to node_id when untagged
+        (setup_default_node_rois holds exactly one node's ROIs at a time).
+        """
         return [app_id for app_id, info in self.rois.items()
-                if info.get("node_id", node_id) == node_id and app_id.startswith(f"{node_id}_")]
+                if info.get("node_id", node_id) == node_id]
 
     def assign_detections(self, detections: List[Tuple[int, int, int, int]]) -> Dict[str, List[Tuple[int, int, int, int]]]:
         """

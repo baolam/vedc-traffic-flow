@@ -46,7 +46,7 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         },
         default_duration_s=300,
         category="synthetic",
-        supported_topologies=["corridor", "junction", "four_intersection_v1", "four_intersection_rl_v1", "three_way_junction_v1"],
+        supported_topologies=["corridor", "junction", "four_intersection_v1", "four_intersection_rl_v1", "three_way_junction_v1", "tabletop_j1_j2_v1"],
     ),
     "directional_surge": ScenarioProfile(
         scenario_id="directional_surge",
@@ -60,7 +60,7 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         },
         default_duration_s=300,
         category="synthetic",
-        supported_topologies=["corridor", "four_intersection_v1", "four_intersection_rl_v1"],
+        supported_topologies=["corridor", "four_intersection_v1", "four_intersection_rl_v1", "tabletop_j1_j2_v1"],
     ),
     "directional_surge_ew": ScenarioProfile(
         scenario_id="directional_surge_ew",
@@ -88,7 +88,7 @@ CANONICAL_SCENARIOS: Dict[str, ScenarioProfile] = {
         },
         default_duration_s=300,
         category="synthetic",
-        supported_topologies=["corridor", "four_intersection_v1", "four_intersection_rl_v1"],
+        supported_topologies=["corridor", "four_intersection_v1", "four_intersection_rl_v1", "tabletop_j1_j2_v1"],
     ),
     "grid4x4": ScenarioProfile(
         scenario_id="grid4x4",

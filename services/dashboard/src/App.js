@@ -6,6 +6,7 @@ import NetworkOverview from './pages/NetworkOverview';
 import IntersectionDetail from './pages/IntersectionDetail';
 import ControlPanel from './pages/ControlPanel';
 import BenchmarkSummary from './pages/BenchmarkSummary';
+import HcmCameraMap from './pages/HcmCameraMap';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="/intersections/:nodeId" element={<IntersectionDetail />} />
             <Route path="/benchmark" element={<BenchmarkSummary />} />
             <Route path="/experiments" element={<ControlPanel />} />
+            <Route path="/cameras" element={<HcmCameraMap />} />
           </Routes>
         </div>
       </div>

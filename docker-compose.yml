@@ -178,6 +178,7 @@ services:
       - api
     volumes:
       - ./services/dashboard/src:/app/src
+      - ./services/dashboard/public:/app/public
     profiles:
       - simulation
       - vision

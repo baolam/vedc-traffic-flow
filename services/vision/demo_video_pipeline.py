@@ -76,13 +76,10 @@ def annotate_frame(
     canvas = frame.copy()
     h, w = canvas.shape[:2]
 
-    # 1. Draw Approach ROIs (Color-coded)
-    colors = {
-        f"{node_id}_N_IN": (255, 128, 0),    # Blue/Orange
-        f"{node_id}_S_IN": (0, 165, 255),    # Orange
-        f"{node_id}_E_IN": (0, 200, 0),      # Green
-        f"{node_id}_W_IN": (200, 0, 200),    # Magenta
-    }
+    # 1. Draw Approach ROIs (Color-coded by position, keyed by the node's real approach_id --
+    # not a N/S/E/W guess, since SUMO-derived topologies don't name approaches that way)
+    palette = [(255, 128, 0), (0, 165, 255), (0, 200, 0), (200, 0, 200)]
+    colors = {app_id: palette[i % len(palette)] for i, app_id in enumerate(roi_manager.rois.keys())}
 
     for app_id, roi_info in roi_manager.rois.items():
         color = colors.get(app_id, (150, 150, 150))
@@ -190,6 +187,24 @@ def run_pipeline_demo(
         logger.warning("No ONNX model found; using motion contour detector as fallback.")
         model_path = None
 
+    # Load Topology first: the demo pipeline must key ROIs/telemetry on the node's REAL
+    # approach_ids and phases from the contract, not invent a N/S/E/W convention that only
+    # holds for a couple of topologies (SUMO-derived topologies use raw edge IDs as approaches).
+    topology = load_topology(topology_id)
+    node_spec = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
+    if node_spec is None:
+        raise ValueError(f"Node '{node_id}' not found in topology '{topology_id}'.")
+    if not node_spec.get("phases"):
+        raise ValueError(
+            f"Node '{node_id}' in topology '{topology_id}' has no signal phases "
+            f"(type={node_spec.get('type', 'unknown')}); it has no traffic light to demo."
+        )
+    approach_ids = node_spec.get("approaches") or [
+        f"{node_id}_N_IN", f"{node_id}_S_IN", f"{node_id}_E_IN", f"{node_id}_W_IN"
+    ]
+    initial_phase = node_spec["phases"][0]["phase_id"]
+    current_phase_id = initial_phase
+
     # 3. Initialize Detector, ROI Manager, Video Source, and Controller
     width, height = 640, 480
     detector = VehicleDetector(model_path=model_path, conf_threshold=conf_threshold, input_size=640)
@@ -201,14 +216,8 @@ def run_pipeline_demo(
 
     video_source = create_video_source(video_source_str, width=width, height=height)
     roi_manager = ROIManager(width=width, height=height)
-    roi_manager.setup_default_node_rois(node_id=node_id)
+    roi_manager.setup_default_node_rois(node_id=node_id, approach_ids=approach_ids)
     metrics_extractor = MetricsExtractor()
-
-    # Load Topology & Controller for Next Step
-    topology = load_topology(topology_id)
-    node_spec = next((n for n in topology.get("nodes", []) if n["node_id"] == node_id), None)
-    initial_phase = node_spec["phases"][0]["phase_id"] if (node_spec and node_spec.get("phases")) else f"{node_id}_PHASE_NS"
-    current_phase_id = initial_phase
 
     controller = None
     if controller_type and controller_type.lower() not in ("none", "off", "false"):

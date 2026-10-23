@@ -15,21 +15,21 @@ from src.simulation.sumo_network_registry import (
 
 
 def test_registry_contains_four_required_networks():
-    """Requirement: four_intersection_v1, grid4x4, cologne8, hcm_corridor."""
-    required = ["four_intersection_v1", "grid4x4", "cologne8", "hcm_corridor"]
+    """Requirement: four_intersection_v1, tabletop_j1_j2_v1, grid4x4, cologne8, hcm_corridor."""
+    required = ["four_intersection_v1", "tabletop_j1_j2_v1", "grid4x4", "cologne8", "hcm_corridor"]
     for net_id in required:
         assert net_id in NETWORK_REGISTRY
 
 
 def test_preflight_all_networks_pass():
-    """Preflight check across all 4 canonical topologies must pass with 0 failures."""
+    """Preflight check across all 5 canonical topologies must pass with 0 failures."""
     res = run_preflight_check()
     assert res["status"] == "PASS"
     assert len(res["failed_topologies"]) == 0
-    assert len(res["verified_topologies"]) == 4
+    assert len(res["verified_topologies"]) == 5
 
     summary = res["summary"]
-    assert summary["total_controlled_tls"] == 57
+    assert summary["total_controlled_tls"] == 59
     assert summary["total_stable_green_phases"] > 0
     assert summary["total_verified_movements"] > 0
 
@@ -100,7 +100,7 @@ def test_controlled_vs_uncontrolled_nodes_distinction():
 
 def test_stable_green_phases_contain_no_yellow():
     """Verify that NO yellow or transition state is included in the controller action set."""
-    for net_id in ["four_intersection_v1", "grid4x4", "cologne8", "hcm_corridor"]:
+    for net_id in ["four_intersection_v1", "tabletop_j1_j2_v1", "grid4x4", "cologne8", "hcm_corridor"]:
         resolver = NetworkMappingResolver(net_id)
         for nid in resolver.mapping["controlled_tls_ids"]:
             node_data = resolver.mapping["nodes"][nid]

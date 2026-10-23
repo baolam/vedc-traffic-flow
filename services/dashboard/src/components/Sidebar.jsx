@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Activity, Trophy } from 'lucide-react';
+import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Activity, Trophy, Camera } from 'lucide-react';
+import { useActiveScenario } from '../hooks/useActiveScenario';
 
 const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
-  const [activeScenarioId, setActiveScenarioId] = useState(
-    localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
-  );
-  
+  const [activeScenarioId] = useActiveScenario();
+
   const [topologyStats, setTopologyStats] = useState({
     total_nodes: 4,
     total_edges: 8,
@@ -22,16 +21,6 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
     setIsCollapsed(next);
     if (onToggleCollapse) onToggleCollapse(next);
   };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const current = localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1';
-      if (current !== activeScenarioId) {
-        setActiveScenarioId(current);
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [activeScenarioId]);
 
   useEffect(() => {
     fetch(`${apiBase}/api/v1/topologies/${activeScenarioId}`)
@@ -57,6 +46,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
     { to: `/intersections/${firstNode}`, label: 'Station Details', icon: Network },
     { to: '/benchmark', label: 'Benchmark Campaign', icon: Trophy },
     { to: '/experiments', label: 'Control & Tuning', icon: Sliders },
+    { to: '/cameras', label: 'HCM Camera Network', icon: Camera },
   ];
 
   return (

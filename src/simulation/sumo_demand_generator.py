@@ -54,6 +54,14 @@ FOUR_INT_ROUTES = [
     {"route_id": "r_J4_EW", "axis": "EW", "edges": ["J4_E_IN", "J3_E_IN"]},
 ]
 
+# 1b. tabletop_j1_j2_v1 (sa ban demo corridor, 2 signalized intersections: J1, J2)
+TABLETOP_J1_J2_ROUTES = [
+    {"route_id": "r_J1_NS", "axis": "NS", "edges": ["J1_N_IN", "J1_S_OUT"]},
+    {"route_id": "r_J2_NS", "axis": "NS", "edges": ["J2_N_IN", "J2_S_OUT"]},
+    {"route_id": "r_J1_EW", "axis": "EW", "edges": ["J1_W_IN", "J2_W_IN"]},
+    {"route_id": "r_J2_EW", "axis": "EW", "edges": ["J2_E_IN", "J1_E_IN"]},
+]
+
 # 2. grid4x4 (16 arterial routes, 8 NS, 8 EW across all rows and columns)
 GRID4X4_ROUTES = [
     # North-South columns
@@ -202,6 +210,7 @@ HCM_ROUTES = [
 
 TOPOLOGY_ROUTE_REGISTRY: Dict[str, List[Dict[str, Any]]] = {
     "four_intersection_v1": FOUR_INT_ROUTES,
+    "tabletop_j1_j2_v1": TABLETOP_J1_J2_ROUTES,
     "grid4x4": GRID4X4_ROUTES,
     "cologne8": COLOGNE8_ROUTES,
     "hcm_corridor": HCM_ROUTES,

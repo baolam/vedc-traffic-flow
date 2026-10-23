@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+
+    <!-- Multimodal vehicle types with GUI raster icons (TP.HCM modal split) -->
+    <include href="vehicles.rou.xml"/>
+
+    <!-- Through-routes matching the sa ban (tabletop) J1/J2 corridor approaches.
+         Approach + phase IDs are identical to four_intersection_v1 so ROI,
+         firmware (ESP32) and vision calibration need no changes. -->
+    <route id="r_J1_NS" edges="J1_N_IN J1_S_OUT"/>
+    <route id="r_J1_EW" edges="J1_W_IN J2_W_IN"/>
+    <route id="r_J2_NS" edges="J2_N_IN J2_S_OUT"/>
+    <route id="r_J2_EW" edges="J2_E_IN J1_E_IN"/>
+
+    <!-- TP.HCM default modal split per route: motorcycle 65%, car 25%, taxi 4%, bus 3%, truck 3% -->
+    <flow id="f_J1_NS_motorcycle" type="motorcycle" route="r_J1_NS" begin="0" end="3600" period="exp(0.23)"/>
+    <flow id="f_J1_NS_car"        type="car"        route="r_J1_NS" begin="0" end="3600" period="exp(0.09)"/>
+    <flow id="f_J1_NS_taxi"       type="taxi"       route="r_J1_NS" begin="0" end="3600" period="exp(0.014)"/>
+    <flow id="f_J1_NS_bus"        type="bus"        route="r_J1_NS" begin="0" end="3600" period="exp(0.011)"/>
+    <flow id="f_J1_NS_truck"      type="truck"      route="r_J1_NS" begin="0" end="3600" period="exp(0.011)"/>
+
+    <flow id="f_J1_EW_motorcycle" type="motorcycle" route="r_J1_EW" begin="0" end="3600" period="exp(0.29)"/>
+    <flow id="f_J1_EW_car"        type="car"        route="r_J1_EW" begin="0" end="3600" period="exp(0.11)"/>
+    <flow id="f_J1_EW_taxi"       type="taxi"       route="r_J1_EW" begin="0" end="3600" period="exp(0.018)"/>
+    <flow id="f_J1_EW_bus"        type="bus"        route="r_J1_EW" begin="0" end="3600" period="exp(0.013)"/>
+    <flow id="f_J1_EW_truck"      type="truck"      route="r_J1_EW" begin="0" end="3600" period="exp(0.013)"/>
+
+    <flow id="f_J2_NS_motorcycle" type="motorcycle" route="r_J2_NS" begin="0" end="3600" period="exp(0.23)"/>
+    <flow id="f_J2_NS_car"        type="car"        route="r_J2_NS" begin="0" end="3600" period="exp(0.09)"/>
+    <flow id="f_J2_NS_taxi"       type="taxi"       route="r_J2_NS" begin="0" end="3600" period="exp(0.014)"/>
+    <flow id="f_J2_NS_bus"        type="bus"        route="r_J2_NS" begin="0" end="3600" period="exp(0.011)"/>
+    <flow id="f_J2_NS_truck"      type="truck"      route="r_J2_NS" begin="0" end="3600" period="exp(0.011)"/>
+
+    <flow id="f_J2_EW_motorcycle" type="motorcycle" route="r_J2_EW" begin="0" end="3600" period="exp(0.29)"/>
+    <flow id="f_J2_EW_car"        type="car"        route="r_J2_EW" begin="0" end="3600" period="exp(0.11)"/>
+    <flow id="f_J2_EW_taxi"       type="taxi"       route="r_J2_EW" begin="0" end="3600" period="exp(0.018)"/>
+    <flow id="f_J2_EW_bus"        type="bus"        route="r_J2_EW" begin="0" end="3600" period="exp(0.013)"/>
+    <flow id="f_J2_EW_truck"      type="truck"      route="r_J2_EW" begin="0" end="3600" period="exp(0.013)"/>
+</routes>

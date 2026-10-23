@@ -109,6 +109,23 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "congested_speed_mps": 1.50,
         "primary_surge_axis": "NS",
     },
+    "tabletop_j1_j2_v1": {
+        "topology_id": "tabletop_j1_j2_v1",
+        "display_name": "Sa Ban Tabletop Corridor (J1-J2, 2 Signalized Intersections)",
+        "net_rel_path": "services/simulator/sumo_configs/tabletop_j1_j2_v1/tabletop_j1_j2_v1.net.xml",
+        "expected_net_sha256": [
+            "5945a354853f3bcddb5a85f321ac28629a3b9cf9e7ec5551245c7c572e02bfb3",
+        ],
+        "topo_rel_path": "contracts/topology/tabletop_j1_j2_v1.json",
+        "expected_topo_sha256": [
+            "b40be610b985c8e4c0abad8637337c42bb3fd47c4baa75361da3c2ea9a7981e0",
+        ],
+        "controlled_tls_ids": ["J1", "J2"],
+        "bottleneck_edge": "J2_W_IN",
+        "normal_speed_mps": 13.89,
+        "congested_speed_mps": 1.50,
+        "primary_surge_axis": "EW",
+    },
     "hcm_corridor": {
         "topology_id": "hcm_corridor",
         "display_name": "Ho Chi Minh City Arterial Corridor (29 Signalized Intersections)",

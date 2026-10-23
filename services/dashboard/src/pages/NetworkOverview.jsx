@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TopologyMap from '../components/TopologyMap';
 import PhaseIndicator from '../components/PhaseIndicator';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useActiveScenario, MAP_ONLY_SCENARIOS } from '../hooks/useActiveScenario';
 import { 
   Activity, Car, Gauge, Radio, Search, ChevronRight, ShieldCheck, 
   Terminal, FileText, CheckCircle, AlertTriangle, ChevronDown, ChevronUp,
@@ -12,6 +13,10 @@ import {
 // Queue above 12 vehicles or any status other than ONLINE (camera fault, heartbeat lost, fallback, ...)
 const ATTENTION_QUEUE_VEH = 12;
 const needsAttention = (d) => (d.total_queue || 0) > ATTENTION_QUEUE_VEH || Boolean(d.status && d.status !== 'ONLINE');
+
+// OSM-derived node IDs (e.g. "cluster_2938641203_366431367_5750600582") blow out the station
+// row layout at full length; show a short form and keep the full ID in a title tooltip.
+const shortNodeId = (id) => (id && id.length > 16 ? `${id.slice(0, 10)}…${id.slice(-4)}` : id);
 
 const NetworkOverview = () => {
   const navigate = useNavigate();
@@ -24,9 +29,7 @@ const NetworkOverview = () => {
     { scenario_id: 'multi_phase_v1', name: 'Multi Phase V1', has_sumo_config: false, total_nodes: 5 }
   ]);
 
-  const [activeScenarioId, setActiveScenarioId] = useState(
-    localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
-  );
+  const [activeScenarioId, setActiveScenarioId] = useActiveScenario();
 
   const [topology, setTopology] = useState(null);
   const [nodes, setNodes] = useState({});
@@ -48,16 +51,9 @@ const NetworkOverview = () => {
   const [logSearch, setLogSearch] = useState('');
   const [isStreamPaused, setIsStreamPaused] = useState(false);
 
-  const [systemReports, setSystemReports] = useState({
-    mean_network_wait_time_s: 3.8,
-    total_throughput_veh_per_min: 120.0,
-    total_throughput_veh_per_h: 7200.0,
-    safety_compliance_rate_pct: 100.0,
-    safety_compliance_detail: 'Zero conflicting green phases; clearance transitions enforced by ActuatorStateMachine.',
-    active_alerts_count: 0,
-    active_alerts: [],
-    recent_system_logs: []
-  });
+  // null until the first successful /api/v1/system/reports fetch: the KPI cards show '—' rather than
+  // inventing numbers that would look as authoritative as real telemetry.
+  const [systemReports, setSystemReports] = useState(null);
 
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -99,7 +95,6 @@ const NetworkOverview = () => {
       .then(data => {
         if (data && data.active_topology) {
           setActiveScenarioId(data.active_topology);
-          localStorage.setItem('edgeflow_active_scenario', data.active_topology);
         }
       })
       .catch(() => {});
@@ -111,7 +106,7 @@ const NetworkOverview = () => {
       .then(res => res.json())
       .then(data => {
         if (data && data.scenarios && data.scenarios.length > 0) {
-          const mapScenarios = data.scenarios.filter(s => s.scenario_id !== 'hcm_realworld_v1');
+          const mapScenarios = data.scenarios.filter(s => !MAP_ONLY_SCENARIOS.includes(s.scenario_id));
           if (mapScenarios.length > 0) setScenarios(mapScenarios);
         }
       })
@@ -199,7 +194,6 @@ const NetworkOverview = () => {
       if (wsData.source_mode) setSourceMode(wsData.source_mode);
       if (wsData.topology_id && wsData.topology_id !== activeScenarioId) {
         setActiveScenarioId(wsData.topology_id);
-        localStorage.setItem('edgeflow_active_scenario', wsData.topology_id);
       }
       if (wsData.nodes && wsData.nodes.length > 0) {
         const updated = {};
@@ -243,7 +237,6 @@ const NetworkOverview = () => {
     const newId = e.target.value;
     setActiveScenarioId(newId);
     setSelectedNodeId(null);
-    localStorage.setItem('edgeflow_active_scenario', newId);
   };
 
   const nodeEntries = Object.entries(nodes);
@@ -289,7 +282,7 @@ const NetworkOverview = () => {
 
   // Filtered log events
   const filteredLogs = useMemo(() => {
-    const rawLogs = systemReports.recent_system_logs || [];
+    const rawLogs = systemReports?.recent_system_logs || [];
     return rawLogs.filter(log => {
       const lvl = (log.level || 'INFO').toUpperCase();
       const svc = (log.service || '').toUpperCase();
@@ -311,7 +304,7 @@ const NetworkOverview = () => {
       }
       return true;
     });
-  }, [systemReports.recent_system_logs, logFilter, logSearch]);
+  }, [systemReports?.recent_system_logs, logFilter, logSearch]);
 
   const activeAlertsCount = attentionNodes.length;
 
@@ -495,17 +488,17 @@ const NetworkOverview = () => {
             </div>
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            {systemReports.mean_network_wait_time_s} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>sec</span>
+            {systemReports ? systemReports.mean_network_wait_time_s : '—'} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>sec</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem' }}>
             <span style={{
               padding: '2px 6px',
               borderRadius: '4px',
               fontWeight: 700,
-              backgroundColor: systemReports.mean_network_wait_time_s > 15 ? '#fef9c3' : '#dcfce7',
-              color: systemReports.mean_network_wait_time_s > 15 ? '#a16207' : '#15803d'
+              backgroundColor: !systemReports ? '#f1f5f9' : systemReports.mean_network_wait_time_s > 15 ? '#fef9c3' : '#dcfce7',
+              color: !systemReports ? '#64748b' : systemReports.mean_network_wait_time_s > 15 ? '#a16207' : '#15803d'
             }}>
-              {systemReports.mean_network_wait_time_s > 15 ? 'ELEVATED' : 'TARGET <15s'}
+              {!systemReports ? 'ĐANG ĐỒNG BỘ' : systemReports.mean_network_wait_time_s > 15 ? 'ELEVATED' : 'TARGET <15s'}
             </span>
             <span style={{ color: '#64748b' }}>Actuator clearance: 5s</span>
           </div>
@@ -522,11 +515,11 @@ const NetworkOverview = () => {
             </div>
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            {systemReports.total_throughput_veh_per_min} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ca8a04' }}>veh/min</span>
+            {systemReports ? systemReports.total_throughput_veh_per_min : '—'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ca8a04' }}>veh/min</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#64748b' }}>
             <span title="Calculated as sum of all lane flow rates × 60s" style={{ textDecoration: 'underline dotted', cursor: 'help' }}>
-              ~{Math.round(systemReports.total_throughput_veh_per_min * 60)} veh/h equivalent
+              {systemReports ? `~${Math.round(systemReports.total_throughput_veh_per_min * 60)} veh/h equivalent` : 'Chưa có dữ liệu system reports'}
             </span>
           </div>
         </div>
@@ -562,9 +555,9 @@ const NetworkOverview = () => {
               color: '#065f46',
               border: '1px solid #a7f3d0'
             }}>
-              Interlock on ESP32
+              Hardware Interlock
             </span>
-            <span title="Firmware switches green only after yellow 3 s + all-red 2 s; evidence: TRACE log checked by src/hardware/verify_trace.py" style={{ color: '#64748b', cursor: 'help' }}>
+            <span title="Switches green only after yellow 3 s + all-red 2 s clearance" style={{ color: '#64748b', cursor: 'help' }}>
               (Y 3s + all-red 2s)
             </span>
           </div>
@@ -788,8 +781,8 @@ const NetworkOverview = () => {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 800, fontSize: '0.88rem', color: isSelected ? '#0284c7' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
-                          Station {nodeId}
+                        <span title={nodeId} style={{ fontWeight: 800, fontSize: '0.88rem', color: isSelected ? '#0284c7' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
+                          Station {shortNodeId(nodeId)}
                         </span>
                         
                         {/* Health Status */}
@@ -802,7 +795,7 @@ const NetworkOverview = () => {
                         ) : data.status === 'ACTUATOR_FAULT' ? (
                           <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>ACTUATOR ERR</span>
                         ) : data.status === 'FALLBACK' ? (
-                          <span className="badge badge-yellow" title="ESP32 has had no command for > 5 s: fixed 15 s/phase cycle" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>FALLBACK 15s</span>
+                          <span className="badge badge-yellow" title="Device has had no command for > 5 s: fixed 15 s/phase cycle" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>FALLBACK 15s</span>
                         ) : (
                           <span className="badge badge-green" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>ONLINE</span>
                         )}

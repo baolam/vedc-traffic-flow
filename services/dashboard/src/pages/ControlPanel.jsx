@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sliders, AlertTriangle, Play, RefreshCw, Cpu, Layers, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sliders, AlertTriangle, Play, RefreshCw, Cpu, Layers, CheckCircle2, Camera } from 'lucide-react';
 import { describeOverride, overrideRequestError, OVERRIDE_IN_PROGRESS } from '../utils/manualOverride';
+import { useActiveScenario, MAP_ONLY_SCENARIOS } from '../hooks/useActiveScenario';
 
 const OVERRIDE_FOLLOW_MAX_POLLS = 60; // 1 s each: covers the 25 s wait + 15 s hold
 
@@ -14,9 +16,7 @@ const ControlPanel = () => {
     { scenario_id: 'multi_phase_v1', name: 'Multi Phase V1', has_sumo_config: false }
   ]);
 
-  const [activeScenarioId, setActiveScenarioId] = useState(
-    localStorage.getItem('edgeflow_active_scenario') || 'four_intersection_v1'
-  );
+  const [activeScenarioId, setActiveScenarioId] = useActiveScenario();
 
   const [simEngine, setSimEngine] = useState('live_mqtt');
   const [controllerMode, setControllerMode] = useState('max_pressure');
@@ -27,6 +27,9 @@ const ControlPanel = () => {
   const [configSuccess, setConfigSuccess] = useState(null);
 
   const [topologyNodes, setTopologyNodes] = useState(['J1', 'J2', 'J3', 'J4']);
+  // node_id -> its first contract phase_id, used as the "priority" phase for emergency override
+  // instead of assuming every node has a literal "_PHASE_NS" (only true for the NS/EW-named topologies).
+  const [nodeDefaultPhase, setNodeDefaultPhase] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
 
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -63,20 +66,27 @@ const ControlPanel = () => {
       .then(data => {
         if (data && data.nodes) {
           setTopologyNodes(data.nodes.map(n => n.node_id));
+          const defaultPhases = {};
+          data.nodes.forEach(n => {
+            if (n.phases && n.phases.length > 0) defaultPhases[n.node_id] = n.phases[0].phase_id;
+          });
+          setNodeDefaultPhase(defaultPhases);
         }
       })
       .catch(() => {
         setTopologyNodes(['J1', 'J2', 'J3', 'J4']);
+        setNodeDefaultPhase({});
       });
   }, [activeScenarioId, apiBase]);
 
   const handleScenarioChange = (e) => {
     const newId = e.target.value;
     setActiveScenarioId(newId);
-    localStorage.setItem('edgeflow_active_scenario', newId);
     setConfigSuccess(`Active scenario switched to ${newId}`);
     setTimeout(() => setConfigSuccess(null), 4000);
   };
+
+  const isMapOnlyScenario = MAP_ONLY_SCENARIOS.includes(activeScenarioId);
 
   const handleSaveConfig = () => {
     fetch(`${apiBase}/api/v1/control/policy`, {
@@ -124,13 +134,17 @@ const ControlPanel = () => {
     }, 1000);
   };
 
-  // Emergency priority = North-South green for this node, under the ESP32 safety rules
+  // Emergency priority = this node's first contract phase (its default/primary green), under the
+  // ESP32 safety rules. Falls back to the NS/EW convention only when the contract phase list
+  // hasn't loaded yet; using "_PHASE_NS" unconditionally 400s on topologies that don't name phases
+  // that way (grid4x4, cologne8 use PHASE_1..PHASE_10).
   const handleEmergencyOverride = (nodeId) => {
+    const targetPhaseId = nodeDefaultPhase[nodeId] || `${nodeId}_PHASE_NS`;
     showOverride(nodeId, null);
     fetch(`${apiBase}/api/v1/control/override`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ node_id: nodeId, target_phase_id: `${nodeId}_PHASE_NS` })
+      body: JSON.stringify({ node_id: nodeId, target_phase_id: targetPhaseId })
     })
       .then(res => res.json().then(data => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
@@ -141,7 +155,7 @@ const ControlPanel = () => {
         showOverride(nodeId, describeOverride({ status: 'SENT', target_phase_id: data.target_phase_id }));
         followOverride(nodeId);
       })
-      .catch(() => showOverride(nodeId, overrideRequestError('Không gọi được API: lệnh chưa tới ESP32.')));
+      .catch(() => showOverride(nodeId, overrideRequestError('Không gọi được API: lệnh chưa tới thiết bị.')));
   };
 
   const filteredNodes = topologyNodes.filter(id => id.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -217,8 +231,7 @@ const ControlPanel = () => {
               <select
                 value={simEngine}
                 disabled
-                title="Display only: on the tabletop the telemetry comes from the vision service on the Pi"
-                onChange={(e) => setSimEngine(e.target.value)}
+                title="Display only: telemetry currently comes from the vision service"
                 style={{
                   width: '100%',
                   backgroundColor: '#ffffff',
@@ -229,7 +242,7 @@ const ControlPanel = () => {
                   fontSize: '0.9rem'
                 }}
               >
-                <option value="live_mqtt">Live MQTT telemetry (vision service on the Pi)</option>
+                <option value="live_mqtt">Live MQTT telemetry (vision service)</option>
                 <option value="sumo_traci">SUMO TraCI Simulator (Microscopic Simulation Engine)</option>
                 <option value="synthetic">Synthetic Telemetry Generator (Mock Sensors)</option>
               </select>
@@ -261,7 +274,7 @@ const ControlPanel = () => {
             {/* Not sent anywhere yet: the controller puts min/max green in every command and the ESP32
                 enforces them (max green capped at 60 s on the device). Disabled so a click is not mistaken
                 for a change on the lights. */}
-            <div style={{ opacity: 0.55 }} title="Not connected: the controller sets min/max green per command (10 s / 60 s); the ESP32 enforces them">
+            <div style={{ opacity: 0.55 }} title="Not connected: the controller sets min/max green per command (10 s / 60 s); the actuator device enforces them">
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', marginBottom: '6px', fontWeight: 600 }}>
                 Minimum Green Time Constraint (`min_green_s`): <strong style={{ color: '#0284c7' }}>{minGreen}s</strong>
               </label>
@@ -271,12 +284,12 @@ const ControlPanel = () => {
                 max="30"
                 value={minGreen}
                 disabled
-                onChange={(e) => setMinGreen(Number(e.target.value))}
+                readOnly
                 style={{ width: '100%' }}
               />
             </div>
 
-            <div style={{ opacity: 0.55 }} title="Not connected: the ESP32 caps max green at 60 s">
+            <div style={{ opacity: 0.55 }} title="Not connected: the actuator device caps max green at 60 s">
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#64748b', marginBottom: '6px', fontWeight: 600 }}>
                 Maximum Green Time Constraint (`max_green_s`): <strong style={{ color: '#0284c7' }}>{maxGreen}s</strong>
               </label>
@@ -286,11 +299,11 @@ const ControlPanel = () => {
                 max="60"
                 value={maxGreen}
                 disabled
-                onChange={(e) => setMaxGreen(Number(e.target.value))}
+                readOnly
                 style={{ width: '100%' }}
               />
               <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-                Min/max green come from the controller in each command and are enforced on the ESP32; not adjustable here yet.
+                Min/max green come from the controller in each command and are enforced on the actuator device; not adjustable here yet.
               </div>
             </div>
 
@@ -311,9 +324,24 @@ const ControlPanel = () => {
           </div>
 
           <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
-            Emergency priority: North-South green in scenario <strong style={{ color: '#0284c7' }}>{activeScenarioId}</strong>. The ESP32 switches once its current green has run 5 s (yellow 3 s, all-red 2 s), then holds it 15 s before the controller resumes. The status below is the ESP32's own answer.
+            Emergency priority: each node's default contract phase in scenario <strong style={{ color: '#0284c7' }}>{activeScenarioId}</strong>. The actuator device switches once its current green has run 5 s (yellow 3 s, all-red 2 s), then holds it 15 s before the controller resumes. The status below is the device's own answer.
           </p>
 
+          {isMapOnlyScenario ? (
+            <div style={{
+              backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px',
+              padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px'
+            }}>
+              <Camera size={22} color="#0284c7" />
+              <div style={{ fontSize: '0.84rem', color: '#1e3a8a' }}>
+                <strong>{activeScenarioId}</strong> là mạng camera địa lý ({topologyNodes.length} trạm), không phải kịch bản vận hành trực tiếp — không có panel override theo từng trạm ở đây.{' '}
+                <Link to="/cameras" style={{ color: '#0284c7', fontWeight: 700, textDecoration: 'underline' }}>
+                  Xem Bản đồ Camera HCM
+                </Link>
+              </div>
+            </div>
+          ) : (
+          <>
           {topologyNodes.length > 5 && (
             <input
               type="text"
@@ -349,7 +377,7 @@ const ControlPanel = () => {
                   onClick={() => handleEmergencyOverride(nodeId)}
                   disabled={Boolean(overrideViews[nodeId] && ['info', 'warn'].includes(overrideViews[nodeId].tone))}
                 >
-                  <Play size={14} /> Force N-S Priority
+                  <Play size={14} /> Force Priority Phase
                 </button>
               </div>
               {overrideViews[nodeId] && (
@@ -369,6 +397,8 @@ const ControlPanel = () => {
               </div>
             ))}
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

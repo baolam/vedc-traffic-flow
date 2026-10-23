@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Layers, RotateCcw, ZoomIn, ZoomOut, Navigation, Eye, EyeOff, Radio } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
+// CARTO's anonymous basemaps.cartocdn.com tiles (the old VOYAGER/DARK entries here) now require a
+// registered API key -- every tile renders an "API KEY REQUIRED" watermark without one. Replaced
+// with free, keyless tile sources (verified live): OSM standard and Esri's public basemaps.
 const TILE_PROVIDERS = {
   STREET: {
     name: 'OpenStreetMap',
@@ -9,16 +14,16 @@ const TILE_PROVIDERS = {
     maxZoom: 19
   },
   VOYAGER: {
-    name: 'CartoDB Voyager',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 20
+    name: 'Esri Bản đồ Đường phố',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, FAO, NOAA, USGS',
+    maxZoom: 19
   },
   DARK: {
     name: 'Bản đồ Đêm (Dark)',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 20
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+    maxZoom: 16
   }
 };
 
@@ -78,8 +83,7 @@ export default function LeafletStreetMap({
 
   // 1. Initialize Leaflet Map
   useEffect(() => {
-    const L = window.L;
-    if (!L || !mapContainerRef.current) return;
+    if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
@@ -104,18 +108,44 @@ export default function LeafletStreetMap({
       }
 
       setMapLoaded(true);
+
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 150);
     }
 
     return () => {
-      // Keep map instance mounted across prop re-renders
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        setMapLoaded(false);
+      }
     };
-  }, [center, bounds]);
+  }, []);
+
+  // Update bounds when topology finishes loading
+  useEffect(() => {
+    if (mapInstanceRef.current && bounds) {
+      mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
+    }
+  }, [bounds]);
+
+  // Keep map tiles sharp and properly sized on container/window resize
+  useEffect(() => {
+    if (!mapContainerRef.current || !mapInstanceRef.current) return;
+    const resizeObserver = new ResizeObserver(() => {
+      mapInstanceRef.current?.invalidateSize();
+    });
+    resizeObserver.observe(mapContainerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [mapLoaded]);
 
   // 2. Handle Tile Layer Switch
   useEffect(() => {
-    const L = window.L;
     const map = mapInstanceRef.current;
-    if (!L || !map) return;
+    if (!map) return;
 
     if (tileLayerRef.current) {
       map.removeLayer(tileLayerRef.current);
@@ -132,9 +162,8 @@ export default function LeafletStreetMap({
 
   // 3. Draw Road Lines between connected junctions
   useEffect(() => {
-    const L = window.L;
     const map = mapInstanceRef.current;
-    if (!L || !map || !mapLoaded) return;
+    if (!map || !mapLoaded) return;
 
     // Clear existing polylines
     polylinesRef.current.forEach(line => map.removeLayer(line));
@@ -182,9 +211,8 @@ export default function LeafletStreetMap({
 
   // 4. Draw & Update Real-time Junction Markers
   useEffect(() => {
-    const L = window.L;
     const map = mapInstanceRef.current;
-    if (!L || !map || !mapLoaded) return;
+    if (!map || !mapLoaded) return;
 
     geoNodes.forEach(node => {
       const nid = node.node_id;
@@ -193,8 +221,8 @@ export default function LeafletStreetMap({
       const phase = String(live.current_phase_id || 'PHASE_1');
       const isSelected = selectedNodeId === nid;
 
-      // Color scheme based on queue & signal state
-      const isGreen = phase.includes('GREEN') || phase.includes('NS') || phase.includes('1');
+      // Color scheme based on queue & signal state (bare "1" false-matched node ids like "A1")
+      const isGreen = phase.includes('GREEN') || phase.includes('NS');
       const signalColor = isGreen ? '#22c55e' : '#0284c7';
       const queueBadgeColor = queue >= 10 ? '#ef4444' : queue >= 4 ? '#f59e0b' : '#10b981';
 
@@ -381,12 +409,16 @@ export default function LeafletStreetMap({
           </span>
         </div>
 
-        {/* Right Toolbar: Map Controls */}
+        {/* Right Toolbar: Map Controls -- wraps onto a 2nd row instead of overflowing past the
+            card edge when the map column is narrow (e.g. the split map+station-list layout). */}
         <div style={{
           pointerEvents: 'auto',
           display: 'flex',
           alignItems: 'center',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
           gap: '6px',
+          maxWidth: '100%',
           backgroundColor: 'rgba(255, 255, 255, 0.94)',
           backdropFilter: 'blur(6px)',
           borderRadius: '8px',
