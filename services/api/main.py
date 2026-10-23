@@ -556,6 +556,11 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
     # HEARTBEAT_LOST instead of SAFE_STOP); this answers "what did it last say", which is what a
     # UI following the physical button must use so it only clears on a real RELEASED health message,
     # never on a single missed/delayed one.
+    # Exception: once the device is CONFIRMED gone (explicit LWT "OFFLINE", or total silence past
+    # ACTUATOR_HEARTBEAT_TIMEOUT_MS), it can never send that RELEASED message -- it's disconnected,
+    # not just slow. On a rig where the safe-stop line and the power line are wired together
+    # (unplugging reads as SAFE_STOP, same as pressing the button), failing to clear raw_safe_stop
+    # here would freeze SafeStopOverlay open forever instead of ever showing the device as offline.
     raw_safe_stop = False
     if actuator_data:
         h_time = actuator_data.get("_ingested_at_ms") or actuator_data.get("timestamp_ms") or 0
@@ -567,6 +572,7 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
 
         if device_status == "OFFLINE" or (actuator_age_ms is not None and actuator_age_ms > ACTUATOR_HEARTBEAT_TIMEOUT_MS):
             actuator_status = "HEARTBEAT_LOST"
+            raw_safe_stop = False
         elif safe_stop:
             actuator_status = "SAFE_STOP"
         elif device_status in ("DEGRADED", "UNHEALTHY"):

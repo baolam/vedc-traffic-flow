@@ -131,6 +131,17 @@ def ensure_docker_services(skip_docker: bool = False, hardware: bool = False):
             else:
                 print("[!] Warning: Failed to start Docker Compose. Continuing in local mode.\n")
 
+        if hardware:
+            # The api container's background MQTT listener can be left in a broken/stale state by a
+            # prior run (see the NOTE above `if __name__ == "__main__"` in services/api/main.py) --
+            # when that happens it silently stops ingesting ESP32 health/heartbeat/LWT messages, so
+            # unplugging the board never flips the dashboard to Offline/HEARTBEAT_LOST. Recreating the
+            # container here guarantees a clean listener for every hardware run, at the cost of a few
+            # seconds; the file is bind-mounted so this never requires an image rebuild.
+            print("[🔁] Hardware mode: recreating 'api' container for a clean MQTT listener "
+                  "(prevents a stale listener from silently dropping ESP32 Offline/heartbeat updates)...")
+            subprocess.run([docker_bin, "compose", "--profile", profile, "up", "-d", "--force-recreate", "api"], cwd=str(repo_root))
+
         if hardware and "edgeflow-actuator" in r.stdout:
             print("[⚡] Hardware mode: stopping the virtual 'actuator' container (it was running from a "
                   "previous 'simulation'/'vision' run and would double-ACK the real ESP32)...")
