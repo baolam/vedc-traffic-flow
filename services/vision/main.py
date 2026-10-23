@@ -76,6 +76,14 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--roi-config", help="ROI_CONFIG_PATH: calibrated ROI JSON (needed for several nodes)")
     parser.add_argument("--model", help="DETECTION_MODEL_PATH (.onnx)")
     parser.add_argument("--lens-position", type=float, help="CAMERA_LENS_POSITION in dioptres (Picamera2)")
+    parser.add_argument("--topology", help="EDGEFLOW_TOPOLOGY, e.g. rpi_demo_v1")
+    parser.add_argument("--video-sync", action="store_true", default=None,
+                        help="Enable live video streaming sync to API (VIDEO_SYNC_ENABLED=true)")
+    parser.add_argument("--no-video-sync", action="store_false", dest="video_sync",
+                        help="Disable live video streaming sync (VIDEO_SYNC_ENABLED=false)")
+    parser.add_argument("--video-sync-url", help="API base URL for video sync (VIDEO_SYNC_API_URL)")
+    parser.add_argument("--video-sync-fps", type=float, help="Max FPS for video streaming (VIDEO_SYNC_FPS)")
+    parser.add_argument("--video-sync-quality", type=int, help="JPEG quality 1-100 (VIDEO_SYNC_JPEG_QUALITY)")
     return parser.parse_args(argv)
 
 
@@ -90,6 +98,11 @@ def apply_cli_overrides(base, args: argparse.Namespace):
         "roi_config": "roi_config_path",
         "model": "detection_model_path",
         "lens_position": "camera_lens_position",
+        "topology": "edgeflow_topology",
+        "video_sync": "video_sync_enabled",
+        "video_sync_url": "video_sync_api_url",
+        "video_sync_fps": "video_sync_fps",
+        "video_sync_quality": "video_sync_jpeg_quality",
     }
     updates = {field: getattr(args, arg) for arg, field in mapping.items() if getattr(args, arg) is not None}
     return base.model_copy(update=updates)
