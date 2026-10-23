@@ -87,9 +87,15 @@ class LiveStreamPusher:
                 pass
 
     def _push_worker(self) -> None:
-        import requests
+        try:
+            import requests
+        except ImportError:
+            logger.error("Live video stream disabled: 'requests' is not installed in this "
+                        "environment. Run: pip install -r services/vision/requirements.txt")
+            return
         url = f"{self.api_base_url}/api/v1/vision/live-frame"
         params = {"node_id": self.node_id}
+        consecutive_failures = 0
         while not self._stop.is_set():
             try:
                 jpeg_bytes = self._queue.get(timeout=1.0)
@@ -98,10 +104,19 @@ class LiveStreamPusher:
             try:
                 resp = requests.post(url, params=params, data=jpeg_bytes,
                                      headers={"Content-Type": "image/jpeg"}, timeout=2)
-                if resp.status_code != 200:
+                if resp.status_code == 200:
+                    if consecutive_failures > 0:
+                        logger.info(f"Live frame push to {url} recovered after {consecutive_failures} failures")
+                    consecutive_failures = 0
+                else:
                     logger.warning(f"Live frame push rejected ({resp.status_code}): {resp.text[:200]}")
             except Exception as e:
-                logger.debug(f"Live frame push error (will retry next frame): {e}")
+                # WARNING (not debug): a network/connectivity problem here is silent otherwise --
+                # the perception loop keeps running fine, so nothing else would ever surface it.
+                # Logged on the 1st failure and every 20th after, to stay readable at ~2-10 fps.
+                consecutive_failures += 1
+                if consecutive_failures == 1 or consecutive_failures % 20 == 0:
+                    logger.warning(f"Live frame push to {url} failed ({consecutive_failures} in a row): {e}")
 
     def close(self) -> None:
         self._stop.set()

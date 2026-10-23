@@ -214,3 +214,10 @@ body {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Raspberry Pi Demo page: connection/signal-lost alert pop-in (independent of safe-stop above,
+   which is specifically the physical emergency button on a controlled intersection). */
+@keyframes rpi-alert-pop-in {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
