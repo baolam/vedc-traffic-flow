@@ -8,6 +8,7 @@ import IntersectionDetail from './pages/IntersectionDetail';
 import ControlPanel from './pages/ControlPanel';
 import BenchmarkSummary from './pages/BenchmarkSummary';
 import HcmCameraMap from './pages/HcmCameraMap';
+import RaspberryPiDemo from './pages/RaspberryPiDemo';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/benchmark" element={<BenchmarkSummary />} />
             <Route path="/experiments" element={<ControlPanel />} />
             <Route path="/cameras" element={<HcmCameraMap />} />
+            <Route path="/raspberry-pi-demo" element={<RaspberryPiDemo />} />
           </Routes>
         </div>
       </div>

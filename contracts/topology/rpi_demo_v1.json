@@ -1,0 +1,37 @@
+{
+  "topology_id": "rpi_demo_v1",
+  "version": "1.0",
+  "description": "Standalone Raspberry Pi 5 edge-vision demo. Single virtual station (J3) used to showcase the perception pipeline (video -> YOLO detection -> ROI telemetry -> MQTT) end to end. J3 here does not correspond to a real physical intersection; it exists only inside this topology's own namespace, same convention as other demo topologies (e.g. tabletop_j1_j2_v1).",
+  "nodes": [
+    {
+      "node_id": "J3",
+      "name": "Raspberry Pi 5 Vision Demo Station",
+      "street_name": "Virtual Demo Node (No Physical Intersection)",
+      "is_virtual_demo": true,
+      "x": 150.0,
+      "y": 150.0,
+      "approaches": ["J3_N_IN", "J3_S_IN", "J3_E_IN", "J3_W_IN"],
+      "phases": [
+        {
+          "phase_id": "J3_PHASE_NS",
+          "name": "North-South Green",
+          "approaches": ["J3_N_IN", "J3_S_IN"],
+          "movements": [
+            { "from_approach": "J3_N_IN", "to_edge": "EXIT_SOUTH", "to_node": null, "turn_ratio": 1.0, "capacity_vehicles": 100 },
+            { "from_approach": "J3_S_IN", "to_edge": "EXIT_NORTH", "to_node": null, "turn_ratio": 1.0, "capacity_vehicles": 100 }
+          ]
+        },
+        {
+          "phase_id": "J3_PHASE_EW",
+          "name": "East-West Green",
+          "approaches": ["J3_E_IN", "J3_W_IN"],
+          "movements": [
+            { "from_approach": "J3_E_IN", "to_edge": "EXIT_WEST", "to_node": null, "turn_ratio": 1.0, "capacity_vehicles": 100 },
+            { "from_approach": "J3_W_IN", "to_edge": "EXIT_EAST", "to_node": null, "turn_ratio": 1.0, "capacity_vehicles": 100 }
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": []
+}

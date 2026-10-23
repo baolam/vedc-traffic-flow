@@ -59,6 +59,7 @@ from controller import (
     MaxPressureController, EdgeFlowController, PressLightRLController, FlowTheoryController,
 )
 from state_machine import ActuatorStateMachine
+from runtime_guards import ManualOverrideHold
 
 import struct
 
@@ -285,6 +286,14 @@ def run_demo_simulation(
     controller = CONTROLLERS.get(ctrl_key, CONTROLLERS.get("max_pressure", CONTROLLERS["edgeflow"]))()
     actuator = ActuatorStateMachine(yellow_duration_s=3.0, all_red_duration_s=2.0)
 
+    # Dashboard "Force Priority" phase override (POST /api/v1/control/override) is published straight
+    # to MQTT by the API, same shared OVERRIDE_ID_PREFIX/hold logic as services/graph-control uses for
+    # the real deployment. Reused here so a click on the dashboard shows up on the SUMO-GUI light too,
+    # not only on the real ESP32 -- without this, run_demo.py's own controller would just overwrite the
+    # override on the very next tick and the simulated light would never match what was requested.
+    override_hold_s = float(os.environ.get("MANUAL_OVERRIDE_HOLD_S", "15"))
+    override_hold = ManualOverrideHold(hold_s=override_hold_s)
+
     # Hardware mirror: ESP32 boards are actuator-only (no sensors, no decisions). The SAME
     # ControlCommand already applied above to the local ActuatorStateMachine (which drives the
     # SUMO-GUI light) is also published to the real board over MQTT; it runs its own safety
@@ -312,6 +321,9 @@ def run_demo_simulation(
                 if rc == 0:
                     print(f"[⚡] Hardware mirror: connected to MQTT broker {mqtt_host}:{mqtt_port}")
                     client.subscribe(topics.HEALTH_SUB_PATTERN)
+                    # Dashboard "Force Priority" override publishes straight to this same command
+                    # topic; seeing it here is how run_demo.py's own SUMO-GUI light learns about it.
+                    client.subscribe(topics.COMMAND_SUB_PATTERN)
                 else:
                     print(f"[!] Hardware mirror: MQTT connect failed (rc={rc})")
 
@@ -327,6 +339,18 @@ def run_demo_simulation(
                 nid = payload.get("node_id")
                 if not nid:
                     return
+
+                if msg.topic.endswith("/command"):
+                    # Our own mirrored commands (fresh uuid4) and hold re-sends (HOLD_ID_PREFIX) come
+                    # back through this same subscription too; observe_command() ignores anything
+                    # whose command_id isn't a dashboard override (OVERRIDE_ID_PREFIX), so only a real
+                    # "Force Priority" click starts a hold here.
+                    if override_hold.observe_command(payload):
+                        print(f"[🎛️] Hardware mirror: dashboard override for {nid} -> "
+                              f"{payload.get('target_phase_id')} -- holding the SUMO-GUI light in sync "
+                              f"with it for up to {override_hold_s:.0f}s.")
+                    return
+
                 is_stopped = bool(payload.get("safe_stop")) or payload.get("status") == "SAFE_STOP"
                 was_stopped = hw_safe_stop.get(nid, False)
                 hw_safe_stop[nid] = is_stopped
@@ -589,7 +613,8 @@ def run_demo_simulation(
                 }
                 step_telemetries.append(telemetry)
 
-                cmd = controller.compute_command(
+                override_cmd = override_hold.command_for(nid, active_phase) if hardware else None
+                cmd = override_cmd or controller.compute_command(
                     node_id=nid,
                     telemetry=telemetry,
                     topology=topology,

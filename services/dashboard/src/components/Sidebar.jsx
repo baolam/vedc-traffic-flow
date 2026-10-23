@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Activity, Trophy, Camera } from 'lucide-react';
+import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Activity, Trophy, Camera, Video } from 'lucide-react';
 import { useActiveScenario } from '../hooks/useActiveScenario';
 
 const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
@@ -47,6 +47,7 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
     { to: '/benchmark', label: 'Benchmark Campaign', icon: Trophy },
     { to: '/experiments', label: 'Control & Tuning', icon: Sliders },
     { to: '/cameras', label: 'HCM Camera Network', icon: Camera },
+    { to: '/raspberry-pi-demo', label: 'Raspberry Pi Demo', icon: Video },
   ];
 
   return (

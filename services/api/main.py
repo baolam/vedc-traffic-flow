@@ -5,7 +5,7 @@ import time
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
-from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -406,13 +406,15 @@ def api_root():
             "/api/v1/network/state",
             "/api/v1/network/state/{node_id}",
             "/api/v1/telemetry",
+            "/api/v1/telemetry/node/{node_id}",
             "/api/v1/control_ack",
             "/api/v1/control/policy",
             "/api/v1/experiments",
             "/api/v1/scenarios",
             "/api/v1/topologies",
             "/api/v1/topologies/{topology_id}",
-            "/api/v1/topologies/convert-sumo"
+            "/api/v1/topologies/convert-sumo",
+            "/api/v1/vision/video-upload"
         ]
     }
 
@@ -650,6 +652,27 @@ def get_network_state():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed retrieving network state: {str(e)}")
+
+@app.get("/api/v1/telemetry/node/{node_id}")
+def get_node_telemetry(node_id: str):
+    """
+    Raw last-known telemetry + device health for a single node, independent of whichever
+    topology_id is currently LIVE_STATE["active_topology_id"] (unlike /api/v1/network/state/*).
+    Used by standalone demo pages (e.g. the Raspberry Pi vision demo) whose node lives in its
+    own topology contract and must not be entangled with the operator's active scenario.
+    """
+    now_ms = int(time.time() * 1000)
+    node_live = LIVE_STATE["nodes"].get(node_id)
+    health_meta = compute_node_device_health(node_id, node_live, now_ms)
+    return {
+        "node_id": node_id,
+        "has_telemetry": node_live is not None,
+        "telemetry": node_live,
+        "device_health": health_meta,
+        "telemetry_topic": topics.get_telemetry_topic(node_id),
+        "server_time_ms": now_ms
+    }
+
 
 @app.get("/api/v1/network/state/{node_id}")
 def get_node_network_state(node_id: str):
@@ -1228,6 +1251,10 @@ class VisionRunRequest(BaseModel):
     # Defaults to the currently active topology (LIVE_STATE) when omitted, so the demo runs
     # against the node's real contract (phases/approaches) instead of a hard-coded scenario.
     topology_id: Optional[str] = None
+    # Opt-in: also publishes each extracted telemetry frame to the canonical MQTT telemetry
+    # topic (edgeflow/v1/telemetry/{node_id}), same broker the API itself listens on. Defaults
+    # to False so existing callers (per-node "Chạy lại Demo" button) keep today's behavior.
+    publish_mqtt: Optional[bool] = False
 
 
 def _vision_artifact_paths(topology_id: str, node_id: str):
@@ -1257,6 +1284,45 @@ def get_vision_demo_video(node_id: Optional[str] = None, topology_id: Optional[s
         if p.is_file():
             return FileResponse(str(p), media_type="video/mp4", filename="yolo_demo_annotated.mp4")
     raise HTTPException(status_code=404, detail="No demo video found. Run services/vision/demo_video_pipeline.py first.")
+
+
+@app.post("/api/v1/vision/video-upload")
+async def upload_vision_video(node_id: str, topology_id: str, file: UploadFile = File(...)):
+    """
+    Receives a short annotated video clip pushed from a REAL vision device (a Raspberry Pi
+    running services/vision with VIDEO_SYNC_ENABLED=true -- see services/vision/video_sync.py),
+    over plain HTTP, and stores it at the exact artifact path that GET /api/v1/vision/demo-video
+    already serves for this (topology_id, node_id). A device's live clip and the server-side demo
+    pipeline's offline clip are therefore the same file underneath the dashboard never needs a
+    separate "real device video" code path. Each upload overwrites the previous clip (a rolling
+    "latest" view, not an archive). This is a side channel only: MQTT telemetry (published
+    directly by the device) remains the canonical data path and is untouched by this endpoint.
+    """
+    video_path, _ = _vision_artifact_paths(topology_id, node_id)
+    video_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = video_path.with_suffix(video_path.suffix + ".part")
+    size = 0
+    try:
+        with open(tmp_path, "wb") as out:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                size += len(chunk)
+                out.write(chunk)
+        tmp_path.replace(video_path)
+    except Exception as e:
+        tmp_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=f"Could not store uploaded clip: {e}")
+
+    logger.info(f"Video clip received from device for node '{node_id}' ({topology_id}): {size} bytes")
+    return {
+        "status": "SUCCESS",
+        "node_id": node_id,
+        "topology_id": topology_id,
+        "bytes_received": size,
+        "video_url": f"/api/v1/vision/demo-video?node_id={node_id}&topology_id={topology_id}"
+    }
 
 
 @app.get("/api/v1/vision/demo-report")
@@ -1383,6 +1449,10 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
         "--output-video", str(out_video),
         "--output-report", str(out_report),
     ]
+    if req.publish_mqtt:
+        mqtt_host = os.getenv("MQTT_HOST", getattr(settings, "mqtt_host", "localhost"))
+        mqtt_port = int(os.getenv("MQTT_PORT", getattr(settings, "mqtt_port", 1883)))
+        cmd += ["--mqtt-host", mqtt_host, "--mqtt-port", str(mqtt_port)]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         if proc.returncode != 0:

@@ -129,3 +129,29 @@ docker compose -f docker-compose.rpi.yml --profile management up -d
    ping 192.168.1.100
    nc -zv 192.168.1.100 1883
    ```
+
+---
+
+## 6. Trang Demo Raspberry Pi Trên Dashboard (Node J3 ảo, không phải giao lộ thật)
+
+Dashboard có một trang riêng (`Raspberry Pi Demo`, route `/raspberry-pi-demo`) dùng để trình diễn
+trọn vẹn pipeline edge vision của Pi 5, gắn với một node ảo `J3` trong topology contract riêng
+`contracts/topology/rpi_demo_v1.json` (không liên quan tới J3 trong `four_intersection_v1`).
+
+Để chạy Pi thật cho trang này: trong `.env.rpi` (xem khối "Raspberry Pi Demo" ở mục 2), đặt
+```ini
+VISION_NODE_ID=J3
+EDGEFLOW_TOPOLOGY=rpi_demo_v1
+VIDEO_SYNC_ENABLED=true
+VIDEO_SYNC_API_URL=http://<ip-laptop-server>:8000
+```
+rồi chạy như Chế độ 1 bình thường (`--profile vision`). Khi đó Pi tự động:
+1. Phát telemetry qua MQTT đúng chuẩn (`edgeflow/v1/telemetry/J3`) — không khác gì node thật.
+2. Đẩy định kỳ (mỗi `VIDEO_SYNC_PERIOD_S` giây) một đoạn video đã chú thích lên API qua
+   `POST /api/v1/vision/video-upload` (xem `services/vision/video_sync.py`), để trang dashboard
+   phát lại gần như trực tiếp. Kênh này hoàn toàn tách biệt với MQTT — tắt nó
+   (`VIDEO_SYNC_ENABLED=false`, mặc định) không ảnh hưởng gì tới telemetry.
+
+Không có Pi thật? Trang dashboard có nút "Mô Phỏng Server-Side" chạy cùng pipeline
+(`services/vision/demo_video_pipeline.py`) ngay trên máy chủ API với một file video mẫu, cho
+cùng kết quả hiển thị.

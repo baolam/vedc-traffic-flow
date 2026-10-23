@@ -47,6 +47,11 @@ class PerceptionEngine:
         # Last processed frame: wall-clock capture time (ms) plus measured stage timings; {} on failure.
         # A processed frame reports confidence 1.0; main.TelemetryWindow lowers it when frames are lost.
         self.last_frame: Dict[str, Any] = {}
+        # Raw frame + its assigned detection boxes, kept only for an optional caller (video sync to the
+        # platform, see services/vision/video_sync.py) -- None whenever nothing read this frame yet or
+        # the last read failed. A plain attribute, not returned by process_frame_nodes(), so callers that
+        # don't need pixels (the normal telemetry-only path) pay no extra cost.
+        self.last_rendered: Optional[Tuple[np.ndarray, Dict[str, List[Tuple[int, int, int, int]]]]] = None
 
     def setup_topology(self, topology: Dict[str, Any], node_id: str = "J1") -> None:
         """Sets up the default (uncalibrated) ROIs for a single node."""
@@ -128,6 +133,7 @@ class PerceptionEngine:
         ret, frame = self.video_source.read_frame()
         if not ret or frame is None:
             self.last_frame = {}
+            self.last_rendered = None
             return {}
         frame_info = {"captured_at_ms": int(time.time() * 1000),
                       "capture_ms": (time.perf_counter() - started) * 1000}
@@ -136,6 +142,7 @@ class PerceptionEngine:
 
         assigned_boxes = self.roi_manager.assign_detections(self.detect_vehicles(frame))
         self.last_frame = {**frame_info, **self.detector.last_timings}
+        self.last_rendered = (frame, assigned_boxes)
         results: Dict[str, List[Dict[str, Any]]] = {}
         for node_id in self.node_ids or []:
             results[node_id] = [
