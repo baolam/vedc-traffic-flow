@@ -40,7 +40,7 @@ try:
     from runtime_stats import RuntimeStats
     from telemetry_window import TelemetryWindow
     from phase_tracker import PhaseTracker, SOURCE_DEVICE
-    from video_sync import VideoSyncUploader, draw_sync_overlay
+    from video_sync import LiveStreamPusher, draw_sync_overlay
 except ImportError:
     from services.vision.config import settings
     from services.vision.perception_engine import PerceptionEngine
@@ -51,7 +51,7 @@ except ImportError:
     from services.vision.runtime_stats import RuntimeStats
     from services.vision.telemetry_window import TelemetryWindow
     from services.vision.phase_tracker import PhaseTracker, SOURCE_DEVICE
-    from services.vision.video_sync import VideoSyncUploader, draw_sync_overlay
+    from services.vision.video_sync import LiveStreamPusher, draw_sync_overlay
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -236,20 +236,20 @@ def main(argv: Optional[List[str]] = None):
     engine.setup_nodes(node_ids, roi_config.nodes if roi_config else None)
     logger.info(f"Perception Engine initialized using backend: [{engine.detector.backend}]")
 
-    # Optional Video Sync: uploads short annotated clips of this camera's feed to the platform API
-    # over HTTP, alongside (never instead of) the MQTT telemetry above. Opt-in via VIDEO_SYNC_ENABLED;
-    # labeled with the first active node (demo deployments run one node per camera, e.g. J3).
+    # Optional Live Video Stream: pushes this camera's annotated frames to the platform API over
+    # HTTP (one JPEG per frame, rate-capped), alongside (never instead of) the MQTT telemetry
+    # above. Opt-in via VIDEO_SYNC_ENABLED; labeled with the first active node (demo deployments
+    # run one node per camera, e.g. J3). The dashboard reads it back as an MJPEG stream.
     video_sync = None
     if cfg.video_sync_enabled:
-        video_sync = VideoSyncUploader(
+        video_sync = LiveStreamPusher(
             api_base_url=cfg.video_sync_api_url,
             node_id=node_ids[0],
-            topology_id=cfg.video_sync_topology_id or topology_id,
-            width=frame_w, height=frame_h,
-            fps=cfg.video_sync_fps, clip_period_s=cfg.video_sync_period_s,
+            max_fps=cfg.video_sync_fps,
+            jpeg_quality=cfg.video_sync_jpeg_quality,
         )
-        logger.info(f"Video Sync         : ENABLED -> {cfg.video_sync_api_url} "
-                    f"(clips every {cfg.video_sync_period_s}s, node {node_ids[0]})")
+        logger.info(f"Live Video Stream  : ENABLED -> {cfg.video_sync_api_url} "
+                    f"(up to {cfg.video_sync_fps} fps, node {node_ids[0]})")
 
     period_s = cfg.telemetry_period_s
     stats = RuntimeStats(window_s=STATS_WINDOW_S)
@@ -331,7 +331,7 @@ def main(argv: Optional[List[str]] = None):
                     raw_frame, assigned_boxes = engine.last_rendered
                     annotated = draw_sync_overlay(raw_frame, engine.roi_manager.rois, assigned_boxes,
                                                   node_ids[0], frame_info["captured_at_ms"])
-                    video_sync.add_frame(annotated)
+                    video_sync.push_frame(annotated)
             else:
                 window.add_failure()
                 stats.record(False)

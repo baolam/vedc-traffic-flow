@@ -60,17 +60,17 @@ class Settings(BaseSettings):
     # Raspberry Pi 5 & Edge Hardware Telemetry Reporting
     enable_hardware_telemetry: bool = Field(default_factory=lambda: os.getenv("ENABLE_HARDWARE_TELEMETRY", "true").lower() == "true")
 
-    # Optional Video Sync: uploads short annotated clips of the camera feed to the platform API
-    # (services/vision/video_sync.py) over HTTP, alongside the normal MQTT telemetry. Off by
-    # default -- enabling it is a deliberate choice for a demo/showcase node (e.g. the Raspberry
-    # Pi vision demo, VISION_NODE_ID=J3), not something every deployment needs.
+    # Optional Live Video Stream: pushes annotated camera frames (one JPEG per frame) to the
+    # platform API over HTTP (services/vision/video_sync.py), alongside the normal MQTT
+    # telemetry, so the dashboard can show a real live view (MJPEG) of this node. Off by default
+    # -- enabling it is a deliberate choice for a demo/showcase node (e.g. the Raspberry Pi
+    # vision demo, VISION_NODE_ID=J3), not something every deployment needs.
     video_sync_enabled: bool = Field(default_factory=lambda: os.getenv("VIDEO_SYNC_ENABLED", "false").lower() == "true")
     video_sync_api_url: str = Field(default_factory=lambda: os.getenv("VIDEO_SYNC_API_URL", "http://localhost:8000"))
-    video_sync_period_s: float = Field(default_factory=lambda: float(os.getenv("VIDEO_SYNC_PERIOD_S", "10.0")))
-    video_sync_fps: float = Field(default_factory=lambda: float(os.getenv("VIDEO_SYNC_FPS", "10.0")))
-    # Topology the uploaded clip is filed under; defaults to EDGEFLOW_TOPOLOGY so it lands on the
-    # same (topology_id, node_id) pair the dashboard already queries for this node's demo video.
-    video_sync_topology_id: str = Field(default_factory=lambda: os.getenv("VIDEO_SYNC_TOPOLOGY_ID", ""))
+    # Frames pushed to the API per second (capped independently of VISION_FPS/camera rate); higher
+    # costs more LAN bandwidth and Pi CPU for JPEG encoding, with little visible smoothness gain.
+    video_sync_fps: float = Field(default_factory=lambda: float(os.getenv("VIDEO_SYNC_FPS", "8.0")))
+    video_sync_jpeg_quality: int = Field(default_factory=lambda: int(os.getenv("VIDEO_SYNC_JPEG_QUALITY", "70")))
 
 
 settings = Settings()

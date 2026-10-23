@@ -33,6 +33,9 @@ const RaspberryPiDemo = () => {
   const [nodeTelemetry, setNodeTelemetry] = useState(null);
   const [deviceHealth, setDeviceHealth] = useState(null);
   const [telemetryTopic, setTelemetryTopic] = useState(null);
+  const [isLive, setIsLive] = useState(false);
+  const [liveAgeMs, setLiveAgeMs] = useState(null);
+  const [streamKey, setStreamKey] = useState(0);
 
   // Vision demo video/report: whatever was last synced to the platform for (rpi_demo_v1, J3)
   const refreshVisionStatus = useCallback(() => {
@@ -57,15 +60,32 @@ const RaspberryPiDemo = () => {
       .catch(() => {});
   }, [apiBase]);
 
+  // Real live view (MJPEG) pushed by an actual Pi running services/vision with
+  // VIDEO_SYNC_ENABLED=true -- independent of the server-side simulate button below.
+  const refreshLiveStatus = useCallback(() => {
+    fetch(`${apiBase}/api/v1/vision/live-status/${DEMO_NODE_ID}`)
+      .then(res => res.json())
+      .then(data => {
+        setIsLive(prevLive => {
+          if (!prevLive && data.is_live) setStreamKey(k => k + 1); // (re)connect the <img> stream
+          return Boolean(data.is_live);
+        });
+        setLiveAgeMs(data.age_ms);
+      })
+      .catch(() => setIsLive(false));
+  }, [apiBase]);
+
   useEffect(() => {
     refreshVisionStatus();
     refreshTelemetry();
+    refreshLiveStatus();
     const interval = setInterval(() => {
       refreshVisionStatus();
       refreshTelemetry();
+      refreshLiveStatus();
     }, 3000);
     return () => clearInterval(interval);
-  }, [refreshVisionStatus, refreshTelemetry]);
+  }, [refreshVisionStatus, refreshTelemetry, refreshLiveStatus]);
 
   const handleRunDemo = async () => {
     setIsRunning(true);
@@ -126,9 +146,10 @@ const RaspberryPiDemo = () => {
           Trang riêng cho kịch bản demo trên Raspberry Pi 5. Khi chạy <code>services/vision</code> thật
           trên Pi (<code>VISION_NODE_ID=J3</code>), thiết bị tự động: (1) phát telemetry qua MQTT theo
           đúng chuẩn như mọi node khác (<code style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 6px', borderRadius: '4px' }}>{telemetryTopic || `edgeflow/v1/telemetry/${DEMO_NODE_ID}`}</code>),
-          và (2) nếu bật <code>VIDEO_SYNC_ENABLED=true</code>, tự đẩy các đoạn video đã chú thích lên nền
-          tảng qua HTTP (<code>POST /api/v1/vision/video-upload</code>) mỗi vài giây — trang này chỉ
-          hiển thị lại, không cần bấm nút gì cả. Topology contract:{' '}
+          và (2) nếu bật <code>VIDEO_SYNC_ENABLED=true</code>, tự đẩy từng khung hình đã chú thích lên
+          nền tảng qua HTTP (<code>POST /api/v1/vision/live-frame</code>), được phát lại ngay dưới
+          dạng luồng trực tiếp (MJPEG) — trang này chỉ hiển thị lại, không cần bấm nút gì cả.
+          Topology contract:{' '}
           <code style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 6px', borderRadius: '4px' }}>{DEMO_TOPOLOGY_ID}</code>.
         </p>
       </div>
@@ -152,14 +173,26 @@ const RaspberryPiDemo = () => {
       <div className="grid-cols-2" style={{ marginBottom: '24px', gap: '20px' }}>
         {/* LEFT: Controls + Video Playback */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-            <Video color="#0284c7" size={20} />
-            <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-              Video Đã Đồng Bộ Lên Nền Tảng
-            </h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Video color="#0284c7" size={20} />
+              <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
+                {isLive ? 'Live Stream Từ Raspberry Pi' : 'Video Đã Đồng Bộ Lên Nền Tảng'}
+              </h3>
+            </div>
+            {isLive && (
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 800,
+                padding: '3px 9px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#dc2626',
+                border: '1px solid #fecaca'
+              }}>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                LIVE {liveAgeMs != null ? `(${(liveAgeMs / 1000).toFixed(1)}s)` : ''}
+              </span>
+            )}
           </div>
           <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginBottom: '12px' }}>
-            Nếu Pi thật đang chạy & tự đẩy video lên, nó hiện thẳng bên dưới — không cần bấm gì.
+            Nếu Pi thật đang chạy & đẩy stream lên, nó hiện thẳng bên dưới — không cần bấm gì.
             Phần điều khiển dưới đây chỉ để <strong>mô phỏng server-side khi chưa có Pi thật</strong>.
           </div>
 
@@ -227,7 +260,17 @@ const RaspberryPiDemo = () => {
             position: 'relative', backgroundColor: '#090d16', borderRadius: '12px', flex: 1,
             minHeight: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
           }}>
-            {hasVideo ? (
+            {isLive ? (
+              // MJPEG multipart stream: the browser renders this as a plain live-updating image,
+              // no polling/reload needed. streamKey forces a fresh connection whenever the device
+              // transitions from offline -> live (a stale open connection would otherwise freeze).
+              <img
+                key={streamKey}
+                src={`${apiBase}/api/v1/vision/live-stream/${DEMO_NODE_ID}`}
+                alt={`Live stream from node ${DEMO_NODE_ID}`}
+                style={{ width: '100%', height: '100%', maxHeight: '340px', objectFit: 'contain' }}
+              />
+            ) : hasVideo ? (
               <video
                 key={videoUrl}
                 src={videoUrl}
@@ -240,9 +283,9 @@ const RaspberryPiDemo = () => {
             ) : (
               <div style={{ color: '#64748b', fontSize: '0.84rem', textAlign: 'center', padding: '20px' }}>
                 <Cpu size={32} style={{ marginBottom: '8px', opacity: 0.6 }} />
-                <div>Chưa có video nào được đồng bộ lên cho node {DEMO_NODE_ID}.</div>
+                <div>Chưa có live stream hoặc video nào cho node {DEMO_NODE_ID}.</div>
                 <div style={{ marginTop: '4px' }}>
-                  Bật Pi thật (VIDEO_SYNC_ENABLED=true) để nó tự đẩy video lên, hoặc nhấn nút mô
+                  Bật Pi thật (VIDEO_SYNC_ENABLED=true) để nó tự đẩy stream lên, hoặc nhấn nút mô
                   phỏng server-side bên trên.
                 </div>
               </div>

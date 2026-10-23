@@ -5,8 +5,8 @@ import time
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
-from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect, UploadFile, File
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect, Request
+from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -414,7 +414,9 @@ def api_root():
             "/api/v1/topologies",
             "/api/v1/topologies/{topology_id}",
             "/api/v1/topologies/convert-sumo",
-            "/api/v1/vision/video-upload"
+            "/api/v1/vision/live-frame",
+            "/api/v1/vision/live-status/{node_id}",
+            "/api/v1/vision/live-stream/{node_id}"
         ]
     }
 
@@ -1286,43 +1288,72 @@ def get_vision_demo_video(node_id: Optional[str] = None, topology_id: Optional[s
     raise HTTPException(status_code=404, detail="No demo video found. Run services/vision/demo_video_pipeline.py first.")
 
 
-@app.post("/api/v1/vision/video-upload")
-async def upload_vision_video(node_id: str, topology_id: str, file: UploadFile = File(...)):
-    """
-    Receives a short annotated video clip pushed from a REAL vision device (a Raspberry Pi
-    running services/vision with VIDEO_SYNC_ENABLED=true -- see services/vision/video_sync.py),
-    over plain HTTP, and stores it at the exact artifact path that GET /api/v1/vision/demo-video
-    already serves for this (topology_id, node_id). A device's live clip and the server-side demo
-    pipeline's offline clip are therefore the same file underneath the dashboard never needs a
-    separate "real device video" code path. Each upload overwrites the previous clip (a rolling
-    "latest" view, not an archive). This is a side channel only: MQTT telemetry (published
-    directly by the device) remains the canonical data path and is untouched by this endpoint.
-    """
-    video_path, _ = _vision_artifact_paths(topology_id, node_id)
-    video_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = video_path.with_suffix(video_path.suffix + ".part")
-    size = 0
-    try:
-        with open(tmp_path, "wb") as out:
-            while True:
-                chunk = await file.read(1024 * 1024)
-                if not chunk:
-                    break
-                size += len(chunk)
-                out.write(chunk)
-        tmp_path.replace(video_path)
-    except Exception as e:
-        tmp_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=500, detail=f"Could not store uploaded clip: {e}")
+# ============================================================================
+# Live Video Stream (Raspberry Pi -> API -> Dashboard, see services/vision/video_sync.py)
+# ============================================================================
+# In-memory only (by design): the latest JPEG per node_id, overwritten on every push. This is a
+# live view, not an archive -- nothing here is persisted to disk or to LIVE_STATE.
+LIVE_FRAMES: Dict[str, Dict[str, Any]] = {}
+LIVE_FRAME_STALE_MS = 15000  # no fresh push in 15s -> treated as offline (camera/device down)
+LIVE_FRAME_MAX_BYTES = 2 * 1024 * 1024  # one JPEG frame; guards against an accidental huge body
 
-    logger.info(f"Video clip received from device for node '{node_id}' ({topology_id}): {size} bytes")
-    return {
-        "status": "SUCCESS",
-        "node_id": node_id,
-        "topology_id": topology_id,
-        "bytes_received": size,
-        "video_url": f"/api/v1/vision/demo-video?node_id={node_id}&topology_id={topology_id}"
-    }
+
+@app.post("/api/v1/vision/live-frame")
+async def push_live_frame(node_id: str, request: Request):
+    """
+    Receives one annotated JPEG frame pushed from a REAL vision device (a Raspberry Pi running
+    services/vision with VIDEO_SYNC_ENABLED=true) and keeps it as that node's latest frame.
+    GET /api/v1/vision/live-stream/{node_id} re-serves whatever is stored here as an MJPEG
+    stream. This is a side channel only: MQTT telemetry (published directly by the device)
+    remains the canonical data path and is untouched by this endpoint.
+    """
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="Empty request body (expected raw JPEG bytes).")
+    if len(body) > LIVE_FRAME_MAX_BYTES:
+        raise HTTPException(status_code=413, detail=f"Frame too large ({len(body)} bytes).")
+    LIVE_FRAMES[node_id] = {"jpeg": body, "timestamp_ms": int(time.time() * 1000)}
+    return {"status": "SUCCESS", "node_id": node_id, "bytes_received": len(body)}
+
+
+@app.get("/api/v1/vision/live-status/{node_id}")
+def get_live_stream_status(node_id: str):
+    """Whether a live frame is currently available for this node, for the dashboard to decide
+    between showing the MJPEG stream or falling back to the last synced/demo video."""
+    entry = LIVE_FRAMES.get(node_id)
+    if not entry:
+        return {"node_id": node_id, "is_live": False, "age_ms": None}
+    age_ms = int(time.time() * 1000) - entry["timestamp_ms"]
+    return {"node_id": node_id, "is_live": age_ms <= LIVE_FRAME_STALE_MS, "age_ms": age_ms}
+
+
+@app.get("/api/v1/vision/live-stream/{node_id}")
+async def get_live_stream(node_id: str):
+    """
+    MJPEG (multipart/x-mixed-replace) stream re-serving whatever frame this node last pushed to
+    POST /api/v1/vision/live-frame -- a plain <img src="..."> on the dashboard renders this as a
+    live view natively, no browser plugin or WebRTC signaling needed. Several viewers can read
+    the same node concurrently; each gets its own copy of this generator over the shared
+    LIVE_FRAMES store. Ends (lets the client's <img> show a broken image) once the node has gone
+    quiet for LIVE_FRAME_STALE_MS, rather than looping forever on a frame that stopped updating.
+    """
+    if node_id not in LIVE_FRAMES:
+        raise HTTPException(status_code=404, detail=f"No live frame received yet for node '{node_id}'.")
+
+    async def frame_generator():
+        import asyncio
+        last_sent_ts = 0
+        while True:
+            entry = LIVE_FRAMES.get(node_id)
+            if not entry or (int(time.time() * 1000) - entry["timestamp_ms"]) > LIVE_FRAME_STALE_MS:
+                return
+            if entry["timestamp_ms"] != last_sent_ts:
+                last_sent_ts = entry["timestamp_ms"]
+                yield (b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " +
+                      str(len(entry["jpeg"])).encode() + b"\r\n\r\n" + entry["jpeg"] + b"\r\n")
+            await asyncio.sleep(0.05)
+
+    return StreamingResponse(frame_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 
 @app.get("/api/v1/vision/demo-report")
