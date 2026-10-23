@@ -36,13 +36,13 @@
 
 // Network & Broker Credentials (override with -D flags in secrets.ini)
 #ifndef WIFI_SSID
-#define WIFI_SSID "Kinghouse B11-12"
+#define WIFI_SSID "Kingshouse A1-2-11-12"
 #endif
 #ifndef WIFI_PASS
 #define WIFI_PASS "kingshouse2018"
 #endif
 #ifndef MQTT_BROKER
-#define MQTT_BROKER "172.30.80.1" // IP of the host running Mosquitto
+#define MQTT_BROKER "192.168.101.205" // IP of the host running Mosquitto
 #endif
 #ifndef NTP_SERVER
 #define NTP_SERVER MQTT_BROKER // e.g. the Pi running chrony (infra/rpi/setup_pi.sh)
@@ -124,6 +124,7 @@ unsigned long lastHealthTime = 0;
 unsigned long lastMqttAttempt = 0;
 
 bool isLocalFallbackMode = false;
+bool wifiWasConnected = false;
 String pendingCommandId = "";
 String pendingTargetPhaseStr = "";
 
@@ -595,8 +596,18 @@ void loop()
   // 2. WiFi & MQTT Connection Handling (keeps running during safe-stop for health reports)
   if (WiFi.status() == WL_CONNECTED)
   {
+    if (!wifiWasConnected)
+    {
+      wifiWasConnected = true;
+      Serial.printf("[WiFi] Connected! IP=%s RSSI=%ddBm\n", WiFi.localIP().toString().c_str(), WiFi.RSSI());
+    }
     maintainMqttConnection(now);
     mqttClient.loop();
+  }
+  else if (wifiWasConnected)
+  {
+    wifiWasConnected = false;
+    Serial.println("[WiFi] Connection lost -> retrying (auto-reconnect)");
   }
 
   // onMqttCommand() runs inside mqttClient.loop() and stamps stateStartTime with a newer millis().

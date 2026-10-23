@@ -114,15 +114,18 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "display_name": "Sa Ban Tabletop Corridor (J1-J2, 2 Signalized Intersections)",
         "net_rel_path": "services/simulator/sumo_configs/tabletop_j1_j2_v1/tabletop_j1_j2_v1.net.xml",
         "expected_net_sha256": [
-            "5945a354853f3bcddb5a85f321ac28629a3b9cf9e7ec5551245c7c572e02bfb3",
+            "f62b9e0e12c3e8b2eb9e61695e26523988598c84908868662f28bbedd68855d7",  # Canonical (LF)
+            "2bb1c8b01247036c0c4aac44dfe9918d1a1f53eccd7b008f0ffa51117f85da60",  # Windows (CRLF)
+            "5945a354853f3bcddb5a85f321ac28629a3b9cf9e7ec5551245c7c572e02bfb3",  # Legacy initial draft
         ],
         "topo_rel_path": "contracts/topology/tabletop_j1_j2_v1.json",
         "expected_topo_sha256": [
-            "b40be610b985c8e4c0abad8637337c42bb3fd47c4baa75361da3c2ea9a7981e0",
+            "0b75033ef0bea14100d9f3740b68f89ae8b7d7430fae262c9e3ecd8cc65a2780",  # Matched with sa ban layout (LF & CRLF)
+            "b40be610b985c8e4c0abad8637337c42bb3fd47c4baa75361da3c2ea9a7981e0",  # Initial draft
         ],
         "controlled_tls_ids": ["J1", "J2"],
         "bottleneck_edge": "J2_W_IN",
-        "normal_speed_mps": 13.89,
+        "normal_speed_mps": 11.11,
         "congested_speed_mps": 1.50,
         "primary_surge_axis": "EW",
     },

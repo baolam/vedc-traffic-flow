@@ -199,3 +199,18 @@ body {
   animation: live-pulse 2s infinite ease-in-out;
 }
 
+/* Safe-Stop emergency flash: hard on/off at the board's own 500ms half-period
+   (firmware SAFE_STOP_FLASH_MS), so the dashboard flashes in the same rhythm as the physical LEDs. */
+@keyframes safe-stop-flash {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.35; }
+}
+.safe-stop-flash {
+  animation: safe-stop-flash 1s steps(1) infinite;
+}
+
+@keyframes safe-stop-pop-in {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+

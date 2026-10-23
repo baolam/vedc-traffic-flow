@@ -18,6 +18,16 @@ const needsAttention = (d) => (d.total_queue || 0) > ATTENTION_QUEUE_VEH || Bool
 // row layout at full length; show a short form and keep the full ID in a title tooltip.
 const shortNodeId = (id) => (id && id.length > 16 ? `${id.slice(0, 10)}…${id.slice(-4)}` : id);
 
+// System Log timestamps: the API formats "timestamp" with the SERVER/container's own local clock
+// (often UTC in Docker, unrelated to the operator's timezone), so it can look hours off on screen.
+// timestamp_ms is an unambiguous UTC epoch; format it with the browser's own timezone instead.
+// "timestamp" is only a fallback for the rare log entry that predates this field.
+const formatLogTime = (log) => (
+  log.timestamp_ms
+    ? new Date(log.timestamp_ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : (log.timestamp || '--:--:--')
+);
+
 const NetworkOverview = () => {
   const navigate = useNavigate();
 
@@ -225,6 +235,10 @@ const NetworkOverview = () => {
             confidence: Math.round(avgConf),
             source_type: n.source_type || 'system',
             status: n.status || 'ONLINE',
+            // overall_status collapses SAFE_STOP and HEARTBEAT_LOST into the same "ACTUATOR_FAULT"
+            // (intentional, see services/api/main.py); device_health.actuator.status keeps them apart
+            // so the overview badge can tell "someone pressed the emergency button" from "device down".
+            device_health: n.device_health || null,
             approaches: approaches
           };
         });
@@ -792,6 +806,10 @@ const NetworkOverview = () => {
                           <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>SIGNAL LOST</span>
                         ) : data.status === 'CAMERA_FAULT' ? (
                           <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>CAM FAULT</span>
+                        ) : data.device_health?.actuator?.status === 'SAFE_STOP' ? (
+                          // Deliberate operator action on the board, not a device malfunction --
+                          // must look different from ACTUATOR ERR (heartbeat lost) below.
+                          <span title="Nút dừng khẩn cấp trên board đang được nhấn" className="badge" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fef3c7', color: '#92400e', fontWeight: 800 }}>🛑 SAFE-STOP</span>
                         ) : data.status === 'ACTUATOR_FAULT' ? (
                           <span className="badge badge-red" style={{ fontSize: '0.65rem', padding: '1px 6px', backgroundColor: '#fee2e2', color: '#b91c1c' }}>ACTUATOR ERR</span>
                         ) : data.status === 'FALLBACK' ? (
@@ -824,7 +842,12 @@ const NetworkOverview = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <PhaseIndicator activePhase={data.current_phase_id} state="GREEN" compact />
+                      <PhaseIndicator
+                        activePhase={data.current_phase_id}
+                        state="GREEN"
+                        compact
+                        safeStop={data.device_health?.actuator?.status === 'SAFE_STOP'}
+                      />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1006,7 +1029,7 @@ const NetworkOverview = () => {
 
                 return (
                   <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                    <span style={{ color: '#64748b', flexShrink: 0 }}>[{log.timestamp}]</span>
+                    <span style={{ color: '#64748b', flexShrink: 0 }}>[{formatLogTime(log)}]</span>
                     <span style={{
                       color: isWarn ? '#f87171' : isCtrl ? '#38bdf8' : '#a7f3d0',
                       fontWeight: 700,

@@ -52,6 +52,7 @@ for p in [
         sys.path.insert(0, str(p))
 
 import contracts_sdk
+import topics
 from sumo_runner import generate_sumo_routes
 from controller import (
     FixedTimeController, ActuatedController, MaxQueueController,
@@ -75,7 +76,8 @@ def _png_dimensions(path: Path) -> Optional[tuple]:
         return None
 
 
-def print_banner(topology_id: str, scenario_id: str, controller_name: str, duration_s: int):
+def print_banner(topology_id: str, scenario_id: str, controller_name: str, duration_s: int,
+                  hardware: bool = False, mqtt_host: str = "", mqtt_port: int = 1883):
     print("=" * 75)
     print(" 🚥 EDGEFLOW AI — CANONICAL SUMO-GUI LIVE DEMO")
     print("=" * 75)
@@ -85,10 +87,19 @@ def print_banner(topology_id: str, scenario_id: str, controller_name: str, durat
     print(f" • Duration (seconds) : {duration_s}s")
     print(f" • React Dashboard    : http://localhost:3000")
     print(f" • FastAPI Backend    : http://localhost:8000/docs")
+    if hardware:
+        print(f" • Hardware Mirror    : ENABLED — ControlCommand mirrored to real ESP32 via MQTT {mqtt_host}:{mqtt_port}")
+        print(f"                        (ESP32 is actuator-only: it executes the command and ACKs/health back;")
+        print(f"                        the decision stays local to this controller, same as SimulationActuator)")
+        print(f"                        (Docker Compose uses the 'hardware' profile and the virtual 'actuator'")
+        print(f"                        container is stopped automatically -- it would otherwise double-ACK the ESP32.")
+        print(f"                        With --skip-docker, stop it yourself first: `docker compose stop actuator`.)")
+    else:
+        print(f" • Hardware Mirror    : disabled (pass --hardware to mirror commands to real ESP32 boards)")
     print("=" * 75 + "\n")
 
 
-def ensure_docker_services(skip_docker: bool = False):
+def ensure_docker_services(skip_docker: bool = False, hardware: bool = False):
     """Ensure Docker Compose microservices (MQTT, API, Dashboard, Control) are running."""
     if skip_docker:
         print("[ℹ] Skipping Docker services check (--skip-docker specified).")
@@ -99,20 +110,30 @@ def ensure_docker_services(skip_docker: bool = False):
         print("[!] Warning: Docker CLI not found. Running in standalone local mode.")
         return
 
-    print("[🐳] Checking Docker Microservices status...")
+    # --hardware uses the 'hardware' compose profile (mqtt, api, graph-control, dashboard) instead of
+    # 'simulation': the latter also brings up the virtual 'actuator' container, which would answer
+    # the very same mirrored ControlCommand as the real ESP32 -- two ACKs (one fabricated, one real)
+    # for one command_id, which is exactly the confusing duplicate-ACK log this was built to prevent.
+    profile = "hardware" if hardware else "simulation"
+    print(f"[🐳] Checking Docker Microservices status (profile: {profile})...")
     try:
         r = subprocess.run([docker_bin, "compose", "ps", "--format", "json"], capture_output=True, text=True, cwd=str(repo_root))
-        if "edgeflow-mqtt" in r.stdout and "edgeflow-dashboard" in r.stdout:
+        already_up = "edgeflow-mqtt" in r.stdout and "edgeflow-dashboard" in r.stdout
+        if already_up:
             print("[✓] Docker Microservices (MQTT, API, Dashboard) are already running.\n")
-            return
-
-        print("[🚀] Starting Docker Stack with 'simulation' profile...")
-        cmd = [docker_bin, "compose", "--profile", "simulation", "up", "-d"]
-        res = subprocess.run(cmd, cwd=str(repo_root))
-        if res.returncode == 0:
-            print("[✓] Docker Microservices started successfully.\n")
         else:
-            print("[!] Warning: Failed to start Docker Compose. Continuing in local mode.\n")
+            print(f"[🚀] Starting Docker Stack with '{profile}' profile...")
+            cmd = [docker_bin, "compose", "--profile", profile, "up", "-d"]
+            res = subprocess.run(cmd, cwd=str(repo_root))
+            if res.returncode == 0:
+                print("[✓] Docker Microservices started successfully.\n")
+            else:
+                print("[!] Warning: Failed to start Docker Compose. Continuing in local mode.\n")
+
+        if hardware and "edgeflow-actuator" in r.stdout:
+            print("[⚡] Hardware mode: stopping the virtual 'actuator' container (it was running from a "
+                  "previous 'simulation'/'vision' run and would double-ACK the real ESP32)...")
+            subprocess.run([docker_bin, "compose", "stop", "actuator"], cwd=str(repo_root))
     except Exception as err:
         print(f"[!] Warning: Docker check encountered error: {err}. Continuing locally.\n")
 
@@ -159,6 +180,9 @@ def run_demo_simulation(
     seed: int,
     sumo_gui_bin: str,
     delay_ms: int = 0,
+    hardware: bool = False,
+    mqtt_host: str = "localhost",
+    mqtt_port: int = 1883,
 ):
     """Execute live TraCI simulation for canonical topologies."""
     import traci
@@ -183,6 +207,12 @@ def run_demo_simulation(
     gui_settings_path = output_dir / "gui-settings.xml"
     if src_gui_settings.exists():
         shutil.copy(src_gui_settings, gui_settings_path)
+        # Copy any decal/background images referenced by gui-settings.xml (relative paths
+        # resolve against the copy's own directory, not the original scenario folder).
+        for img in src_gui_settings.parent.glob("*.jpg"):
+            shutil.copy(img, output_dir / img.name)
+        for img in src_gui_settings.parent.glob("*.png"):
+            shutil.copy(img, output_dir / img.name)
     else:
         gui_settings_path = sumo_configs_dir / "gui-settings.xml"
 
@@ -254,6 +284,72 @@ def run_demo_simulation(
     ctrl_key = controller_name.lower()
     controller = CONTROLLERS.get(ctrl_key, CONTROLLERS.get("max_pressure", CONTROLLERS["edgeflow"]))()
     actuator = ActuatorStateMachine(yellow_duration_s=3.0, all_red_duration_s=2.0)
+
+    # Hardware mirror: ESP32 boards are actuator-only (no sensors, no decisions). The SAME
+    # ControlCommand already applied above to the local ActuatorStateMachine (which drives the
+    # SUMO-GUI light) is also published to the real board over MQTT; it runs its own safety
+    # clearance (yellow/all-red/min/max-green) and reports ControlACK/health back on its own.
+    # This loop never reads that ACK/health back to decide anything -- it is status-only, consumed
+    # by services/api's existing MQTT listener for the dashboard.
+    hw_mqtt_client = None
+    hw_connected = {"value": False}
+    # Per-node real Safe-Stop state, read from the ESP32's OWN health/{node} message (never from
+    # telemetry or any decision logic). This is a pure backoff signal -- "is it worth sending a
+    # command at all" -- not a control input: it never touches `controller`/`actuator`/the SUMO
+    # phase. Without it, every keepalive resend while the button is held gets REJECTED "Safe-stop is
+    # engaged", flooding the ACK log for no reason (the board already told us not to bother).
+    hw_safe_stop: Dict[str, bool] = {}
+    if hardware:
+        try:
+            import paho.mqtt.client as mqtt
+            try:
+                hw_mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, client_id=f"run_demo-hw-mirror-{os.getpid()}")
+            except AttributeError:
+                hw_mqtt_client = mqtt.Client(client_id=f"run_demo-hw-mirror-{os.getpid()}")
+
+            def _on_hw_connect(client, userdata, flags, rc):
+                hw_connected["value"] = (rc == 0)
+                if rc == 0:
+                    print(f"[⚡] Hardware mirror: connected to MQTT broker {mqtt_host}:{mqtt_port}")
+                    client.subscribe(topics.HEALTH_SUB_PATTERN)
+                else:
+                    print(f"[!] Hardware mirror: MQTT connect failed (rc={rc})")
+
+            def _on_hw_disconnect(client, userdata, rc):
+                hw_connected["value"] = False
+                print("[!] Hardware mirror: MQTT connection lost, retrying...")
+
+            def _on_hw_message(client, userdata, msg):
+                try:
+                    payload = json.loads(msg.payload.decode("utf-8"))
+                except Exception:
+                    return
+                nid = payload.get("node_id")
+                if not nid:
+                    return
+                is_stopped = bool(payload.get("safe_stop")) or payload.get("status") == "SAFE_STOP"
+                was_stopped = hw_safe_stop.get(nid, False)
+                hw_safe_stop[nid] = is_stopped
+                if is_stopped and not was_stopped:
+                    print(f"[🛑] Hardware mirror: {nid} reports SAFE_STOP -- pausing ControlCommand to this node until released.")
+                elif was_stopped and not is_stopped:
+                    print(f"[⚡] Hardware mirror: {nid} SAFE_STOP released -- resuming ControlCommand mirror.")
+
+            hw_mqtt_client.on_connect = _on_hw_connect
+            hw_mqtt_client.on_disconnect = _on_hw_disconnect
+            hw_mqtt_client.on_message = _on_hw_message
+            hw_mqtt_client.connect_async(mqtt_host, mqtt_port, keepalive=30)
+            hw_mqtt_client.loop_start()
+            hw_node_ids = [n["node_id"] for n in topology.get("nodes", [])]
+            print(f"[⚡] Hardware-mirrored nodes (every ESP32 actuator for this topology): {', '.join(hw_node_ids)}")
+        except Exception as exc:
+            print(f"[!] Hardware mirror requested but MQTT client init failed: {exc}")
+            hw_mqtt_client = None
+
+    # Per-node throttling for the hardware mirror publish: send immediately on a phase change,
+    # otherwise at most once/second as a keepalive (well under the ESP32's 5s watchdog timeout).
+    last_hw_publish_s: Dict[str, float] = {}
+    last_hw_target: Dict[str, str] = {}
 
     # Sync active topology and controller to Dashboard API
     try:
@@ -488,6 +584,8 @@ def run_demo_simulation(
                     "current_phase_id": active_phase,
                     "status": "ONLINE",
                     "approaches": canonical_approaches,
+                    "hardware_mirror": hardware,
+                    "hardware_mqtt_connected": bool(hardware and hw_mqtt_client is not None and hw_connected["value"]),
                 }
                 step_telemetries.append(telemetry)
 
@@ -497,18 +595,36 @@ def run_demo_simulation(
                     topology=topology,
                     current_time_s=t,
                 )
+                if cmd and hw_mqtt_client is not None and hw_connected["value"] and not hw_safe_stop.get(nid):
+                    target = cmd.get("target_phase_id")
+                    changed = last_hw_target.get(nid) != target
+                    if changed or (now_wall_s - last_hw_publish_s.get(nid, -999.0)) >= 1.0:
+                        try:
+                            hw_mqtt_client.publish(topics.get_command_topic(nid), json.dumps(cmd), qos=0)
+                            last_hw_publish_s[nid] = now_wall_s
+                            last_hw_target[nid] = target
+                        except Exception:
+                            pass
                 if cmd:
                     ack = actuator.process_command(cmd, now=t)
                     # Only record control ACK on actual phase transition to avoid flooding HTTP queue
                     if ack and getattr(node_state, "state_start_time", -1.0) == t:
                         try:
-                            ack_payload = ack.to_dict() if hasattr(ack, "to_dict") else {
-                                "command_id": getattr(ack, "command_id", f"cmd-{nid}-{t}"),
-                                "node_id": nid,
-                                "status": getattr(ack, "status", "APPLIED"),
-                                "reason": getattr(ack, "reason", "Phase command executed."),
-                                "timestamp_ms": int(time.time() * 1000)
-                            }
+                            # ack is already a plain ControlACK dict (command_id, node_id, status,
+                            # reason, ...) from ActuatorStateMachine._ack() -- use it as-is. The old
+                            # `getattr(ack, "status", ...)` here never worked on a dict (getattr reads
+                            # object attributes, not keys), so every local ACK silently reported the
+                            # fallback "APPLIED"/"Phase command executed." regardless of what actually
+                            # happened (REJECTED/EXPIRED reasons were swallowed).
+                            ack_payload = dict(ack) if isinstance(ack, dict) else (
+                                ack.to_dict() if hasattr(ack, "to_dict") else {
+                                    "command_id": f"cmd-{nid}-{t}",
+                                    "node_id": nid,
+                                    "status": "APPLIED",
+                                    "reason": "Phase command executed.",
+                                    "timestamp_ms": int(time.time() * 1000)
+                                }
+                            )
                             telemetry_queue.put_nowait(("control_ack", ack_payload))
                         except queue.Full:
                             pass
@@ -562,6 +678,12 @@ def run_demo_simulation(
             traci.close()
         except Exception:
             pass
+        if hw_mqtt_client is not None:
+            try:
+                hw_mqtt_client.loop_stop()
+                hw_mqtt_client.disconnect()
+            except Exception:
+                pass
 
     # Parse and compute metrics
     print("\n[📊] Calculating emission & trip performance metrics...")
@@ -632,6 +754,14 @@ def main():
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--delay", type=int, default=0, help="SUMO-GUI step delay in milliseconds (0 for max speed / instant, 20 for fast/smooth, 100 for slow)")
     parser.add_argument("--skip-docker", action="store_true", help="Skip Docker compose initialization")
+    parser.add_argument("--hardware", action="store_true",
+                         help="Mirror every ControlCommand to real ESP32 actuator boards over MQTT "
+                              "(e.g. tabletop_j1_j2_v1 J1/J2). ESP32 is actuator-only: it executes the "
+                              "command and safety timing itself; this process remains the sole decision brain.")
+    parser.add_argument("--mqtt-host", type=str, default=os.environ.get("MQTT_HOST", "localhost"),
+                         help="MQTT broker host for --hardware (default: $MQTT_HOST or localhost)")
+    parser.add_argument("--mqtt-port", type=int, default=int(os.environ.get("MQTT_PORT", "1883")),
+                         help="MQTT broker port for --hardware (default: $MQTT_PORT or 1883)")
 
     args = parser.parse_args()
 
@@ -642,10 +772,11 @@ def main():
     seed = args.seed
     delay_ms = args.delay
 
-    print_banner(topology_id, scenario_id, controller_name, duration_s)
+    print_banner(topology_id, scenario_id, controller_name, duration_s,
+                 hardware=args.hardware, mqtt_host=args.mqtt_host, mqtt_port=args.mqtt_port)
 
     # 1. Ensure Docker Microservices
-    ensure_docker_services(skip_docker=args.skip_docker)
+    ensure_docker_services(skip_docker=args.skip_docker, hardware=args.hardware)
 
     # 2. Find SUMO-GUI executable
     sumo_gui_bin = find_sumo_gui_binary()
@@ -659,6 +790,9 @@ def main():
         seed=seed,
         sumo_gui_bin=sumo_gui_bin,
         delay_ms=delay_ms,
+        hardware=args.hardware,
+        mqtt_host=args.mqtt_host,
+        mqtt_port=args.mqtt_port,
     )
 
 

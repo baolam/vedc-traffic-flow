@@ -62,20 +62,8 @@ const TopologyMap = ({
       };
     }
 
-    // 1b. Standard positions for the sa ban tabletop corridor (J1 west, J2 east) — the
-    // contract has no x/y, so without this it falls through to the generic auto-grid below.
-    if (total === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id))) {
-      const byId = Object.fromEntries(rawNodes.map(n => [n.node_id, n]));
-      return {
-        nodePositions: {
-          J1: { x: 220, y: 250, name: byId.J1?.name || "Intersection 1", street_name: byId.J1?.street_name || "Sa Ban Corridor (West)" },
-          J2: { x: 540, y: 250, name: byId.J2?.name || "Intersection 2", street_name: byId.J2?.street_name || "Sa Ban Corridor (East)" }
-        },
-        projectionMeta: null
-      };
-    }
-
-    // 2. Exact SUMO XY coordinate projection (used for hcm_corridor and other real maps)
+    // 2. Exact SUMO XY coordinate projection (used for hcm_corridor, the sa ban tabletop
+    // corridor (J1/J2), and any other topology whose contract carries real x/y)
     const hasXY = rawNodes.some(n => n.x != null && n.y != null);
     if (hasXY && total > 0) {
       const xs = rawNodes.map(n => n.x != null ? Number(n.x) : 0);
@@ -299,6 +287,148 @@ const TopologyMap = ({
     );
   }
 
+  const isTabletop = useMemo(() => {
+    const tid = String(topology?.topology_id || '').toLowerCase();
+    return tid.includes('tabletop') || (rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id)));
+  }, [topology, rawNodes]);
+
+  const renderTabletopMat = () => {
+    const renderZebraHorizontal = (cx, y) => {
+      const startX = cx - 31.5;
+      return Array.from({ length: 8 }).map((_, i) => (
+        <rect 
+          key={`zh-${cx}-${y}-${i}`} 
+          x={startX + i * 8} 
+          y={y} 
+          width="5" 
+          height="16" 
+          fill="#F0F0EC" 
+          rx="0.5"
+        />
+      ));
+    };
+
+    const renderZebraVertical = (x, cy) => {
+      const startY = cy - 31.5;
+      return Array.from({ length: 8 }).map((_, i) => (
+        <rect 
+          key={`zv-${x}-${cy}-${i}`} 
+          x={x} 
+          y={startY + i * 8} 
+          width="16" 
+          height="5" 
+          fill="#F0F0EC" 
+          rx="0.5"
+        />
+      ));
+    };
+
+    return (
+      <g id="tabletop-sa-ban-layer" style={{ pointerEvents: 'none' }}>
+        {/* Soft shadow under the mat */}
+        <rect x="26" y="66" width="708" height="368" rx="12" fill="#0f172a" opacity="0.12" />
+
+        {/* Outer Mat Canvas (700x360, matching 1200x600 mm physical tabletop) */}
+        <rect x="30" y="70" width="700" height="360" rx="10" fill="#80A568" stroke="#5b784a" strokeWidth="2.5" />
+
+        {/* Sidewalk border layer (#D6D2C8) */}
+        <rect x="30" y="208" width="700" height="84" fill="#D6D2C8" />
+        <rect x="163" y="70" width="84" height="360" fill="#D6D2C8" />
+        <rect x="513" y="70" width="84" height="360" fill="#D6D2C8" />
+
+        {/* Asphalt road surface (#3E4044) */}
+        <rect x="30" y="216" width="700" height="68" fill="#3E4044" />
+        <rect x="171" y="70" width="68" height="360" fill="#3E4044" />
+        <rect x="521" y="70" width="68" height="360" fill="#3E4044" />
+
+        {/* Lane Centerlines (dashed #F0F0EC) */}
+        <line x1="32" y1="250" x2="150" y2="250" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+        <line x1="260" y1="250" x2="500" y2="250" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+        <line x1="610" y1="250" x2="728" y2="250" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+        <line x1="205" y1="72" x2="205" y2="190" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+        <line x1="205" y1="310" x2="205" y2="428" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+        <line x1="555" y1="72" x2="555" y2="190" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+        <line x1="555" y1="310" x2="555" y2="428" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="16,10" />
+
+        {/* Crosswalk Zebra Stripes (#F0F0EC) */}
+        {renderZebraHorizontal(205, 194)}
+        {renderZebraHorizontal(205, 290)}
+        {renderZebraVertical(154, 250)}
+        {renderZebraVertical(238, 250)}
+
+        {renderZebraHorizontal(555, 194)}
+        {renderZebraHorizontal(555, 290)}
+        {renderZebraVertical(504, 250)}
+        {renderZebraVertical(588, 250)}
+
+        {/* Stop Lines (solid #F0F0EC, 3.5px thick) */}
+        {/* J1: North inbound (west lane) */}
+        <rect x="171" y="190" width="34" height="3.5" fill="#F0F0EC" />
+        {/* J1: South inbound (east lane) */}
+        <rect x="205" y="306.5" width="34" height="3.5" fill="#F0F0EC" />
+        {/* J1: West inbound (south lane) */}
+        <rect x="150.5" y="250" width="3.5" height="34" fill="#F0F0EC" />
+        {/* J1: East inbound (north lane, coming from J2) */}
+        <rect x="254" y="216" width="3.5" height="34" fill="#F0F0EC" />
+
+        {/* J2: North inbound (west lane) */}
+        <rect x="521" y="190" width="34" height="3.5" fill="#F0F0EC" />
+        {/* J2: South inbound (east lane) */}
+        <rect x="555" y="306.5" width="34" height="3.5" fill="#F0F0EC" />
+        {/* J2: West inbound (south lane, coming from J1) */}
+        <rect x="500.5" y="250" width="3.5" height="34" fill="#F0F0EC" />
+        {/* J2: East inbound (north lane) */}
+        <rect x="604" y="216" width="3.5" height="34" fill="#F0F0EC" />
+
+        {/* J1 Badge & Compass Box (NW of J1) */}
+        <rect x="80" y="148" width="54" height="34" rx="7" fill="#FAFAF8" stroke="#282828" strokeWidth="1.5" />
+        <text x="107" y="165" fontSize="19" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J1</text>
+        <path d="M 68 156 L 73 167 L 63 167 Z" fill="#F7F7F2" />
+        <text x="68" y="177" fontSize="9" fontWeight="800" fill="#F7F7F2" textAnchor="middle" dominantBaseline="central">B</text>
+
+        {/* J2 Badge & Compass Box (NE of J2) */}
+        <rect x="626" y="148" width="54" height="34" rx="7" fill="#FAFAF8" stroke="#282828" strokeWidth="1.5" />
+        <text x="653" y="165" fontSize="19" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J2</text>
+        <path d="M 692 156 L 697 167 L 687 167 Z" fill="#F7F7F2" />
+        <text x="692" y="177" fontSize="9" fontWeight="800" fill="#F7F7F2" textAnchor="middle" dominantBaseline="central">B</text>
+
+        {/* Equipment Footprints & Labels (matching Image 2 & SA_BAN_BAT_1200x600.html) */}
+        {/* J1 MDF Base 200x200 */}
+        <rect x="250" y="78" width="112" height="112" fill="none" stroke="#222831" strokeWidth="0.8" strokeDasharray="4 3" />
+        <text x="306" y="88" fontSize="6.8" fontWeight="700" fill="#222831" textAnchor="middle" letterSpacing="0.3">ĐẾ TRỤ MDF 200 × 200</text>
+        <rect x="264" y="165" width="14" height="14" fill="none" stroke="#222831" strokeWidth="0.8" />
+        <text x="271" y="172" fontSize="5" fontWeight="700" fill="#222831" textAnchor="middle" dominantBaseline="central">TRỤ</text>
+
+        {/* J2 MDF Base 200x200 */}
+        <rect x="398" y="78" width="112" height="112" fill="none" stroke="#222831" strokeWidth="0.8" strokeDasharray="4 3" />
+        <text x="454" y="88" fontSize="6.8" fontWeight="700" fill="#222831" textAnchor="middle" letterSpacing="0.3">ĐẾ TRỤ MDF 200 × 200</text>
+        <rect x="482" y="165" width="14" height="14" fill="none" stroke="#222831" strokeWidth="0.8" />
+        <text x="489" y="172" fontSize="5" fontWeight="700" fill="#222831" textAnchor="middle" dominantBaseline="central">TRỤ</text>
+
+        {/* ESP32 J1 (South grass) */}
+        <rect x="278" y="318" width="72" height="98" rx="4" fill="#C9C5BC" stroke="#8F8B83" strokeWidth="0.8" />
+        <text x="314" y="328" fontSize="7" fontWeight="700" fill="#4A4741" textAnchor="middle">ESP32 · J1</text>
+        <rect x="260" y="390" width="16" height="24" rx="2" fill="#C9C5BC" stroke="#8F8B83" strokeWidth="0.8" />
+        <text x="268" y="402" fontSize="5" fontWeight="700" fill="#4A4741" textAnchor="middle" dominantBaseline="central">X1</text>
+
+        {/* ESP32 J2 (South grass) */}
+        <rect x="410" y="318" width="72" height="98" rx="4" fill="#C9C5BC" stroke="#8F8B83" strokeWidth="0.8" />
+        <text x="446" y="328" fontSize="7" fontWeight="700" fill="#4A4741" textAnchor="middle">ESP32 · J2</text>
+
+        {/* Pi 5 (SE grass) */}
+        <rect x="646" y="348" width="66" height="48" rx="4" fill="#C9C5BC" stroke="#8F8B83" strokeWidth="0.8" />
+        <text x="679" y="372" fontSize="6.8" fontWeight="700" fill="#4A4741" textAnchor="middle" dominantBaseline="central">AI BIÊN · PI 5</text>
+
+        {/* Title & Scale Bar (SW grass) */}
+        <text x="48" y="408" fontSize="9.5" fontWeight="800" fill="#F7F7F2">EdgeFlow AI · VEDC 2026 · đội 31μF</text>
+        <line x1="48" y1="418" x2="108" y2="418" stroke="#F7F7F2" strokeWidth="2" />
+        <line x1="48" y1="415" x2="48" y2="421" stroke="#F7F7F2" strokeWidth="1.5" />
+        <line x1="108" y1="415" x2="108" y2="421" stroke="#F7F7F2" strokeWidth="1.5" />
+        <text x="114" y="418" fontSize="6.5" fontWeight="700" fill="#F7F7F2" dominantBaseline="central">100 mm</text>
+      </g>
+    );
+  };
+
   const activeFocusNode = selectedNodeId || hoveredNode;
   const activeFocusData = activeFocusNode ? (nodesData[activeFocusNode] || null) : null;
 
@@ -331,6 +461,21 @@ const TopologyMap = ({
           <span style={{ color: '#64748b' }}>
             Lanes: <strong>{edgesToDraw.length} Directed Links</strong>
           </span>
+          {isTabletop && (
+            <span style={{ 
+              backgroundColor: '#dcfce7', 
+              color: '#15803d', 
+              padding: '2px 8px', 
+              borderRadius: '4px', 
+              fontWeight: 700,
+              fontSize: '0.74rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              🌿 Sa Bàn Bạt 1200 × 600 mm (đội 31μF)
+            </span>
+          )}
           {selectedNodeId && (
             <span style={{ 
               backgroundColor: '#e0f2fe', 
@@ -527,6 +672,9 @@ const TopologyMap = ({
           {/* Transform group for Pan & Zoom */}
           <g transform={`translate(${pan.x + (1 - zoom) * 380}, ${pan.y + (1 - zoom) * 250}) scale(${zoom})`}>
             
+            {/* Tabletop Sa Bàn Overlay (Image 2 exact 1200x600 mm layout) */}
+            {isTabletop && renderTabletopMat()}
+
             {/* Draw Directed Edges & SUMO Roads */}
             {showEdges && edgesToDraw.map((edge) => {
               const p1 = nodePositions[edge.src];
@@ -566,28 +714,41 @@ const TopologyMap = ({
                 );
               }
 
+              let lx1 = p1.x, ly1 = p1.y, lx2 = p2.x, ly2 = p2.y;
+              if (isTabletop) {
+                if (edge.src === 'J1' && edge.tgt === 'J2') {
+                  // Eastbound: lower lane in right-hand traffic
+                  ly1 = 266; ly2 = 266; lx1 = 238; lx2 = 520;
+                } else if (edge.src === 'J2' && edge.tgt === 'J1') {
+                  // Westbound: upper lane in right-hand traffic
+                  ly1 = 234; ly2 = 234; lx1 = 522; lx2 = 240;
+                }
+              }
+
               return (
                 <g key={edge.key}>
-                  {/* Subtle edge road bed */}
-                  <line
-                    x1={p1.x}
-                    y1={p1.y}
-                    x2={p2.x}
-                    y2={p2.y}
-                    stroke={isConnectedToFocus ? "#38bdf8" : "#cbd5e1"}
-                    strokeWidth={isConnectedToFocus ? "3.5" : totalCount > 30 ? "1.4" : "1.8"}
-                    opacity={isConnectedToFocus ? 0.95 : hasActiveFocus ? 0.25 : 0.55}
-                  />
+                  {/* Subtle edge road bed (hidden on tabletop where asphalt is already drawn) */}
+                  {!isTabletop && (
+                    <line
+                      x1={lx1}
+                      y1={ly1}
+                      x2={lx2}
+                      y2={ly2}
+                      stroke={isConnectedToFocus ? "#38bdf8" : "#cbd5e1"}
+                      strokeWidth={isConnectedToFocus ? "3.5" : totalCount > 30 ? "1.4" : "1.8"}
+                      opacity={isConnectedToFocus ? 0.95 : hasActiveFocus ? 0.25 : 0.55}
+                    />
+                  )}
                   {/* Directional flow lane with marker */}
                   <line
-                    x1={p1.x}
-                    y1={p1.y}
-                    x2={p2.x}
-                    y2={p2.y}
-                    stroke={isConnectedToFocus ? "#0284c7" : "#0284c7"}
-                    strokeWidth={isConnectedToFocus ? "2.2" : totalCount > 30 ? "1" : "1.3"}
-                    strokeDasharray={totalCount > 20 ? "none" : "5,3"}
-                    opacity={isConnectedToFocus ? 1.0 : hasActiveFocus ? 0.3 : 0.7}
+                    x1={lx1}
+                    y1={ly1}
+                    x2={lx2}
+                    y2={ly2}
+                    stroke={isConnectedToFocus ? "#38bdf8" : isTabletop ? "#38bdf8" : "#0284c7"}
+                    strokeWidth={isTabletop ? "2.4" : isConnectedToFocus ? "2.2" : totalCount > 30 ? "1" : "1.3"}
+                    strokeDasharray={totalCount > 20 && !isTabletop ? "none" : "5,3"}
+                    opacity={isConnectedToFocus ? 1.0 : hasActiveFocus ? 0.35 : 0.85}
                     markerEnd={isConnectedToFocus ? "url(#traffic-arrow-highlight)" : "url(#traffic-arrow)"}
                   />
                 </g>

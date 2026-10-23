@@ -70,6 +70,33 @@ def test_fallback_mode_is_visible_but_not_a_fault():
     assert health["overall_status"] == "FALLBACK"
 
 
+def _sumo_telemetry(confidence=1.0):
+    """run_demo.py --hardware: telemetry still comes from SUMO (source_type simulation), but a REAL
+    ESP32 is mirrored and answers over MQTT health -- its status must not be hidden by sim mode."""
+    t = _telemetry(confidence)
+    t["source_type"] = "simulation"
+    return t
+
+
+def test_hardware_mirrored_safe_stop_surfaces_through_simulation_telemetry():
+    """Regression: compute_node_device_health() used to short-circuit the whole actuator block to
+    ACTIVE whenever source_type == "simulation", hiding a real ESP32's SAFE_STOP/HEARTBEAT_LOST/
+    FALLBACK during a run_demo.py --hardware run (telemetry is simulated, the board is real)."""
+    _esp32(safe_stop=True, status="SAFE_STOP")
+    health = compute_node_device_health("J1", _sumo_telemetry(), NOW_MS)
+    assert health["actuator"]["status"] == "SAFE_STOP"
+    assert health["overall_status"] == "ACTUATOR_FAULT"
+    # Camera half still reads as simulated/active: there is no real camera to lose signal on.
+    assert health["camera"]["status"] == "ACTIVE"
+
+
+def test_hardware_mirrored_heartbeat_lost_surfaces_through_simulation_telemetry():
+    _esp32(status="OFFLINE")
+    health = compute_node_device_health("J1", _sumo_telemetry(), NOW_MS)
+    assert health["actuator"]["status"] == "HEARTBEAT_LOST"
+    assert health["overall_status"] == "ACTUATOR_FAULT"
+
+
 def test_heartbeat_age_uses_receive_time_not_device_clock():
     """An ESP32 whose SNTP clock is hours off still counts as alive when its messages arrive (G3)."""
     _esp32(timestamp_ms=NOW_MS - 3 * 3600 * 1000, _ingested_at_ms=NOW_MS - 1000)

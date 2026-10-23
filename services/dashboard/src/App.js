@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import SafeStopOverlay from './components/SafeStopOverlay';
 import NetworkOverview from './pages/NetworkOverview';
 import IntersectionDetail from './pages/IntersectionDetail';
 import ControlPanel from './pages/ControlPanel';
@@ -12,6 +13,7 @@ import './App.css';
 function App() {
   return (
     <BrowserRouter>
+      <SafeStopOverlay />
       <div className="app-container">
         <Sidebar />
         <div className="main-content">

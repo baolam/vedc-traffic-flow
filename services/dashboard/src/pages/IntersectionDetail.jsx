@@ -233,6 +233,7 @@ const IntersectionDetail = () => {
   const overrideBanner = overrideError || describeOverride(manualOverride);
   const overrideBusy = Boolean(manualOverride && OVERRIDE_IN_PROGRESS.includes(manualOverride.status));
   const liveClearance = deviceHealth?.actuator?.clearance;
+  const isSafeStop = deviceHealth?.actuator?.status === 'SAFE_STOP';
 
   const appStats = useMemo(() => nodeTelemetry?.approaches || [], [nodeTelemetry]);
   const sourceType = nodeTelemetry?.source_type || 'system';
@@ -464,7 +465,11 @@ const IntersectionDetail = () => {
           </div>
 
           <div style={{ backgroundColor: '#ffffff', padding: '10px 18px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-            <PhaseIndicator activePhase={activePhase} state={liveClearance === 'YELLOW' || liveClearance === 'ALL_RED' ? liveClearance : 'GREEN'} />
+            <PhaseIndicator
+              activePhase={activePhase}
+              state={liveClearance === 'YELLOW' || liveClearance === 'ALL_RED' ? liveClearance : 'GREEN'}
+              safeStop={isSafeStop}
+            />
           </div>
         </div>
       </div>
@@ -517,6 +522,57 @@ const IntersectionDetail = () => {
         </div>
       )}
 
+      {/* Hardware Mirror status: run_demo.py --hardware is mirroring every ControlCommand to a real
+          ESP32 actuator over MQTT. The ESP32 only executes + ACKs; it never decides the phase, so this
+          banner is purely informational (connection + latest ACK), never a control-loop indicator. */}
+      {nodeTelemetry?.hardware_mirror && (
+        <div style={{
+          backgroundColor: nodeTelemetry?.hardware_mqtt_connected ? '#f0fdf4' : '#fffbeb',
+          border: `2px solid ${nodeTelemetry?.hardware_mqtt_connected ? '#16a34a' : '#f59e0b'}`,
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          color: nodeTelemetry?.hardware_mqtt_connected ? '#166534' : '#92400e',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <Radio size={26} color={nodeTelemetry?.hardware_mqtt_connected ? '#16a34a' : '#f59e0b'} />
+            <div>
+              <div style={{ fontSize: '1.0rem', fontWeight: 800 }}>
+                {nodeTelemetry?.hardware_mqtt_connected
+                  ? `⚡ MIRROR SANG ESP32 THẬT (${nodeId}) — Đang kết nối MQTT`
+                  : `⚡ HARDWARE MIRROR BẬT (${nodeId}) — chưa kết nối được broker MQTT`}
+              </div>
+              <div style={{ fontSize: '0.84rem', fontWeight: 500, marginTop: '2px' }}>
+                {nodeTelemetry?.hardware_mqtt_connected
+                  ? 'ESP32 chỉ chấp hành: nhận đúng lệnh mà bộ điều khiển đang dùng cho đèn mô phỏng, tự chạy an toàn (vàng 3s + đỏ 2s) và báo ACK/health riêng.'
+                  : 'run_demo.py chạy với --hardware nhưng MQTT client chưa nối được broker. ESP32 sẽ không nhận lệnh cho tới khi kết nối lại.'}
+              </div>
+            </div>
+          </div>
+          <div style={{
+            fontSize: '0.8rem',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontWeight: 800,
+            backgroundColor: '#ffffff',
+            color: nodeTelemetry?.hardware_mqtt_connected ? '#16a34a' : '#92400e',
+            border: `1.5px solid ${nodeTelemetry?.hardware_mqtt_connected ? '#86efac' : '#fcd34d'}`,
+            padding: '6px 14px',
+            borderRadius: '8px',
+            whiteSpace: 'nowrap'
+          }}>
+            {/* controlAcks only (never displayAcks/defaultAckLogs): that fallback is fabricated
+                placeholder data for the log list below, not real evidence of an ESP32 reply. */}
+            {controlAcks?.[0]
+              ? `ACK: ${controlAcks[0].status} — ${controlAcks[0].target_phase_id || activePhase}`
+              : 'Chưa nhận ACK thật từ ESP32'}
+          </div>
+        </div>
+      )}
+
       {/* Hardware Signal & Fail-Safe Monitor Banner */}
       {(nodeTelemetry?.status === 'SIGNAL_LOST' || 
         nodeTelemetry?.status === 'CAMERA_FAULT' || 
@@ -526,31 +582,35 @@ const IntersectionDetail = () => {
         deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' || 
         deviceHealth?.actuator?.status === 'SAFE_STOP') && (
         <div style={{
-          backgroundColor: '#fef2f2',
-          border: '2px solid #ef4444',
+          backgroundColor: isSafeStop ? '#fffbeb' : '#fef2f2',
+          border: `2px solid ${isSafeStop ? '#f59e0b' : '#ef4444'}`,
           borderRadius: '12px',
           padding: '16px 20px',
           marginBottom: '24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          color: '#991b1b',
-          boxShadow: '0 4px 14px rgba(239, 68, 68, 0.12)'
+          color: isSafeStop ? '#92400e' : '#991b1b',
+          boxShadow: `0 4px 14px ${isSafeStop ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)'}`
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <AlertTriangle size={28} color="#dc2626" />
+            <AlertTriangle size={28} color={isSafeStop ? '#d97706' : '#dc2626'} />
             <div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>
-                CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG ({nodeId})
+                {isSafeStop
+                  ? `🛑 NÚT DỪNG KHẨN CẤP (SAFE-STOP) ĐANG ĐƯỢC NHẤN (${nodeId})`
+                  : `CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG (${nodeId})`}
               </div>
-              <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: '#7f1d1d' }}>
-                {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
+              <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: isSafeStop ? '#78350f' : '#7f1d1d' }}>
+                {isSafeStop
+                  ? 'Nút an toàn trên board đang bị giữ: cả hai hướng đèn nhấp nháy vàng, mọi ControlCommand (tự động hoặc tay) đều bị ESP32 từ chối. Đây là hành động chủ ý của người vận hành, không phải lỗi thiết bị. Nhả nút → ALL_RED 2 s → trở lại xanh bình thường.'
+                  : deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
                   ? 'Không nhận nhịp tim thiết bị quá 6 s (mất nguồn hoặc mạng). Nếu thiết bị vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
                   ? 'Camera/video không cho quan sát (độ tin cậy 0). Graph-control ngừng gửi lệnh cho nút này; sau 5 s thiết bị tự chạy chu kỳ cố định 15 s/pha.'
                   : (deviceHealth?.camera?.status === 'SIGNAL_LOST' || nodeTelemetry?.status === 'SIGNAL_LOST')
                   ? 'Không nhận telemetry quá 3,5 s (dịch vụ vision hoặc mạng). Không có telemetry thì graph-control không ra lệnh; sau 5 s thiết bị tự chạy chu kỳ cố định.'
-                  : 'Phần cứng Actuator đang trong chế độ Safe-Stop hoặc chờ xác thực an toàn.'}
+                  : 'Phần cứng Actuator đang chờ xác thực an toàn.'}
               </div>
             </div>
           </div>
@@ -559,8 +619,8 @@ const IntersectionDetail = () => {
             fontFamily: 'JetBrains Mono, monospace',
             fontWeight: 800,
             backgroundColor: '#ffffff',
-            color: '#dc2626',
-            border: '1.5px solid #f87171',
+            color: isSafeStop ? '#d97706' : '#dc2626',
+            border: `1.5px solid ${isSafeStop ? '#fcd34d' : '#f87171'}`,
             padding: '6px 14px',
             borderRadius: '8px',
             textTransform: 'uppercase'

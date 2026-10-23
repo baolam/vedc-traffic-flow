@@ -203,6 +203,11 @@ def ingest_health_message(topic: str, payload: Dict[str, Any]) -> None:
     LIVE_STATE.setdefault("health", {})[svc_id] = payload
     event_msg = {
         "timestamp": time.strftime("%H:%M:%S"),
+        # Server/container local time can differ from the operator's browser timezone (e.g. a
+        # Docker image defaulting to UTC vs. the operator in UTC+7) and "timestamp" above would then
+        # look wrong on screen. timestamp_ms is an unambiguous UTC epoch the dashboard formats itself
+        # with the browser's own timezone; "timestamp" stays only as a non-browser fallback.
+        "timestamp_ms": now_ms,
         "service": "HEALTH",
         "source": svc_id,
         "target": "SYSTEM",
@@ -287,15 +292,17 @@ def _start_mqtt_listener():
                 payload = json.loads(msg.payload.decode("utf-8"))
                 topic = msg.topic
                 now_str = time.strftime("%H:%M:%S")
+                now_ms = int(time.time() * 1000)
 
                 if topic.startswith(f"{topics.PREFIX_V1}/telemetry/"):
                     node_id = payload.get("node_id") or topic.split("/")[-1]
-                    payload["_ingested_at_ms"] = int(time.time() * 1000)
+                    payload["_ingested_at_ms"] = now_ms
                     LIVE_STATE["nodes"][node_id] = payload
-                    LIVE_STATE["last_updated_ms"] = int(time.time() * 1000)
+                    LIVE_STATE["last_updated_ms"] = now_ms
                     total_q = sum(a.get("queue_vehicles", 0) for a in payload.get("approaches", []))
                     event_msg = {
                         "timestamp": now_str,
+                        "timestamp_ms": now_ms,
                         "service": "SIMULATOR",
                         "source": "SIMULATOR/VISION",
                         "target": "MQTT",
@@ -313,6 +320,7 @@ def _start_mqtt_listener():
                     node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
                     event_msg = {
                         "timestamp": now_str,
+                        "timestamp_ms": now_ms,
                         "service": "GRAPH-CONTROL",
                         "source": "GRAPH-CONTROL",
                         "target": "ACTUATOR",
@@ -334,6 +342,7 @@ def _start_mqtt_listener():
                         track_override_ack(node_id, payload)
                     event_msg = {
                         "timestamp": now_str,
+                        "timestamp_ms": now_ms,
                         "service": "ACTUATOR",
                         "source": "ACTUATOR",
                         "target": "SYSTEM",
@@ -514,24 +523,14 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
     all_zero_conf = bool(approaches) and all(a.get("confidence", 1.0) <= 0.0 for a in approaches)
     avg_conf = (sum(a.get("confidence", 1.0) for a in approaches) / len(approaches)) if approaches else 0.0
 
-    # Simulation mode: fully simulated, never degrades to hardware SIGNAL_LOST or ACTUATOR_FAULT
+    # Simulation mode telemetry (SUMO / virtual sensor) has no real camera to lose signal on, so the
+    # CAMERA half never degrades to SIGNAL_LOST/ZERO_CONFIDENCE for it. The ACTUATOR half must NOT be
+    # short-circuited here though: run_demo.py --hardware mirrors ControlCommand to a REAL ESP32 while
+    # still reporting source_type "simulation" (the telemetry itself comes from SUMO, not a camera) --
+    # that board's genuine SAFE_STOP/HEARTBEAT_LOST/FALLBACK health must still surface on the dashboard.
     if source_type == "simulation":
-        return {
-            "overall_status": node_live.get("status", "ONLINE"),
-            "camera": {
-                "status": "ACTIVE",
-                "confidence": round(avg_conf, 2),
-                "last_seen_ms_ago": age_ms,
-                "zero_confidence": all_zero_conf
-            },
-            "actuator": {
-                "status": "ACTIVE",
-                "last_heartbeat_ms_ago": 0,
-                "clearance": "GREEN"
-            }
-        }
-
-    if age_ms is None or age_ms > TELEMETRY_STALE_TIMEOUT_MS:
+        camera_status = "ACTIVE"
+    elif age_ms is None or age_ms > TELEMETRY_STALE_TIMEOUT_MS:
         camera_status = "SIGNAL_LOST"
     elif all_zero_conf:
         camera_status = "ZERO_CONFIDENCE"
@@ -880,21 +879,25 @@ def get_system_aggregated_reports():
                 "message": f"Station {nid} health state: {status}"
             })
 
+    _default_logs_now_ms = int(time.time() * 1000)
     default_system_logs = [
         {
             "timestamp": time.strftime("%H:%M:%S"),
+            "timestamp_ms": _default_logs_now_ms,
             "service": "graph-control",
             "level": "INFO",
             "message": f"Active controller policy: {LIVE_STATE['active_controller'].upper()} on topology {LIVE_STATE['active_topology_id']}"
         },
         {
             "timestamp": time.strftime("%H:%M:%S"),
+            "timestamp_ms": _default_logs_now_ms,
             "service": "actuator",
             "level": "INFO",
             "message": "Actuator State Machine: 100% safety compliance verified (0 green conflicts)."
         },
         {
             "timestamp": time.strftime("%H:%M:%S"),
+            "timestamp_ms": _default_logs_now_ms,
             "service": "vision",
             "level": "INFO",
             "message": f"Edge perception online. {online_count}/{total_nodes} nodes broadcasting telemetry."
@@ -1392,5 +1395,13 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.api_host, port=settings.api_port)
+    # docker-compose bind-mounts this file straight into the container (./services/api/main.py ->
+    # /app/main.py), but a plain `uvicorn.run(app, ...)` loads the module once at process start --
+    # editing the file on the host has NO effect until the container is restarted. reload=True (dev
+    # env only) watches the file and respawns the worker automatically, which is what this project
+    # needs since services/api/main.py is iterated on constantly during this build-out.
+    if settings.edgeflow_env == "dev":
+        uvicorn.run("main:app", host=settings.api_host, port=settings.api_port, reload=True)
+    else:
+        uvicorn.run(app, host=settings.api_host, port=settings.api_port)
 

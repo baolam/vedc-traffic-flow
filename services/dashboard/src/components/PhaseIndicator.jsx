@@ -6,13 +6,41 @@ import React from 'react';
  * Accurately displays traffic signal states without creating false alarm styling.
  * Distinguishes normal cyclic RED (conflicting approach waiting) from system alerts.
  */
-const PhaseIndicator = ({ activePhase = "J1_PHASE_NS", state = "GREEN", compact = false }) => {
+const PhaseIndicator = ({ activePhase = "J1_PHASE_NS", state = "GREEN", compact = false, safeStop = false }) => {
   const phaseUpper = String(activePhase || "").toUpperCase();
   // Only the literal NS/EW convention (four_intersection_v1, hcm_realworld_v1) is trustworthy here.
   // Topologies with many phases per node (grid4x4, cologne8: PHASE_1..PHASE_10) fall through to the
   // generic badge below instead of being mislabeled N-S/E-W off a "_1"/"_2" suffix match.
   const isNS = phaseUpper.includes("NS");
   const isEW = phaseUpper.includes("EW");
+
+  // Emergency Safe-Stop button held on the board: firmware freezes its clearance state machine and
+  // flashes BOTH heads yellow (writeHeads('Y'/'-', 'Y'/'-')) instead of showing any normal phase, so
+  // `state`/`clearance` from health (frozen at whatever it was before the press) would be misleading
+  // here. Must be checked before YELLOW/ALL_RED/NS/EW so it always wins.
+  if (safeStop) {
+    return (
+      <div
+        className="safe-stop-flash"
+        title="Nút dừng khẩn cấp (Safe-Stop) đang được nhấn: cả hai hướng nhấp nháy vàng, mọi lệnh bị từ chối"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          padding: '3px 8px',
+          borderRadius: '6px',
+          backgroundColor: '#fef3c7',
+          border: '2px solid #f59e0b',
+          fontSize: '0.72rem',
+          fontWeight: 800,
+          color: '#92400e'
+        }}
+      >
+        <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+        <span>🛑 SAFE-STOP (nhấp nháy vàng)</span>
+      </div>
+    );
+  }
 
   // If in transitional clearance state (YELLOW or ALL_RED)
   if (state === 'YELLOW') {

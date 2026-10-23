@@ -2,11 +2,12 @@
 <viewsettings>
     <scheme name="real_world">
         <opengl perspective="0" antialiasing="1"/>
-        <background backgroundColor="240,240,240"/>
+        <background backgroundColor="128,165,104"/>
         <edges laneEdgeSelection="0" laneShowBorders="1" showLinkDecals="1" showRails="1"/>
-        <vehicles vehicleMode="0" vehicleScale="3.0" vehicleQuality="2" showBikes="1"/>
+        <vehicles vehicleMode="0" vehicleScale="2.5" vehicleQuality="2" showBikes="1"/>
         <junctions drawLinkTLIndex="1" drawLinkJunctionIndex="1"/>
     </scheme>
     <delay value="100"/>
-    <viewport zoom="600" x="200.0" y="200.0"/>
+    <viewport zoom="200" x="300.0" y="150.0"/>
+    <decal file="tabletop_mat.jpg" centerX="300.0" centerY="150.0" width="600.0" height="300.0" layer="-1"/>
 </viewsettings>

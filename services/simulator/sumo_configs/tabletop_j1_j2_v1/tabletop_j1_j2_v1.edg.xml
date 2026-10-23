@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
     <!-- J1 boundary legs (dead-end sa ban approaches: N/S side street, W side street) -->
-    <edge id="J1_N_IN"  from="N1" to="J1" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J1_N_OUT" from="J1" to="N1" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J1_S_IN"  from="S1" to="J1" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J1_S_OUT" from="J1" to="S1" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J1_W_IN"  from="W1" to="J1" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J1_W_OUT" from="J1" to="W1" priority="2" numLanes="1" speed="13.89"/>
+    <edge id="J1_N_IN"  from="N1" to="J1" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J1_N_OUT" from="J1" to="N1" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J1_S_IN"  from="S1" to="J1" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J1_S_OUT" from="J1" to="S1" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J1_W_IN"  from="W1" to="J1" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J1_W_OUT" from="J1" to="W1" priority="2" numLanes="1" speed="11.11"/>
 
     <!-- J2 boundary legs (dead-end sa ban approaches: N/S side street, E side street) -->
-    <edge id="J2_N_IN"  from="N2" to="J2" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J2_N_OUT" from="J2" to="N2" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J2_S_IN"  from="S2" to="J2" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J2_S_OUT" from="J2" to="S2" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J2_E_IN"  from="E2" to="J2" priority="2" numLanes="1" speed="13.89"/>
-    <edge id="J2_E_OUT" from="J2" to="E2" priority="2" numLanes="1" speed="13.89"/>
+    <edge id="J2_N_IN"  from="N2" to="J2" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J2_N_OUT" from="J2" to="N2" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J2_S_IN"  from="S2" to="J2" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J2_S_OUT" from="J2" to="S2" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J2_E_IN"  from="E2" to="J2" priority="2" numLanes="1" speed="11.11"/>
+    <edge id="J2_E_OUT" from="J2" to="E2" priority="2" numLanes="1" speed="11.11"/>
 
     <!-- Shared corridor between J1 and J2 (the main sa ban road) -->
-    <edge id="J2_W_IN" from="J1" to="J2" priority="3" numLanes="1" speed="13.89"/>
-    <edge id="J1_E_IN" from="J2" to="J1" priority="3" numLanes="1" speed="13.89"/>
+    <edge id="J2_W_IN" from="J1" to="J2" priority="3" numLanes="1" speed="11.11"/>
+    <edge id="J1_E_IN" from="J2" to="J1" priority="3" numLanes="1" speed="11.11"/>
 </edges>

@@ -5,6 +5,9 @@
     {
       "node_id": "J1",
       "name": "Intersection 1",
+      "x": 150.0,
+      "y": 150.0,
+      "street_name": "Sa Ban Corridor (West)",
       "approaches": [
         "J1_N_IN",
         "J1_S_IN",
@@ -66,6 +69,9 @@
     {
       "node_id": "J2",
       "name": "Intersection 2",
+      "x": 450.0,
+      "y": 150.0,
+      "street_name": "Sa Ban Corridor (East)",
       "approaches": [
         "J2_N_IN",
         "J2_S_IN",
