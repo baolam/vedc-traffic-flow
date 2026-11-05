@@ -14,10 +14,10 @@ from typing import Dict, Any, List, Optional, Union
 import jsonschema
 
 try:
-    from .models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec
+    from .models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec, SignalFaultEvent
     from .scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
 except ImportError:  # legacy top-level imports
-    from models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec
+    from models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec, SignalFaultEvent
     from scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
 
 

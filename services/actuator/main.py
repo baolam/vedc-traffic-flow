@@ -94,6 +94,27 @@ def main():
             ack_topic = topics.get_ack_topic(node_id)
             client.publish(ack_topic, json.dumps(ack))
             logger.info(f"Command for [{node_id}] -> ACK Status: {ack['status']} ({ack.get('reason', '')})")
+
+            if ack.get("status") in ("REJECTED", "FAILED"):
+                node_obj = actuator.nodes.get(node_id)
+                fault_evt = {
+                    "event_id": f"fault-{node_id}-{int(now * 1000)}",
+                    "node_id": node_id,
+                    "category": "feedback_error",
+                    "fault_code": "ERR_FEEDBACK_MISMATCH",
+                    "severity": "WARNING",
+                    "current_phase": node_obj.current_phase_id if node_obj else None,
+                    "target_phase": payload.get("target_phase_id"),
+                    "clearance_state": node_obj.state if node_obj else None,
+                    "reason": ack.get("reason", ""),
+                    "timestamp_ms": int(now * 1000)
+                }
+                try:
+                    contracts_sdk.validate_payload(fault_evt, "signal_fault_event")
+                    fault_topic = topics.get_signal_fault_topic(node_id, "feedback_error")
+                    client.publish(fault_topic, json.dumps(fault_evt))
+                except Exception as fe:
+                    logger.warning(f"Failed to publish actuator feedback fault: {fe}")
         except Exception as e:
             logger.error(f"Error handling ControlCommand on {msg.topic}: {e}")
 

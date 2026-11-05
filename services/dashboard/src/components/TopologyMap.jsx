@@ -249,6 +249,11 @@ const TopologyMap = ({
     return rawNodes.some(n => n.lat != null && n.lng != null);
   }, [rawNodes]);
 
+  const isTabletop = useMemo(() => {
+    const tid = String(topology?.topology_id || '').toLowerCase();
+    return tid.includes('tabletop') || (rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id)));
+  }, [topology, rawNodes]);
+
   // If map has real-world GPS coordinates (HCM Corridor) and STREET mode is chosen: Render LeafletStreetMap!
   if (hasGeoCoords && mapType === 'STREET') {
     return (
@@ -286,11 +291,6 @@ const TopologyMap = ({
       </div>
     );
   }
-
-  const isTabletop = useMemo(() => {
-    const tid = String(topology?.topology_id || '').toLowerCase();
-    return tid.includes('tabletop') || (rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id)));
-  }, [topology, rawNodes]);
 
   const renderTabletopMat = () => {
     const renderZebraHorizontal = (cx, y) => {

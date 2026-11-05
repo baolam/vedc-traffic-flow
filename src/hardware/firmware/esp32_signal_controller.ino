@@ -36,13 +36,13 @@
 
 // Network & Broker Credentials (override with -D flags in secrets.ini)
 #ifndef WIFI_SSID
-#define WIFI_SSID "Kingshouse A1-2-11-12"
+#define WIFI_SSID "Công Thịnh"
 #endif
 #ifndef WIFI_PASS
-#define WIFI_PASS "kingshouse2018"
+#define WIFI_PASS "cth17122006"
 #endif
 #ifndef MQTT_BROKER
-#define MQTT_BROKER "192.168.101.205" // IP of the host running Mosquitto
+#define MQTT_BROKER "172.20.10.3"
 #endif
 #ifndef NTP_SERVER
 #define NTP_SERVER MQTT_BROKER // e.g. the Pi running chrony (infra/rpi/setup_pi.sh)
@@ -140,6 +140,8 @@ char lastEw = '?';
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
+void publishSignalFault(const char *category, const char *faultCode, const char *severity, const char *reason, const char *targetPhase = nullptr);
+
 // ====================================================================
 // 5. CLOCK HELPERS (UTC via SNTP when available)
 // ====================================================================
@@ -173,6 +175,7 @@ void writeHeads(char ns, char ew, const char *label)
     ns = 'R';
     ew = 'R';
     label = "CONFLICT_GUARD";
+    publishSignalFault("feedback_error", "ERR_CONFLICT_GUARD_TRIGGERED", "CRITICAL", "Conflicting green requested -> forcing ALL_RED");
   }
   // Turn all OFF first (prevent phantom currents), then light the requested colours
   digitalWrite(PIN_NS_RED, LOW);
@@ -372,6 +375,7 @@ void onMqttCommand(char *topic, byte *payload, unsigned int length)
   if (!parsePhaseString(targetPhaseStr, targetPhase))
   {
     publishControlAck(cmdId, targetPhaseStr, "REJECTED", "Unknown target_phase_id for this node");
+    publishSignalFault("feedback_error", "ERR_FEEDBACK_MISMATCH", "WARNING", "Unknown target_phase_id for this node", targetPhaseStr);
     return;
   }
 
@@ -488,6 +492,7 @@ void engageSafeStop(unsigned long now)
 {
   safeStopActive = true;
   Serial.println("[SAFE-STOP] Engaged -> flashing yellow, commands rejected");
+  publishSignalFault("emergency", "ERR_SAFE_STOP_ENGAGED", "CRITICAL", "Safe-stop emergency switch engaged by user");
   if (pendingCommandId.length() > 0)
   {
     publishControlAck(pendingCommandId.c_str(), pendingTargetPhaseStr.c_str(), "FAILED",
@@ -509,6 +514,7 @@ void releaseSafeStop(unsigned long now)
   stateStartTime = now;
   applySignalOutputs(currentPhase, STATE_ALL_RED);
   Serial.println("[SAFE-STOP] Released -> ALL_RED clearance before resuming");
+  publishSignalFault("emergency", "ERR_SAFE_STOP_RELEASED", "INFO", "Safe-stop emergency switch released");
   publishHealth(now);
 }
 
@@ -594,6 +600,7 @@ void loop()
     releaseSafeStop(now);
 
   // 2. WiFi & MQTT Connection Handling (keeps running during safe-stop for health reports)
+  static unsigned long lastWifiRetry = 0;
   if (WiFi.status() == WL_CONNECTED)
   {
     if (!wifiWasConnected)
@@ -604,10 +611,20 @@ void loop()
     maintainMqttConnection(now);
     mqttClient.loop();
   }
-  else if (wifiWasConnected)
+  else
   {
-    wifiWasConnected = false;
-    Serial.println("[WiFi] Connection lost -> retrying (auto-reconnect)");
+    if (wifiWasConnected)
+    {
+      wifiWasConnected = false;
+      Serial.println("[WiFi] Connection lost -> retrying (auto-reconnect)");
+    }
+    if (now - lastWifiRetry > 3000)
+    {
+      lastWifiRetry = now;
+      Serial.printf("[WiFi] Connecting (status=%d)...\n", WiFi.status());
+      WiFi.disconnect();
+      WiFi.begin(WIFI_SSID, WIFI_PASS);
+    }
   }
 
   // onMqttCommand() runs inside mqttClient.loop() and stamps stateStartTime with a newer millis().
@@ -669,6 +686,7 @@ void loop()
       {
         isLocalFallbackMode = true;
         Serial.println("[WATCHDOG] Coordinator timeout > 5.0s -> Switched to Autonomous Fallback Schedule");
+        publishSignalFault("disconnect", "ERR_COORDINATOR_TIMEOUT", "WARNING", "Coordinator timeout > 5.0s -> Switched to Autonomous Fallback Schedule");
         publishHealth(now);
       }
 

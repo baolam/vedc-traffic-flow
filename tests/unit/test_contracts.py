@@ -115,3 +115,48 @@ def test_one_word_topology_names_and_aliases():
 
 
 
+
+def test_signal_fault_topics_and_schema():
+    import topics
+    import jsonschema
+    import pytest
+
+    # Verify topic builders and filters
+    assert topics.SIGNAL_FAULT_PUB_PATTERN == "edgeflow/v1/signal_fault/{node_id}/{category}"
+    assert topics.SIGNAL_FAULT_SUB_PATTERN == "edgeflow/v1/signal_fault/#"
+    assert topics.get_signal_fault_topic("J1", "disconnect") == "edgeflow/v1/signal_fault/J1/disconnect"
+    assert topics.get_signal_fault_topic("J1", "feedback_error") == "edgeflow/v1/signal_fault/J1/feedback_error"
+    assert topics.get_signal_fault_topic("J1", "emergency") == "edgeflow/v1/signal_fault/J1/emergency"
+    assert topics.get_signal_fault_topic("J1", "hardware") == "edgeflow/v1/signal_fault/J1/hardware"
+
+    with pytest.raises(ValueError):
+        topics.get_signal_fault_topic("J1", "invalid_cat")
+
+    # Verify generic topic() helper
+    assert topics.topic("signal_fault", "J1", category="emergency") == "edgeflow/v1/signal_fault/J1/emergency"
+
+    # Verify schema validation
+    valid_event = {
+        "event_id": "evt-1234",
+        "node_id": "J1",
+        "category": "emergency",
+        "fault_code": "ERR_SAFE_STOP_ENGAGED",
+        "severity": "CRITICAL",
+        "current_phase": "J1_PHASE_NS",
+        "clearance_state": "FLASHING_YELLOW",
+        "reason": "Physical safe-stop button pressed by user",
+        "details": {"gpio": 16, "raw_level": 0},
+        "timestamp_ms": 1700000000000
+    }
+    contracts_sdk.validate_payload(valid_event, "signal_fault_event")
+
+    # Invalid event missing category
+    invalid_event = {
+        "event_id": "evt-1234",
+        "node_id": "J1",
+        "fault_code": "ERR_SAFE_STOP_ENGAGED",
+        "severity": "CRITICAL",
+        "timestamp_ms": 1700000000000
+    }
+    with pytest.raises(jsonschema.ValidationError):
+        contracts_sdk.validate_payload(invalid_event, "signal_fault_event")

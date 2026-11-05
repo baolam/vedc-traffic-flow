@@ -200,3 +200,55 @@ class TopologyContract:
             "total_edges": len(self.edges),
             "total_phases": total_phases,
         }
+
+@dataclass
+class SignalFaultEvent:
+    """Canonical Signal Fault & Disconnection Event Model."""
+    event_id: str
+    node_id: str
+    category: str
+    fault_code: str
+    severity: str
+    timestamp_ms: int
+    current_phase: Optional[str] = None
+    target_phase: Optional[str] = None
+    clearance_state: Optional[str] = None
+    reason: Optional[str] = None
+    details: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SignalFaultEvent":
+        return cls(
+            event_id=data.get("event_id", ""),
+            node_id=data.get("node_id", ""),
+            category=data.get("category", "disconnect"),
+            fault_code=data.get("fault_code", "ERR_COORDINATOR_TIMEOUT"),
+            severity=data.get("severity", "WARNING"),
+            timestamp_ms=int(data.get("timestamp_ms", 0)),
+            current_phase=data.get("current_phase"),
+            target_phase=data.get("target_phase"),
+            clearance_state=data.get("clearance_state"),
+            reason=data.get("reason"),
+            details=dict(data.get("details", {}) or {}),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        res: Dict[str, Any] = {
+            "event_id": self.event_id,
+            "node_id": self.node_id,
+            "category": self.category,
+            "fault_code": self.fault_code,
+            "severity": self.severity,
+            "timestamp_ms": self.timestamp_ms,
+        }
+        if self.current_phase is not None:
+            res["current_phase"] = self.current_phase
+        if self.target_phase is not None:
+            res["target_phase"] = self.target_phase
+        if self.clearance_state is not None:
+            res["clearance_state"] = self.clearance_state
+        if self.reason is not None:
+            res["reason"] = self.reason
+        if self.details:
+            res["details"] = self.details
+        return res

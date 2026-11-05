@@ -35,13 +35,15 @@ class Esp32Logic:
 
     def __init__(self, node_id: str, timing: mc.Timing, now: float, emit_ack: AckEmitter,
                  emit_health: Callable[[], None], clock_synced: bool = True,
-                 epoch_ms: Callable[[], int] = mc.now_ms):
+                 epoch_ms: Callable[[], int] = mc.now_ms,
+                 emit_fault: Optional[Callable[[Dict[str, Any]], None]] = None):
         self.node_id = node_id
         self.timing = timing
         self.emit_ack = emit_ack
         self.emit_health = emit_health
         self.clock_synced = clock_synced
         self.epoch_ms = epoch_ms
+        self.emit_fault = emit_fault
         # Boot state of the firmware: ALL_RED first, then North-South green
         self.current_phase = "NS"
         self.pending_phase = "NS"
@@ -56,6 +58,28 @@ class Esp32Logic:
         self.pending_target = ""
         self.min_green_s = timing.min_green_s
         self.max_green_s = timing.max_green_s
+
+    def set_safe_stop(self, active: bool) -> None:
+        if self.safe_stop == active:
+            return
+        self.safe_stop = active
+        if self.emit_fault:
+            code = "ERR_SAFE_STOP_ENGAGED" if active else "ERR_SAFE_STOP_RELEASED"
+            sev = "CRITICAL" if active else "INFO"
+            state = "FLASHING_YELLOW" if active else self.clear_state
+            reason = "Safe-stop emergency switch engaged by user" if active else "Safe-stop released. Normal operation resuming."
+            self.emit_fault({
+                "event_id": f"evt-{self.node_id}-{self.epoch_ms()}",
+                "node_id": self.node_id,
+                "category": "emergency",
+                "fault_code": code,
+                "severity": sev,
+                "current_phase": self.phase_id(self.current_phase),
+                "clearance_state": state,
+                "reason": reason,
+                "timestamp_ms": self.epoch_ms()
+            })
+        self.emit_health()
 
     # ---- helpers -------------------------------------------------------------------------------
     def phase_id(self, phase: str) -> str:
@@ -98,6 +122,19 @@ class Esp32Logic:
         target = self._parse_phase(target_str)
         if target is None:
             self.emit_ack(cmd_id, target_str, "REJECTED", "Unknown target_phase_id for this node")
+            if self.emit_fault:
+                self.emit_fault({
+                    "event_id": f"evt-{self.node_id}-{self.epoch_ms()}",
+                    "node_id": self.node_id,
+                    "category": "feedback_error",
+                    "fault_code": "ERR_FEEDBACK_MISMATCH",
+                    "severity": "WARNING",
+                    "current_phase": self.phase_id(self.current_phase),
+                    "target_phase": target_str,
+                    "clearance_state": self.clear_state,
+                    "reason": f"Unknown target_phase_id '{target_str}' for node {self.node_id}",
+                    "timestamp_ms": self.epoch_ms()
+                })
             return
 
         # Requested timings may lengthen but never shorten the device limits
@@ -147,6 +184,18 @@ class Esp32Logic:
                 if not self.fallback:
                     self.fallback = True
                     self.emit_health()
+                    if self.emit_fault:
+                        self.emit_fault({
+                            "event_id": f"evt-{self.node_id}-{self.epoch_ms()}",
+                            "node_id": self.node_id,
+                            "category": "disconnect",
+                            "fault_code": "ERR_COORDINATOR_TIMEOUT",
+                            "severity": "WARNING",
+                            "current_phase": self.phase_id(self.current_phase),
+                            "clearance_state": self.clear_state,
+                            "reason": f"Coordinator command timeout > {self.timing.watchdog_s:.1f}s. Fallback schedule active.",
+                            "timestamp_ms": self.epoch_ms()
+                        })
                 if self.clear_state == GREEN and now - self.phase_start >= self.timing.fallback_green_s:
                     self._start_clearance(other, "", self.phase_id(other), now)  # local cycle: no ACK
             elif self.clear_state == GREEN and now - self.phase_start >= self.max_green_s:
@@ -189,9 +238,16 @@ def run(args: argparse.Namespace, stop: Optional[threading.Event] = None) -> int
         logger.info("[ACK] %s %s (%s)", status, cmd_id, reason)
         publish(mc.topics.get_ack_topic(node), ack)
 
+    def emit_fault(fault: Dict[str, Any]) -> None:
+        cat = fault.get("category", "disconnect")
+        fault_topic = mc.topics.get_signal_fault_topic(node, category=cat)
+        logger.warning("[FAULT] [%s] %s: %s", cat.upper(), fault.get("fault_code"), fault.get("reason"))
+        publish(fault_topic, fault)
+
     logic = Esp32Logic(node, timing, time.monotonic(), emit_ack,
                        lambda: publish(health_topic, logic.health(time.monotonic(), started)),
-                       clock_synced=not args.no_clock)
+                       clock_synced=not args.no_clock,
+                       emit_fault=emit_fault)
 
     def on_connect(c, userdata, flags, rc):
         if rc == 0:

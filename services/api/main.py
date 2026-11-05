@@ -20,6 +20,13 @@ try:
 except ImportError:
     from services.api.config import settings
 
+try:
+    from db import get_db
+except ImportError:
+    from services.api.db import get_db
+
+db = get_db()
+
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
 logger = logging.getLogger("api-service")
 
@@ -124,6 +131,7 @@ LIVE_STATE: Dict[str, Any] = {
     "nodes": {},
     "control_acks": {},
     "health": {},
+    "signal_faults": {},
     "actuator_config": {
         "yellow_duration_s": 3.0,
         "all_red_duration_s": 2.0,
@@ -294,11 +302,43 @@ def _start_mqtt_listener():
                 now_str = time.strftime("%H:%M:%S")
                 now_ms = int(time.time() * 1000)
 
-                if topic.startswith(f"{topics.PREFIX_V1}/telemetry/"):
+                if topic.startswith(f"{topics.PREFIX_V1}/signal_fault/"):
+                    parts = topic.split("/")
+                    node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
+                    category = parts[4] if len(parts) > 4 else payload.get("category", "disconnect")
+                    payload["node_id"] = node_id
+                    payload["category"] = category
+                    payload["_ingested_at_ms"] = now_ms
+
+                    try:
+                        contracts_sdk.validate_payload(payload, "signal_fault_event")
+                    except Exception as ve:
+                        logger.warning(f"SignalFaultEvent schema validation warning on {topic}: {ve}")
+
+                    db.record_fault_event(payload)
+                    LIVE_STATE.setdefault("signal_faults", {})[node_id] = payload
+
+                    severity = str(payload.get("severity", "WARNING")).upper()
+                    event_msg = {
+                        "timestamp": now_str,
+                        "timestamp_ms": now_ms,
+                        "service": "SIGNAL_FAULT",
+                        "source": node_id,
+                        "target": "SYSTEM",
+                        "topic": topic,
+                        "level": "CRITICAL" if severity == "CRITICAL" else "WARNING",
+                        "message": f"FAULT [{node_id}] [{category.upper()}]: {payload.get('fault_code')} - {payload.get('reason', '')}"
+                    }
+                    events = LIVE_STATE.setdefault("recent_inter_service_events", [])
+                    events.insert(0, event_msg)
+                    LIVE_STATE["recent_inter_service_events"] = events[:50]
+
+                elif topic.startswith(f"{topics.PREFIX_V1}/telemetry/"):
                     node_id = payload.get("node_id") or topic.split("/")[-1]
                     payload["_ingested_at_ms"] = now_ms
                     LIVE_STATE["nodes"][node_id] = payload
                     LIVE_STATE["last_updated_ms"] = now_ms
+                    db.record_telemetry(payload)
                     total_q = sum(a.get("queue_vehicles", 0) for a in payload.get("approaches", []))
                     event_msg = {
                         "timestamp": now_str,
@@ -318,6 +358,7 @@ def _start_mqtt_listener():
                     note_command_controller(payload)
                     parts = topic.split("/")
                     node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
+                    db.record_command(payload)
                     event_msg = {
                         "timestamp": now_str,
                         "timestamp_ms": now_ms,
@@ -340,6 +381,7 @@ def _start_mqtt_listener():
                         LIVE_STATE["control_acks"][node_id].insert(0, payload)
                         LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
                         track_override_ack(node_id, payload)
+                    db.record_ack(payload)
                     event_msg = {
                         "timestamp": now_str,
                         "timestamp_ms": now_ms,
@@ -356,6 +398,7 @@ def _start_mqtt_listener():
 
                 elif topic.startswith(f"{topics.PREFIX_V1}/health/") or topic.startswith("edgex/health/"):
                     ingest_health_message(topic, payload)
+                    db.record_health(payload)
             except Exception as ex:
                 logger.debug(f"Error parsing MQTT telemetry payload: {ex}")
 
@@ -656,7 +699,8 @@ def get_network_state():
             "source_mode": LIVE_STATE["source_mode"],
             "last_updated_ms": LIVE_STATE["last_updated_ms"],
             "total_nodes": len(nodes_info),
-            "nodes": nodes_info
+            "nodes": nodes_info,
+            "signal_faults": LIVE_STATE.get("signal_faults", {})
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed retrieving network state: {str(e)}")
@@ -1508,6 +1552,153 @@ def trigger_vision_demo(req: VisionRunRequest = Body(default_factory=VisionRunRe
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Historical Database & Fault Management Endpoints
+# =============================================================================
+
+@app.get("/api/v1/history/faults")
+def get_fault_history(
+    node_id: Optional[str] = None,
+    category: Optional[str] = None,
+    severity: Optional[str] = None,
+    from_ms: Optional[int] = None,
+    to_ms: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0
+):
+    """
+    Query persistent signal fault events (disconnect, feedback_error, emergency, hardware).
+    """
+    records = db.query_faults(
+        node_id=node_id,
+        category=category,
+        severity=severity,
+        from_ms=from_ms,
+        to_ms=to_ms,
+        limit=limit,
+        offset=offset
+    )
+    return {
+        "status": "SUCCESS",
+        "total": len(records),
+        "limit": limit,
+        "offset": offset,
+        "faults": records
+    }
+
+
+@app.get("/api/v1/history/telemetry")
+def get_telemetry_history(
+    node_id: Optional[str] = None,
+    from_ms: Optional[int] = None,
+    to_ms: Optional[int] = None,
+    limit: int = 100
+):
+    """
+    Query historical traffic telemetry data (queue lengths, flow rates, phases).
+    """
+    records = db.query_telemetry(
+        node_id=node_id,
+        from_ms=from_ms,
+        to_ms=to_ms,
+        limit=limit
+    )
+    return {
+        "status": "SUCCESS",
+        "total": len(records),
+        "limit": limit,
+        "telemetry": records
+    }
+
+
+@app.get("/api/v1/history/commands")
+def get_commands_history(node_id: Optional[str] = None, limit: int = 50):
+    """
+    Query historical control commands issued to intersections.
+    """
+    records = db.query_commands(node_id=node_id, limit=limit)
+    return {
+        "status": "SUCCESS",
+        "total": len(records),
+        "limit": limit,
+        "commands": records
+    }
+
+
+@app.get("/api/v1/history/acks")
+def get_acks_history(node_id: Optional[str] = None, limit: int = 50):
+    """
+    Query historical control acknowledgments (ACKs) received from actuators.
+    """
+    records = db.query_acks(node_id=node_id, limit=limit)
+    return {
+        "status": "SUCCESS",
+        "total": len(records),
+        "limit": limit,
+        "acks": records
+    }
+
+
+@app.get("/api/v1/history/stats")
+def get_history_stats():
+    """
+    Aggregate statistics of faults, commands, and acknowledgments across the network.
+    """
+    return db.query_stats()
+
+
+class SignalFaultReportRequest(BaseModel):
+    node_id: str
+    category: str
+    fault_code: str
+    severity: str = "WARNING"
+    current_phase: Optional[str] = None
+    target_phase: Optional[str] = None
+    clearance_state: Optional[str] = None
+    reason: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+    timestamp_ms: Optional[int] = None
+
+
+@app.post("/api/v1/control/fault")
+def report_or_inject_fault(req: SignalFaultReportRequest):
+    """
+    Report or inject a signal fault event. Validates schema, persists to DB,
+    and publishes to the dedicated MQTT topic edgeflow/v1/signal_fault/{node_id}/{category}.
+    """
+    now_ms = req.timestamp_ms or int(time.time() * 1000)
+    event_payload = {
+        "event_id": f"evt-{req.node_id}-{now_ms}",
+        "node_id": req.node_id,
+        "category": req.category.lower(),
+        "fault_code": req.fault_code,
+        "severity": req.severity.upper(),
+        "current_phase": req.current_phase,
+        "target_phase": req.target_phase,
+        "clearance_state": req.clearance_state,
+        "reason": req.reason,
+        "details": req.details or {},
+        "timestamp_ms": now_ms
+    }
+
+    contracts_sdk.validate_payload(event_payload, "signal_fault_event")
+    db.record_fault_event(event_payload, sync=True)
+    LIVE_STATE.setdefault("signal_faults", {})[req.node_id] = event_payload
+
+    if MQTT_CLIENT and MQTT_CLIENT.is_connected():
+        try:
+            pub_topic = topics.get_signal_fault_topic(req.node_id, category=req.category.lower())
+            MQTT_CLIENT.publish(pub_topic, json.dumps(event_payload))
+        except Exception as e:
+            logger.warning(f"Could not publish fault event to MQTT: {e}")
+
+    return {
+        "status": "SUCCESS",
+        "message": "Signal fault recorded and broadcasted on dedicated channel.",
+        "event": event_payload
+    }
 
 
 if __name__ == "__main__":

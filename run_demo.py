@@ -214,8 +214,20 @@ def run_demo_simulation(
     emission_out = output_dir / "emission.xml"
     csv_out = output_dir / "metrics.csv"
 
+    # Map canonical alias back to config directory if naming differs
+    net_alias = {
+        "cologne": "cologne8",
+        "grid16": "grid4x4",
+        "corridor": "four_intersection_v1",
+    }.get(resolved_topo, resolved_topo)
+    alias_config_dir = sumo_configs_dir / net_alias
+
     # Ensure gui-settings.xml is copied/present in output_dir
-    src_gui_settings = topo_config_dir / "gui-settings.xml" if topo_config_dir.exists() else (sumo_configs_dir / "gui-settings.xml")
+    src_gui_settings = (
+        topo_config_dir / "gui-settings.xml" if topo_config_dir.exists()
+        else (alias_config_dir / "gui-settings.xml" if alias_config_dir.exists()
+        else (sumo_configs_dir / "gui-settings.xml"))
+    )
     gui_settings_path = output_dir / "gui-settings.xml"
     if src_gui_settings.exists():
         shutil.copy(src_gui_settings, gui_settings_path)
@@ -238,7 +250,9 @@ def run_demo_simulation(
 
         candidates = [
             topo_config_dir / f"{resolved_topo}.net.xml",
+            alias_config_dir / f"{net_alias}.net.xml",
             sumo_configs_dir / f"{resolved_topo}.net.xml",
+            sumo_configs_dir / f"{net_alias}.net.xml",
             sumo_configs_dir / "four_intersection_v1" / "four_intersection_v1.net.xml",
             sumo_configs_dir / "four_intersection_v1.net.xml",
         ]

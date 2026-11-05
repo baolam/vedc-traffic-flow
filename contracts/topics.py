@@ -26,6 +26,13 @@ ACK_SUB_PATTERN = f"{PREFIX_V1}/control/+/ack"
 HEALTH_PUB_PATTERN = f"{PREFIX_V1}/health/{{service_name}}"
 HEALTH_SUB_PATTERN = f"{PREFIX_V1}/health/+"
 
+# Dedicated Signal Faults & Disconnection Channels
+# Categories: 'disconnect', 'feedback_error', 'emergency', 'hardware'
+FAULT_CATEGORIES = ("disconnect", "feedback_error", "emergency", "hardware")
+SIGNAL_FAULT_PUB_PATTERN = f"{PREFIX_V1}/signal_fault/{{node_id}}/{{category}}"
+SIGNAL_FAULT_SUB_PATTERN = f"{PREFIX_V1}/signal_fault/#"
+SIGNAL_FAULT_NODE_SUB_PATTERN = f"{PREFIX_V1}/signal_fault/{{node_id}}/+"
+
 # Wildcard all EdgeFlow topics
 ALL_EDGEFLOW_SUB = f"{PREFIX_V1}/#"
 
@@ -46,15 +53,22 @@ def get_health_topic(service_name: str) -> str:
     return HEALTH_PUB_PATTERN.format(service_name=service_name)
 
 
+def get_signal_fault_topic(node_id: str, category: str = "disconnect") -> str:
+    if category not in FAULT_CATEGORIES:
+        raise ValueError(f"Invalid fault category '{category}'. Allowed: {FAULT_CATEGORIES}")
+    return SIGNAL_FAULT_PUB_PATTERN.format(node_id=node_id, category=category)
+
+
 # Aliases for routing filters
 TELEMETRY_FILTER = TELEMETRY_SUB_PATTERN
 ACK_FILTER = ACK_SUB_PATTERN
 COMMAND_FILTER = COMMAND_SUB_PATTERN
 HEALTH_FILTER = HEALTH_SUB_PATTERN
+SIGNAL_FAULT_FILTER = SIGNAL_FAULT_SUB_PATTERN
 
 
-def topic(kind: str, node_id: str) -> str:
-    """Resolve canonical MQTT topic by kind ('telemetry', 'command', 'ack', 'health')."""
+def topic(kind: str, node_id: str, category: str = "disconnect") -> str:
+    """Resolve canonical MQTT topic by kind ('telemetry', 'command', 'ack', 'health', 'signal_fault')."""
     if not node_id or any(c in node_id for c in "/+#"):
         raise ValueError("Invalid MQTT node_id")
     if kind == "telemetry":
@@ -65,6 +79,8 @@ def topic(kind: str, node_id: str) -> str:
         return get_ack_topic(node_id)
     if kind == "health":
         return get_health_topic(node_id)
+    if kind in ("signal_fault", "fault"):
+        return get_signal_fault_topic(node_id, category=category)
     raise ValueError(f"Unknown message kind: '{kind}'")
 
 

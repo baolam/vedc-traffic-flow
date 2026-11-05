@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SignalFaultEvent",
+  "type": "object",
+  "properties": {
+    "event_id": { "type": "string" },
+    "node_id": { "type": "string" },
+    "category": { 
+      "type": "string", 
+      "enum": ["disconnect", "feedback_error", "emergency", "hardware"] 
+    },
+    "fault_code": { 
+      "type": "string", 
+      "enum": [
+        "ERR_COORDINATOR_TIMEOUT",
+        "ERR_BROKER_DISCONNECT",
+        "ERR_FEEDBACK_MISMATCH",
+        "ERR_CONFLICT_GUARD_TRIGGERED",
+        "ERR_SAFE_STOP_ENGAGED",
+        "ERR_SAFE_STOP_RELEASED",
+        "ERR_EMERGENCY_OVERRIDE",
+        "ERR_MIN_GREEN_VIOLATION",
+        "ERR_HARDWARE_DEFECT"
+      ] 
+    },
+    "severity": { 
+      "type": "string", 
+      "enum": ["CRITICAL", "WARNING", "INFO"] 
+    },
+    "current_phase": { "type": ["string", "null"] },
+    "target_phase": { "type": ["string", "null"] },
+    "clearance_state": { 
+      "type": ["string", "null"],
+      "enum": ["GREEN", "YELLOW", "ALL_RED", "FLASHING_YELLOW", null] 
+    },
+    "reason": { "type": ["string", "null"] },
+    "details": { "type": "object" },
+    "timestamp_ms": { "type": "integer" }
+  },
+  "required": [
+    "event_id",
+    "node_id",
+    "category",
+    "fault_code",
+    "severity",
+    "timestamp_ms"
+  ]
+}
