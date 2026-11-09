@@ -105,6 +105,7 @@ TOPOLOGY_ALIASES = {
     "hcm-corridor": "hcm_corridor",
     "tabletop": "tabletop_j1_j2_v1",
     "tabletop_v1": "tabletop_j1_j2_v1",
+    "tabletop5": "tabletop_5nut_v1",
 }
 
 

@@ -3,14 +3,17 @@ EdgeFlow AI - Verify ESP32 signal output traces (evidence for the "Signal behavi
 
 The firmware prints one line per output change:
     TRACE,<millis>,<node>,<ns>,<ew>,<label>     ns/ew in {R, Y, G, -}
-    label in {GREEN, YELLOW, ALL_RED, SAFE_STOP, CONFLICT_GUARD}
+    label in {GREEN, YELLOW, ALL_RED, FLASH, FLASH_EXIT_YELLOW, CONFLICT_GUARD}
+    (SAFE_STOP is the flashing label of firmware before 11/2026; it is read like FLASH)
 
 Capture:  pio device monitor -e J1 | tee trace_J1.log
 Check:    python src/hardware/verify_trace.py trace_J1.log --json trace_J1_report.json
 
 Checks per node: no conflicting greens; GREEN only after an ALL_RED of at least 2 s;
-GREEN -> YELLOW (same head) -> ALL_RED with yellow >= 3 s; green >= the device minimum.
-Intervals cut short by the safe-stop button are reported, not counted as violations.
+GREEN -> YELLOW (same head) -> ALL_RED with yellow >= 3 s; green >= the device minimum;
+flashing yellow (startup, safe-stop, fault) left only through a steady yellow on both heads >= 3 s
+and then ALL_RED (MUTCD 4D.31). Intervals cut short by entering flashing mode are reported, not
+counted as violations.
 Exit code 1 when any violation is found.
 """
 
@@ -22,6 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
+FLASH_LABELS = ("FLASH", "SAFE_STOP")
 TRACE_RE = re.compile(r"TRACE,(\d+),([A-Za-z0-9_]+),([RYG-]),([RYG-]),([A-Z_]+)")
 
 
@@ -99,11 +103,24 @@ def check_node(events: List[TraceEvent], yellow_ms: int = 3000, all_red_ms: int 
             report.violations.append(f"{where}: conflicting green requested/shown")
             continue
 
-        if event.label == "SAFE_STOP":
-            if prev is None or prev.label != "SAFE_STOP":
+        if event.label in FLASH_LABELS:
+            if prev is None or prev.label not in FLASH_LABELS:
                 report.safe_stop_episodes += 1
-            if nxt and nxt.label not in ("SAFE_STOP", "ALL_RED"):
-                report.violations.append(f"{where}: safe-stop released into {nxt.label} without ALL_RED")
+            allowed = FLASH_LABELS + (("ALL_RED",) if event.label == "SAFE_STOP" else ("FLASH_EXIT_YELLOW",))
+            if nxt and nxt.label not in allowed:
+                missing = "ALL_RED" if event.label == "SAFE_STOP" else "a steady yellow"
+                report.violations.append(f"{where}: flashing left into {nxt.label} without {missing}")
+            continue
+
+        if event.label == "FLASH_EXIT_YELLOW":
+            if event.ns != "Y" or event.ew != "Y":
+                report.violations.append(f"{where}: flash-exit yellow is not yellow on both heads")
+            if nxt and nxt.label not in ("ALL_RED",) + FLASH_LABELS:
+                report.violations.append(f"{where}: flash-exit yellow followed by {nxt.label}, not ALL_RED")
+            if nxt and nxt.label == "ALL_RED":
+                report.yellow_ms.append(duration)
+                if duration < yellow_ms - tolerance_ms:
+                    report.violations.append(f"{where}: flash-exit yellow {duration}ms < {yellow_ms}ms")
             continue
 
         if event.label == "GREEN":
@@ -120,7 +137,7 @@ def check_node(events: List[TraceEvent], yellow_ms: int = 3000, all_red_ms: int 
                     report.violations.append(f"t={nxt.t_ms}ms: YELLOW on a head that was not GREEN")
 
         elif event.label == "YELLOW":
-            if nxt and nxt.label not in ("ALL_RED", "SAFE_STOP"):
+            if nxt and nxt.label not in ("ALL_RED",) + FLASH_LABELS:
                 report.violations.append(f"{where}: YELLOW followed by {nxt.label}, not ALL_RED")
             if nxt and nxt.label == "ALL_RED":
                 report.yellow_ms.append(duration)
@@ -164,7 +181,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"[{status}] node {summary['node']}: {summary['events']} events over {summary['duration_s']}s, "
               f"{summary['phase_switches']} greens, yellow {summary['yellow_ms_min_max']} ms, "
               f"all-red {summary['all_red_ms_min_max']} ms, green {summary['green_ms_min_max']} ms, "
-              f"safe-stop x{summary['safe_stop_episodes']}")
+              f"flashing x{summary['safe_stop_episodes']}")
         for violation in summary["violations"]:
             print(f"    VIOLATION {violation}")
     if args.json:

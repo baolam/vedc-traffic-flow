@@ -29,6 +29,16 @@ class Timing:
     fallback_green_s: float = 15.0
     health_period_s: float = 5.0
     keepalive_s: float = 2.0   # how often a test tool must send a command to stay under the watchdog
+    startup_flash_s: float = 4.0       # flashing yellow after every boot, then yellow + all-red
+    fault_flash_hold_s: float = 10.0   # flashing yellow after a conflict / output readback fault
+    flash_half_period_s: float = 0.5
+    readback_period_s: float = 0.1
+    readback_fault_repeat_s: float = 60.0
+
+    @property
+    def boot_s(self) -> float:
+        """Boot to first GREEN: startup flash, then the steady yellow + all-red that leave flashing mode."""
+        return self.startup_flash_s + self.clearance_s
 
     @property
     def clearance_s(self) -> float:

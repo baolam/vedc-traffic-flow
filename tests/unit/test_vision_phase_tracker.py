@@ -137,7 +137,8 @@ def test_vision_health_says_where_each_phase_came_from():
 def test_firmware_health_matches_what_the_tracker_reads():
     source = FIRMWARE.read_text(encoding="utf-8")
 
-    assert 'hDoc["current_phase"] = String(NODE_ID) + (currentPhase == PHASE_NS ? "_PHASE_NS" : "_PHASE_EW");' in source
+    assert 'return String(NODE_ID) + (p == PHASE_NS ? "_PHASE_NS" : "_PHASE_EW");' in source  # canonicalPhaseString
+    assert 'hDoc["current_phase"] = canonicalPhaseString(currentPhase);' in source
     assert '\\"status\\":\\"OFFLINE\\"' in source  # LWT
     # Every switch to GREEN (command, max green, fallback, safe-stop release, boot) announces the new phase
     green_entry = re.search(r"ALL_RED finished -> GREEN active.*?\n    }\n", source, re.S)

@@ -23,7 +23,15 @@ from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger("edgeflow-db")
 
-DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "data" / "edgeflow.db"
+def _default_db_path() -> Path:
+    """<repo>/data/edgeflow.db from a checkout; <dir of db.py>/data/edgeflow.db in the API container,
+    where db.py sits at /app/db.py and has no grandparent (parents[2] raised IndexError at import)."""
+    parents = Path(__file__).resolve().parents
+    root = parents[2] if len(parents) > 2 else parents[0]
+    return root / "data" / "edgeflow.db"
+
+
+DEFAULT_DB_PATH = _default_db_path()
 
 
 class DatabaseManager:

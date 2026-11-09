@@ -26,8 +26,9 @@ class ROIManager:
         edge IDs, not a N/S/E/W convention).
         """
         cx, cy = self.width // 2, self.height // 2
+        # Same order as `slots` below (W, E, N, S): the synthetic IDs must name the quadrant they label
         ids = list(approach_ids) if approach_ids else [
-            f"{node_id}_N_IN", f"{node_id}_S_IN", f"{node_id}_E_IN", f"{node_id}_W_IN"
+            f"{node_id}_W_IN", f"{node_id}_E_IN", f"{node_id}_N_IN", f"{node_id}_S_IN"
         ]
         ids = ids[:4]
 

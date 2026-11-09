@@ -254,6 +254,15 @@ const TopologyMap = ({
     return tid.includes('tabletop') || (rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id)));
   }, [topology, rawNodes]);
 
+  // The drawn mat (renderTabletopMat) and its fixed lane coordinates are the 2-node 1200 x 600 mm bạt only.
+  // Other tabletop topologies (tabletop_5nut_v1) keep the generic x/y vector drawing under the same badge.
+  const isTwoNodeMat = isTabletop && rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id));
+  const tabletopLabel = isTwoNodeMat
+    ? 'Sa Bàn Bạt 1200 × 600 mm (đội 31μF)'
+    : String(topology?.topology_id || '').toLowerCase() === 'tabletop_5nut_v1'
+      ? 'Sa Bàn Bạt 1800 × 1200 mm, 5 nút (đội 31μF)'
+      : `Sa Bàn ${rawNodes.length} nút (đội 31μF)`;
+
   // If map has real-world GPS coordinates (HCM Corridor) and STREET mode is chosen: Render LeafletStreetMap!
   if (hasGeoCoords && mapType === 'STREET') {
     return (
@@ -473,7 +482,7 @@ const TopologyMap = ({
               alignItems: 'center',
               gap: '4px'
             }}>
-              🌿 Sa Bàn Bạt 1200 × 600 mm (đội 31μF)
+              🌿 {tabletopLabel}
             </span>
           )}
           {selectedNodeId && (
@@ -673,7 +682,7 @@ const TopologyMap = ({
           <g transform={`translate(${pan.x + (1 - zoom) * 380}, ${pan.y + (1 - zoom) * 250}) scale(${zoom})`}>
             
             {/* Tabletop Sa Bàn Overlay (Image 2 exact 1200x600 mm layout) */}
-            {isTabletop && renderTabletopMat()}
+            {isTwoNodeMat && renderTabletopMat()}
 
             {/* Draw Directed Edges & SUMO Roads */}
             {showEdges && edgesToDraw.map((edge) => {
@@ -715,7 +724,7 @@ const TopologyMap = ({
               }
 
               let lx1 = p1.x, ly1 = p1.y, lx2 = p2.x, ly2 = p2.y;
-              if (isTabletop) {
+              if (isTwoNodeMat) {
                 if (edge.src === 'J1' && edge.tgt === 'J2') {
                   // Eastbound: lower lane in right-hand traffic
                   ly1 = 266; ly2 = 266; lx1 = 238; lx2 = 520;
@@ -728,7 +737,7 @@ const TopologyMap = ({
               return (
                 <g key={edge.key}>
                   {/* Subtle edge road bed (hidden on tabletop where asphalt is already drawn) */}
-                  {!isTabletop && (
+                  {!isTwoNodeMat && (
                     <line
                       x1={lx1}
                       y1={ly1}
@@ -870,7 +879,9 @@ const TopologyMap = ({
           <div style={{
             position: 'absolute',
             left: '16px',
-            bottom: '16px',
+            // Pin the drawer to the opposite half of the 760x500 viewBox so it
+            // never covers the station being inspected (e.g. J4/J5 bottom row).
+            ...(nodePositions[activeFocusNode].y > 250 ? { top: '16px' } : { bottom: '16px' }),
             backgroundColor: 'rgba(15, 23, 42, 0.96)',
             color: '#f8fafc',
             borderRadius: '10px',

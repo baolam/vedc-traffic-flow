@@ -26,7 +26,7 @@ class Rig:
         self.logic = Esp32Logic("J1", TIMING, 0.0, lambda *a: self.acks.append(a),
                                 lambda: setattr(self, "healths", self.healths + 1),
                                 clock_synced=clock_synced, epoch_ms=epoch_ms)
-        self.advance(TIMING.all_red_s)  # boot: ALL_RED then GREEN NS
+        self.advance(TIMING.boot_s)  # boot: flashing yellow, steady yellow, ALL_RED, then GREEN NS
 
     def advance(self, seconds, step=0.125):  # 1/8 s is exact in binary: no float drift
         end = self.now + seconds
@@ -44,7 +44,7 @@ class Rig:
         return [a[2] for a in self.acks]
 
 
-def test_boot_is_all_red_then_north_south_green_and_announces_it():
+def test_boot_ends_in_north_south_green_and_announces_it():
     rig = Rig()
 
     assert rig.logic.clear_state == GREEN and rig.logic.current_phase == "NS"

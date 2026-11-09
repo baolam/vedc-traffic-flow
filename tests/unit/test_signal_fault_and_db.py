@@ -217,8 +217,11 @@ class TestSignalFaultAndDatabase:
             emit_fault=lambda f: faults.append(f)
         )
 
-        # Advance past watchdog timeout (>5.0s) without commands
-        logic.tick(6.0)
+        # Boot = startup flash, then the 5 s watchdog runs: step the clock past both without commands
+        t = 0.0
+        while t < timing.boot_s + timing.watchdog_s + 1.0:
+            t += 0.1
+            logic.tick(t)
         assert logic.fallback is True
 
         # Check emitted fault
@@ -227,13 +230,13 @@ class TestSignalFaultAndDatabase:
         assert disconnect_faults[0]["fault_code"] == "ERR_COORDINATOR_TIMEOUT"
 
         # Test safe-stop button pressed
-        logic.set_safe_stop(True)
+        logic.set_safe_stop(True, t)
         emergency_faults = [f for f in faults if f["category"] == "emergency" and f["fault_code"] == "ERR_SAFE_STOP_ENGAGED"]
         assert len(emergency_faults) == 1
         assert emergency_faults[0]["severity"] == "CRITICAL"
 
         # Test safe-stop released
-        logic.set_safe_stop(False)
+        logic.set_safe_stop(False, t + 1.0)
         release_faults = [f for f in faults if f["category"] == "emergency" and f["fault_code"] == "ERR_SAFE_STOP_RELEASED"]
         assert len(release_faults) == 1
 
@@ -245,7 +248,7 @@ class TestSignalFaultAndDatabase:
             "min_green_s": 5,
             "max_green_s": 60
         }
-        logic.handle_command(json.dumps(invalid_cmd).encode(), 10.0)
+        logic.handle_command(json.dumps(invalid_cmd).encode(), t + 2.0)
         feedback_faults = [f for f in faults if f["category"] == "feedback_error"]
         assert len(feedback_faults) == 1
         assert feedback_faults[0]["fault_code"] == "ERR_FEEDBACK_MISMATCH"

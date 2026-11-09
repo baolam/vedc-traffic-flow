@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Point the ESP32 firmware at another Wi-Fi network (home Wi-Fi now, a phone hotspot at the venue):
-# writes src/hardware/secrets.ini, builds J1 and J2, and prints what is left to do on the boards and the Pi.
+# writes src/hardware/secrets.ini, builds J1..J5, and prints what is left to do on the boards and the Pi.
+# Build fewer boards with NODES="J1 J2" bash src/hardware/set_network.sh ...
 #
 #   bash src/hardware/set_network.sh "<SSID>" "<password>"              # broker = this laptop's current IP
 #   bash src/hardware/set_network.sh "<SSID>" "<password>" 172.20.10.4  # explicit broker IP
+#   bash src/hardware/set_network.sh "<SSID>" "<password>" --also "<SSID2>" "<password2>" <broker2>
+#       up to 2 fallback networks (--also), each with its own broker IP: a board that cannot join a
+#       network for 10 s tries the next one, so a venue change needs no re-flash if it was listed here
 #
 # Run it while the laptop is already connected to that network: the broker IP is read from the interface
 # that carries the default route. The ESP32 only sees 2.4 GHz: on an iPhone hotspot turn on
@@ -14,17 +18,35 @@ set -euo pipefail
 HW_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSID="${1:-}"
 PASS="${2:-}"
-BROKER="${3:-}"
+BROKER=""
+shift 2 2>/dev/null || true
+if [[ $# -gt 0 && "$1" != --also ]]; then BROKER="$1"; shift; fi
+EXTRA=()   # SSID pass broker triples for WIFI_SSID_2/_3
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" != --also || $# -lt 4 ]]; then
+    echo "Expected: --also \"<SSID>\" \"<password>\" <broker IP>" >&2; exit 2
+  fi
+  EXTRA+=("$2" "$3" "$4"); shift 4
+done
+if (( ${#EXTRA[@]} > 6 )); then
+  echo "At most 2 --also networks (the firmware knows 3)" >&2; exit 2
+fi
 
 if [[ -z "$SSID" || -z "$PASS" ]]; then
-  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 fi
 # The values become C string literals inside a PlatformIO build flag: quotes and backslashes would break it
-for value in "$SSID" "$PASS" "$BROKER"; do
+for value in "$SSID" "$PASS" "$BROKER" ${EXTRA[@]+"${EXTRA[@]}"}; do
   if [[ "$value" == *[\"\'\\]* ]]; then
     echo "SSID/password/broker must not contain quotes or backslashes (rename the hotspot, e.g. EdgeFlow)" >&2
     exit 2
+  fi
+done
+for ((i = 1; i < ${#EXTRA[@]}; i += 3)); do
+  if (( ${#EXTRA[i]} < 8 )); then echo "WPA2 passwords are at least 8 characters (${EXTRA[i-1]})" >&2; exit 2; fi
+  if ! [[ "${EXTRA[i+1]}" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+    echo "Broker of ${EXTRA[i-1]} must be an IPv4 address: ${EXTRA[i+1]}" >&2; exit 2
   fi
 done
 if (( ${#PASS} < 8 )); then
@@ -66,22 +88,31 @@ build_flags =
     '-D WIFI_PASS="$PASS"'
     '-D MQTT_BROKER="$BROKER"'
 INI
+for ((i = 0, n = 2; i < ${#EXTRA[@]}; i += 3, n++)); do
+  cat >> "$HW_DIR/secrets.ini" <<INI
+    '-D WIFI_SSID_$n="${EXTRA[i]}"'
+    '-D WIFI_PASS_$n="${EXTRA[i+1]}"'
+    '-D MQTT_BROKER_$n="${EXTRA[i+2]}"'
+INI
+  echo "== fallback network $n: SSID '${EXTRA[i]}', broker ${EXTRA[i+2]}"
+done
 echo "== secrets.ini: SSID '$SSID', broker $BROKER (previous file: ~/.edgeflow/secrets.ini.prev)"
 
 PIO=(pio)
 command -v pio >/dev/null || PIO=(uvx --from platformio pio)
 cd "$HW_DIR"
-for node in J1 J2; do
-  echo "== Building $node"
-  "${PIO[@]}" run -e "$node" | tail -3
-done
+read -r -a NODE_LIST <<< "${NODES:-J1 J2 J3 J4 J5}"
+ENV_ARGS=()
+for node in "${NODE_LIST[@]}"; do ENV_ARGS+=(-e "$node"); done
+echo "== Building ${NODE_LIST[*]}"
+"${PIO[@]}" run "${ENV_ARGS[@]}" | grep -E '^J[0-9]+ +(SUCCESS|FAILED)|=====.*(SUCCESS|FAILED|succeeded|failed)'
 
 cat <<NEXT
 
 == Next
 1. Flash each board (one plugged at a time):
-     cd src/hardware && ${PIO[*]} run -e J1 -t upload     # then J2
-   USB keeps dropping? esptool at 115200 with retries (see flash_retry.sh notes in KE_HOACH_DEPLOY.md).
+     cd src/hardware && ${PIO[*]} run -e J1 -t upload     # then ${NODE_LIST[*]:1}
+   USB keeps dropping? bash src/hardware/flash_retry.sh J3   (esptool at 115200, retries)
 2. Pi: join the same network, then in ~/vedc-traffic-flow/.env.rpi set
      MQTT_HOST=$BROKER
    and restart:  sudo systemctl restart edgeflow-vision

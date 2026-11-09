@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # EdgeFlow AI - closed-loop rehearsal on one laptop, no hardware:
-#   telemetry source -> REAL graph-control -> 2 virtual ESP32 (esp32_simulator.py) -> ACK/health -> back.
+#   telemetry source -> REAL graph-control -> 1 virtual ESP32 per topology node (esp32_simulator.py) -> ACK/health -> back.
 # Uses a private Mosquitto on 127.0.0.1 (default port 18830), records every message, then runs flow_report.py.
 # The virtual ESP32 follows the firmware rules but is not evidence about the real boards.
 #
 #   bash src/hardware/demo/closed_loop_rehearsal.sh                                  # 60 s, fake Pi ns_heavy, max_pressure
 #   bash src/hardware/demo/closed_loop_rehearsal.sh --controller edgeflow --source fake:camera_lost
 #   bash src/hardware/demo/closed_loop_rehearsal.sh --source vision --model models/yolo11n.onnx   # real vision service, synthetic video
+#   bash src/hardware/demo/closed_loop_rehearsal.sh --topology tabletop_5nut_v1 --controller edgeflow   # 5-node sa ban
+#   ... --fault J3:wifi_drop@20+15 --fault J5:kill@25+20 --fault J2:safe_stop@30+8 --fault J4:reboot@40=BROWNOUT
+#       (NODE:KIND@T[+D][=ARG], T/D in s from the virtual ESP32 start; kinds in esp32_simulator.py --help)
 #
 # Needs: mosquitto + mosquitto_sub in PATH, a Python with paho-mqtt, jsonschema, pydantic-settings, networkx
 # (CI package list). PY=/path/to/python overrides the interpreter.
@@ -22,8 +25,9 @@ TOPOLOGY=tabletop_j1_j2_v1
 PORT=18830
 MODEL=""
 OUT=""
+FAULTS=()
 
-usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --controller) CONTROLLER=$2; shift 2 ;;
@@ -33,6 +37,7 @@ while [ $# -gt 0 ]; do
     --port) PORT=$2; shift 2 ;;
     --model) MODEL=$2; shift 2 ;;
     --out) OUT=$2; shift 2 ;;
+    --fault) FAULTS+=("$2"); shift 2 ;;
     -h|--help) usage 0 ;;
     *) echo "Unknown option: $1" >&2; usage 2 ;;
   esac
@@ -41,6 +46,9 @@ case "$SOURCE" in fake:*|vision) ;; *) echo "--source must be fake:<scenario> or
 for tool in mosquitto mosquitto_sub; do
   command -v "$tool" >/dev/null || { echo "$tool not found (brew install mosquitto / apt install mosquitto mosquitto-clients)" >&2; exit 2; }
 done
+# Nodes under control = every node of the topology contract (J1,J2 for tabletop_j1_j2_v1; J1..J5 for tabletop_5nut_v1)
+NODES="$("$PY" -c 'import json,sys; print(",".join(n["node_id"] for n in json.load(open(sys.argv[1]))["nodes"]))' \
+  "$REPO/contracts/topology/$TOPOLOGY.json")" || { echo "Cannot read contracts/topology/$TOPOLOGY.json" >&2; exit 2; }
 OUT="${OUT:-$HOME/edgeflow_runs/rehearsal_$(date +%Y%m%d_%H%M%S)_${CONTROLLER}_${SOURCE//:/_}}"
 mkdir -p "$OUT"
 export MQTT_HOST=127.0.0.1 MQTT_PORT="$PORT" EDGEFLOW_TOPOLOGY="$TOPOLOGY" EDGEFLOW_CONTROLLER="$CONTROLLER"
@@ -57,19 +65,26 @@ printf 'listener %s 127.0.0.1\nallow_anonymous true\npersistence false\n' "$PORT
 mosquitto -c "$OUT/mosquitto.conf" > "$OUT/mosquitto.log" 2>&1 & pids+=("$!")
 sleep 0.5
 mosquitto_sub -h 127.0.0.1 -p "$PORT" -v -F '%U %t %p' -t 'edgeflow/v1/#' > "$OUT/mqtt.log" 2>&1 & pids+=("$!")
-for node in J1 J2; do
+for f in ${FAULTS[@]+"${FAULTS[@]}"}; do
+  case ",$NODES," in *",${f%%:*},"*) ;; *) echo "--fault $f: node ${f%%:*} is not in $TOPOLOGY ($NODES)" >&2; exit 2 ;; esac
+done
+for node in ${NODES//,/ }; do
+  inject=()
+  for f in ${FAULTS[@]+"${FAULTS[@]}"}; do
+    [ "${f%%:*}" = "$node" ] && inject+=(--inject "${f#*:}")
+  done
   "$PY" -u "$DEMO/esp32_simulator.py" --node "$node" --mqtt-host 127.0.0.1 --mqtt-port "$PORT" \
-    > "$OUT/esp32_$node.log" 2>&1 & pids+=("$!")
+    ${inject[@]+"${inject[@]}"} > "$OUT/esp32_$node.log" 2>&1 & pids+=("$!")
 done
 (cd "$REPO/services/graph-control" && exec "$PY" -u main.py) > "$OUT/graph_control.log" 2>&1 & pids+=("$!")
 sleep 3
-echo "Rehearsal: controller=$CONTROLLER source=$SOURCE topology=$TOPOLOGY ${DURATION}s -> $OUT"
+echo "Rehearsal: controller=$CONTROLLER source=$SOURCE topology=$TOPOLOGY nodes=$NODES ${DURATION}s faults=[${FAULTS[*]+${FAULTS[*]}}] -> $OUT"
 
 if [ "${SOURCE%%:*}" = fake ]; then
-  "$PY" -u "$DEMO/pi_fake_telemetry.py" --mqtt-host 127.0.0.1 --mqtt-port "$PORT" --topology "$TOPOLOGY" \
+  "$PY" -u "$DEMO/pi_fake_telemetry.py" --mqtt-host 127.0.0.1 --mqtt-port "$PORT" --topology "$TOPOLOGY" --nodes "$NODES" \
     --scenario "${SOURCE#fake:}" --seed 7 --duration "$DURATION" > "$OUT/source.log" 2>&1 || echo "telemetry source exited with an error: see $OUT/source.log" >&2
 else
-  (cd "$REPO" && VIDEO_SOURCE="${VIDEO_SOURCE:-synthetic}" VISION_NODE_IDS=J1,J2 \
+  (cd "$REPO" && VIDEO_SOURCE="${VIDEO_SOURCE:-synthetic}" VISION_NODE_IDS="${VISION_NODE_IDS:-J1,J2}" \
      ROI_CONFIG_PATH="${ROI_CONFIG_PATH:-services/vision/rois/example_two_nodes_1280x720.json}" \
      DETECTION_MODEL_PATH="$MODEL" VISION_FPS="${VISION_FPS:-5}" exec "$PY" -u services/vision/main.py) \
      > "$OUT/source.log" 2>&1 &
@@ -83,7 +98,7 @@ cleanup
 trap - EXIT INT TERM
 
 status=0
-"$PY" "$DEMO/flow_report.py" "$OUT/mqtt.log" --nodes J1,J2 --json "$OUT/flow_report.json" | tee "$OUT/flow_report.txt" || status=$?
+"$PY" "$DEMO/flow_report.py" "$OUT/mqtt.log" --nodes "$NODES" --json "$OUT/flow_report.json" | tee "$OUT/flow_report.txt" || status=$?
 if grep -qiE 'Traceback|ERROR' "$OUT/graph_control.log"; then
   echo "graph-control logged errors: see $OUT/graph_control.log" >&2
 fi

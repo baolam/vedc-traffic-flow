@@ -29,7 +29,9 @@ BLIND_COMMAND_WINDOW_S = 1.0    # graph-control answers a telemetry message with
 CONTROLLED_LOOKBACK_S = 2.0     # a fallback entry this soon after confident telemetry is a failure
 PHASE_GRACE_S = 1.5             # telemetry built just before the new ESP32 phase reached the Pi
 MIN_PHASE_AGREEMENT = 0.95
-EXPECTED_REJECTS = ("Min green", "Clearance interval", "Phase transition")
+EXPECTED_REJECTS = ("Min green", "Clearance interval", "Phase transition", "Signal is in flashing mode")
+OUTAGE_MARGIN_S = 1.0           # a command published just before the board vanished is lost with it
+OUTAGE_REPORT_WINDOW_S = 15.0   # after reconnecting, the board must explain the outage this soon
 
 
 @dataclass(frozen=True)
@@ -96,6 +98,68 @@ def _check_telemetry(tel: List[Msg]) -> Tuple[str, str]:
     if rate < MIN_TELEMETRY_HZ:
         return "FAIL", detail + f" (need >= {MIN_TELEMETRY_HZ} Hz)"
     return ("WARN" if gaps else "PASS"), detail
+
+
+Window = Tuple[float, Optional[float]]  # (start, end); end None = still out when the log ends
+
+
+def _outages(health: List[Msg]) -> List[Window]:
+    """Device gone: from its LWT ("OFFLINE") to its next health report."""
+    windows: List[Window] = []
+    for h in health:
+        offline = h.payload.get("status") == "OFFLINE"
+        if offline and (not windows or windows[-1][1] is not None):
+            windows.append((h.t, None))
+        elif not offline and windows and windows[-1][1] is None:
+            windows[-1] = (windows[-1][0], h.t)
+    return windows
+
+
+def _in_windows(t: float, windows: List[Window], before: float = 0.0, after: float = 0.0) -> bool:
+    return any(start - before <= t <= (end if end is not None else float("inf")) + after for start, end in windows)
+
+
+def _check_outages(windows: List[Window], health: List[Msg], faults: List[Msg]) -> Tuple[str, str]:
+    """Every outage that ended must be explained: ERR_BROKER_DISCONNECT or a new boot (boot_count up)."""
+    if not windows:
+        return "PASS", "no outage"
+    unexplained = []
+    for start, end in windows:
+        if end is None:
+            continue
+        before = [h.payload.get("boot_count") for h in health if h.t < start and h.payload.get("boot_count")]
+        after = [h.payload.get("boot_count") for h in health
+                 if end <= h.t <= end + OUTAGE_REPORT_WINDOW_S and h.payload.get("boot_count")]
+        rebooted = bool(before and after and max(after) > before[-1])
+        reported = any(f.payload.get("fault_code") == "ERR_BROKER_DISCONNECT"
+                       and start <= f.t <= end + OUTAGE_REPORT_WINDOW_S for f in faults)
+        if not (rebooted or reported):
+            unexplained.append(round(start, 1))
+    spans = [f"{e - s:.1f}s" if e is not None else "open" for s, e in windows]
+    detail = f"{len(windows)} outage(s) {spans}"
+    if unexplained:
+        return "FAIL", detail + f"; {len(unexplained)} ended without ERR_BROKER_DISCONNECT or a new boot"
+    return "PASS", detail + ", each explained (fault event or reboot)"
+
+
+def _check_faults(faults: List[Msg]) -> Tuple[str, str]:
+    invalid = []
+    for f in faults:
+        try:
+            mc.validate(f.payload, "signal_fault_event")
+        except Exception as exc:  # noqa: BLE001 - any schema error is a finding
+            invalid.append(f"{f.payload.get('fault_code')}: {str(exc).splitlines()[0][:60]}")
+    codes = dict(collections.Counter(f.payload.get("fault_code") for f in faults))
+    ids = [f.payload.get("event_id") for f in faults]
+    dup = len(ids) - len(set(ids))
+    detail = f"{len(faults)} event(s) {codes}"
+    if dup:
+        detail += f"; {dup} duplicate event_id (the API keeps only the last)"
+    if invalid:
+        # Without SNTP the firmware omits timestamp_ms (required by the schema); the API stamps the arrival
+        only_clock = all("timestamp_ms" in i for i in invalid)
+        return ("WARN" if only_clock else "FAIL"), detail + f"; schema: {invalid[:3]}"
+    return ("WARN" if dup else "PASS"), detail
 
 
 def _check_acks(cmds: List[Msg], acks: List[Msg], log_end: float) -> Tuple[str, str, Dict[str, int]]:
@@ -182,6 +246,10 @@ def _analyze_node(msgs: List[Msg], node: str, log_start: float, log_end: float, 
     cmds = [m for m in msgs if m.topic == topics.get_command_topic(node)]
     acks = [m for m in msgs if m.topic == topics.get_ack_topic(node)]
     health = [m for m in msgs if m.topic == topics.get_health_topic(node)]
+    faults = [m for m in msgs if m.topic.startswith(f"edgeflow/v1/signal_fault/{node}/")]
+    windows = _outages(health)
+    # Commands sent while the board was gone cannot be answered; judge the others
+    cmds_judged = [c for c in cmds if not _in_windows(c.t, windows, before=OUTAGE_MARGIN_S)]
     confident = [m for m in tel if not is_blind(m.payload)]
     blind = [m for m in tel if is_blind(m.payload)]
     checks = []
@@ -195,12 +263,16 @@ def _analyze_node(msgs: List[Msg], node: str, log_start: float, log_end: float, 
                                 "with the same EDGEFLOW_TOPOLOGY and broker?")
     else:
         add("commands", "PASS", f"{len(cmds)} commands for {len(confident)} confident telemetry")
-    ack_status, ack_detail, _ = _check_acks(cmds, acks, log_end)
+    ack_status, ack_detail, _ = _check_acks(cmds_judged, acks, log_end)
+    if len(cmds_judged) < len(cmds):
+        ack_detail += f"; {len(cmds) - len(cmds_judged)} command(s) sent during an outage not judged"
     add("acks", ack_status, ack_detail)
     add("switch_timing", *_check_switches(acks, timing))
 
     entries = _fallback_entries(health)
-    controlled = [t for t in entries if any(t - CONTROLLED_LOOKBACK_S <= m.t <= t for m in confident)]
+    # A fallback announced on reconnect started while the board was cut off: expected, not a failure
+    controlled = [t for t in entries if any(t - CONTROLLED_LOOKBACK_S <= m.t <= t for m in confident)
+                  and not _in_windows(t, windows, after=timing.watchdog_s + OUTAGE_REPORT_WINDOW_S)]
     add("fallback", "FAIL" if controlled else "PASS",
         f"{len(entries)} fallback entr(y/ies)" + (f", {len(controlled)} while confident telemetry was flowing "
                                                   "(commands stopped reaching the device)" if controlled else ""))
@@ -209,7 +281,10 @@ def _analyze_node(msgs: List[Msg], node: str, log_start: float, log_end: float, 
     add("blind_commands", "FAIL" if answered_blind else "PASS",
         f"{answered_blind} of {len(blind)} blind telemetry (camera lost) answered with a command"
         + ("; graph-control decides on zeros and the ESP32 fallback never engages" if answered_blind else ""))
-    add("phase_agreement", *_phase_agreement(health, tel))
+    add("phase_agreement", *_phase_agreement(health, [m for m in tel if not _in_windows(
+        m.t, windows, after=PHASE_GRACE_S + timing.boot_s)]))
+    add("outages", *_check_outages(windows, health, faults))
+    add("faults", *_check_faults(faults))
 
     alarms = [(round(h.t - log_start, 1), h.payload.get("status")) for h in health
               if h.payload.get("status") in ("SAFE_STOP", "OFFLINE")]
@@ -221,7 +296,10 @@ def _analyze_node(msgs: List[Msg], node: str, log_start: float, log_end: float, 
                "ack_statuses": dict(collections.Counter(a.payload.get("status") for a in acks)),
                "green_switches": len(starts), "green_s": served,
                "green_starts": [(round(t - log_start, 1), p) for t, p in starts],
-               "fallback_entries": [round(t - log_start, 2) for t in entries]}
+               "fallback_entries": [round(t - log_start, 2) for t in entries],
+               "outages": [(round(a - log_start, 1), round(b - log_start, 1) if b is not None else None)
+                           for a, b in windows],
+               "faults": dict(collections.Counter(f.payload.get("fault_code") for f in faults))}
     return summary, checks
 
 
@@ -251,7 +329,7 @@ def print_report(report: Report, name: str) -> None:
         print(f"[{c.status}] {c.node:3s} {c.name:16s} {c.detail}")
     for node, s in report.nodes.items():
         print(f"{node}: green s per phase {s['green_s']} ({s['green_switches']} green starts), "
-              f"fallback entries at {s['fallback_entries']} s")
+              f"fallback entries at {s['fallback_entries']} s, outages {s['outages']}, faults {s['faults']}")
     if report.vision:
         print(f"vision health (last): {report.vision}")
     print(f"RESULT: {report.result}")

@@ -53,7 +53,7 @@ Hệ thống phần cứng thực tế phân tách rạch ròi giữa **Tầng N
   2. **Thực thi chuyển pha an toàn tuyệt đối (Hardware Clearance)**: Bắt buộc đi qua chu trình $\text{GREEN} \rightarrow \text{YELLOW (3.0s)} \rightarrow \text{ALL-RED (2.0s)} \rightarrow \text{GREEN mới}$.
   3. **Phản hồi xác thực (ControlACK)**: Bắn các trạng thái `ACCEPTED`, `APPLIED`, `REJECTED`, `EXPIRED` về Laptop Server.
   4. **Tự chủ khi mất mạng (Autonomous Watchdog Fallback)**: Nếu mất kết nối với Laptop Server quá $5.0\text{s}$, tự chuyển sang chu kỳ cố định cục bộ ($15\text{s}$ xanh mỗi hướng) để duy trì giao thông.
-  5. **Nút ngắt khẩn cấp (Physical Safe-Stop)**: Khi nhấn nút cơ (J1: `GPIO 16`, J2: `GPIO 4`, tiếp điểm NC, xem `HUONG_DAN_LAP_RAP.md` mục 3a), lập tức ngắt toàn bộ đèn và chuyển sang nhấp nháy đèn vàng cảnh báo nguy hiểm.
+  5. **Nút ngắt khẩn cấp (Physical Safe-Stop)**: Khi nhấn nút cơ (`GPIO 4` ở mọi nút, tiếp điểm NC, xem `HUONG_DAN_LAP_RAP.md` mục 3a), lập tức ngắt toàn bộ đèn và chuyển sang nhấp nháy đèn vàng cảnh báo nguy hiểm.
 
 ---
 
