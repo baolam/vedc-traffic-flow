@@ -179,6 +179,7 @@ services/simulator/sumo_configs/test_*
 
 # Presentations & Large Media
 presentation/
+services/vision/input_videos/
 
 *.db-shm
 *.db-wal
