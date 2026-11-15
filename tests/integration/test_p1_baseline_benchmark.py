@@ -136,7 +136,7 @@ def run_p1_benchmark(duration_s: int = 90):
             print(f"| {ctrl:18s} | {avg_mean_wait:17.2f} | {avg_p95_wait:16.2f} | {avg_completed:19.1f} | {avg_q:20.2f} |")
 
     # Save Markdown summary report
-    md_summary_path = repo_root / "docs" / "P1_FAIR_BASELINES_REPORT.md"
+    md_summary_path = repo_root / "docs" / "engineering" / "reports" / "benchmarks" / "P1_FAIR_BASELINES_REPORT.md"
     with open(md_summary_path, "w", encoding="utf-8") as f:
         f.write("# P1 Fair Baselines & Benchmark Report\n\n")
         f.write(f"**Execution Date:** {time.strftime('%Y-%m-%d %H:%M:%S')}\n")

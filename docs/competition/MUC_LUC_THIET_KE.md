@@ -33,7 +33,7 @@ Tóm tắt chân (mỗi nút J1/J2, theo `esp32_signal_controller.ino`):
 | Thư mục | Nội dung |
 |---|---|
 | [`thiet_ke/`](thiet_ke/) | Hình và bản vẽ báo cáo: 3.3 kiến trúc + phụ lục A (file `.drawio` là nguồn, PNG/SVG là bản xuất), 3.4 linh kiện, 4.4 hình minh họa Blender, video demo + nhãn + ROI, script sinh hình (`_scripts/`), ghi chú lịch sử (`_ghi_chu/`). Xem [`thiet_ke/README.md`](thiet_ke/README.md) |
-| [`in_sa_ban/`](in_sa_ban/) | File in sa bàn bạt 1200 × 600, phiếu đặt in, decal, bảng giới thiệu A3. Sinh lại: `python3 docs/in_sa_ban/_nguon/tao_tat_ca.py` |
+| [`in_sa_ban/`](in_sa_ban/) | File in sa bàn bạt 1200 × 600, phiếu đặt in, decal, bảng giới thiệu A3. Sinh lại: `python3 docs/competition/in_sa_ban/_nguon/tao_tat_ca.py` |
 | [`ke_hoach/`](ke_hoach/) | `KE_HOACH_DEPLOY.md` (kế hoạch và nhật ký deploy Pi/ESP32/laptop, các lỗi F1–F33, G1–G7), `KE_HOACH_TOI_NAY.md`, danh sách mua sắm còn thiếu |
 | [`ho_so/`](ho_so/) | Revised Development Plan (2) 22/09 (nguồn đúng về phạm vi), phương án phần cứng 29/07, Team Setup Guide |
 | [`bang_chung/2026-10-21/`](bang_chung/2026-10-21/) | Vòng kín trên phần cứng thật (Pi + 2 ESP32): `run_report.txt` PASS 16/16. Log MQTT gốc `run_pi_esp32_that.log` bị `.gitignore` bỏ qua (`*.log`), muốn commit phải `git add -f` |

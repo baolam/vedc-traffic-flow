@@ -7,7 +7,7 @@ Phase Steps:
   3. Freeze EdgeFlow v2 configuration into configs/controllers/edgeflow_v2.yaml.
   4. Final Benchmark on 10 Fresh Unseen Holdout Seeds (701..705, 801..805).
   5. Statistical Analysis with Paired Differences & 95% Confidence Intervals.
-  6. Generate comprehensive documentation in docs/P2_EDGEFLOW_OPTIMIZATION_REPORT.md.
+  6. Generate comprehensive documentation in docs/engineering/reports/benchmarks/P2_EDGEFLOW_OPTIMIZATION_REPORT.md.
 """
 
 import sys
@@ -242,7 +242,7 @@ def run_final_holdout_benchmark():
     stats_report = compute_paired_statistics(all_results, scenarios, holdout_seeds, controllers)
 
     # Generate Full P2 Optimization Report
-    generate_p2_report(stats_report, repo_root / "docs" / "P2_EDGEFLOW_OPTIMIZATION_REPORT.md")
+    generate_p2_report(stats_report, repo_root / "docs" / "engineering" / "reports" / "benchmarks" / "P2_EDGEFLOW_OPTIMIZATION_REPORT.md")
     return stats_report
 
 

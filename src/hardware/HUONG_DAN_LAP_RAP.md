@@ -2,7 +2,7 @@
 
 Viết cho bộ linh kiện chung kết: 5 nút, mỗi nút một ESP32-DevKitC-32U. Chân lấy từ `firmware/esp32_signal_controller.ino` và `platformio.ini`. Bản bán kết (2 nút, NodeMCU-32S, J1 hàn nút khẩn vào P16) nằm trong lịch sử git của file này.
 
-Bản vẽ HA.1–HA.4 trong `docs/thiet_ke/3.3_kien_truc/` vẫn đúng về chân GPIO. Riêng phần cơ khí trong đó đã cũ: bản vẽ còn tấm A0, trụ và camera trên trụ.
+Bản vẽ HA.1–HA.4 trong `docs/competition/thiet_ke/3.3_kien_truc/` vẫn đúng về chân GPIO. Riêng phần cơ khí trong đó đã cũ: bản vẽ còn tấm A0, trụ và camera trên trụ.
 
 ## 1. Linh kiện mỗi nút (J1–J5 giống hệt nhau)
 

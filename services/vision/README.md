@@ -91,7 +91,7 @@ docker compose -f docker-compose.rpi.yml --profile vision up -d
 # Hoặc khởi chạy trọn gói Standalone Edge Gateway (Vision + Control + Dashboard trên Pi):
 docker compose -f docker-compose.rpi.yml --profile standalone up -d
 ```
-Xem hướng dẫn chi tiết tại [`docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
+Xem hướng dẫn chi tiết tại [`docs/engineering/guides/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/engineering/guides/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
 
 ---
 

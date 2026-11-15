@@ -94,7 +94,7 @@ edgeflow-ai/
 ## ⚡ Hướng Dẫn Khởi Chạy (Quick Start)
 
 > [!TIP]
-> **Hướng dẫn chi tiết toàn bộ các chế độ chạy:** Xem [`docs/SYSTEM_RUN_MODES.md`](file:///e:/vedc-traffic-flow/docs/SYSTEM_RUN_MODES.md) (Pure Simulation, 3-Tier Demo, Edge Control, Standalone Pi, Experiment & Benchmark).
+> **Hướng dẫn chi tiết toàn bộ các chế độ chạy:** Xem [`docs/engineering/guides/SYSTEM_RUN_MODES.md`](file:///e:/vedc-traffic-flow/docs/engineering/guides/SYSTEM_RUN_MODES.md) (Pure Simulation, 3-Tier Demo, Edge Control, Standalone Pi, Experiment & Benchmark).
 
 ### 1. Khởi chạy Server Chính trên Laptop (Docker Stack)
 ```bash
@@ -107,7 +107,7 @@ make run-server
 Truy cập Dashboard điều hành tại: `http://localhost:3000`.
 
 ### 2. Khởi chạy Tầng Nhận Thức trên Raspberry Pi 5 (Docker hoặc Python)
-Xem chi tiết hướng dẫn đầy đủ tại [`docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
+Xem chi tiết hướng dẫn đầy đủ tại [`docs/engineering/guides/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/engineering/guides/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
 
 ```bash
 # Cách 1: Chạy bằng Docker Compose (Khuyến nghị cho chạy phân tán):
@@ -143,6 +143,6 @@ pytest tests/unit
 
 ## Shared Double DQN research track
 
-For the isolated four-intersection SUMO benchmark, training, validation, reproducibility limits, and promotion gate, see [the shared DQN research guide](docs/SHARED_DQN_RESEARCH.md).
+For the isolated four-intersection SUMO benchmark, training, validation, reproducibility limits, and promotion gate, see [the shared DQN research guide](docs/engineering/research/SHARED_DQN_RESEARCH.md).
 
 ---

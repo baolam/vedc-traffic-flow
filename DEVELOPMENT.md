@@ -3,7 +3,7 @@
 Hướng dẫn chi tiết quy trình phát triển, kiểm thử cục bộ và thiết lập môi trường trình diễn thực tế theo kiến trúc **3 Tầng Phân Tán (Laptop Server $\leftrightarrow$ Raspberry Pi 5 $\leftrightarrow$ ESP32 Hardware)**.
 
 > [!TIP]
-> **Xem chi tiết các kịch bản và chế độ chạy:** [`docs/SYSTEM_RUN_MODES.md`](file:///e:/vedc-traffic-flow/docs/SYSTEM_RUN_MODES.md) | **Hướng dẫn Docker Pi 5:** [`docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
+> **Xem chi tiết các kịch bản và chế độ chạy:** [`docs/engineering/guides/SYSTEM_RUN_MODES.md`](file:///e:/vedc-traffic-flow/docs/engineering/guides/SYSTEM_RUN_MODES.md) | **Hướng dẫn Docker Pi 5:** [`docs/engineering/guides/RASPBERRY_PI_DISTRIBUTED_GUIDE.md`](file:///e:/vedc-traffic-flow/docs/engineering/guides/RASPBERRY_PI_DISTRIBUTED_GUIDE.md).
 
 ---
 

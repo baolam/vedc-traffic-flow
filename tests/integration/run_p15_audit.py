@@ -8,7 +8,7 @@ This script executes:
   4. Direct spillback measurement (time occ >= 0.85, >= 0.95, storage queue capacity, episodes).
   5. Directional surge recovery analysis (peak queue, dissipation time).
   6. Completion & censoring accounting (scheduled, inserted, arrived, unfinished).
-  7. Generation of docs/P1_5_PERFORMANCE_AUDIT.md.
+  7. Generation of docs/engineering/reports/benchmarks/P1_5_PERFORMANCE_AUDIT.md.
 """
 
 import sys
@@ -277,8 +277,8 @@ def execute_full_p15_audit():
         json.dump(all_audits, f, indent=2)
 
     # Generate Markdown Report
-    generate_audit_markdown(all_audits, repo_root / "docs" / "P1_5_PERFORMANCE_AUDIT.md")
-    print("\n✅ P1.5 Audit Complete. Generated docs/P1_5_PERFORMANCE_AUDIT.md")
+    generate_audit_markdown(all_audits, repo_root / "docs" / "engineering" / "reports" / "benchmarks" / "P1_5_PERFORMANCE_AUDIT.md")
+    print("\n✅ P1.5 Audit Complete. Generated docs/engineering/reports/benchmarks/P1_5_PERFORMANCE_AUDIT.md")
     return all_audits
 
 
