@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="EdgeFlow AI - Services">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="1360" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ================= TIER 1 — CENTRAL SERVER (LAPTOP) ================= -->
+        <mxCell id="t1" value="TIER 1 &#8212; CENTRAL SERVER (LAPTOP, Docker Compose)" style="swimlane;startSize=30;fontStyle=1;fontSize=16;align=center;verticalAlign=top;fillColor=#F5F9FF;strokeColor=#6C8EBF;strokeWidth=2;rounded=0;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1100" height="550" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dash" value="Dashboard&#xa;(React &#8226; :3000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="150" y="140" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="API Backend&#xa;(FastAPI &#8226; :8000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="460" y="140" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="exprunner" value="Experiment-Runner&#xa;(Benchmark Orchestrator)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="750" y="140" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gc" value="Graph-Control&#xa;EdgeFlow / FlowTheory(CTM) /&#xa;Max-Pressure / RL Controllers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="140" y="280" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="broker" value="MQTT Broker&#xa;(Eclipse Mosquitto &#8226; :1883)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=13;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="460" y="290" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sim" value="Simulator&#xa;SUMO Digital Twin (TraCI)&#xa;+ optional internal math fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="770" y="280" width="220" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="act" value="Actuator&#xa;Simulation / Virtual Actuator&#xa;Safe-Phase State Machine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="140" y="400" width="230" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- intra-tier edges -->
+        <mxCell id="e-dash-api" value="REST / WebSocket" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="t1" source="dash" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-exp-api" value="REST&#xa;(experiment registry)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="t1" source="exprunner" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-api-broker" value="&#8595; control/policy, control/override, control/fault&#xa;&#8593; telemetry, health, network/state, acks" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="t1" source="api" target="broker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-gc-broker" value="&#8594; control/{node}/command&#xa;&#8592; telemetry, network/state, signal_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="t1" source="gc" target="broker">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-act-broker" value="&#8592; control/{node}/command&#xa;&#8594; control_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="t1" source="act" target="broker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-sim-broker" value="&#8592; control/{node}/command (sim)&#xa;&#8594; telemetry/{node_id} (sim)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="t1" source="sim" target="broker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= TIER 2 — RASPBERRY PI 5 (EDGE AI PERCEPTION) ================= -->
+        <mxCell id="t2" value="TIER 2 &#8212; RASPBERRY PI 5 (EDGE AI PERCEPTION)&#xa;Vision / Perception Service" style="swimlane;startSize=40;fontStyle=1;fontSize=16;align=center;verticalAlign=top;fillColor=#F2FBF5;strokeColor=#82B366;strokeWidth=2;rounded=0;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="680" width="760" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="detector" value="YOLOv8 / OpenCV DNN&#xa;Vehicle Detector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
+          <mxGeometry x="40" y="60" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="roi" value="ROI Manager&#xa;(per-approach polygons,&#xa;approach_id mapping)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
+          <mxGeometry x="270" y="60" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="metricsx" value="Metrics Extractor&#xa;(queue, occupancy,&#xa;dynamic flow rate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
+          <mxGeometry x="500" y="60" width="210" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ================= TIER 3 — PHYSICAL ACTUATORS (ESP32) ================= -->
+        <mxCell id="t3" value="TIER 3 &#8212; PHYSICAL ACTUATORS (ESP32)" style="swimlane;startSize=30;fontStyle=1;fontSize=16;align=center;verticalAlign=top;fillColor=#FFF7EC;strokeColor=#D79B00;strokeWidth=2;rounded=0;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="950" width="700" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="j1" value="ESP32 Node &#8212; J1&#xa;Intersection 1&#xa;4 Signal Heads (12 LEDs)&#xa;Safe Clearance State Machine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="t3">
+          <mxGeometry x="40" y="60" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="j2" value="ESP32 Node &#8212; J2&#xa;Intersection 2&#xa;4 Signal Heads (12 LEDs)&#xa;Safe Clearance State Machine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="t3">
+          <mxGeometry x="360" y="60" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ================= CROSS-TIER EDGES (via MQTT backbone) ================= -->
+        <mxCell id="e-vision-broker" value="&#8594; telemetry/{node_id}, health/{node_id} (publish)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="t2" target="broker">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1060" y="775" />
+              <mxPoint x="1060" y="605" />
+              <mxPoint x="555" y="605" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-j1-broker" value="&#8592; control/{node}/command&#xa;&#8594; control_ack, health, signal_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="j1" target="broker">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="1075" />
+              <mxPoint x="200" y="625" />
+              <mxPoint x="610" y="625" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-j2-broker" value="&#8592; control/{node}/command&#xa;&#8594; control_ack, health, signal_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="j2" target="broker">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="1075" />
+              <mxPoint x="1100" y="645" />
+              <mxPoint x="665" y="645" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ================= LEGEND ================= -->
+        <mxCell id="legend" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1200" width="200" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="" style="rounded=1;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="legend">
+          <mxGeometry x="10" y="30" width="30" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1t" value="Software service" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="50" y="28" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="" style="rounded=1;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="legend">
+          <mxGeometry x="10" y="54" width="30" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2t" value="API / control plane" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="50" y="52" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="rounded=1;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="legend">
+          <mxGeometry x="10" y="78" width="30" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3t" value="MQTT event broker" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="50" y="76" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="rounded=1;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=2;" vertex="1" parent="legend">
+          <mxGeometry x="10" y="102" width="30" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4t" value="Physical hardware" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="50" y="100" width="140" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
