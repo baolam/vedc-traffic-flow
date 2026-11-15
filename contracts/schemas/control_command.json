@@ -8,7 +8,10 @@
     "target_phase_id": { "type": "string" },
     "min_green_s": { "type": "number" },
     "max_green_s": { "type": "number" },
-    "controller": { "type": "string" }
+    "controller": { "type": "string" },
+    "controller_id": { "type": "string" },
+    "timestamp_ms": { "type": "integer" },
+    "expires_at_ms": { "type": "integer" }
   },
   "required": ["command_id", "node_id", "target_phase_id", "min_green_s", "max_green_s", "controller"]
 }

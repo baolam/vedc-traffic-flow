@@ -12,6 +12,7 @@ from controller import (
     FlowTheoryController
 )
 from runtime_guards import BlindNodeGate, ManualOverrideHold, PolicyFollower
+from noise_shield import NoiseShieldPipeline
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("graph-control")
@@ -36,6 +37,23 @@ def main():
     logger.info(f"Topology: {topology_id} | controller: {settings.edgeflow_controller}")
     gate = BlindNodeGate()
     hold = ManualOverrideHold(settings.manual_override_hold_s)
+    shield = NoiseShieldPipeline(
+        enabled=settings.noise_shield_enabled,
+        max_telemetry_age_ms=settings.max_telemetry_age_ms,
+        neighbor_ttl_s=settings.neighbor_ttl_s,
+        ema_alpha=settings.ema_alpha,
+        max_queue_rise_per_s=settings.max_queue_rise_per_s,
+        max_queue_drop_per_s=settings.max_queue_drop_per_s,
+        max_single_step_jump=settings.max_single_step_jump,
+        min_approach_confidence=settings.min_approach_confidence,
+        fallback_demand_floor_veh=settings.fallback_demand_floor_veh,
+        holdover_max_s=settings.holdover_max_s,
+        feedback_cooldown_s=settings.feedback_cooldown_s,
+        debounce_ticks=settings.debounce_ticks,
+        clearance_lock_s=settings.clearance_lock_s,
+        command_ttl_ms=settings.command_ttl_ms,
+        republish_interval_s=settings.command_republish_s,
+    )
 
     mqtt_host = settings.mqtt_host
     mqtt_port = settings.mqtt_port
@@ -47,6 +65,8 @@ def main():
             client.subscribe(topics.TELEMETRY_SUB_PATTERN)
             # Dashboard overrides are published by the API straight to the ESP32; seeing them here pauses the controller
             client.subscribe(topics.COMMAND_SUB_PATTERN)
+            # Dedicated signal fault channel: emergency lockouts, feedback errors, disconnects
+            client.subscribe(topics.SIGNAL_FAULT_SUB_PATTERN)
         else:
             logger.warning(f"MQTT Connect failed with code {rc}")
 
@@ -56,26 +76,30 @@ def main():
             if msg.topic.endswith("/command"):
                 hold.observe_command(payload)  # our own commands are ignored by their command_id
                 return
+            if msg.topic.startswith(f"{topics.PREFIX_V1}/signal_fault/"):
+                parts = msg.topic.split("/")
+                if len(parts) > 3 and "node_id" not in payload:
+                    payload["node_id"] = parts[3]
+                if len(parts) > 4 and "category" not in payload:
+                    payload["category"] = parts[4]
+                validate_payload(payload, "signal_fault_event")
+                shield.handle_fault(payload, topology=topology, network_state=network_state)
+                return
+
             validate_payload(payload, "telemetry")
             node_id = payload["node_id"]
-            # No observation -> no command: the ESP32 runs its own fallback instead of obeying zeros (G1)
-            admitted = gate.admit(node_id, payload, network_state)
-            if admitted:
-                network_state[node_id] = payload
 
-            # An operator override outranks both the controller and the blind gate, for a bounded time
-            cmd = hold.command_for(node_id, payload.get("current_phase_id"))
-            if cmd is None:
-                if not admitted:
-                    return
-                cmd = active["controller"].compute_command(
-                    node_id=node_id,
-                    telemetry=payload,
-                    topology=topology,
-                    network_state=network_state
-                )
+            cmd = shield.process_telemetry(
+                node_id=node_id,
+                telemetry=payload,
+                topology=topology,
+                network_state=network_state,
+                controller=active["controller"],
+                blind_gate=gate,
+                manual_hold=hold,
+            )
             if not cmd:
-                logger.debug(f"Node {node_id} has no traffic light phases; skipping command.")
+                logger.debug(f"Node {node_id} command suppressed or no phases available.")
                 return
 
             validate_payload(cmd, "control_command")

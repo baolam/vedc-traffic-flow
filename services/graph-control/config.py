@@ -14,6 +14,23 @@ class Settings(BaseSettings):
     # Dashboard phase override: seconds the forced phase stays green before the controller resumes; 0 = no hold
     manual_override_hold_s: float = 15.0
 
+    # 5-Layer Noise Immunity & Resilience Configuration
+    noise_shield_enabled: bool = True
+    max_telemetry_age_ms: int = 5000
+    neighbor_ttl_s: float = 8.0
+    ema_alpha: float = 0.5
+    max_queue_rise_per_s: float = 2.5
+    max_queue_drop_per_s: float = 3.5
+    max_single_step_jump: float = 4.0
+    min_approach_confidence: float = 0.25
+    fallback_demand_floor_veh: float = 1.0
+    holdover_max_s: float = 10.0
+    feedback_cooldown_s: float = 5.0
+    debounce_ticks: int = 2
+    clearance_lock_s: float = 5.0
+    command_ttl_ms: int = 4000
+    command_republish_s: float = 2.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
