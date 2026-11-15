@@ -26,32 +26,33 @@ class ROIManager:
         edge IDs, not a N/S/E/W convention).
         """
         cx, cy = self.width // 2, self.height // 2
-        # Same order as `slots` below (W, E, N, S): the synthetic IDs must name the quadrant they label
+        # Same order as `slots` below: [North, South, East, West]
         ids = list(approach_ids) if approach_ids else [
-            f"{node_id}_W_IN", f"{node_id}_E_IN", f"{node_id}_N_IN", f"{node_id}_S_IN"
+            f"{node_id}_N_IN", f"{node_id}_S_IN", f"{node_id}_E_IN", f"{node_id}_W_IN"
         ]
         ids = ids[:4]
 
+        # Slots must align with ids order: [North, South, East, West]
         slots = [
-            {  # west quadrant
-                "polygon": np.array([[0, cy], [cx - 50, cy], [cx - 50, cy + 50], [0, cy + 50]], np.int32),
-                "box": (0, cy, cx - 50, cy + 50),
-                "stop_line_x": cx - 50
-            },
-            {  # east quadrant
-                "polygon": np.array([[cx + 50, cy - 50], [self.width, cy - 50], [self.width, cy], [cx + 50, cy]], np.int32),
-                "box": (cx + 50, cy - 50, self.width, cy),
-                "stop_line_x": cx + 50
-            },
-            {  # north quadrant
+            {  # north quadrant (maps to N_IN)
                 "polygon": np.array([[cx - 50, 0], [cx, 0], [cx, cy - 50], [cx - 50, cy - 50]], np.int32),
                 "box": (cx - 50, 0, cx, cy - 50),
                 "stop_line_y": cy - 50
             },
-            {  # south quadrant
+            {  # south quadrant (maps to S_IN)
                 "polygon": np.array([[cx, cy + 50], [cx + 50, cy + 50], [cx + 50, self.height], [cx, self.height]], np.int32),
                 "box": (cx, cy + 50, cx + 50, self.height),
                 "stop_line_y": cy + 50
+            },
+            {  # east quadrant (maps to E_IN)
+                "polygon": np.array([[cx + 50, cy - 50], [self.width, cy - 50], [self.width, cy], [cx + 50, cy]], np.int32),
+                "box": (cx + 50, cy - 50, self.width, cy),
+                "stop_line_x": cx + 50
+            },
+            {  # west quadrant (maps to W_IN)
+                "polygon": np.array([[0, cy], [cx - 50, cy], [cx - 50, cy + 50], [0, cy + 50]], np.int32),
+                "box": (0, cy, cx - 50, cy + 50),
+                "stop_line_x": cx - 50
             },
         ]
 
