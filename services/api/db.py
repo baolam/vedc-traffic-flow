@@ -26,12 +26,18 @@ logger = logging.getLogger("edgeflow-db")
 def _default_db_path() -> Path:
     """<repo>/data/edgeflow.db from a checkout; <dir of db.py>/data/edgeflow.db in the API container,
     where db.py sits at /app/db.py and has no grandparent (parents[2] raised IndexError at import)."""
+    env_path = os.getenv("EDGEFLOW_DB_PATH")
+    if env_path:
+        return Path(env_path)
+    if Path("/data").is_dir() or Path("/data").exists():
+        return Path("/data/edgeflow.db")
     parents = Path(__file__).resolve().parents
     root = parents[2] if len(parents) > 2 else parents[0]
     return root / "data" / "edgeflow.db"
 
 
 DEFAULT_DB_PATH = _default_db_path()
+_get_default_db_path = _default_db_path
 
 
 class DatabaseManager:

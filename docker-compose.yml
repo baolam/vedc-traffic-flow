@@ -46,10 +46,11 @@ services:
         condition: service_healthy
     volumes:
       - ./contracts:/contracts
+      - ./services/api:/app
       - ./src:/app/src
       - ./output:/app/output
       - ./artifacts:/app/artifacts
-      - ./services/api/main.py:/app/main.py
+      - ./data:/data
     profiles:
       - simulation
       - vision
