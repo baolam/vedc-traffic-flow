@@ -14,13 +14,13 @@ import cv2
 import numpy as np
 
 try:
-    from .detector import VehicleDetector
-    from .hardware_monitor import get_runtime_hardware, read_board_model
-    from .video_source import create_video_source
+    from .vision.detector import VehicleDetector
+    from .connectivity.hardware_monitor import get_runtime_hardware, read_board_model
+    from .vision.video_source import create_video_source
 except ImportError:
-    from detector import VehicleDetector
-    from hardware_monitor import get_runtime_hardware, read_board_model
-    from video_source import create_video_source
+    from vision.detector import VehicleDetector
+    from connectivity.hardware_monitor import get_runtime_hardware, read_board_model
+    from vision.video_source import create_video_source
 
 
 def benchmark(source, model=None, frames=300, warmup=20, input_size=640,

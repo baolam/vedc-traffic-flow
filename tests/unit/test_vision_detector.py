@@ -12,7 +12,7 @@ if str(VISION_DIR) not in sys.path:
 
 cv2 = pytest.importorskip("cv2")
 
-from detector import VehicleDetector  # noqa: E402
+from vision.detector import VehicleDetector  # noqa: E402
 
 
 class FakeNet:

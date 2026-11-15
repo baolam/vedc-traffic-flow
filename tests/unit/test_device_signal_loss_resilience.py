@@ -16,7 +16,7 @@ from contracts.contracts_sdk import load_topology, validate_payload
 from src.control.gateway import ControlGateway
 from src.control.controllers import FixedTimeController
 from src.control.actuator import ActuatorStateMachine
-from services.vision.main import build_telemetry
+from services.vision.supervisor import build_telemetry
 
 
 class TestDeviceSignalLossResilience:

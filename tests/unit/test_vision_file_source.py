@@ -11,7 +11,7 @@ if str(VISION_DIR) not in sys.path:
 
 cv2 = pytest.importorskip("cv2")
 
-from video_source import FileVideoSource  # noqa: E402
+from vision.video_source import FileVideoSource  # noqa: E402
 
 FPS, FRAMES = 10, 20
 

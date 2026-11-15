@@ -29,7 +29,7 @@ CURR_DIR = Path(__file__).resolve().parent
 if str(CURR_DIR) not in sys.path:
     sys.path.insert(0, str(CURR_DIR))
 
-from video_source import BaseVideoSource, create_video_source  # noqa: E402
+from vision.video_source import BaseVideoSource, create_video_source  # noqa: E402
 
 SESSION_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 DIFF_SIZE = (160, 90)  # downscaled grayscale used only for the near-duplicate test

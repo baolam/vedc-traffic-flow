@@ -28,8 +28,8 @@ CURR_DIR = Path(__file__).resolve().parent
 if str(CURR_DIR) not in sys.path:
     sys.path.insert(0, str(CURR_DIR))
 
-from roi_config import RoiConfig, load_roi_config, save_roi_config, validate_against_topology  # noqa: E402
-from video_source import create_video_source  # noqa: E402
+from vision.roi_config import RoiConfig, load_roi_config, save_roi_config, validate_against_topology  # noqa: E402
+from vision.video_source import create_video_source  # noqa: E402
 from vision_contracts_helper import load_topology  # noqa: E402
 
 NODE_COLORS = [(0, 200, 255), (255, 120, 0), (0, 255, 120), (200, 0, 255)]

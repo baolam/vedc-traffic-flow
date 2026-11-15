@@ -193,7 +193,7 @@ PY
             "$(env_get DETECTOR_OUTPUT_FORMAT yolov8)" "$(env_get DETECTOR_NUM_CLASSES 80)" \
             "$(env_get DETECTOR_VEHICLE_CLASSES 2,3,5,7)" 2>&1 <<'PY'
 import sys, time
-from detector import VehicleDetector
+from vision.detector import VehicleDetector
 path, size, fmt, classes, vehicles = sys.argv[1:6]
 started = time.perf_counter()
 VehicleDetector(path, input_size=int(size), output_format=fmt, num_classes=int(classes),

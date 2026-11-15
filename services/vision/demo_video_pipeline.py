@@ -33,11 +33,10 @@ for p in (CURR_DIR, REPO_ROOT, CONTRACTS_DIR):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-from detector import VehicleDetector
-from video_source import create_video_source
-from roi_manager import ROIManager
-from metrics_extractor import MetricsExtractor
-from hardware_monitor import get_hardware_diagnostics, is_raspberry_pi
+from vision.detector import VehicleDetector
+from vision.engine import PerceptionEngine
+from vision.roi_manager import ROIManager
+from connectivity.hardware_monitor import get_hardware_diagnostics, is_raspberry_pi
 import contracts_sdk
 from contracts_sdk import validate_payload, load_topology
 
@@ -205,19 +204,21 @@ def run_pipeline_demo(
     initial_phase = node_spec["phases"][0]["phase_id"]
     current_phase_id = initial_phase
 
-    # 3. Initialize Detector, ROI Manager, Video Source, and Controller
+    # 3. Initialize Detector, ROI Manager and Video Source (via the vision module's
+    # PerceptionEngine, the same construction the live service uses) and the Controller.
     width, height = 640, 480
-    detector = VehicleDetector(model_path=model_path, conf_threshold=conf_threshold, input_size=640)
+    engine = PerceptionEngine(video_source_str=video_source_str, width=width, height=height,
+                              model_path=model_path, input_size=640, conf_threshold=conf_threshold)
+    detector = engine.detector
     logger.info(f"Detector Initialized: [{detector.backend}]")
 
     fallback_detector = None
     if enable_motion_fallback and detector.backend != "motion_baseline":
         fallback_detector = VehicleDetector(model_path=None, motion_scale=1.0)
 
-    video_source = create_video_source(video_source_str, width=width, height=height)
-    roi_manager = ROIManager(width=width, height=height)
-    roi_manager.setup_default_node_rois(node_id=node_id, approach_ids=approach_ids)
-    metrics_extractor = MetricsExtractor()
+    engine.roi_manager.setup_default_node_rois(node_id=node_id, approach_ids=approach_ids)
+    roi_manager = engine.roi_manager
+    metrics_extractor = engine.metrics_extractor
 
     controller = None
     if controller_type and controller_type.lower() not in ("none", "off", "false"):
@@ -247,7 +248,7 @@ def run_pipeline_demo(
 
     for idx in range(1, max_frames + 1):
         t0 = time.perf_counter()
-        ret, frame = video_source.read_frame()
+        ret, frame = engine.video_source.read_frame()
         if not ret or frame is None:
             logger.warning(f"Video stream ended at frame {idx - 1}.")
             break
@@ -256,7 +257,7 @@ def run_pipeline_demo(
             frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
 
         # Step 2: YOLO Detection
-        boxes, latency_ms = detector.detect(frame)
+        boxes = engine.detect_vehicles(frame)
         scores = detector.last_scores
 
         # If zero detections (e.g. synthetic flat rectangle video) and fallback enabled, supplement with contours
@@ -358,7 +359,7 @@ def run_pipeline_demo(
 
     # 5. Cleanup
     total_time = time.perf_counter() - start_all
-    video_source.release()
+    engine.close()
     if video_writer:
         video_writer.release()
     if mqtt_client:

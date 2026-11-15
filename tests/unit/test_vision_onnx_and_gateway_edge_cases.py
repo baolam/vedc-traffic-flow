@@ -7,7 +7,7 @@ from contracts.topics import topic
 from src.control.gateway import ControlGateway
 from src.control.controllers import FixedTimeController
 from services.vision.config import settings
-from services.vision.detector import VehicleDetector
+from services.vision.vision.detector import VehicleDetector
 
 
 class TestRealYOLOv8nONNX:

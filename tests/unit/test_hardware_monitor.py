@@ -3,7 +3,7 @@ import platform
 import pytest
 from unittest.mock import patch, mock_open
 
-from services.vision.hardware_monitor import (
+from services.vision.connectivity.hardware_monitor import (
     is_raspberry_pi,
     get_cpu_temperature,
     get_throttled_status,

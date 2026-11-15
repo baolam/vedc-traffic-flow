@@ -14,8 +14,8 @@ if str(CONTRACTS_DIR) not in sys.path:
 
 cv2 = pytest.importorskip("cv2")
 
-from roi_manager import ROIManager
-from metrics_extractor import MetricsExtractor
+from vision.roi_manager import ROIManager
+from vision.metrics_extractor import MetricsExtractor
 from vision_contracts_helper import validate_payload
 
 

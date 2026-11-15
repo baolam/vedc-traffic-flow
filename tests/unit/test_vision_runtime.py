@@ -19,14 +19,17 @@ for path in (VISION_DIR, CONTRACTS_DIR):
 pytest.importorskip("cv2")
 
 import benchmark  # noqa: E402
-import hardware_monitor  # noqa: E402
-from perception_engine import PerceptionEngine  # noqa: E402
+import connectivity.hardware_monitor as hardware_monitor  # noqa: E402
+from config import settings  # noqa: E402
+from connectivity.mqtt_gateway import MqttGateway  # noqa: E402
+from connectivity.phase_tracker import PhaseTracker  # noqa: E402
+from vision.engine import PerceptionEngine  # noqa: E402
 from runtime_stats import RuntimeStats  # noqa: E402
 
 
-def load_vision_main():
-    """Load services/vision/main.py by path; other services also ship a top-level main.py."""
-    spec = importlib.util.spec_from_file_location("vision_main", VISION_DIR / "main.py")
+def load_vision_supervisor():
+    """Load services/vision/supervisor.py by path; other services also ship a top-level main.py."""
+    spec = importlib.util.spec_from_file_location("vision_supervisor", VISION_DIR / "supervisor.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -166,11 +169,11 @@ def test_engine_clears_frame_info_when_camera_fails():
 # --- vision health topic ------------------------------------------------------------------------
 
 def test_offline_will_is_retained_on_the_health_topic():
-    vision_main = load_vision_main()
+    gateway = MqttGateway(settings, PhaseTracker([]), "edgeflow/v1/health/vision")
     calls = []
     client = types.SimpleNamespace(will_set=lambda *a, **k: calls.append((a, k)))
 
-    vision_main.set_offline_will(client)
+    gateway._set_offline_will(client)
 
     (args, kwargs), = calls
     assert args[0] == "edgeflow/v1/health/vision"
@@ -184,11 +187,11 @@ def test_offline_will_is_retained_on_the_health_topic():
     ({"frames_ok": 8, "consecutive_failures": 3}, "DEGRADED"),
 ])
 def test_health_status_follows_measured_frames(snapshot, status):
-    assert load_vision_main().health_status(snapshot) == status
+    assert load_vision_supervisor().health_status(snapshot) == status
 
 
 def test_health_payload_carries_measured_runtime_not_config():
-    vision_main = load_vision_main()
+    vision_supervisor = load_vision_supervisor()
     clock = FakeClock()
     stats = RuntimeStats(clock=clock)
     for _ in range(4):
@@ -199,7 +202,7 @@ def test_health_payload_carries_measured_runtime_not_config():
     identity = {"service": "vision", "model_sha256": "abc", "active_nodes": ["J1", "J2"]}
     hardware = {"cpu_temp_c": 61.2, "throttled_flags": []}
 
-    payload = vision_main.build_health(identity, stats.snapshot(), hardware, timestamp_ms=1234)
+    payload = vision_supervisor.build_health(identity, stats.snapshot(), hardware, timestamp_ms=1234)
 
     assert payload["status"] == "DEGRADED"
     assert "1 consecutive" in payload["reason"]

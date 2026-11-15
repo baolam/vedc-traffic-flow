@@ -21,9 +21,9 @@ from typing import Dict, List, Tuple
 import cv2
 import numpy as np
 
-from detector import VehicleDetector
-from roi_config import load_roi_config
-from roi_manager import ROIManager
+from vision.engine import PerceptionEngine
+from vision.roi_config import load_roi_config
+from vision.roi_manager import ROIManager
 
 logger = logging.getLogger("annotate_video")
 
@@ -68,15 +68,10 @@ def draw_frame(frame: np.ndarray, rois: ROIManager, node_of: Dict[str, str], nod
 
 def annotate(args: argparse.Namespace) -> Dict[str, object]:
     roi_config = load_roi_config(args.rois)
-    rois = ROIManager(width=roi_config.frame_size[0], height=roi_config.frame_size[1])
     node_of: Dict[str, str] = {}
     for node_id, polygons in roi_config.nodes.items():
-        rois.set_node_rois(node_id, polygons)
         node_of.update({app_id: node_id for app_id in polygons})
     node_color = {n: NODE_COLORS[i % len(NODE_COLORS)] for i, n in enumerate(roi_config.nodes)}
-    detector = VehicleDetector(model_path=args.model, conf_threshold=args.conf, input_size=args.input_size,
-                               num_classes=args.num_classes,
-                               vehicle_classes=tuple(int(c) for c in args.vehicle_classes.split(",")))
 
     cap = cv2.VideoCapture(args.video)
     if not cap.isOpened():
@@ -88,24 +83,41 @@ def annotate(args: argparse.Namespace) -> Dict[str, object]:
     writer, fourcc = open_writer(Path(args.out), fps, size)
     max_frames = int(args.seconds * fps) if args.seconds > 0 else None
 
+    # Reuse the vision module's detector + ROI-manager construction (the same objects the live
+    # service builds via PerceptionEngine), but keep driving frame reads with our own cap.read()
+    # loop below: PerceptionEngine's own FileVideoSource loops forever at EOF and paces itself to
+    # the file's real-time fps, neither of which this offline, as-fast-as-possible annotator wants.
+    engine = PerceptionEngine(
+        video_source_str="synthetic", width=size[0], height=size[1],
+        model_path=args.model, conf_threshold=args.conf, input_size=args.input_size,
+        num_classes=args.num_classes,
+        vehicle_classes=tuple(int(c) for c in args.vehicle_classes.split(",")),
+    )
+    engine.setup_nodes(list(roi_config.nodes), roi_config.nodes)
+    rois = engine.roi_manager
+    detector = engine.detector
+
     counts: Dict[str, List[int]] = {app_id: [] for app_id in rois.rois}
     frames, started = 0, time.monotonic()
     model_name = Path(args.model).name
-    while max_frames is None or frames < max_frames:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        boxes, _ = detector.detect(frame)
-        assigned = rois.assign_detections(boxes)
-        for app_id in counts:
-            counts[app_id].append(len(assigned.get(app_id, [])))
-        caption = (f"EdgeFlow vision | {model_name} | t={frames / fps:5.1f}s | "
-                   + "  ".join(f"{n}: {sum(len(assigned[a]) for a in node_of if node_of[a] == n)} xe trong ROI"
-                               for n in roi_config.nodes))
-        writer.write(draw_frame(frame, rois, node_of, node_color, boxes, assigned, caption))
-        frames += 1
-    writer.release()
-    cap.release()
+    try:
+        while max_frames is None or frames < max_frames:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            boxes, _ = detector.detect(frame)
+            assigned = rois.assign_detections(boxes)
+            for app_id in counts:
+                counts[app_id].append(len(assigned.get(app_id, [])))
+            caption = (f"EdgeFlow vision | {model_name} | t={frames / fps:5.1f}s | "
+                       + "  ".join(f"{n}: {sum(len(assigned[a]) for a in node_of if node_of[a] == n)} xe trong ROI"
+                                   for n in roi_config.nodes))
+            writer.write(draw_frame(frame, rois, node_of, node_color, boxes, assigned, caption))
+            frames += 1
+    finally:
+        writer.release()
+        cap.release()
+        engine.close()
     elapsed = time.monotonic() - started
 
     processing_fps = round(frames / elapsed, 2) if elapsed > 0 else None

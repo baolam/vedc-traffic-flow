@@ -17,8 +17,8 @@ pytest.importorskip("cv2")
 
 import importlib.util  # noqa: E402
 
-import video_source  # noqa: E402
-from video_source import Picamera2VideoSource, create_video_source  # noqa: E402
+import vision.video_source as video_source  # noqa: E402
+from vision.video_source import Picamera2VideoSource, create_video_source  # noqa: E402
 
 
 def load_vision_main():

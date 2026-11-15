@@ -16,7 +16,7 @@ for path in (VISION_DIR, CONTRACTS_DIR):
 cv2 = pytest.importorskip("cv2")
 
 import capture_dataset  # noqa: E402
-from video_source import SyntheticVideoSource  # noqa: E402
+from vision.video_source import SyntheticVideoSource  # noqa: E402
 
 
 class ConstantSource:

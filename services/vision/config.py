@@ -72,5 +72,28 @@ class Settings(BaseSettings):
     video_sync_fps: float = Field(default_factory=lambda: float(os.getenv("VIDEO_SYNC_FPS", "8.0")))
     video_sync_jpeg_quality: int = Field(default_factory=lambda: int(os.getenv("VIDEO_SYNC_JPEG_QUALITY", "70")))
 
+    # MQTT client identity, keepalive and QoS (previously hardcoded in main.py; now explicit and
+    # overridable). Defaults match what the service always did, so leaving these unset changes
+    # nothing.
+    mqtt_client_id: Optional[str] = Field(default_factory=lambda: os.getenv("MQTT_CLIENT_ID") or None)
+    mqtt_keepalive_s: int = Field(default_factory=lambda: int(os.getenv("MQTT_KEEPALIVE_S", "60")))
+    mqtt_qos_telemetry: int = Field(default_factory=lambda: int(os.getenv("MQTT_QOS_TELEMETRY", "0")))
+    mqtt_qos_health: int = Field(default_factory=lambda: int(os.getenv("MQTT_QOS_HEALTH", "1")))
+
+    # Optional Frame Archive (services/vision/storage/frame_archive.py): periodically saves
+    # annotated frames/clips to local disk for later review. Off by default, same opt-in style
+    # as VIDEO_SYNC_*; unlike video_sync it never leaves the device (no HTTP/MQTT), and it is
+    # NOT a telemetry history log or an MQTT-outage durability buffer.
+    frame_archive_enabled: bool = Field(
+        default_factory=lambda: os.getenv("FRAME_ARCHIVE_ENABLED", "false").lower() == "true")
+    frame_archive_dir: str = Field(
+        default_factory=lambda: os.getenv(
+            "FRAME_ARCHIVE_DIR", str(Path(__file__).resolve().parent / "frame_archive")))
+    frame_archive_mode: str = Field(default_factory=lambda: os.getenv("FRAME_ARCHIVE_MODE", "snapshot"))  # "snapshot" | "clip"
+    frame_archive_interval_s: float = Field(default_factory=lambda: float(os.getenv("FRAME_ARCHIVE_INTERVAL_S", "30.0")))
+    frame_archive_clip_duration_s: float = Field(default_factory=lambda: float(os.getenv("FRAME_ARCHIVE_CLIP_DURATION_S", "10.0")))
+    frame_archive_retention_hours: float = Field(default_factory=lambda: float(os.getenv("FRAME_ARCHIVE_RETENTION_HOURS", "24.0")))
+    frame_archive_jpeg_quality: int = Field(default_factory=lambda: int(os.getenv("FRAME_ARCHIVE_JPEG_QUALITY", "80")))
+
 
 settings = Settings()

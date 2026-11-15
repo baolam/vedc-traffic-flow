@@ -16,8 +16,9 @@ for path in (VISION_DIR, CONTRACTS_DIR):
 cv2 = pytest.importorskip("cv2")
 
 import contracts_sdk  # noqa: E402
-from perception_engine import PerceptionEngine  # noqa: E402
-from roi_config import load_roi_config, parse_roi_config, save_roi_config, validate_against_topology  # noqa: E402
+from config import settings  # noqa: E402
+from vision.engine import PerceptionEngine  # noqa: E402
+from vision.roi_config import load_roi_config, parse_roi_config, save_roi_config, validate_against_topology  # noqa: E402
 
 EXAMPLE_ROI = VISION_DIR / "rois" / "example_two_nodes_1280x720.json"
 TOPOLOGY = contracts_sdk.load_topology("four_intersection_v1")
@@ -128,22 +129,22 @@ def test_single_node_default_rois_still_work():
 
 
 def test_main_helpers_build_valid_telemetry_per_node(two_node_engine):
-    vision_main = load_module("vision_main_multinode", "main.py")
-    cfg = vision_main.settings.model_copy(update={"vision_node_ids": "J1, J2"})
-    assert vision_main.resolve_node_ids(cfg) == ["J1", "J2"]
+    vision_supervisor = load_module("vision_supervisor_multinode", "supervisor.py")
+    cfg = settings.model_copy(update={"vision_node_ids": "J1, J2"})
+    assert vision_supervisor.resolve_node_ids(cfg) == ["J1", "J2"]
 
     nodes = {n["node_id"]: n for n in TOPOLOGY["nodes"]}
     per_node = two_node_engine.process_frame_nodes()
     for node_id in ("J1", "J2"):
-        payload = vision_main.build_telemetry(nodes[node_id], per_node[node_id], 1.0, 1727005820123)
+        payload = vision_supervisor.build_telemetry(nodes[node_id], per_node[node_id], 1.0, 1727005820123)
         contracts_sdk.validate_payload(payload, "telemetry")
         assert payload["node_id"] == node_id
 
 
 def test_missing_frame_reports_zero_confidence_not_traffic():
-    vision_main = load_module("vision_main_missing", "main.py")
+    vision_supervisor = load_module("vision_supervisor_missing", "supervisor.py")
     node = next(n for n in TOPOLOGY["nodes"] if n["node_id"] == "J2")
-    payload = vision_main.build_telemetry(node, [], 1.0, 1727005820123)
+    payload = vision_supervisor.build_telemetry(node, [], 1.0, 1727005820123)
     contracts_sdk.validate_payload(payload, "telemetry")
     assert all(a["confidence"] == 0.0 and a["queue_vehicles"] == 0.0 for a in payload["approaches"])
 

@@ -1,26 +1,13 @@
-import sys
-import os
 import time
-from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
 import cv2
 
-# Ensure services/vision directory is in sys.path for IDE & module resolution
-CURR_DIR = Path(__file__).resolve().parent
-if str(CURR_DIR) not in sys.path:
-    sys.path.insert(0, str(CURR_DIR))
+from .video_source import BaseVideoSource, create_video_source
+from .roi_manager import ROIManager
+from .metrics_extractor import MetricsExtractor
+from .detector import VehicleDetector
 
-try:
-    from video_source import BaseVideoSource, create_video_source
-    from roi_manager import ROIManager
-    from metrics_extractor import MetricsExtractor
-    from detector import VehicleDetector
-except ImportError:
-    from services.vision.video_source import BaseVideoSource, create_video_source
-    from services.vision.roi_manager import ROIManager
-    from services.vision.metrics_extractor import MetricsExtractor
-    from services.vision.detector import VehicleDetector
 
 class PerceptionEngine:
     """
@@ -48,10 +35,12 @@ class PerceptionEngine:
         # A processed frame reports confidence 1.0; main.TelemetryWindow lowers it when frames are lost.
         self.last_frame: Dict[str, Any] = {}
         # Raw frame + its assigned detection boxes, kept only for an optional caller (video sync to the
-        # platform, see services/vision/video_sync.py) -- None whenever nothing read this frame yet or
-        # the last read failed. A plain attribute, not returned by process_frame_nodes(), so callers that
-        # don't need pixels (the normal telemetry-only path) pay no extra cost.
-        self.last_rendered: Optional[Tuple[np.ndarray, Dict[str, List[Tuple[int, int, int, int]]]]] = None
+        # platform, see services/vision/streaming/live_stream.py) -- None whenever nothing read this
+        # frame yet or the last read failed. A plain attribute, not returned by process_frame_nodes(),
+        # so callers that don't need pixels (the normal telemetry-only path) pay no extra cost.
+        # (frame, boxes assigned to an approach, every detected box including ones outside any ROI)
+        self.last_rendered: Optional[Tuple[np.ndarray, Dict[str, List[Tuple[int, int, int, int]]],
+                                           List[Tuple[int, int, int, int]]]] = None
 
     def setup_topology(self, topology: Dict[str, Any], node_id: str = "J1") -> None:
         """Sets up the default (uncalibrated) ROIs for a single node."""
@@ -140,9 +129,10 @@ class PerceptionEngine:
         if frame.shape[:2] != (self.height, self.width):
             frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
 
-        assigned_boxes = self.roi_manager.assign_detections(self.detect_vehicles(frame))
+        all_boxes = self.detect_vehicles(frame)
+        assigned_boxes = self.roi_manager.assign_detections(all_boxes)
         self.last_frame = {**frame_info, **self.detector.last_timings}
-        self.last_rendered = (frame, assigned_boxes)
+        self.last_rendered = (frame, assigned_boxes, all_boxes)
         results: Dict[str, List[Dict[str, Any]]] = {}
         for node_id in self.node_ids or []:
             results[node_id] = [
@@ -160,3 +150,28 @@ class PerceptionEngine:
         """Cleanup video source resources."""
         if self.video_source:
             self.video_source.release()
+
+
+def build_engine_from_settings(settings, node_ids: List[str],
+                               roi_nodes: Optional[Dict[str, Dict[str, Any]]] = None,
+                               frame_size: Optional[Tuple[int, int]] = None) -> PerceptionEngine:
+    """Builds a PerceptionEngine the same way every caller needs to: one VehicleDetector, one
+    video source, ROIs for every node this camera covers. Centralizes what used to be
+    independently duplicated in main.py, demo_video_pipeline.py and benchmark.py."""
+    width, height = frame_size or (640, 480)
+    engine = PerceptionEngine(
+        video_source_str=settings.video_source,
+        width=width,
+        height=height,
+        model_path=settings.detection_model_path or None,
+        input_size=settings.detector_input_size,
+        output_format=settings.detector_output_format,
+        motion_scale=settings.motion_scale,
+        conf_threshold=settings.confidence_threshold,
+        num_classes=settings.detector_num_classes,
+        vehicle_classes=tuple(int(c) for c in settings.detector_vehicle_classes.split(",")),
+        lens_position=settings.camera_lens_position,
+        flicker_period_us=settings.camera_flicker_period_us,
+    )
+    engine.setup_nodes(node_ids, roi_nodes)
+    return engine

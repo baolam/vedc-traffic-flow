@@ -16,7 +16,7 @@ for path in (VISION_DIR, CONTRACTS_DIR):
         sys.path.insert(0, str(path))
 
 import contracts_sdk  # noqa: E402
-from phase_tracker import PHASE_STALE_S, PhaseTracker  # noqa: E402
+from connectivity.phase_tracker import PHASE_STALE_S, PhaseTracker  # noqa: E402
 
 TOPOLOGY = contracts_sdk.load_topology("four_intersection_v1")
 NODES = {n["node_id"]: n for n in TOPOLOGY["nodes"]}
@@ -102,20 +102,20 @@ def test_safe_stop_still_reports_the_held_phase(tracker):
 
 # --- telemetry and health of the vision service -------------------------------------------------
 
-def load_vision_main():
-    """services/vision/main.py by path (other services also ship a main.py); it needs OpenCV."""
+def load_vision_supervisor():
+    """services/vision/supervisor.py by path (other services also ship a main.py); needs OpenCV."""
     pytest.importorskip("cv2")
-    spec = importlib.util.spec_from_file_location("vision_main_phase", VISION_DIR / "main.py")
+    spec = importlib.util.spec_from_file_location("vision_supervisor_phase", VISION_DIR / "supervisor.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
 def test_telemetry_carries_the_reported_phase():
-    vision_main = load_vision_main()
+    vision_supervisor = load_vision_supervisor()
 
-    reported = vision_main.build_telemetry(NODES["J1"], [], 1.0, 1727005820123, current_phase_id="J1_PHASE_EW")
-    unknown = vision_main.build_telemetry(NODES["J1"], [], 1.0, 1727005820123)
+    reported = vision_supervisor.build_telemetry(NODES["J1"], [], 1.0, 1727005820123, current_phase_id="J1_PHASE_EW")
+    unknown = vision_supervisor.build_telemetry(NODES["J1"], [], 1.0, 1727005820123)
 
     contracts_sdk.validate_payload(reported, "telemetry")
     assert reported["current_phase_id"] == "J1_PHASE_EW"
@@ -123,11 +123,11 @@ def test_telemetry_carries_the_reported_phase():
 
 
 def test_vision_health_says_where_each_phase_came_from():
-    vision_main = load_vision_main()
+    vision_supervisor = load_vision_supervisor()
     snapshot = {"frames_ok": 3, "consecutive_failures": 0}
 
-    payload = vision_main.build_health({"service": "vision"}, snapshot, {}, 1234,
-                                       phase_sources={"J1": "esp32_health", "J2": "default"})
+    payload = vision_supervisor.build_health({"service": "vision"}, snapshot, {}, 1234,
+                                             phase_sources={"J1": "esp32_health", "J2": "default"})
 
     assert payload["phase_source"] == {"J1": "esp32_health", "J2": "default"}
 

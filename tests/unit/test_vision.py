@@ -16,10 +16,10 @@ if str(CONTRACTS_DIR) not in sys.path:
 import contracts_sdk
 cv2 = pytest.importorskip("cv2")
 
-from video_source import SyntheticVideoSource, create_video_source
-from roi_manager import ROIManager
-from metrics_extractor import MetricsExtractor
-from perception_engine import PerceptionEngine
+from vision.video_source import SyntheticVideoSource, create_video_source
+from vision.roi_manager import ROIManager
+from vision.metrics_extractor import MetricsExtractor
+from vision.engine import PerceptionEngine
 
 def test_synthetic_video_source():
     source = SyntheticVideoSource(width=640, height=480)

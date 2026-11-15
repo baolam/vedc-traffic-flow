@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[2] / "services" / "vision"))
 from annotate_video import draw_frame, open_writer  # noqa: E402
-from roi_manager import ROIManager  # noqa: E402
+from vision.roi_manager import ROIManager  # noqa: E402
 
 
 def _rois():
