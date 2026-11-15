@@ -6,6 +6,8 @@ TELEMETRY_PERIOD_S. Each published field is the median over the period's frames,
 that misses or double-counts a car does not move the queue. `confidence` is the share of the
 period's frames that were actually captured and processed: 1.0 with a healthy camera (as the
 simulator sends), lower when frames were lost, and no approaches at all when none was processed.
+It is further multiplied, per approach, by the share of frames in which that ROI was visible (a
+covered ROI reports row confidence 0.0, see roi_visibility.py).
 """
 
 from typing import Any, Dict, List, Optional
@@ -45,10 +47,11 @@ class TelemetryWindow:
         for per_node in self.samples:
             for row in per_node.get(node_id, []):
                 rows_by_approach.setdefault(row["approach_id"], []).append(row)
-        confidence = round(self.validity(), 3)
+        validity = self.validity()
+        # Per-approach: frame validity x share of frames in which that ROI was visible (roi_visibility.py)
         return [
             {"approach_id": approach_id,
              **{key: round(float(np.median([r[key] for r in rows])), 3) for key in MEDIAN_FIELDS},
-             "confidence": confidence}
+             "confidence": round(validity * float(np.mean([r.get("confidence", 1.0) for r in rows])), 3)}
             for approach_id, rows in rows_by_approach.items()
         ]

@@ -143,6 +143,45 @@ def test_device_enforces_max_green_even_if_the_controller_keeps_asking():
     assert rig.logic.current_phase == "EW"
 
 
+def _force_max_green_switch(rig):
+    """Controller keeps asking NS until the device forces EW; returns when EW is green."""
+    while rig.logic.current_phase != "EW" or rig.logic.clear_state != GREEN:
+        rig.advance(1.0)
+        rig.send("NS", cmd_id="keep")
+
+
+def test_phase_forced_by_max_green_keeps_green_for_the_forced_service_time():
+    rig = Rig()
+    _force_max_green_switch(rig)
+
+    rig.advance(TIMING.min_green_s + 1)              # past the 5 s minimum, inside the 15 s service
+    assert rig.send("NS", cmd_id="back") == "REJECTED"
+    assert "Forced-service green not met" in rig.acks[-1][3]
+    rig.advance(TIMING.forced_service_green_s - TIMING.min_green_s)
+    assert rig.send("NS", cmd_id="later") == "ACCEPTED"
+
+
+def test_dashboard_override_is_not_held_by_the_forced_service_time():
+    rig = Rig()
+    _force_max_green_switch(rig)
+
+    rig.advance(TIMING.min_green_s + 1)
+    assert rig.send("NS", cmd_id=f"{mc_override()}1") == "ACCEPTED"
+
+
+def test_green_reached_by_a_normal_command_has_only_the_minimum():
+    rig = Rig()
+    rig.advance(TIMING.min_green_s)
+    rig.send("EW", cmd_id="go")
+    rig.advance(TIMING.clearance_s + TIMING.min_green_s + 0.5)
+    assert rig.send("NS", cmd_id="back") == "ACCEPTED"
+
+
+def mc_override():
+    from esp32_simulator import OVERRIDE_ID_PREFIX
+    return OVERRIDE_ID_PREFIX
+
+
 def test_safe_stop_rejects_commands_and_reports_status():
     rig = Rig()
     rig.logic.safe_stop = True
@@ -180,3 +219,18 @@ def test_resolve_phase_accepts_short_names_and_rejects_unknown_ones():
         lct.resolve_phase("four_intersection_v1", "J1", "DIAG")
     with pytest.raises(ValueError):
         lct.resolve_phase("four_intersection_v1", "J9", "NS")
+
+
+def test_safe_stop_release_restarts_the_coordinator_watchdog():
+    # graph-control's circuit breaker halts commands on purpose while SAFE_STOP is engaged
+    # (noise_shield.py): that silence must not throw the node into fallback the instant it is released.
+    rig = Rig()
+    rig.send("NS")                          # coordinator alive before the switch is pressed
+    assert not rig.logic.fallback
+    rig.logic.set_safe_stop(True, rig.now)
+    rig.advance(TIMING.watchdog_s + 3)
+    rig.logic.set_safe_stop(False, rig.now)
+    rig.advance(1.0)
+    assert not rig.logic.fallback
+    rig.advance(TIMING.watchdog_s)         # but a coordinator that stays silent is still caught
+    assert rig.logic.fallback

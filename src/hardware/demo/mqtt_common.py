@@ -27,6 +27,7 @@ class Timing:
     max_green_s: float = 60.0
     watchdog_s: float = 5.0
     fallback_green_s: float = 15.0
+    forced_service_green_s: float = 15.0  # FORCED_SERVICE_GREEN_MS: green kept after a max-green switch
     health_period_s: float = 5.0
     keepalive_s: float = 2.0   # how often a test tool must send a command to stay under the watchdog
     startup_flash_s: float = 4.0       # flashing yellow after every boot, then yellow + all-red

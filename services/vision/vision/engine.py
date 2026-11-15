@@ -1,5 +1,6 @@
 import time
 from typing import Dict, List, Any, Optional, Tuple
+import logging
 import numpy as np
 import cv2
 
@@ -7,6 +8,10 @@ from .video_source import BaseVideoSource, create_video_source
 from .roi_manager import ROIManager
 from .metrics_extractor import MetricsExtractor
 from .detector import VehicleDetector
+from .motion_estimator import MotionEstimator
+from .roi_visibility import RoiVisibility
+
+logger = logging.getLogger("vision-service")
 
 
 class PerceptionEngine:
@@ -17,12 +22,18 @@ class PerceptionEngine:
     def __init__(self, video_source_str: str = "synthetic", width: int = 640, height: int = 480,
                  model_path=None, input_size=640, output_format="yolov8", motion_scale=1.0,
                  conf_threshold=.4, num_classes=80, vehicle_classes=(2, 3, 5, 7),
-                 lens_position=None, flicker_period_us=10000):
+                 lens_position=None, flicker_period_us=10000, px_per_m=1000.0,
+                 blind_edge_ratio=0.01):
         self.video_source: BaseVideoSource = create_video_source(
             video_source_str, width=width, height=height,
             lens_position=lens_position, flicker_period_us=flicker_period_us)
         self.roi_manager = ROIManager(width=width, height=height)
         self.metrics_extractor = MetricsExtractor()
+        # Measured box motion replaces the occupancy-based speed estimate (motion_estimator.py)
+        self.motion = MotionEstimator(px_per_m)
+        # A covered/blinded ROI reports confidence 0.0, not "0 vehicles" (roi_visibility.py)
+        self.visibility = RoiVisibility(blind_edge_ratio)
+        self.blind: set = set()
         self.detector = VehicleDetector(model_path=model_path, input_size=input_size,
                                         output_format=output_format, motion_scale=motion_scale,
                                         conf_threshold=conf_threshold, num_classes=num_classes,
@@ -98,6 +109,7 @@ class PerceptionEngine:
 
         # Map boxes to ROIs
         assigned_boxes = self.roi_manager.assign_detections(boxes)
+        self._update_blind(frame)
 
         # Calculate approach metrics
         approaches_telemetry = []
@@ -107,8 +119,9 @@ class PerceptionEngine:
                 approach_id=app_id,
                 boxes=app_boxes,
                 roi_area=roi_area,
-                detection_confidence=1.0
+                detection_confidence=0.0 if app_id in self.blind else 1.0
             )
+            metrics["mean_speed_mps"] = self.motion.update(app_id, app_boxes, time.time())
             approaches_telemetry.append(metrics)
 
         return approaches_telemetry
@@ -131,20 +144,35 @@ class PerceptionEngine:
 
         all_boxes = self.detect_vehicles(frame)
         assigned_boxes = self.roi_manager.assign_detections(all_boxes)
+        self._update_blind(frame)
         self.last_frame = {**frame_info, **self.detector.last_timings}
         self.last_rendered = (frame, assigned_boxes, all_boxes)
         results: Dict[str, List[Dict[str, Any]]] = {}
+        t_s = frame_info["captured_at_ms"] / 1000.0
         for node_id in self.node_ids or []:
-            results[node_id] = [
-                self.metrics_extractor.compute_approach_metrics(
+            rows = []
+            for app_id in self.roi_manager.approaches_for_node(node_id):
+                boxes = assigned_boxes.get(app_id, [])
+                metrics = self.metrics_extractor.compute_approach_metrics(
                     approach_id=app_id,
-                    boxes=assigned_boxes.get(app_id, []),
+                    boxes=boxes,
                     roi_area=self.roi_manager.get_roi_area(app_id),
-                    detection_confidence=1.0
+                    detection_confidence=0.0 if app_id in self.blind else 1.0
                 )
-                for app_id in self.roi_manager.approaches_for_node(node_id)
-            ]
+                metrics["mean_speed_mps"] = self.motion.update(app_id, boxes, t_s)
+                rows.append(metrics)
+            results[node_id] = rows
         return results
+
+    def _update_blind(self, frame: np.ndarray) -> None:
+        """Marks ROIs without texture this frame; logs each blind episode once (start and end)."""
+        blind = self.visibility.blind_approaches(frame, self.roi_manager.rois)
+        for app_id in sorted(blind - self.blind):
+            logger.warning(f"{app_id}: ROI shows no texture (covered, blinded or dark): "
+                           "confidence 0 while it lasts, its '0 vehicles' is unknown, not empty")
+        for app_id in sorted(self.blind - blind):
+            logger.info(f"{app_id}: ROI visible again")
+        self.blind = blind
 
     def close(self) -> None:
         """Cleanup video source resources."""
@@ -172,6 +200,8 @@ def build_engine_from_settings(settings, node_ids: List[str],
         vehicle_classes=tuple(int(c) for c in settings.detector_vehicle_classes.split(",")),
         lens_position=settings.camera_lens_position,
         flicker_period_us=settings.camera_flicker_period_us,
+        px_per_m=getattr(settings, "vision_px_per_m", 1000.0),
+        blind_edge_ratio=getattr(settings, "vision_blind_edge_ratio", 0.01),
     )
     engine.setup_nodes(node_ids, roi_nodes)
     return engine

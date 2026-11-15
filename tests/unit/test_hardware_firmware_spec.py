@@ -34,3 +34,10 @@ def test_schematic_and_pinout_doc():
     assert "GPIO" in content
     assert "J1" in content
     assert "J2" in content
+
+
+def test_esp32_firmware_holds_a_phase_forced_by_max_green():
+    content = Path("src/hardware/firmware/esp32_signal_controller.ino").read_text(encoding="utf-8")
+    # Same rule as the virtual ESP32 (mqtt_common.Timing.forced_service_green_s)
+    assert re.search(r"FORCED_SERVICE_GREEN_MS\s*=\s*15000", content)
+    assert "forcedServicePending = true" in content

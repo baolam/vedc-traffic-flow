@@ -95,6 +95,8 @@ class Esp32Logic:
         self.min_green_s = timing.min_green_s
         self.max_green_s = timing.max_green_s
         self.min_green_fault_sent = False
+        self.forced_service_pending = False  # clearance in progress was forced by max green
+        self.forced_service_active = False   # current green was forced: forced_service_green_s applies
         self.consecutive_expired = 0
         self.clock_distrusted = False
         self.output_fault = False          # injected: head pins read back wrong
@@ -149,6 +151,7 @@ class Esp32Logic:
 
     def _start_clearance(self, target: str, cmd_id: str, target_str: str, now: float) -> None:
         self.pending_phase, self.pending_command_id, self.pending_target = target, cmd_id, target_str
+        self.forced_service_pending = False  # the max-green path sets it again right after this call
         self.yellow_both = False
         self.clear_state, self.state_start = YELLOW, now
 
@@ -221,6 +224,7 @@ class Esp32Logic:
     def exit_flash(self, now: float) -> None:
         self.flash_reason = None
         self.pending_phase = self.current_phase
+        self.forced_service_pending = False  # a max-green switch interrupted by flashing no longer applies
         self.yellow_both = True
         self.clear_state, self.state_start = YELLOW, now
         self.emit_health()
@@ -235,6 +239,8 @@ class Esp32Logic:
             self.enter_flash(SAFE_STOP, now)
         else:
             self.raise_fault("emergency", "ERR_SAFE_STOP_RELEASED", "INFO", "Safe-stop emergency switch released", now)
+            # graph-control halts commands on purpose during SAFE_STOP: give it a full watchdog period to resume
+            self.last_command = now
             self.exit_flash(now)
 
     def force_heads(self, ns: str, ew: str, now: float) -> None:
@@ -312,8 +318,12 @@ class Esp32Logic:
             self.emit_ack(cmd_id, target_str, "REJECTED", "Clearance interval currently in progress.")
             return
         elapsed = now - self.phase_start
-        if elapsed < self.min_green_s:
-            reason = f"Min green time not met ({elapsed:.1f}s < {self.min_green_s:.1f}s)"
+        required = self.min_green_s
+        if self.forced_service_active and not cmd_id.startswith(OVERRIDE_ID_PREFIX):
+            required = max(required, self.timing.forced_service_green_s)
+        if elapsed < required:
+            label = "Forced-service green" if required > self.min_green_s else "Min green time"
+            reason = f"{label} not met ({elapsed:.1f}s < {required:.1f}s)"
             self.emit_ack(cmd_id, target_str, "REJECTED", reason)
             if not self.min_green_fault_sent:
                 self.min_green_fault_sent = True
@@ -338,6 +348,7 @@ class Esp32Logic:
             self.current_phase, self.clear_state = self.pending_phase, GREEN
             self.state_start = self.phase_start = now
             self.min_green_fault_sent = False
+            self.forced_service_active, self.forced_service_pending = self.forced_service_pending, False
             if self.pending_command_id:  # APPLIED only once the output really changed
                 self.emit_ack(self.pending_command_id, self.pending_target, "APPLIED",
                               "Physical clearance completed. Target phase is now active GREEN.")
@@ -356,6 +367,7 @@ class Esp32Logic:
                 self._start_clearance(other, "", self.phase_id(other), now)  # local cycle: no ACK
         elif self.clear_state == GREEN and now - self.phase_start >= self.max_green_s:
             self._start_clearance(other, "", self.phase_id(other), now)  # device-enforced max green
+            self.forced_service_pending = True  # the other phase then keeps green >= forced_service_green_s
 
     def _service_readback(self, now: float) -> None:
         if now - self.last_readback < self.timing.readback_period_s:

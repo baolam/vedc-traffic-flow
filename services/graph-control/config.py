@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     control_policy_url: str = ""
     # Dashboard phase override: seconds the forced phase stays green before the controller resumes; 0 = no hold
     manual_override_hold_s: float = 15.0
+    # Fairness guard (fairness_guard.py): no road starves whatever the controller; false = controller alone
+    fairness_guard: bool = True
+    fairness_max_red_s: float = 60.0
+    fairness_owed_after_s: float = 30.0
+    fairness_stuck_after_s: float = 15.0
 
     # 5-Layer Noise Immunity & Resilience Configuration
     noise_shield_enabled: bool = True

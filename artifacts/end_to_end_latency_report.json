@@ -3,44 +3,44 @@
   "total_cycles_measured": 30,
   "control_frequency_hz": 2.0,
   "vision_pipeline": {
-    "mean_ms": 7.865,
-    "median_ms": 7.053,
-    "p95_ms": 12.237,
-    "p99_ms": 12.988,
-    "min_ms": 5.897,
-    "max_ms": 12.988
+    "mean_ms": 2.232,
+    "median_ms": 1.444,
+    "p95_ms": 9.446,
+    "p99_ms": 10.133,
+    "min_ms": 1.169,
+    "max_ms": 10.133
   },
   "ai_controller_compute": {
-    "mean_ms": 0.382,
-    "median_ms": 0.398,
-    "p95_ms": 0.482,
-    "p99_ms": 0.486,
-    "min_ms": 0.241,
-    "max_ms": 0.486
+    "mean_ms": 0.073,
+    "median_ms": 0.046,
+    "p95_ms": 0.267,
+    "p99_ms": 0.68,
+    "min_ms": 0.032,
+    "max_ms": 0.68
   },
   "mqtt_transport_loopback": {
-    "mean_ms": 2.522,
-    "median_ms": 2.606,
-    "p95_ms": 3.554,
-    "p99_ms": 5.621,
-    "min_ms": 1.467,
-    "max_ms": 5.621
+    "mean_ms": 0.808,
+    "median_ms": 0.316,
+    "p95_ms": 5.237,
+    "p99_ms": 9.144,
+    "min_ms": 0.251,
+    "max_ms": 9.144
   },
   "actuator_state_machine": {
-    "mean_ms": 2.268,
-    "median_ms": 2.539,
-    "p95_ms": 3.14,
-    "p99_ms": 3.252,
-    "min_ms": 1.446,
-    "max_ms": 3.252
+    "mean_ms": 0.381,
+    "median_ms": 0.292,
+    "p95_ms": 0.619,
+    "p99_ms": 1.798,
+    "min_ms": 0.245,
+    "max_ms": 1.798
   },
   "end_to_end_total": {
-    "mean_ms": 20.161,
-    "median_ms": 19.915,
-    "p95_ms": 28.646,
-    "p99_ms": 32.718,
-    "min_ms": 14.105,
-    "max_ms": 32.718
+    "mean_ms": 4.643,
+    "median_ms": 3.029,
+    "p95_ms": 13.297,
+    "p99_ms": 15.319,
+    "min_ms": 2.706,
+    "max_ms": 15.319
   },
   "failsafe_watchdog": {
     "timeout_threshold_s": 5.0,

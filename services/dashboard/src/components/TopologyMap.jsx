@@ -263,6 +263,24 @@ const TopologyMap = ({
       ? 'Sa Bàn Bạt 1800 × 1200 mm, 5 nút (đội 31μF)'
       : `Sa Bàn ${rawNodes.length} nút (đội 31μF)`;
 
+  // The inspection drawer is ~300 x 200 units of the 760x500 viewBox. Put it in the
+  // corner that covers the fewest stations, so it never hides a node (e.g. J4/J5 on
+  // the 5-node bottom row). Ties keep the original bottom-left placement.
+  const drawerCornerStyle = useMemo(() => {
+    const corners = [
+      { style: { left: '16px', bottom: '16px' }, covers: (p) => p.x < 330 && p.y > 270 },
+      { style: { right: '16px', bottom: '16px' }, covers: (p) => p.x > 430 && p.y > 270 },
+      { style: { left: '16px', top: '16px' }, covers: (p) => p.x < 330 && p.y < 230 },
+      { style: { right: '16px', top: '16px' }, covers: (p) => p.x > 430 && p.y < 230 },
+    ];
+    const points = Object.values(nodePositions);
+    const best = corners.reduce((acc, corner) => {
+      const covered = points.filter(corner.covers).length;
+      return covered < acc.covered ? { style: corner.style, covered } : acc;
+    }, { style: corners[0].style, covered: Infinity });
+    return best.style;
+  }, [nodePositions]);
+
   // If map has real-world GPS coordinates (HCM Corridor) and STREET mode is chosen: Render LeafletStreetMap!
   if (hasGeoCoords && mapType === 'STREET') {
     return (
@@ -878,10 +896,7 @@ const TopologyMap = ({
         {activeFocusNode && nodePositions[activeFocusNode] && (
           <div style={{
             position: 'absolute',
-            left: '16px',
-            // Pin the drawer to the opposite half of the 760x500 viewBox so it
-            // never covers the station being inspected (e.g. J4/J5 bottom row).
-            ...(nodePositions[activeFocusNode].y > 250 ? { top: '16px' } : { bottom: '16px' }),
+            ...drawerCornerStyle,
             backgroundColor: 'rgba(15, 23, 42, 0.96)',
             color: '#f8fafc',
             borderRadius: '10px',

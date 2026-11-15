@@ -82,6 +82,10 @@ const unsigned long DEFAULT_MIN_GREEN_MS = 5000;  // 5.0 s minimum green floor (
 const unsigned long DEFAULT_MAX_GREEN_MS = 60000; // 60.0 s maximum green cap (device-owned)
 const unsigned long NETWORK_TIMEOUT_MS = 5000;    // 5.0 s without a command -> fallback
 const unsigned long FALLBACK_GREEN_MS = 15000;    // 15.0 s green per phase in fallback
+// A phase that only got green because the other one hit max green keeps it at least this long:
+// otherwise a controller that always prefers the busy road takes it back after the 5 s minimum
+// and the quiet road is served 5 s every ~70 s (soft starvation). Dashboard overrides are exempt.
+const unsigned long FORCED_SERVICE_GREEN_MS = 15000;
 const unsigned long STARTUP_FLASH_MS = 4000;      // flashing yellow after every boot/reset
 const unsigned long FAULT_FLASH_HOLD_MS = 10000;  // flashing yellow after a conflict / readback fault
 const unsigned long SAFE_STOP_DEBOUNCE_MS = 50;
@@ -142,6 +146,8 @@ unsigned long lastHealthTime = 0;
 
 bool isLocalFallbackMode = false;
 bool minGreenFaultSent = false; // ERR_MIN_GREEN_VIOLATION at most once per green interval
+bool forcedServicePending = false; // the clearance in progress was forced by max green
+bool forcedServiceActive = false;  // the current green was forced: FORCED_SERVICE_GREEN_MS applies
 String pendingCommandId = "";
 String pendingTargetPhaseStr = "";
 
@@ -519,6 +525,7 @@ void exitFlash(unsigned long now)
   Serial.printf("[FLASH] Leave flashing (%s) -> YELLOW -> ALL_RED -> GREEN\n", flashReasonName(flashReason));
   flashReason = FLASH_NONE;
   pendingPhase = currentPhase;
+  forcedServicePending = false; // a max-green switch interrupted by flashing no longer applies
   yellowOnBothHeads = true;
   clearState = STATE_YELLOW;
   stateStartTime = now;
@@ -564,6 +571,7 @@ void startClearance(PhaseId target, const String &cmdId, const String &targetStr
   pendingPhase = target;
   pendingCommandId = cmdId;
   pendingTargetPhaseStr = targetStr;
+  forcedServicePending = false; // the max-green path sets it again right after this call
   yellowOnBothHeads = false;
   clearState = STATE_YELLOW;
   stateStartTime = now;
@@ -690,10 +698,15 @@ void onMqttCommand(char *topic, byte *payload, unsigned int length)
   }
 
   unsigned long elapsedGreen = now - phaseStartTime;
-  if (elapsedGreen < currentMinGreenMs)
+  unsigned long requiredGreenMs = currentMinGreenMs;
+  if (forcedServiceActive && !isOverrideCommand(cmdId))
+    requiredGreenMs = max(requiredGreenMs, FORCED_SERVICE_GREEN_MS);
+  if (elapsedGreen < requiredGreenMs)
   {
     char reason[80];
-    snprintf(reason, sizeof(reason), "Min green time not met (%.1fs < %.1fs)", elapsedGreen / 1000.0, currentMinGreenMs / 1000.0);
+    snprintf(reason, sizeof(reason), "%s not met (%.1fs < %.1fs)",
+             requiredGreenMs > currentMinGreenMs ? "Forced-service green" : "Min green time",
+             elapsedGreen / 1000.0, requiredGreenMs / 1000.0);
     publishControlAck(cmdId, targetPhaseStr, "REJECTED", reason);
     if (!minGreenFaultSent)
     {
@@ -861,6 +874,8 @@ void serviceSafeStop(unsigned long now)
     safeStopActive = false;
     Serial.println("[SAFE-STOP] Released -> YELLOW -> ALL_RED before resuming");
     raiseFault("emergency", "ERR_SAFE_STOP_RELEASED", "INFO", "Safe-stop emergency switch released");
+    // graph-control halts commands on purpose during SAFE_STOP: give it a full watchdog period to resume
+    lastCommandTime = now;
     exitFlash(now);
   }
 }
@@ -993,6 +1008,8 @@ void runSignalStateMachine(unsigned long now)
       stateStartTime = now;
       phaseStartTime = now;
       minGreenFaultSent = false;
+      forcedServiceActive = forcedServicePending;
+      forcedServicePending = false;
       applySignalOutputs(currentPhase, STATE_GREEN);
       Serial.printf("[FSM] ALL_RED finished -> GREEN active on [%s]\n", canonicalPhaseString(currentPhase).c_str());
 
@@ -1032,6 +1049,7 @@ void runSignalStateMachine(unsigned long now)
     PhaseId next = (currentPhase == PHASE_NS) ? PHASE_EW : PHASE_NS;
     Serial.println("[FSM] Max green reached -> forced clearance to the opposing phase");
     startClearance(next, "", canonicalPhaseString(next), now);
+    forcedServicePending = true; // the opposing phase then keeps green >= FORCED_SERVICE_GREEN_MS
   }
 }
 

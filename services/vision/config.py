@@ -56,6 +56,12 @@ class Settings(BaseSettings):
     detector_num_classes: int = Field(default_factory=lambda: int(os.getenv("DETECTOR_NUM_CLASSES", "80")))
     detector_vehicle_classes: str = Field(default_factory=lambda: os.getenv("DETECTOR_VEHICLE_CLASSES", "2,3,5,7"))
     motion_scale: float = Field(default_factory=lambda: float(os.getenv("MOTION_SCALE", "1.0")))
+    # Pixels per metre at the stop lines: converts measured box motion to mean_speed_mps
+    # (motion_estimator.py). ~1000 for the 1280 px sa ban video over ~1.2 m of tarp; recalibrate per camera.
+    vision_px_per_m: float = Field(default_factory=lambda: float(os.getenv("VISION_PX_PER_M", "1000")))
+    # Share of Canny edge pixels below which a ROI counts as covered/blind for a frame (roi_visibility.py);
+    # its approach then reports confidence 0 instead of "0 vehicles". 0 = off.
+    vision_blind_edge_ratio: float = Field(default_factory=lambda: float(os.getenv("VISION_BLIND_EDGE_RATIO", "0.01")))
 
     # Raspberry Pi 5 & Edge Hardware Telemetry Reporting
     enable_hardware_telemetry: bool = Field(default_factory=lambda: os.getenv("ENABLE_HARDWARE_TELEMETRY", "true").lower() == "true")

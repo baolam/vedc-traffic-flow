@@ -77,6 +77,12 @@ services:
       - CONTROL_POLICY_URL=${CONTROL_POLICY_URL:-http://api:8000/api/v1/control/policy}
       # Dashboard phase override: seconds the forced phase stays green (api reads the same value)
       - MANUAL_OVERRIDE_HOLD_S=${MANUAL_OVERRIDE_HOLD_S:-15}
+      # Fairness guard (services/graph-control/fairness_guard.py): no road starves whatever the controller
+      - FAIRNESS_GUARD=${FAIRNESS_GUARD:-true}
+      - FAIRNESS_MAX_RED_S=${FAIRNESS_MAX_RED_S:-60}
+      - FAIRNESS_OWED_AFTER_S=${FAIRNESS_OWED_AFTER_S:-30}
+      # Blocked-lane detection; 0 = off (open-loop video demo: its cars ignore our lights)
+      - FAIRNESS_STUCK_AFTER_S=${FAIRNESS_STUCK_AFTER_S:-15}
     depends_on:
       mqtt:
         condition: service_healthy

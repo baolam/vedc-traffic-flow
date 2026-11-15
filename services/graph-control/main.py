@@ -13,6 +13,7 @@ from controller import (
 )
 from runtime_guards import BlindNodeGate, ManualOverrideHold, PolicyFollower
 from noise_shield import NoiseShieldPipeline
+from fairness_guard import FairController, FairnessConfig, FairnessGuard
 
 logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("graph-control")
@@ -54,6 +55,14 @@ def main():
         command_ttl_ms=settings.command_ttl_ms,
         republish_interval_s=settings.command_republish_s,
     )
+    fairness = None
+    if settings.fairness_guard:
+        fairness = FairnessGuard(topology, FairnessConfig(
+            max_red_s=settings.fairness_max_red_s, owed_after_s=settings.fairness_owed_after_s,
+            stuck_after_s=settings.fairness_stuck_after_s))
+        logger.info(f"Fairness guard on: max red {settings.fairness_max_red_s:g} s, "
+                    f"owed service after {settings.fairness_owed_after_s:g} s, "
+                    f"stuck lane after {settings.fairness_stuck_after_s:g} s without discharge or motion (0 = off)")
 
     mqtt_host = settings.mqtt_host
     mqtt_port = settings.mqtt_port
@@ -89,12 +98,16 @@ def main():
             validate_payload(payload, "telemetry")
             node_id = payload["node_id"]
 
+            # Fairness (anti-starvation) runs inside the shield, between its telemetry filter and its debouncer
+            controller = active["controller"]
+            if fairness is not None:
+                controller = FairController(fairness, controller)
             cmd = shield.process_telemetry(
                 node_id=node_id,
                 telemetry=payload,
                 topology=topology,
                 network_state=network_state,
-                controller=active["controller"],
+                controller=controller,
                 blind_gate=gate,
                 manual_hold=hold,
             )

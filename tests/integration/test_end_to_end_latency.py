@@ -39,7 +39,7 @@ import pytest
 cv2 = pytest.importorskip("cv2")
 
 import contracts_sdk
-from perception_engine import PerceptionEngine
+from vision.engine import PerceptionEngine  # services/vision/vision/engine.py since the Supervisor refactor
 from controller import EdgeFlowController
 from state_machine import SignalNodeState, ActuatorStateMachine
 

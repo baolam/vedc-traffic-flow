@@ -29,7 +29,9 @@ BLIND_COMMAND_WINDOW_S = 1.0    # graph-control answers a telemetry message with
 CONTROLLED_LOOKBACK_S = 2.0     # a fallback entry this soon after confident telemetry is a failure
 PHASE_GRACE_S = 1.5             # telemetry built just before the new ESP32 phase reached the Pi
 MIN_PHASE_AGREEMENT = 0.95
-EXPECTED_REJECTS = ("Min green", "Clearance interval", "Phase transition", "Signal is in flashing mode")
+# "Forced-service green": the device keeps a max-green-forced phase >= FORCED_SERVICE_GREEN_MS (firmware rule)
+EXPECTED_REJECTS = ("Min green", "Forced-service green", "Clearance interval", "Phase transition",
+                    "Signal is in flashing mode")
 OUTAGE_MARGIN_S = 1.0           # a command published just before the board vanished is lost with it
 OUTAGE_REPORT_WINDOW_S = 15.0   # after reconnecting, the board must explain the outage this soon
 
