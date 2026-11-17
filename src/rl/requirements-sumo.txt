@@ -8,3 +8,4 @@ sumolib==1.25.0
 jsonschema>=4.21,<5
 pytest>=8,<10
 PyYAML>=6,<7
+paho-mqtt>=1.6.1,<3

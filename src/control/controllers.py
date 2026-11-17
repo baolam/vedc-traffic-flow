@@ -36,6 +36,11 @@ class BaseController(ABC):
         """Compute control command for a specific intersection node."""
         pass
 
+    def compute_commands(self, network_state, topology, current_time_s=None):
+        """Batch interface; existing controllers retain their per-node implementation."""
+        return {node['node_id']: self.compute_command(node['node_id'],network_state[node['node_id']],
+                topology,network_state,current_time_s) for node in topology['nodes']}
+
     def reset(self):
         """Reset controller state between experiments."""
         pass

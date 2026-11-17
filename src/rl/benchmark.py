@@ -17,19 +17,19 @@ def run_case(config, controller, scenario, seed, output):
         policy.reset()
         environment = {key: value for key, value in config["environment"].items()
                        if key in ("topology_path", "network_path", "demand_s", "drain_s", "intensity",
-                                  "trace", "wait_penalty_lambda")}
+                                  "trace", "wait_penalty_lambda", "benchmark_mode")}
         runtime = SumoRuntime(**environment, output=output, scenario=scenario, seed=seed)
-        if controller["type"] in ("shared_dqn", "fair_cycle_rl"):
+        if controller["type"] in ("shared_dqn", "fair_cycle_rl", "phase_dqn"):
             for key in ("network_sha256", "topology_sha256"):
                 if policy.artifact["provenance"][key] != runtime.metadata[key]:
                     raise ValueError(f"Model {key} mismatch")
         done = False
         while not done:
             actions = {}
+            commands=policy.compute_commands(runtime.telemetry,runtime.topology,current_time_s=runtime.time)
             for node in runtime.topology["nodes"]:
                 nid = node["node_id"]
-                cmd = policy.compute_command(nid, runtime.telemetry[nid], runtime.topology,
-                                             network_state=runtime.telemetry, current_time_s=runtime.time)
+                cmd = commands[nid]
                 if cmd is None or cmd["controller"] != controller["type"]:
                     raise ValueError("Requested controller did not execute")
                 actions[nid] = [p["phase_id"] for p in node["phases"]].index(cmd["target_phase_id"])

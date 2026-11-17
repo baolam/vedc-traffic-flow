@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "algorithm",
+    "features",
+    "normalization",
+    "timing",
+    "topology_id",
+    "weights",
+    "provenance"
+  ],
+  "properties": {
+    "algorithm": {
+      "const": "phase_dqn_v1"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 12,
+      "maxItems": 12
+    },
+    "normalization": {"type": "object", "required": ["queue_vehicles", "service_age_s", "elapsed_green_s", "occupancy_ratio", "confidence"]},
+    "timing": {
+      "type": "object"
+    },
+    "topology_id": {
+      "type": "string"
+    },
+    "weights": {
+      "type": "object"
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "network_sha256",
+        "topology_sha256"
+      ]
+    }
+  }
+}

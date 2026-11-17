@@ -18,15 +18,20 @@ from src.control.research import action_mask
 from .build_network import binary, write_xml
 
 
+class InvalidRun(RuntimeError):
+    """Scientific invalidity must not be retried until a favorable run appears."""
+    scientifically_invalid = True
+
+
 def file_hash(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def occupancy_ratio(percent):
     value = float(percent) / 100.0
-    if not np.isfinite(value) or not 0 <= value <= 1:
+    if not np.isfinite(value) or not -1e-9 <= value <= 1 + 1e-9:
         raise ValueError(f"Invalid SUMO occupancy: {percent}")
-    return value
+    return min(1., max(0., value))
 
 
 def generate_demand(topology, scenario, seed, duration, intensity, path):
@@ -56,7 +61,18 @@ def generate_demand(topology, scenario, seed, duration, intensity, path):
     return result
 
 
-def validate_network(topology, network_path):
+def validate_network(topology, network_path, generic=False):
+    if generic:
+        if not 2 <= len(topology["nodes"]) <= 32:
+            raise ValueError("Expected 2–32 signalized junctions")
+        network = ET.parse(network_path).getroot()
+        programs = {t.get("id"): t for t in network.findall("tlLogic")}
+        for node in topology["nodes"]:
+            native = programs[node.get("sumo_tls_id",node["node_id"])]
+            states = {p.get("state") for p in native.findall("phase")}
+            if len(node["phases"]) < 2 or any(p["sumo_state"] not in states for p in node["phases"]):
+                raise ValueError("Unaudited phase mapping")
+        return
     if topology["topology_id"] != TOPOLOGY_ID:
         raise ValueError("Research runtime requires the corrected topology")
     net = ET.parse(network_path).getroot()
@@ -83,26 +99,34 @@ def validate_network(topology, network_path):
 class SumoRuntime:
     def __init__(self, topology_path, network_path, output, scenario="balanced", seed=20000,
                  demand_s=1800, drain_s=600, intensity=1.0, trace=True,
-                 wait_penalty_lambda=0.):
+                 wait_penalty_lambda=0., benchmark_mode=False):
         import traci
         import traci.constants as tc
         self.tc = tc
         self.connection = None
+        self._slot = None
         self.output = Path(output)
         self.output.mkdir(parents=True, exist_ok=False)
         self.trace = None
         self.topology = json.loads(Path(topology_path).read_text())
-        validate_network(self.topology, network_path)
-        if scenario not in ALL_RESEARCH_SCENARIOS or demand_s <= 0 or drain_s < 0 or not .01 <= intensity <= 10:
+        self.benchmark_mode = benchmark_mode
+        validate_network(self.topology, network_path, generic=benchmark_mode)
+        if (not benchmark_mode and scenario not in ALL_RESEARCH_SCENARIOS) or demand_s <= 0 or drain_s < 0 or not .01 <= intensity <= 10:
             raise ValueError("Invalid research scenario or horizon")
         if not np.isfinite(wait_penalty_lambda) or wait_penalty_lambda < 0:
             raise ValueError("wait_penalty_lambda must be finite and nonnegative")
         self.scenario, self.seed = scenario, int(seed)
         self.wait_penalty_lambda = float(wait_penalty_lambda)
         self.demand_s, self.horizon = int(demand_s), int(demand_s + drain_s)
+        self.edge_ids={a:n.get('sumo_edges',{}).get(a,a) for n in self.topology['nodes'] for a in n['approaches']}
+        self.logical_edges={raw:canonical for canonical,raw in self.edge_ids.items()}
         self.time = 0
         routes_path = self.output / "demand.rou.xml"
-        self.scheduled = generate_demand(self.topology, scenario, seed, demand_s, intensity, routes_path)
+        if benchmark_mode:
+            from src.benchmark.demand import generate_demand as generate_suite_demand
+            self.scheduled = generate_suite_demand(self.topology, scenario, seed, demand_s, intensity, routes_path)
+        else:
+            self.scheduled = generate_demand(self.topology, scenario, seed, demand_s, intensity, routes_path)
         self.scheduled_by_route = {app: [] for node in self.topology["nodes"] for app in node["approaches"]}
         for vid, row in self.scheduled.items():
             self.scheduled_by_route[row["route"]].append((vid, row))
@@ -118,8 +142,10 @@ class SumoRuntime:
         self.actuator = ActuatorStateMachine(3, 2)
         self.last_served = {}
         self.green_seconds = {}
+        self.service_gaps = {}
+        self.queue_trace = []
         self.schema_validator = Draft7Validator(load_schema("telemetry"))
-        self.metadata = {"topology_id": TOPOLOGY_ID, "topology_sha256": file_hash(topology_path),
+        self.metadata = {"topology_id": self.topology["topology_id"], "topology_sha256": file_hash(topology_path),
                          "network_sha256": file_hash(network_path), "demand_sha256": file_hash(routes_path),
                          "scenario": scenario, "seed": seed, "timing": TIMING, "demand_s": demand_s,
                          "drain_s": drain_s, "intensity": intensity, "provenance": "sumo_traci",
@@ -130,16 +156,19 @@ class SumoRuntime:
         (self.output / "metadata.json").write_text(json.dumps(self.metadata, indent=2))
         label = uuid.uuid4().hex
         try:
+            from src.benchmark.resources import simulator_slot
+            self._slot = simulator_slot()
+            self._slot.__enter__()
             traci.start([binary("sumo"), "--net-file", str(Path(network_path).resolve()),
                          "--route-files", str(routes_path.resolve()), "--seed", str(seed), "--step-length", "1",
                          "--time-to-teleport", "-1", "--no-step-log", "true", "--duration-log.disable", "true",
                          "--tripinfo-output", str((self.output / "tripinfo.xml").resolve()),
                          "--tripinfo-output.write-unfinished", "true", "--tripinfo-output.write-undeparted", "true",
-                         "--error-log", str((self.output / "sumo-error.log").resolve())], label=label, verbose=False)
+                         "--error-log", str((self.output / "sumo-error.log").resolve())] + (["--lateral-resolution", ".4"] if benchmark_mode else []), label=label, verbose=False)
             self.connection = traci.getConnection(label)
             for node in self.topology["nodes"]:
                 for app in node["approaches"]:
-                    self.connection.edge.subscribe(app, (tc.LAST_STEP_VEHICLE_ID_LIST,
+                    self.connection.edge.subscribe(self.edge_ids[app], (tc.LAST_STEP_VEHICLE_ID_LIST,
                         tc.LAST_STEP_VEHICLE_HALTING_NUMBER, tc.LAST_STEP_OCCUPANCY, tc.LAST_STEP_MEAN_SPEED))
             self.trace = (self.output / "signals.jsonl").open("w") if trace else None
             for node in self.topology["nodes"]:
@@ -165,11 +194,11 @@ class SumoRuntime:
             phase = next(p for p in node["phases"] if p["phase_id"] == signal.current_phase_id)
             state = phase["sumo_state"]
             if signal.state == "YELLOW":
-                state = state.replace("G", "y")
+                state = state.replace("G", "y").replace("g", "y")
             elif signal.state == "ALL_RED":
                 state = "r" * len(state)
-            self.connection.trafficlight.setRedYellowGreenState(nid, state)
-            actual = self.connection.trafficlight.getRedYellowGreenState(nid)
+            self.connection.trafficlight.setRedYellowGreenState(node.get("sumo_tls_id",nid), state)
+            actual = self.connection.trafficlight.getRedYellowGreenState(node.get("sumo_tls_id",nid))
             if actual != state:
                 raise RuntimeError("SUMO did not execute the requested signal state")
             if self.trace:
@@ -191,7 +220,7 @@ class SumoRuntime:
                     "phase_service_age_s": {p: self.time-t for p, t in self.last_served[nid].items()},
                     "approaches": []}
             for app in node["approaches"]:
-                edge = self.connection.edge.getSubscriptionResults(app)
+                edge = self.connection.edge.getSubscriptionResults(self.edge_ids[app])
                 active_ids = edge[self.tc.LAST_STEP_VEHICLE_ID_LIST]
                 stopped_waits = [self.approach_wait[app].get(vid, 0.) for vid in active_ids
                                  if self.active_speeds.get(vid, 1.) <= .1]
@@ -219,9 +248,13 @@ class SumoRuntime:
         for node in self.topology["nodes"]:
             nid = node["node_id"]
             action = actions[nid]
-            if not isinstance(action, (int, np.integer)) or not 0 <= action < 2:
+            if not isinstance(action, (int, np.integer)) or not 0 <= action < len(node["phases"]):
                 raise ValueError("Invalid action")
-            mask = action_mask(node, self.telemetry[nid])
+            if self.benchmark_mode:
+                from src.control.phase_dqn import phase_mask
+                mask = phase_mask(node, self.telemetry[nid])
+            else:
+                mask = action_mask(node, self.telemetry[nid])
             # The same safety envelope applies to every baseline and RL.
             applied = action if mask[action] else int(np.flatnonzero(mask)[0])
             command = {"command_id": f"{self.time}-{nid}", "node_id": nid,
@@ -240,11 +273,27 @@ class SumoRuntime:
             for node in self.topology["nodes"]:
                 signal = self.actuator.nodes[node["node_id"]]
                 if signal.elapsed_green_time(self.time) >= 60:
-                    alternate = next(p["phase_id"] for p in node["phases"] if p["phase_id"] != signal.current_phase_id)
+                    alternatives=[p for p in node['phases'] if p['phase_id']!=signal.current_phase_id]
+                    if self.benchmark_mode:
+                        observed={a['approach_id']:a for a in self.telemetry[node['node_id']]['approaches']}
+                        demanded=[p for p in alternatives if any(observed[a]['queue_vehicles']+observed[a]['external_due_count']>0 for a in p['approaches'])]
+                        alternatives=demanded or alternatives
+                    alternate=min(alternatives,key=lambda p:self.last_served[node['node_id']][p['phase_id']])['phase_id']
                     self.actuator.process_command({"command_id": f"max-{self.time}", "node_id": node["node_id"],
                                                    "target_phase_id": alternate, "min_green_s": 10.,
                                                    "max_green_s": 60., "controller": "safety_envelope"}, self.time)
-            bottleneck = RESEARCH_SCENARIOS.get(self.scenario, {})
+            bottleneck = RESEARCH_SCENARIOS.get(self.scenario, {}) if not self.benchmark_mode else {}
+            if self.benchmark_mode and self.scenario == "downstream_bottleneck":
+                edge = self.topology["routes"][0]["edges"][-1]
+                if not hasattr(self, "_original_speeds"):
+                    lanes = [lane for lane in self.connection.lane.getIDList()
+                             if self.connection.lane.getEdgeID(lane) == edge]
+                    self._original_speeds = {lane: self.connection.lane.getMaxSpeed(lane) for lane in lanes}
+                    if not self._original_speeds:
+                        raise ValueError(f"Bottleneck edge has no lanes: {edge}")
+                speed = 2. if self.demand_s/3 <= self.time < 2*self.demand_s/3 else None
+                for lane, original in self._original_speeds.items():
+                    self.connection.lane.setMaxSpeed(lane, speed if speed is not None else original)
             if "edge" in bottleneck:
                 speed = bottleneck["speed_mps"] if bottleneck["begin_s"] <= self.time < bottleneck["end_s"] else 13.89
                 self.connection.edge.setMaxSpeed(bottleneck["edge"], speed)
@@ -257,7 +306,7 @@ class SumoRuntime:
             self.time += 1
             sim, vehicles = self.connection.simulation, self.connection.vehicle
             if sim.getCollidingVehiclesNumber() or sim.getStartingTeleportNumber():
-                raise RuntimeError("Collision or teleport invalidates this run")
+                raise InvalidRun("Collision or teleport invalidates this run")
             for vid in sim.getDepartedIDList():
                 self.departed.add(vid)
                 vehicles.subscribe(vid, (self.tc.VAR_SPEED, self.tc.VAR_ROAD_ID))
@@ -266,7 +315,7 @@ class SumoRuntime:
             active = set(vehicle_data)
             self.active_speeds = {vid: float(data[self.tc.VAR_SPEED]) for vid, data in vehicle_data.items()}
             if self.departed != active | self.arrived or active & self.arrived:
-                raise RuntimeError("Unexplained vehicle-accounting loss")
+                raise InvalidRun("Unexplained vehicle-accounting loss")
             pending = [vid for vid, row in self.scheduled.items() if row["depart"] < self.time and vid not in self.departed]
             weighted_wait_cost += sum(min(1., self.time-self.scheduled[vid]["depart"])
                                       * (1. + self.wait_penalty_lambda
@@ -276,13 +325,13 @@ class SumoRuntime:
                 if vehicle_data[vid][self.tc.VAR_SPEED] <= .1:
                     self.waiting[vid] += 1
                     weighted_wait_cost += 1. + self.wait_penalty_lambda * self.waiting[vid] / 120.
-                    road = vehicle_data[vid][self.tc.VAR_ROAD_ID]
+                    road = self.logical_edges.get(vehicle_data[vid][self.tc.VAR_ROAD_ID],vehicle_data[vid][self.tc.VAR_ROAD_ID])
                     if road in self.approach_wait:
                         ledger = self.approach_wait[road]
                         ledger[vid] = ledger.get(vid, 0) + 1
             for node in self.topology["nodes"]:
                 for app in node["approaches"]:
-                    ids = set(self.connection.edge.getSubscriptionResults(app)[self.tc.LAST_STEP_VEHICLE_ID_LIST])
+                    ids = set(self.connection.edge.getSubscriptionResults(self.edge_ids[app])[self.tc.LAST_STEP_VEHICLE_ID_LIST])
                     self.approach_seen[app].update(ids)
                     # Removed vehicles cannot be mistaken for flow: losses/teleports fail above.
                     crossed = len(self.previous_ids.get(app, set()) - ids)
@@ -293,11 +342,25 @@ class SumoRuntime:
                 if signal.state == "GREEN":
                     self.last_served[nid][signal.current_phase_id] = self.time
         self.telemetry = self._telemetry({k: v / interval for k, v in crossing_total.items()})
+        if self.benchmark_mode:
+            total=0
+            for node in self.topology['nodes']:
+                data=self.telemetry[node['node_id']]
+                apps={a['approach_id']:a for a in data['approaches']}
+                total+=sum(a['queue_vehicles']+a['external_due_count'] for a in apps.values())
+                for phase in node['phases']:
+                    key=phase['phase_id']
+                    demanded=any(apps[a]['queue_vehicles']+apps[a]['external_due_count']>0 for a in phase['approaches'])
+                    active=data['signal_state']=='GREEN' and data['current_phase_id']==key
+                    current,maximum=self.service_gaps.get(key,(0,0))
+                    current=current+interval if demanded and not active else 0
+                    self.service_gaps[key]=(current,max(current,maximum))
+            self.queue_trace.append((self.time,total))
         if self.trace:
             self.trace.flush()
         terminated = self.time >= self.demand_s and len(self.arrived) == len(self.scheduled)
         truncated = self.time >= self.horizon and not terminated
-        return self.telemetry, -weighted_wait_cost / (20 * 4 * 5), terminated, truncated
+        return self.telemetry, -weighted_wait_cost / (20 * len(self.topology["nodes"]) * interval), terminated, truncated
 
     def finish(self):
         self.close()
@@ -308,7 +371,7 @@ class SumoRuntime:
         for vid, row in self.scheduled.items():
             if vid in self.departed:
                 if vid not in trips:
-                    raise RuntimeError(f"Missing tripinfo for departed vehicle {vid}")
+                    raise InvalidRun(f"Missing tripinfo for departed vehicle {vid}")
                 trip = trips[vid]
                 accrued.append(float(trip.get("timeLoss")) + float(trip.get("departDelay")))
             else:
@@ -352,14 +415,56 @@ class SumoRuntime:
                       seconds for phases in self.green_seconds.values() for seconds in phases.values())),
                   "collisions": 0, "teleports": 0, "accounting_losses": 0}
         if result["scheduled"] != result["completed"] + result["unfinished"] + result["uninserted"]:
-            raise RuntimeError("Vehicle accounting does not balance")
+            raise InvalidRun("Vehicle accounting does not balance")
+        if self.benchmark_mode:
+            result["metrics_version"] = 3
+            result["signal_clearance_seconds_by_node"] = {
+                nid: self.time - sum(phases.values()) for nid, phases in self.green_seconds.items()}
+            result["total_signal_clearance_node_seconds"] = sum(result["signal_clearance_seconds_by_node"].values())
+            result.pop("signal_clearance_seconds")
+            result['maximum_demanded_service_gap_s']={key:value[1] for key,value in self.service_gaps.items()}
+            result['service_gap_resolution_s']=5
+            result['throughput_veh_per_s']=result['completed']/max(self.time,1)
+            result['queue_backlog_trace_columns']=['time_s','stopped_plus_due_entry_vehicles']
+            result['queue_backlog_trace']=self.queue_trace
+            result['recovery_s']=None
+            result['recovery_censored']=self.scenario in ('downstream_bottleneck','directional_reversal')
+            if result['recovery_censored']:
+                end=2*self.demand_s/3
+                before=[q for t,q in self.queue_trace if self.demand_s/3-60<=t<self.demand_s/3]
+                threshold=np.mean(before)+max(.1*np.mean(before),1.) if before else 0.
+                start=None
+                for t,q in self.queue_trace:
+                    if t<end:
+                        continue
+                    start=t if q<=threshold and start is None else start
+                    if q>threshold:
+                        start=None
+                    if start is not None and t-start>=60:
+                        result['recovery_s']=start-end
+                        result['recovery_censored']=False
+                        break
+            result["vehicle_classes"] = {}
+            for kind in sorted({row["vehicle_class"] for row in self.scheduled.values()}):
+                ids = [vid for vid,row in self.scheduled.items() if row["vehicle_class"] == kind]
+                indices = [i for i,row in enumerate(self.scheduled.values()) if row["vehicle_class"] == kind]
+                result["vehicle_classes"][kind] = dict(scheduled=len(ids), completed=sum(vid in self.arrived for vid in ids),
+                    unfinished=sum(vid in self.departed-self.arrived for vid in ids),
+                    uninserted=sum(vid not in self.departed for vid in ids),
+                    delay_per_scheduled_s=float(np.mean([accrued[i] for i in indices])),
+                    p95_wait_s=float(np.percentile([wait[i] for i in indices],95)))
         (self.output / "metrics.json").write_text(json.dumps(result, indent=2))
         return result
 
     def close(self):
-        if self.connection is not None:
-            self.connection.close()
-            self.connection = None
-        if self.trace:
-            self.trace.close()
-            self.trace = None
+        try:
+            if self.connection is not None:
+                self.connection.close()
+                self.connection = None
+        finally:
+            if self.trace:
+                self.trace.close()
+                self.trace = None
+            if self._slot is not None:
+                self._slot.__exit__(None, None, None)
+                self._slot = None

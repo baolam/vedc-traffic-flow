@@ -4,19 +4,20 @@ from .controllers import (FixedTimeController, ActuatedController, MaxQueueContr
                           FlowTheoryController)
 from .research import SharedDQNController, FairCycleRLController
 from .fair_cycle import FairCycleController
+from .phase_dqn import PhaseDQNController
 
 CONTROLLER_REGISTRY = {"fixed_time": FixedTimeController, "actuated": ActuatedController,
                        "max_queue": MaxQueueController, "max_pressure": MaxPressureController,
                        "edgeflow": EdgeFlowController, "presslight_rl": PressLightRLController,
                        "rl": PressLightRLController, "flow_theory": FlowTheoryController,
                        "shared_dqn": SharedDQNController, "fair_cycle": FairCycleController,
-                       "fair_cycle_rl": FairCycleRLController}
+                       "fair_cycle_rl": FairCycleRLController, "phase_dqn": PhaseDQNController}
 
 
 def create_controller(name, parameters=None, model_path=None):
     if name not in CONTROLLER_REGISTRY:
         raise ValueError(f"Unknown controller: {name}")
     params = dict(parameters or {})
-    if name in ("shared_dqn", "fair_cycle_rl", "presslight_rl", "rl"):
+    if name in ("shared_dqn", "fair_cycle_rl", "presslight_rl", "rl", "phase_dqn"):
         params["model_path"] = model_path
     return CONTROLLER_REGISTRY[name](**params)
