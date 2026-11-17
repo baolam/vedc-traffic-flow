@@ -1,0 +1,1857 @@
+{
+  "attempts": [
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 15.22282679984346,
+      "fingerprint": "7ad093181092d00a81db532c491ffb28d8fad221e3a69b2c704269e2a68d4a31",
+      "started_epoch": 1791743945.5766294,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 14.627073399955407,
+      "fingerprint": "7ad093181092d00a81db532c491ffb28d8fad221e3a69b2c704269e2a68d4a31",
+      "started_epoch": 1791743961.7811174,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 16.091368600027636,
+      "fingerprint": "7ad093181092d00a81db532c491ffb28d8fad221e3a69b2c704269e2a68d4a31",
+      "started_epoch": 1791743977.3863168,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 13.307191499974579,
+      "fingerprint": "7ad093181092d00a81db532c491ffb28d8fad221e3a69b2c704269e2a68d4a31",
+      "started_epoch": 1791743994.2522523,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.085110599873587,
+      "fingerprint": "7ad093181092d00a81db532c491ffb28d8fad221e3a69b2c704269e2a68d4a31",
+      "started_epoch": 1791744008.5265718,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.643269799882546,
+      "fingerprint": "7ad093181092d00a81db532c491ffb28d8fad221e3a69b2c704269e2a68d4a31",
+      "started_epoch": 1791744022.5853171,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-01-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 99.07390928268433,
+      "error": "Stopped candidate with invalid connection serialization order",
+      "fingerprint": "8a75e246519ee688cf36fe64475bb7a9d1e3c4b7c5bb8f113ecb8f338c00bdc1",
+      "started_epoch": 1791744042.1040983,
+      "status": "interrupted",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.112960900180042,
+      "fingerprint": "e8c7c4bffba098440c557cb6417a28bb214618eb75b5404f49f62fb87fd6a42e",
+      "started_epoch": 1791744142.2168438,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 12.858337000012398,
+      "fingerprint": "e8c7c4bffba098440c557cb6417a28bb214618eb75b5404f49f62fb87fd6a42e",
+      "started_epoch": 1791744156.3301709,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 15.472053000004962,
+      "fingerprint": "e8c7c4bffba098440c557cb6417a28bb214618eb75b5404f49f62fb87fd6a42e",
+      "started_epoch": 1791744170.117064,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 12.89492559991777,
+      "fingerprint": "e8c7c4bffba098440c557cb6417a28bb214618eb75b5404f49f62fb87fd6a42e",
+      "started_epoch": 1791744186.3346677,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 12.756646000081673,
+      "fingerprint": "e8c7c4bffba098440c557cb6417a28bb214618eb75b5404f49f62fb87fd6a42e",
+      "started_epoch": 1791744200.2306027,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 15.96624690014869,
+      "fingerprint": "e8c7c4bffba098440c557cb6417a28bb214618eb75b5404f49f62fb87fd6a42e",
+      "started_epoch": 1791744213.9180884,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-01-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 3.547030600020662,
+      "error": "Case worker exited 1; see C:\\Users\\Zephyrus M16\\Desktop\\UNI\\VEDC\\vedc-traffic-flow\\workspaces\\hcm-benchmark-v3\\artifacts\\hcm-qualification-v3\\cases\\repair-01-qualification-directional_shift-500-72003-native_fixed.partial\\worker.log",
+      "fingerprint": "99b1d0679891dbadd13baed20ba0b7c6b119e6423c7dcc295797ea000ea590a1",
+      "started_epoch": 1791744232.5634618,
+      "status": "error",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 14.855061499867588,
+      "fingerprint": "a8fd00ebdf8a45f62f5cd92e536dd54155808fb67eab281d196b24726de0de81",
+      "started_epoch": 1791744460.6195898,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 15.828840600093827,
+      "fingerprint": "a8fd00ebdf8a45f62f5cd92e536dd54155808fb67eab281d196b24726de0de81",
+      "started_epoch": 1791744476.539842,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 19.519319200189784,
+      "fingerprint": "a8fd00ebdf8a45f62f5cd92e536dd54155808fb67eab281d196b24726de0de81",
+      "started_epoch": 1791744493.4176617,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 16.221631899941713,
+      "fingerprint": "a8fd00ebdf8a45f62f5cd92e536dd54155808fb67eab281d196b24726de0de81",
+      "started_epoch": 1791744513.7696104,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 16.25501829991117,
+      "fingerprint": "a8fd00ebdf8a45f62f5cd92e536dd54155808fb67eab281d196b24726de0de81",
+      "started_epoch": 1791744531.2418215,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-baseline-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 19.47612400003709,
+      "fingerprint": "a8fd00ebdf8a45f62f5cd92e536dd54155808fb67eab281d196b24726de0de81",
+      "started_epoch": 1791744548.4744873,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-01-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 16.16095590009354,
+      "fingerprint": "e189478c52bb00d0420d42eb9f188eee185a6d431d26c476119e338e990cb8b5",
+      "started_epoch": 1791744570.9050386,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-01-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 16.022160299820825,
+      "fingerprint": "e189478c52bb00d0420d42eb9f188eee185a6d431d26c476119e338e990cb8b5",
+      "started_epoch": 1791744588.2333744,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-01-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 16.509101700037718,
+      "fingerprint": "e189478c52bb00d0420d42eb9f188eee185a6d431d26c476119e338e990cb8b5",
+      "started_epoch": 1791744605.3442469,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-01-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 19.709026500117034,
+      "fingerprint": "e189478c52bb00d0420d42eb9f188eee185a6d431d26c476119e338e990cb8b5",
+      "started_epoch": 1791744622.9273305,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-02-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 16.0952232000418,
+      "fingerprint": "e264f9eb4a114e12b32cd6459b7a74d721cceb312f983268c13bf4393d27df5a",
+      "started_epoch": 1791744645.8444846,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-02-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 16.590689100092277,
+      "fingerprint": "e264f9eb4a114e12b32cd6459b7a74d721cceb312f983268c13bf4393d27df5a",
+      "started_epoch": 1791744662.9325726,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-02-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 16.22817249991931,
+      "fingerprint": "e264f9eb4a114e12b32cd6459b7a74d721cceb312f983268c13bf4393d27df5a",
+      "started_epoch": 1791744680.591373,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-02-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 19.955244700191543,
+      "fingerprint": "e264f9eb4a114e12b32cd6459b7a74d721cceb312f983268c13bf4393d27df5a",
+      "started_epoch": 1791744697.7803142,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-03-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 16.4496569999028,
+      "fingerprint": "e264f9eb4a114e12b32cd6459b7a74d721cceb312f983268c13bf4393d27df5a",
+      "started_epoch": 1791744720.968958,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-03-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 19.465659799985588,
+      "fingerprint": "e264f9eb4a114e12b32cd6459b7a74d721cceb312f983268c13bf4393d27df5a",
+      "started_epoch": 1791744738.4122965,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-04-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 16.19639219995588,
+      "fingerprint": "27456574879834473deaf43c8ead177bfa8772f23e70424693d477f955c6c7a6",
+      "started_epoch": 1791744760.8348508,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-04-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 19.225942599819973,
+      "fingerprint": "27456574879834473deaf43c8ead177bfa8772f23e70424693d477f955c6c7a6",
+      "started_epoch": 1791744778.116863,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-05-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 15.647888500010595,
+      "fingerprint": "27456574879834473deaf43c8ead177bfa8772f23e70424693d477f955c6c7a6",
+      "started_epoch": 1791744800.6958268,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-06-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 15.86180659988895,
+      "fingerprint": "c57289ebc59ce49e7d158a40894a01b9022145bb5448e4848ece3cf8aff212dc",
+      "started_epoch": 1791744819.8633447,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-07-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 15.981224699877203,
+      "fingerprint": "c57289ebc59ce49e7d158a40894a01b9022145bb5448e4848ece3cf8aff212dc",
+      "started_epoch": 1791744839.0533497,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-08-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 15.65028650010936,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744858.5191693,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-09-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 19.243784999940544,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744877.3488398,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72001-native_fixed",
+      "elapsed_wall_s": 16.401276200078428,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744897.450923,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72001-native_actuated",
+      "elapsed_wall_s": 19.0897888999898,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744913.8703008,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 16.684379799989983,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744932.9766448,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72002-native_actuated",
+      "elapsed_wall_s": 19.393509600078687,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744949.6896684,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72003-native_fixed",
+      "elapsed_wall_s": 16.380824600113556,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744969.1278195,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 18.977549200179055,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791744985.5478833,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 16.134807400172576,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745004.5492458,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72004-native_actuated",
+      "elapsed_wall_s": 19.303887099958956,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745020.7229755,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72005-native_fixed",
+      "elapsed_wall_s": 15.613145800074562,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745040.0838037,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-light_uniform-500-72005-native_actuated",
+      "elapsed_wall_s": 18.58486260008067,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745055.7460654,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72001-native_fixed",
+      "elapsed_wall_s": 15.873248199932277,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745074.3846169,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72001-native_actuated",
+      "elapsed_wall_s": 19.850216099992394,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745090.303974,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 14.440855700057,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745110.195989,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72002-native_actuated",
+      "elapsed_wall_s": 15.903913200134411,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745124.6759026,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72003-native_fixed",
+      "elapsed_wall_s": 13.84498029993847,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745140.6205852,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 15.910127200186253,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745154.523753,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 14.063910899916664,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745170.4864154,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72004-native_actuated",
+      "elapsed_wall_s": 15.722522199852392,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745184.5911982,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72005-native_fixed",
+      "elapsed_wall_s": 14.267314600059763,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745200.3645663,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-primary_uniform-500-72005-native_actuated",
+      "elapsed_wall_s": 16.010093900142238,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745214.6812606,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72001-native_fixed",
+      "elapsed_wall_s": 13.563350700074807,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745230.7427046,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72001-native_actuated",
+      "elapsed_wall_s": 15.804958499968052,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745244.3573182,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.811069499934092,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745260.2188225,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72002-native_actuated",
+      "elapsed_wall_s": 15.806960399961099,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745274.0820775,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.139280200004578,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745289.95025,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72003-native_actuated",
+      "elapsed_wall_s": 15.716031500138342,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745303.1485703,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 13.528719699941576,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745318.928735,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72004-native_actuated",
+      "elapsed_wall_s": 16.181994899874553,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745332.5265958,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72005-native_fixed",
+      "elapsed_wall_s": 14.198417800012976,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745348.773,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 16.013042300008237,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745363.0346298,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72001-native_fixed",
+      "elapsed_wall_s": 13.526050799991935,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745379.1199489,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72001-native_actuated",
+      "elapsed_wall_s": 15.910734500037506,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745392.7238271,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72002-native_fixed",
+      "elapsed_wall_s": 13.592663299990818,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745408.7141051,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72002-native_actuated",
+      "elapsed_wall_s": 16.367064000107348,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745422.3784978,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72003-native_fixed",
+      "elapsed_wall_s": 13.602858699858189,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745438.8213317,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72003-native_actuated",
+      "elapsed_wall_s": 16.05075759999454,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745452.4971628,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72004-native_fixed",
+      "elapsed_wall_s": 13.57257469999604,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745468.6365,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72004-native_actuated",
+      "elapsed_wall_s": 15.766229500062764,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745482.2873154,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72005-native_fixed",
+      "elapsed_wall_s": 13.299070999957621,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745498.136788,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-qualification-downstream_bottleneck-500-72005-native_actuated",
+      "elapsed_wall_s": 15.752594799967483,
+      "fingerprint": "eeb52ba5e3596d3199a06d1ba9412fda04b6a4b954d0f9e29f659bad7951b94f",
+      "started_epoch": 1791745511.5206308,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.10112819983624,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745788.41327,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.632933999877423,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745802.4753351,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 12.874916799832135,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745817.0286844,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 16.065158599987626,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745830.8343806,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 12.849653800018132,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745847.569375,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.43870469997637,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745861.3148136,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.122351699974388,
+      "fingerprint": "94c36df898652bb236cc28ffd4fd5b6d4f5340843d4b6f64f8c3fd8937287cdd",
+      "started_epoch": 1791745875.631378,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.120343500049785,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791745994.193804,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.329799900064245,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791746008.2406116,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 12.920197200030088,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791746022.5431848,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 15.929893200052902,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791746036.444868,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 12.987363799940795,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791746053.0862484,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.329182700021192,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791746066.9929092,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 17.031142599880695,
+      "fingerprint": "caeceb13230147967260d3bc128ab63dc8c572f3e6ae8407ee18c3d67e767641",
+      "started_epoch": 1791746081.2636092,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 12.817217800067738,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746269.9668014,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 14.371850300114602,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746283.749844,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 13.063263199990615,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746299.10508,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 17.438445300096646,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746313.1516798,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 13.537298399955034,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746331.2907503,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.518887599930167,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746345.8077424,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.057493400061503,
+      "fingerprint": "509eaa512b098ac5fb71b0b60ab204b98d2586417996b69f0c1899190a870e4e",
+      "started_epoch": 1791746360.2200332,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.12560010002926,
+      "fingerprint": "ffbd00df88fc04ec3e267b53bef5f7ec815ddd90ee4bb46981e62c94fbe8cf14",
+      "started_epoch": 1791746630.2936265,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.299465999938548,
+      "fingerprint": "ffbd00df88fc04ec3e267b53bef5f7ec815ddd90ee4bb46981e62c94fbe8cf14",
+      "started_epoch": 1791746644.356613,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 14.27469060011208,
+      "fingerprint": "bd192a30eebc428f97a37719a49f76009205c2df7798c084dd1c757653d5fafb",
+      "started_epoch": 1791746912.5025783,
+      "status": "completed",
+      "timeout_s": 291.9414222468622
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 14.095559100154787,
+      "fingerprint": "112131376ea98f36fa8c07e16ea47911fd3138445792ed637d20d70c73759c49",
+      "started_epoch": 1791746965.902651,
+      "status": "completed",
+      "timeout_s": 277.6667316467501
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.430178700014949,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747025.7828803,
+      "status": "completed",
+      "timeout_s": 263.57117254659534
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.260306800017133,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747040.1273558,
+      "status": "completed",
+      "timeout_s": 250.1409938465804
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 13.614960600156337,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747054.2960737,
+      "status": "completed",
+      "timeout_s": 236.88068704656325
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 15.81906900019385,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747068.9551728,
+      "status": "completed",
+      "timeout_s": 223.26572644640692
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 13.374967399984598,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747085.468677,
+      "status": "completed",
+      "timeout_s": 207.44665744621307
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.366093200165778,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747099.7650657,
+      "status": "completed",
+      "timeout_s": 194.07169004622847
+    },
+    {
+      "case": "repair-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.849695399869233,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747114.028809,
+      "status": "completed",
+      "timeout_s": 180.7055968460627
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72001-native_fixed",
+      "elapsed_wall_s": 14.74522059992887,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747131.6478472,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72001-native_actuated",
+      "elapsed_wall_s": 19.741229000035673,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747146.4085774,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 12.955097900005057,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747166.169166,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72002-native_actuated",
+      "elapsed_wall_s": 16.48704220005311,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747179.143904,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72003-native_fixed",
+      "elapsed_wall_s": 12.767821500077844,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747195.6590564,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.09664180013351,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747208.4526837,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 12.88078929996118,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747224.5780578,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72004-native_actuated",
+      "elapsed_wall_s": 16.444299000082538,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747237.4937258,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72005-native_fixed",
+      "elapsed_wall_s": 13.956473700003698,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747253.9733424,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72005-native_actuated",
+      "elapsed_wall_s": 15.857880800031126,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747267.9634178,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72001-native_fixed",
+      "elapsed_wall_s": 12.841217800043523,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747283.854046,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72001-native_actuated",
+      "elapsed_wall_s": 16.340783399995416,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747296.7367756,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 13.379477699985728,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747313.117267,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72002-native_actuated",
+      "elapsed_wall_s": 16.249741399893537,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747326.5343542,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72003-native_fixed",
+      "elapsed_wall_s": 13.726535700028762,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747342.8251157,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.51672920002602,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747356.5947056,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.20055150007829,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747373.1608515,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72004-native_actuated",
+      "elapsed_wall_s": 16.275326400063932,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747386.4138935,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72005-native_fixed",
+      "elapsed_wall_s": 15.001494999974966,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747402.74313,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72005-native_actuated",
+      "elapsed_wall_s": 19.55816529993899,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747417.7966652,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72001-native_fixed",
+      "elapsed_wall_s": 13.014440199825913,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747437.4063742,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72001-native_actuated",
+      "elapsed_wall_s": 16.426152099855244,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747450.4864774,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.112545000156388,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747466.9711788,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72002-native_actuated",
+      "elapsed_wall_s": 16.546103399945423,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747480.1426752,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 13.126769500086084,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747496.7489915,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72003-native_actuated",
+      "elapsed_wall_s": 16.39537200005725,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747509.937067,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 13.3173634998966,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747526.3897052,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72004-native_actuated",
+      "elapsed_wall_s": 16.333546000067145,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747539.771836,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72005-native_fixed",
+      "elapsed_wall_s": 13.130231000017375,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747556.173314,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 16.49204510007985,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747569.3683386,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72001-native_fixed",
+      "elapsed_wall_s": 12.993630500044674,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747585.9345415,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72001-native_actuated",
+      "elapsed_wall_s": 16.271241100039333,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747598.9997606,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72002-native_fixed",
+      "elapsed_wall_s": 13.70042430004105,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747615.3442147,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72002-native_actuated",
+      "elapsed_wall_s": 16.312373399967328,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747629.117424,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72003-native_fixed",
+      "elapsed_wall_s": 12.933810700196773,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747645.5110495,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72003-native_actuated",
+      "elapsed_wall_s": 16.052328899968415,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747658.525125,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72004-native_fixed",
+      "elapsed_wall_s": 13.460417299997061,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747674.6702712,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72004-native_actuated",
+      "elapsed_wall_s": 16.0095218999777,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747688.214689,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72005-native_fixed",
+      "elapsed_wall_s": 12.961529299849644,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747704.3066192,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72005-native_actuated",
+      "elapsed_wall_s": 16.261137400055304,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747717.3471458,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "verification-adjacent-red-bus-queues",
+      "elapsed_wall_s": 2.113371300045401,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747733.7045803,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "verification-adjacent-red-bus-drain",
+      "elapsed_wall_s": 11.075616899877787,
+      "fingerprint": "9e0108deb1894af90f128f56e20b07ca5fae634d5f5f0e27851840166b4c6882",
+      "started_epoch": 1791747856.3183823,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 12.87379250000231,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791747939.2687683,
+      "status": "completed",
+      "timeout_s": 163.85590144619346
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 14.021926600020379,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791747953.1056004,
+      "status": "completed",
+      "timeout_s": 150.98210894619115
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 13.022044999990612,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791747968.0430136,
+      "status": "completed",
+      "timeout_s": 136.96018234617077
+    },
+    {
+      "case": "repair-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 16.677136299898848,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791747982.0152726,
+      "status": "completed",
+      "timeout_s": 123.93813734618016
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 14.965325699886307,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791747999.4136095,
+      "status": "completed",
+      "timeout_s": 107.26100104628131
+    },
+    {
+      "case": "repair-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 15.59451560000889,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748015.3881931,
+      "status": "completed",
+      "timeout_s": 92.295675346395
+    },
+    {
+      "case": "repair-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 15.968745300080627,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748031.8899434,
+      "status": "completed",
+      "timeout_s": 76.70115974638611
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72001-native_fixed",
+      "elapsed_wall_s": 13.555386600084603,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748048.5290442,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72001-native_actuated",
+      "elapsed_wall_s": 15.702073300024495,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748062.1123865,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 13.392419999931008,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748077.845102,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72002-native_actuated",
+      "elapsed_wall_s": 15.59996260004118,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748091.275433,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72003-native_fixed",
+      "elapsed_wall_s": 13.991764600155875,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748106.9165049,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 15.53879029978998,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748120.9352577,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 13.431271100183949,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748136.5074348,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72004-native_actuated",
+      "elapsed_wall_s": 15.7210833998397,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748149.9621325,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72005-native_fixed",
+      "elapsed_wall_s": 13.296763699967414,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748165.726378,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-light_uniform-500-72005-native_actuated",
+      "elapsed_wall_s": 16.054326500045136,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748179.058563,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72001-native_fixed",
+      "elapsed_wall_s": 13.221948599908501,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748195.1521103,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72001-native_actuated",
+      "elapsed_wall_s": 15.743552800035104,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748208.4157417,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72002-native_fixed",
+      "elapsed_wall_s": 13.08447159989737,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748224.206869,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72002-native_actuated",
+      "elapsed_wall_s": 15.556869599968195,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748237.3292937,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72003-native_fixed",
+      "elapsed_wall_s": 13.302795199910179,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748252.9373946,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72003-native_actuated",
+      "elapsed_wall_s": 16.106322600040585,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748266.283131,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72004-native_fixed",
+      "elapsed_wall_s": 12.981355299940333,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748282.4449048,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72004-native_actuated",
+      "elapsed_wall_s": 16.08662179997191,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748295.4815383,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72005-native_fixed",
+      "elapsed_wall_s": 13.042727299965918,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748311.6233697,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-primary_uniform-500-72005-native_actuated",
+      "elapsed_wall_s": 16.622260499978438,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748324.7235088,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72001-native_fixed",
+      "elapsed_wall_s": 13.056557999923825,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748341.4040587,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72001-native_actuated",
+      "elapsed_wall_s": 16.167039699852467,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748354.5204601,
+      "status": "completed",
+      "timeout_s": 300
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72002-native_fixed",
+      "elapsed_wall_s": 13.557618699967861,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748370.7532468,
+      "status": "completed",
+      "timeout_s": 298.7579214456491
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72002-native_actuated",
+      "elapsed_wall_s": 16.318459500093013,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748384.3703377,
+      "status": "completed",
+      "timeout_s": 285.20030274568126
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72003-native_fixed",
+      "elapsed_wall_s": 12.935380199924111,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748400.7566953,
+      "status": "completed",
+      "timeout_s": 268.88184324558824
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72003-native_actuated",
+      "elapsed_wall_s": 16.63018950005062,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748413.7528815,
+      "status": "completed",
+      "timeout_s": 255.94646304566413
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72004-native_fixed",
+      "elapsed_wall_s": 12.934501999989152,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748430.445872,
+      "status": "completed",
+      "timeout_s": 239.3162735456135
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72004-native_actuated",
+      "elapsed_wall_s": 16.245057000080124,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748443.4452393,
+      "status": "completed",
+      "timeout_s": 226.38177154562436
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72005-native_fixed",
+      "elapsed_wall_s": 13.453776499954984,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748459.7629085,
+      "status": "completed",
+      "timeout_s": 210.13671454554424
+    },
+    {
+      "case": "repair-replay-geometry-qualification-directional_shift-500-72005-native_actuated",
+      "elapsed_wall_s": 16.468728000065312,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748473.2900429,
+      "status": "completed",
+      "timeout_s": 196.68293804558925
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72001-native_fixed",
+      "elapsed_wall_s": 13.006417700089514,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748489.837899,
+      "status": "completed",
+      "timeout_s": 180.21421004552394
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72001-native_actuated",
+      "elapsed_wall_s": 16.342964600073174,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748502.9249804,
+      "status": "completed",
+      "timeout_s": 167.20779234543443
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72002-native_fixed",
+      "elapsed_wall_s": 13.326318599982187,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748519.3406389,
+      "status": "completed",
+      "timeout_s": 150.86482774536125
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72002-native_actuated",
+      "elapsed_wall_s": 16.601363100111485,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748532.7425823,
+      "status": "completed",
+      "timeout_s": 137.53850914537907
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72003-native_fixed",
+      "elapsed_wall_s": 13.13340499997139,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748549.4278686,
+      "status": "completed",
+      "timeout_s": 120.93714604526758
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72003-native_actuated",
+      "elapsed_wall_s": 16.18918849993497,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748562.6415918,
+      "status": "completed",
+      "timeout_s": 107.80374104529619
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72004-native_fixed",
+      "elapsed_wall_s": 13.205381900072098,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748578.9157445,
+      "status": "completed",
+      "timeout_s": 91.61455254536122
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72004-native_actuated",
+      "elapsed_wall_s": 16.065848500002176,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748592.2117045,
+      "status": "completed",
+      "timeout_s": 78.40917064528912
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72005-native_fixed",
+      "elapsed_wall_s": 13.059555199928582,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748608.3724277,
+      "status": "completed",
+      "timeout_s": 62.34332214528695
+    },
+    {
+      "case": "repair-replay-geometry-qualification-downstream_bottleneck-500-72005-native_actuated",
+      "elapsed_wall_s": 16.04729379992932,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748621.5264716,
+      "status": "completed",
+      "timeout_s": 49.283766945358366
+    },
+    {
+      "case": "verification-adjacent-red-bus-queues",
+      "elapsed_wall_s": 11.304924100171775,
+      "fingerprint": "4eb785ce252eb61b1a86b2076024571310a8253dec6b767604692a07d137aaed",
+      "started_epoch": 1791748637.7027557,
+      "status": "completed",
+      "timeout_s": 33.236473145429045
+    },
+    {
+      "case": "calibration-500-73001-native_fixed",
+      "elapsed_wall_s": 13.888387700077146,
+      "fingerprint": "11e3e7c748d724f182f8fc50102dbee9122a5381a529f0eb94132b14a8ec241b",
+      "started_epoch": 1791748739.7940552,
+      "status": "completed",
+      "timeout_s": 21.93154904525727
+    },
+    {
+      "case": "calibration-500-73001-native_actuated",
+      "elapsed_wall_s": 15.443564099958166,
+      "error": "Command '['C:\\\\Users\\\\Zephyrus M16\\\\miniconda3\\\\python.exe', '-m', 'src.simulation.qualify_hcm', '--worker', 'C:\\\\Users\\\\Zephyrus M16\\\\Desktop\\\\UNI\\\\VEDC\\\\vedc-traffic-flow\\\\workspaces\\\\hcm-benchmark-v3\\\\artifacts\\\\hcm-qualification-v3\\\\cases\\\\calibration-500-73001-native_actuated.partial\\\\spec.json']' timed out after 8.043161345180124 seconds",
+      "fingerprint": "11e3e7c748d724f182f8fc50102dbee9122a5381a529f0eb94132b14a8ec241b",
+      "started_epoch": 1791748753.6976316,
+      "status": "interrupted",
+      "timeout_s": 8.043161345180124
+    }
+  ],
+  "budget_origin": {
+    "original_budget_s": 7200,
+    "outside_ledger_diagnostic_wall_s": 453.2841334999539,
+    "prior_simulation_wall_s": 4000.773403899977,
+    "reserve_verification_s": 1800,
+    "unmetered_legacy_runs": "SUMO-only diagnostics have no wall-time metrics; prior consumption is a known lower bound.",
+    "v2_ledger_sha256": "e661be9f5caf33669a980b5b05fb736262505623faf07662d15352ffbadc477b",
+    "v2_ledger_wall_s": 3547.489270400023
+  },
+  "fingerprint": "11e3e7c748d724f182f8fc50102dbee9122a5381a529f0eb94132b14a8ec241b",
+  "legacy_unmetered_charged": {
+    "conservative_charge_s": 115.51471877098083,
+    "method": "SUMO generated-on timestamps to latest output mtime, plus 2 seconds launch overhead per run. Read from original v2 output files, never altered.",
+    "runs": [
+      {
+        "conservative_charge_s": 2.270637273788452,
+        "elapsed_from_timestamps_s": 0.27063727378845215,
+        "path": "timegap2\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.263664484024048,
+        "elapsed_from_timestamps_s": 0.26366448402404785,
+        "path": "timegap2\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.229372501373291,
+        "elapsed_from_timestamps_s": 0.22937250137329102,
+        "path": "timegap2\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2132105827331543,
+        "elapsed_from_timestamps_s": 0.2132105827331543,
+        "path": "timegap2\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.271307945251465,
+        "elapsed_from_timestamps_s": 0.27130794525146484,
+        "path": "timegap2\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.190401792526245,
+        "elapsed_from_timestamps_s": 0.19040179252624512,
+        "path": "timegap2\\primary_uniform-72003-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.4786717891693115,
+        "elapsed_from_timestamps_s": 0.4786717891693115,
+        "path": "step05\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.4362199306488037,
+        "elapsed_from_timestamps_s": 0.4362199306488037,
+        "path": "step05\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.512009859085083,
+        "elapsed_from_timestamps_s": 0.512009859085083,
+        "path": "step05\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.446074962615967,
+        "elapsed_from_timestamps_s": 1.4460749626159668,
+        "path": "step01_action1\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.060516357421875,
+        "elapsed_from_timestamps_s": 1.060516357421875,
+        "path": "step01_action1\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.7880051136016846,
+        "elapsed_from_timestamps_s": 0.7880051136016846,
+        "path": "step01_action1\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.1223297119140625,
+        "elapsed_from_timestamps_s": 1.1223297119140625,
+        "path": "step01_action1\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.554431200027466,
+        "elapsed_from_timestamps_s": 1.5544312000274658,
+        "path": "step01_action1\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.771419048309326,
+        "elapsed_from_timestamps_s": 0.7714190483093262,
+        "path": "step01_action1\\primary_uniform-72003-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.902600049972534,
+        "elapsed_from_timestamps_s": 1.9026000499725342,
+        "path": "step01\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.976968288421631,
+        "elapsed_from_timestamps_s": 1.9769682884216309,
+        "path": "step01\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.207314968109131,
+        "elapsed_from_timestamps_s": 1.2073149681091309,
+        "path": "step01\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.877945899963379,
+        "elapsed_from_timestamps_s": 1.877945899963379,
+        "path": "step01\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 4.021413803100586,
+        "elapsed_from_timestamps_s": 2.021413803100586,
+        "path": "step01\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 3.1906590461730957,
+        "elapsed_from_timestamps_s": 1.1906590461730957,
+        "path": "step01\\primary_uniform-72003-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.3815910816192627,
+        "elapsed_from_timestamps_s": 0.3815910816192627,
+        "path": "jmSafety3\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.244347095489502,
+        "elapsed_from_timestamps_s": 0.24434709548950195,
+        "path": "jmSafety3\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.1735029220581055,
+        "elapsed_from_timestamps_s": 0.17350292205810547,
+        "path": "jmSafety3\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2265734672546387,
+        "elapsed_from_timestamps_s": 0.22657346725463867,
+        "path": "jmSafety3\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.3314380645751953,
+        "elapsed_from_timestamps_s": 0.3314380645751953,
+        "path": "jmSafety3\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.189758539199829,
+        "elapsed_from_timestamps_s": 0.1897585391998291,
+        "path": "jmSafety3\\primary_uniform-72003-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2900302410125732,
+        "elapsed_from_timestamps_s": 0.29003024101257324,
+        "path": "jmSafety2\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2270519733428955,
+        "elapsed_from_timestamps_s": 0.2270519733428955,
+        "path": "jmSafety2\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.1545565128326416,
+        "elapsed_from_timestamps_s": 0.1545565128326416,
+        "path": "jmSafety2\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.224196672439575,
+        "elapsed_from_timestamps_s": 0.2241966724395752,
+        "path": "jmSafety2\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.233175754547119,
+        "elapsed_from_timestamps_s": 0.23317575454711914,
+        "path": "jmSafety2\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.1742947101593018,
+        "elapsed_from_timestamps_s": 0.17429471015930176,
+        "path": "jmSafety2\\primary_uniform-72003-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.3987388610839844,
+        "elapsed_from_timestamps_s": 0.3987388610839844,
+        "path": "extra2\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.234417200088501,
+        "elapsed_from_timestamps_s": 0.23441720008850098,
+        "path": "extra2\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.1875970363616943,
+        "elapsed_from_timestamps_s": 0.18759703636169434,
+        "path": "extra2\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2591969966888428,
+        "elapsed_from_timestamps_s": 0.2591969966888428,
+        "path": "extra2\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2625362873077393,
+        "elapsed_from_timestamps_s": 0.26253628730773926,
+        "path": "extra2\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2065775394439697,
+        "elapsed_from_timestamps_s": 0.20657753944396973,
+        "path": "extra2\\primary_uniform-72003-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.2592387199401855,
+        "elapsed_from_timestamps_s": 0.25923871994018555,
+        "path": "allred5\\directional_shift-72003-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.328669548034668,
+        "elapsed_from_timestamps_s": 0.32866954803466797,
+        "path": "allred5\\directional_shift-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.1560757160186768,
+        "elapsed_from_timestamps_s": 0.15607571601867676,
+        "path": "allred5\\directional_shift-72005-native_actuated\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.195854425430298,
+        "elapsed_from_timestamps_s": 0.19585442543029785,
+        "path": "allred5\\light_uniform-72002-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.21006178855896,
+        "elapsed_from_timestamps_s": 0.21006178855895996,
+        "path": "allred5\\light_uniform-72004-native_fixed\\collisions.xml"
+      },
+      {
+        "conservative_charge_s": 2.180063009262085,
+        "elapsed_from_timestamps_s": 0.18006300926208496,
+        "path": "allred5\\primary_uniform-72003-native_actuated\\collisions.xml"
+      }
+    ]
+  },
+  "simulation_wall_s": 7207.400402754778
+}

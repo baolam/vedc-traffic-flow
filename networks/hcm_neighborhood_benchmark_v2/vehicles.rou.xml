@@ -1,0 +1,8 @@
+<routes>
+    <vType id="car" vClass="passenger" guiShape="passenger" imgFile="vehicles/car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,1"/>
+    <vType id="blue_car" vClass="passenger" guiShape="passenger" imgFile="vehicles/blue_car.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="0.1,0.5,1.0"/>
+    <vType id="motorcycle" vClass="motorcycle" guiShape="motorcycle" imgFile="vehicles/motorcycle.png" length="2.2" minGap="1.5" accel="3.0" decel="5.0" maxSpeed="50" color="1,0.2,0.2"/>
+    <vType id="taxi" vClass="taxi" guiShape="passenger" imgFile="vehicles/taxi.png" length="4.5" minGap="2.5" accel="2.6" decel="4.5" maxSpeed="50" color="1,1,0"/>
+    <vType id="bus" vClass="bus" guiShape="bus" imgFile="vehicles/bus.png" length="12" minGap="3" accel="1.2" decel="4" maxSpeed="40" color="0.2,0.5,1"/>
+    <vType id="truck" vClass="truck" guiShape="truck" imgFile="vehicles/truck.png" length="8" minGap="3" accel="1.5" decel="4" maxSpeed="40" color="0.4,0.4,0.4"/>
+</routes>
