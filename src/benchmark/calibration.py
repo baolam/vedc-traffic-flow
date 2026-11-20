@@ -32,25 +32,27 @@ def calibrate(mapping, root, controller, pilot=False, workers=4):
     protocol = dict(demand_s=180 if pilot else 1800, drain_s=600, trace=False, benchmark_mode=True)
     observations = []
 
-    def measure(intensity):
+    def measure(intensity, scenario="balanced"):
         config = dict(protocol, intensity=intensity)
         from .scheduling import run_tasks
 
         tasks = [
-            (dict(map=mapping, scenario="balanced", seed=seed, controller=controller), config, str(root / "cases"))
+            (dict(map=mapping, scenario=scenario, seed=seed, controller=controller), config, str(root / "cases"))
             for seed in SEEDS["development"]
         ]
         rows = run_tasks(tasks, workers, continue_on_error=True)
         # A collision/teleport (invalid run) under load means the load exceeds capacity, not a crash.
         stable = all(r is not None and r["scheduled"] > 0 and r["completed"] >= 0.98 * r["scheduled"] for r in rows)
-        observations.append(dict(intensity=intensity, stable=stable))
+        observations.append(dict(scenario=scenario, intensity=intensity, stable=stable))
         return stable
 
     lower, upper = bracket_capacity(measure)
+    factors = dict(balanced=0.7 * lower, directional_reversal=lower, downstream_bottleneck=0.7 * lower)
     if mapping["id"] == "four_intersection_rl_v1":
-        factors = dict(sparse=lower, near_capacity=lower, oversaturated=upper)
-    else:
-        factors = dict(balanced=0.7 * lower, directional_reversal=lower, downstream_bottleneck=0.7 * lower)
+        factors.update(sparse=lower, near_capacity=lower, oversaturated=upper)
+        # Surges load one direction far above balanced capacity: 0.7x of their own measured stable bound.
+        for surge in ("directional_surge", "directional_surge_ew"):
+            factors[surge] = 0.7 * bracket_capacity(lambda x: measure(x, surge))[0]
     mapping["intensity_by_case"] = factors
     mapping["calibration_mode"] = "pilot" if pilot else "research"
     write_json(

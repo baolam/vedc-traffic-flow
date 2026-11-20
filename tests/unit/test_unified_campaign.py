@@ -202,3 +202,23 @@ def test_every_map_gets_the_native_cycle_baseline_once(tmp_path):
         ["fair_cycle", "fair_cycle_native"], ["fair_cycle_native"]]
     again = load_suite(prepared, tmp_path)
     assert again == suite  # loading is idempotent
+
+
+def test_core_map_calibrates_every_case_and_surges_against_their_own_bound(tmp_path, monkeypatch):
+    from src.benchmark.calibration import calibrate
+
+    capacity = dict(balanced=1.0, directional_surge=0.25, directional_surge_ew=0.5)
+
+    def behaviour(tasks):
+        case, load = tasks[0][0]["scenario"], tasks[0][1]["intensity"]
+        assert all(t[0]["scenario"] == case for t in tasks)
+        return [dict(scheduled=10, completed=10 if load <= capacity[case] else 5) for _ in tasks]
+
+    fake_scheduler(monkeypatch, behaviour)
+    m = calibrate(dict(mapping(tmp_path), id="four_intersection_rl_v1"), tmp_path, dict(type="fixed_time"))
+    f = m["intensity_by_case"]
+    assert set(f) == {"balanced", "directional_reversal", "downstream_bottleneck", "sparse", "near_capacity",
+                      "oversaturated", "directional_surge", "directional_surge_ew"}
+    assert f["directional_reversal"] == f["near_capacity"] and f["balanced"] == pytest.approx(0.7 * f["near_capacity"])
+    assert f["directional_surge"] == pytest.approx(0.7 * 0.25) and f["directional_surge_ew"] == pytest.approx(0.7 * 0.5)
+    assert f["oversaturated"] > f["near_capacity"]
