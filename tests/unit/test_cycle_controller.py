@@ -135,3 +135,24 @@ def test_learned_controller_rejects_bad_artifacts_and_other_maps(tmp_path):
     c = create_controller("fair_cycle_unified", model_path=write(tmp_path, artifact(topology_id="other")))
     with pytest.raises(ValueError):
         run_cycles(c, 2)
+
+
+def test_symmetric_demand_gets_equal_greens_despite_cycle_start_snapshot():
+    """Each phase's queue is high while red and low while green; at cycle start phase 0 looks busiest.
+    Planning from the previous cycle's mean pressure must not systematically favour phase 0."""
+    top, ctl = topology(2), FairCycleNativeController()
+    idx, elapsed, t, greens, queues = 0, 0, 0, [], [6.0, 6.0]
+    while len(greens) < 12:
+        tel = telemetry(top, idx, True, elapsed, t, [round(q) for q in queues])
+        target = ctl.compute_command("J", tel["J"], top, tel, t)["target_phase_id"]
+        if target != f"P{idx}":
+            greens.append((idx, elapsed))
+            idx, elapsed = int(target[1:]), 0
+        else:
+            elapsed += 5
+        queues = [max(0.0, q - 3) if i == idx else q + 1 for i, q in enumerate(queues)]  # red grows, green drains
+        t += 5
+    later = greens[4:]  # after the first cycles have built a pressure history
+    p0 = [g for i, g in later if i == 0]
+    p1 = [g for i, g in later if i == 1]
+    assert abs(np.mean(p0) - np.mean(p1)) <= 5, (p0, p1)

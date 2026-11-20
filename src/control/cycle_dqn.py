@@ -56,17 +56,18 @@ class FairCycleNativeController(BaseController):
     def __init__(self, selector=None):
         self.selector = selector  # (node, view, base_greens) -> slot in [0, GRID)
         self._state = {}
+        self._pressure_sum = {}  # node -> (per-phase pressure sums, samples) over the running cycle
 
     def reset(self):
         self._state.clear()
+        self._pressure_sum.clear()
 
     def plans(self):
         """Greens of each node's running cycle (empty before its first cycle)."""
         return {nid: list(state["greens"]) for nid, state in self._state.items()}
 
-    def _start_cycle(self, node, view, idx):
-        local = {a["approach_id"]: a for a in view[node["node_id"]]["approaches"]}
-        base = allocate_greens([FairCycleController._pressure(p, local, view) for p in node["phases"]])
+    def _start_cycle(self, node, view, idx, weights):
+        base = allocate_greens(weights)
         greens, slot = base, NOOP
         if self.selector is not None:
             slot = int(self.selector(node, view, base))
@@ -84,9 +85,18 @@ class FairCycleNativeController(BaseController):
         green = telemetry.get("signal_state", "GREEN") == "GREEN"
         elapsed = float(telemetry.get("elapsed_green_s", 0))
         view = {**(network_state or {}), node_id: telemetry}
+        local = {a["approach_id"]: a for a in telemetry["approaches"]}
+        now = [FairCycleController._pressure(p, local, view) for p in node["phases"]]
         state = self._state.get(node_id)
         if state is None or (idx == 0 and state["idx"] == len(ids) - 1 and green and elapsed == 0):
-            state = self._state[node_id] = self._start_cycle(node, view, idx)
+            # A snapshot at cycle start over-weights phase 0 (it just queued through every other phase) and
+            # under-weights the phase that just ran; the previous cycle's mean pressure treats phases alike.
+            sums, n = self._pressure_sum.get(node_id, (None, 0))
+            weights = [s / n for s in sums] if n else now
+            state = self._state[node_id] = self._start_cycle(node, view, idx, weights)
+            self._pressure_sum[node_id] = ([0.0] * len(ids), 0)
+        sums, n = self._pressure_sum[node_id]
+        self._pressure_sum[node_id] = ([s + p for s, p in zip(sums, now)], n + 1)
         state["idx"] = idx
         target = ids[(idx + 1) % len(ids)] if green and elapsed >= state["greens"][idx] else ids[idx]
         return {"command_id": str(uuid.uuid4()), "node_id": node_id, "target_phase_id": target,
