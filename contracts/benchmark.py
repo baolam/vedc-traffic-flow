@@ -40,6 +40,7 @@ PHASE_FEATURES = [
 OBSERVATION_SPEC = dict(
     version="raw_two_hop_v1",
     radius_hops=2,
+    max_phases=8,
     features=[
         "served_queue", "served_occupancy",
         "down1_queue", "down1_occupancy", "down2_queue", "down2_occupancy",
@@ -48,6 +49,16 @@ OBSERVATION_SPEC = dict(
         "green", "yellow", "all_red", "confidence",
     ],
     normalization=dict(queue_vehicles=20, service_age_s=60, elapsed_green_s=60),
+)
+UNIFIED_DQN = dict(
+    schema="unified_dqn_v1",
+    # algorithm -> (architecture, reward); generalized project variants, not exact paper reproductions
+    algorithms=dict(
+        phase_dqn_unified=("scalar_phase_scorer", "wait_tail_v1"),
+        shared_dqn_unified=("padded_vector_head", "wait_tail_v1"),
+        presslight_unified=("scalar_phase_scorer", "node_pressure_v1"),
+    ),
+    hidden=64,
 )
 PHASE_NORMALIZATION = dict(
     queue_vehicles=20,
