@@ -70,14 +70,14 @@ UNIFIED_DQN = dict(
 CYCLE_DQN = dict(schema="cycle_candidates_v1", extras=["is_noop", "donor_green", "recipient_green", "cycle_length"])
 # Frozen first recipe (unverified starting point, see docs/engineering/research/INITIAL_RL_HYPERPARAMETERS.md).
 DQN_RECIPE = dict(
-    version="unified_dqn_recipe_v2", gamma_5=0.99, reference_s=5, lr=3e-4, replay=200000, batch=256,
+    version="unified_dqn_recipe_v3", gamma_5=0.99, reference_s=5, lr=3e-4, replay=200000, batch=256,
     learning_starts=5000, update_every_decisions=4, target_every_updates=1000, grad_clip=10,
     epsilon_end=0.05, epsilon_decay_sim_s=125000, validate_every_episodes=40,
-    min_sim_s=250000, min_episodes=100, min_case_visits=10, patience=5, rel_improvement=0.01,
+    min_sim_s=250000, min_episodes=400, min_case_visits=10, patience=5, rel_improvement=0.01,
     cap_sim_s=2500000, demand_s=1800, drain_s=600,
 )
 # Cycle-residual DQN recipe: phase recipe with its own cadence (one optimizer step per joint cycle decision).
-CYCLE_RECIPE = dict(DQN_RECIPE, version="unified_cycle_recipe_v2", learning_starts=1024, target_every_updates=200,
+CYCLE_RECIPE = dict(DQN_RECIPE, version="unified_cycle_recipe_v3", learning_starts=1024, target_every_updates=200,
                     replay=50000, wait_penalty_lambda=0.5)
 # Unified MAPPO: local node features (radius 0) + two attention layers = exactly two hops of communication.
 UNIFIED_MAPPO = dict(
