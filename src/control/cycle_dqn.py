@@ -12,7 +12,7 @@ from contracts.benchmark import CYCLE_DQN as D, CYCLE_RULE as R, OBSERVATION_SPE
 from contracts.contracts_sdk import validate_payload
 from src.rl.policy import NumpyPolicy
 from .controllers import BaseController
-from .cycle_plan import allocate_greens, apply_transfer, cycle_length
+from .cycle_plan import apply_transfer, cycle_length, damped_greens
 from .fair_cycle import FairCycleController
 from .observation import flow_index, observe_node
 from .unified_dqn import FEATURES, MAX_PHASES, pad_rows
@@ -67,7 +67,7 @@ class FairCycleNativeController(BaseController):
         return {nid: list(state["greens"]) for nid, state in self._state.items()}
 
     def _start_cycle(self, node, view, idx, weights):
-        base = allocate_greens(weights)
+        base = damped_greens(weights)
         greens, slot = base, NOOP
         if self.selector is not None:
             slot = int(self.selector(node, view, base))

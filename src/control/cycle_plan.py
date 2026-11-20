@@ -26,6 +26,24 @@ def allocate_greens(weights):
     return greens
 
 
+def damped_greens(weights, share=None):
+    """Greens `share` of the way from the equal split to the pressure split, quantized with the budget exact.
+
+    Leftover quanta go to the largest remainders; equal remainders (common: half an odd quantum count) go to the
+    phase the pressure split favours more, so rounding follows demand, never a fixed phase position.
+    """
+    share = R["adapt_share"] if share is None else share
+    equal, full = allocate_greens([1.0] * len(weights)), allocate_greens(weights)
+    target = [e + share * (f - e) for e, f in zip(equal, full)]
+    q = R["quantum_s"]
+    greens = [int(t // q) * q for t in target]
+    left = (green_budget(len(weights)) - sum(greens)) // q
+    for i in sorted(range(len(target)), key=lambda i: (-(target[i] - greens[i]), -(full[i] - equal[i]), -weights[i], i))[:left]:
+        greens[i] += q
+    assert sum(greens) == green_budget(len(weights)) and all(R["min_green_s"] <= g <= R["max_green_s"] for g in greens)
+    return greens
+
+
 def legal_transfers(greens):
     q = R["quantum_s"]
     return [(d, r) for d, a in enumerate(greens) for r, b in enumerate(greens)

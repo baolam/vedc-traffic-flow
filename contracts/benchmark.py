@@ -11,8 +11,10 @@ LEARNER_SEEDS = [17, 29, 43]
 # Five independent whole-system training runs per map and algorithm; LEARNER_SEEDS stays frozen for old protocols.
 UNIFIED_CAMPAIGN = dict(version="unified_campaign_v1", learner_seeds=[17, 29, 43, 59, 71])
 # Native-phase fair cycle: length max(base, per_phase * P) s incl. clearance_s per phase; greens quantized.
-CYCLE_RULE = dict(version="multiphase_cycle_v1", base_s=70, per_phase_s=25, clearance_s=5,
-                  min_green_s=10, max_green_s=60, quantum_s=5)
+# adapt_share: native greens move this fraction of the way from the equal split toward the pressure split
+# (chosen on development seeds: full adaptation over-reacts to noisy pressure).
+CYCLE_RULE = dict(version="multiphase_cycle_v2", base_s=70, per_phase_s=25, clearance_s=5,
+                  min_green_s=10, max_green_s=60, quantum_s=5, adapt_share=0.5)
 FLEET = dict(motorcycle=65, car=25, taxi=4, bus=3, truck=3)
 CORE_CASES = [
     "balanced",
