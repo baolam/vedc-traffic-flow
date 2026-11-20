@@ -162,3 +162,30 @@ def test_prepare_reuses_audited_maps_and_prepares_only_new_ones(tmp_path, monkey
     out = json.loads((tmp_path / "root" / "prepared.json").read_text())
     assert out["workers"] == 2 and out["controllers"] == [dict(type="fixed_time")]  # base settings preserved
     assert out["maps"][0]["topology_path"] == "/audited/old.json"
+
+
+def test_train_stage_records_every_run_and_keeps_going_after_a_failure(tmp_path, monkeypatch):
+    import src.benchmark.unified_campaign as campaign
+
+    suite = dict(workers=4, maps=[dict(id="m", intensity_by_case={"c": 1.0}, cases=["c"])])
+    monkeypatch.setattr(campaign, "stage_references", lambda *a: {"m": []})
+    seen = []
+
+    def fake(spec, algorithm, seed, out, recipe, wall, device, workers, cases_root, reference):
+        seen.append((seed, workers))
+        if seed == 29:
+            return dict(status="failed", error="boom")
+        return dict(status="selected", stop_reason="plateau", converged=True, wall_s=1.0, sim_s=2.0)
+
+    monkeypatch.setattr(campaign, "_train_one", fake)
+    ledger = campaign.stage_train(suite, tmp_path, ["phase_dqn_unified"], [17, 29, 43], jobs=1)
+    assert [s for s, _ in seen] == [17, 29, 43]  # the failed run did not stop the campaign
+    assert ledger["m/phase_dqn_unified/29"]["status"] == "failed" and ledger["m/phase_dqn_unified/43"]["converged"]
+    assert json.loads((tmp_path / "training-ledger.json").read_text()) == ledger
+
+
+def test_train_stage_requires_workloads_first(tmp_path):
+    from src.benchmark.unified_campaign import stage_train
+
+    with pytest.raises(ValueError, match="workloads"):
+        stage_train(dict(workers=4, maps=[dict(id="m")]), tmp_path, ["phase_dqn_unified"], [17])

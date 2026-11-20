@@ -6,6 +6,7 @@ validation checkpoint is reported as such, never dropped or replaced by another 
 import argparse
 import copy
 import json
+import os
 import traceback
 from collections import defaultdict
 from contextlib import ExitStack
@@ -83,28 +84,70 @@ def stage_workloads(suite, root):
             write_json(path, saved)  # per map, so an interrupted calibration resumes
 
 
-def stage_train(suite, root, algorithms, seeds, recipe=None, wall_limit_s=None, device="cuda"):
+def _train_one(spec, algorithm, seed, out, recipe, wall_limit_s, device, workers, cases_root, reference):
+    """One (map, algorithm, seed) run; returns its ledger entry. Runs in a worker process when jobs > 1."""
     from src.rl.unified_train import train_run
 
+    try:
+        r = train_run(spec, algorithm, seed, out, recipe, wall_limit_s, device, workers, cases_root, reference)
+        return dict(status=r["status"], stop_reason=r["stop_reason"], converged=r["converged"],
+                    wall_s=r["counters"]["wall_s"], sim_s=r["counters"]["sim_s"])
+    except Exception as error:  # recorded, reported, retried on the next invocation
+        Path(out).mkdir(parents=True, exist_ok=True)
+        (Path(out) / "failure.txt").write_text(traceback.format_exc())
+        return dict(status="failed", error=repr(error))
+
+
+def stage_references(suite, root, recipe):
+    """Fixed-Time validation reference per map, computed once so concurrent runs never share a case."""
+    from src.rl.unified_train import DQN_RECIPE, reference_rows
+
+    root, recipe, refs = Path(root), {**DQN_RECIPE, **(recipe or {})}, {}
+    for m in suite["maps"]:
+        path = root / "references" / f"{m['id']}-{recipe['demand_s']}-{recipe['drain_s']}.json"
+        if not path.exists():
+            write_json(path, reference_rows(m, recipe, root / "validation-cases" / m["id"], suite["workers"]))
+        refs[m["id"]] = json.loads(path.read_text())
+    return refs
+
+
+def stage_train(suite, root, algorithms, seeds, recipe=None, wall_limit_s=None, device="cuda", jobs=1):
     root = Path(root)
     ledger_path = root / "training-ledger.json"
     ledger = json.loads(ledger_path.read_text()) if ledger_path.exists() else {}
     for m in suite["maps"]:
         if "intensity_by_case" not in m:
             raise ValueError(f"Run the workloads stage first: {m['id']} has no calibrated demand")
-        for algorithm in algorithms:
-            for seed in seeds:
-                key, out = f"{m['id']}/{algorithm}/{seed}", root / "training" / m["id"] / algorithm / str(seed)
-                try:
-                    r = train_run(m, algorithm, seed, out, recipe, wall_limit_s, device, suite["workers"],
-                                  cases_root=root / "validation-cases" / m["id"])
-                    ledger[key] = dict(status=r["status"], stop_reason=r["stop_reason"], converged=r["converged"],
-                                       wall_s=r["counters"]["wall_s"], sim_s=r["counters"]["sim_s"])
-                except Exception as error:  # recorded, reported, retried on the next invocation
-                    out.mkdir(parents=True, exist_ok=True)
-                    (out / "failure.txt").write_text(traceback.format_exc())
-                    ledger[key] = dict(status="failed", error=repr(error))
-                write_json(ledger_path, ledger)
+    refs = stage_references(suite, root, recipe)
+    workers = max(1, min(suite["workers"], 8 // jobs))  # validation workers per job; at most ~8 simulators
+    if jobs > 1:  # a job is either rolling out or validating, so peak simulators = jobs * workers
+        os.environ["EDGEFLOW_SUMO_SLOTS"] = str(max(4, jobs * workers))  # inherited by the spawned jobs
+    runs = [(m, a, s) for m in suite["maps"] for a in algorithms for s in seeds]
+
+    def args(m, a, s):
+        return (m, a, s, root / "training" / m["id"] / a / str(s), recipe, wall_limit_s, device, workers,
+                root / "validation-cases" / m["id"], refs[m["id"]])
+
+    def record(m, a, s, entry):
+        ledger[f"{m['id']}/{a}/{s}"] = entry
+        write_json(ledger_path, ledger)
+
+    if jobs == 1:
+        for m, a, s in runs:
+            record(m, a, s, _train_one(*args(m, a, s)))
+        return ledger
+    import multiprocessing as mp
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    with ProcessPoolExecutor(jobs, mp_context=mp.get_context("spawn")) as pool:
+        futures = {pool.submit(_train_one, *args(m, a, s)): (m, a, s) for m, a, s in runs}
+        try:
+            for future in as_completed(futures):
+                record(*futures[future], future.result())
+        except BaseException:
+            for future in futures:
+                future.cancel()
+            raise
     return ledger
 
 
@@ -257,6 +300,7 @@ def main(argv=None):
     parser.add_argument("--recipe", default="{}", help="JSON overrides of the frozen recipe (recorded in artifacts)")
     parser.add_argument("--wall-limit-s", type=float)
     parser.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
+    parser.add_argument("--jobs", type=int, default=1, help="concurrent training runs (train stage)")
     parser.add_argument("--demand-s", type=int)
     parser.add_argument("--drain-s", type=int)
     a = parser.parse_args(argv)
@@ -277,7 +321,7 @@ def main(argv=None):
         if a.stage == "workloads":
             stage_workloads(suite, root)
         elif a.stage == "train":
-            stage_train(suite, root, a.algorithms, a.seeds, json.loads(a.recipe), a.wall_limit_s, a.device)
+            stage_train(suite, root, a.algorithms, a.seeds, json.loads(a.recipe), a.wall_limit_s, a.device, a.jobs)
         elif a.stage == "freeze":
             stage_freeze(suite, root, a.algorithms, a.seeds)
         elif a.stage == "evaluate":

@@ -240,3 +240,22 @@ def test_phase_model_runs_through_shared_factory_without_pytorch(tmp_path):
     )
     command = policy.compute_command("J1", state, dict(topology_id="test", nodes=[node]), network_state={"J1": state})
     assert command["target_phase_id"] == "p1" and command["controller"] == "phase_dqn"
+
+
+def test_slot_limit_env_raises_the_default_only(monkeypatch):
+    from contextlib import ExitStack
+
+    monkeypatch.setenv("EDGEFLOW_SUMO_SLOTS", "6")
+    with ExitStack() as stack:
+        for _ in range(6):
+            stack.enter_context(simulator_slot(timeout=0.1))
+        with pytest.raises(TimeoutError):
+            with simulator_slot(timeout=0.1):
+                pass
+    with pytest.raises(ValueError):
+        with simulator_slot(5):  # an explicit limit keeps the 1-4 range
+            pass
+    monkeypatch.setenv("EDGEFLOW_SUMO_SLOTS", "17")
+    with pytest.raises(ValueError):
+        with simulator_slot():
+            pass

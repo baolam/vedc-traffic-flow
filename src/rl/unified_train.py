@@ -25,6 +25,9 @@ from src.rl.stopping import Plateau
 from src.simulation.runtime import InvalidRun, SumoRuntime
 
 
+TRAIN_CHECK_EVERY = 25  # schema/readback cadence in training rollouts only; evaluation checks every step
+
+
 def build_net(architecture):
     return nn.Sequential(nn.Linear(input_dim(architecture), U["hidden"]), nn.ReLU(),
                          nn.Linear(U["hidden"], output_dim(architecture)))
@@ -119,7 +122,7 @@ def reference_rows(spec, recipe, root, workers):
 
 
 def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, device="cuda", workers=4,
-              cases_root=None):
+              cases_root=None, reference=None):
     """Train one learner seed on one map; returns the result summary (also written to result.json)."""
     recipe = {**DQN_RECIPE, **(recipe or {})}
     architecture, reward_version = U["algorithms"][algorithm]
@@ -161,7 +164,9 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
             return json.loads((output / "result.json").read_text())
     cases_root = Path(cases_root or output / "validation-cases")
     reference_file = output / "reference.json"
-    if not reference_file.exists():
+    if reference is not None:  # precomputed once per map by the campaign (safe for concurrent runs)
+        write_json(reference_file, reference)
+    elif not reference_file.exists():
         write_json(reference_file, reference_rows(spec, recipe, cases_root, workers))
     reference = json.loads(reference_file.read_text())
 
@@ -197,15 +202,19 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
         runtime = SumoRuntime(spec["topology_path"], spec["network_path"], output / f"episode-{uuid.uuid4().hex}",
                               seed=SEEDS["train"][counters["episode"] % len(SEEDS["train"])], scenario=case,
                               demand_s=recipe["demand_s"], drain_s=recipe["drain_s"], benchmark_mode=True,
-                              trace=False, intensity=spec.get("intensity_by_case", {}).get(case, 1.0))
+                              trace=False, intensity=spec.get("intensity_by_case", {}).get(case, 1.0),
+                              check_every=TRAIN_CHECK_EVERY)
         try:
             nodes = runtime.topology["nodes"]
             flow = flow_index(runtime.topology)
+            def observe():  # computed once per step and reused as the next step's state
+                return ([pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes],
+                        [np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]), (0, MAX_PHASES - len(n["phases"])))
+                         for n in nodes])
+
             done = False
+            rows, masks = observe()
             while not done:
-                rows = [pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes]
-                masks = [np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]), (0, MAX_PHASES - len(n["phases"])))
-                         for n in nodes]
                 with torch.no_grad():
                     q = q_all(architecture, net, tensor(np.stack(rows))).masked_fill(
                         ~tensor(np.stack(masks), torch.bool), -torch.inf).argmax(1).cpu().numpy()
@@ -221,14 +230,13 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
                         handle.write(json.dumps(dict(episode=counters["episode"], reason=str(error))) + "\n")
                     return False
                 dt = runtime.time - before
+                next_rows, next_masks = observe()
                 for i, n in enumerate(nodes):
                     replay.add(s=rows[i], action=actions[i],
                                reward=reward if reward_version == "wait_tail_v1"
                                else node_pressure_reward(n, runtime.telemetry),
-                               s2=pad_rows(observe_node(n, runtime.telemetry, flow)),
-                               m2=np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]),
-                                         (0, MAX_PHASES - len(n["phases"]))),
-                               terminal=terminated, dt=dt)
+                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
+                rows, masks = next_rows, next_masks
                 counters["sim_s"] += dt
                 counters["decisions"] += 1
                 counters["inserts"] += len(nodes)

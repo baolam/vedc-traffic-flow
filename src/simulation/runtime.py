@@ -113,7 +113,7 @@ def validate_network(topology, network_path, generic=False):
 class SumoRuntime:
     def __init__(self, topology_path, network_path, output, scenario="balanced", seed=20000,
                  demand_s=1800, drain_s=600, intensity=1.0, trace=True,
-                 wait_penalty_lambda=0., benchmark_mode=False):
+                 wait_penalty_lambda=0., benchmark_mode=False, check_every=1):
         import traci
         import traci.constants as tc
         self.tc = tc
@@ -124,6 +124,11 @@ class SumoRuntime:
         self.trace = None
         self.topology = json.loads(Path(topology_path).read_text())
         self.benchmark_mode = benchmark_mode
+        # Telemetry-schema and signal-readback checks run when time % check_every == 0 (always at t=0).
+        # 1 checks every step; larger values are for training rollouts only, never for evidence runs.
+        if type(check_every) is not int or check_every < 1:
+            raise ValueError("check_every must be a positive integer")
+        self.check_every = check_every
         validate_network(self.topology, network_path, generic=benchmark_mode)
         if (not benchmark_mode and scenario not in ALL_RESEARCH_SCENARIOS) or demand_s <= 0 or drain_s < 0 or not .01 <= intensity <= 10:
             raise ValueError("Invalid research scenario or horizon")
@@ -214,6 +219,8 @@ class SumoRuntime:
             elif signal.state == "ALL_RED":
                 state = "r" * len(state)
             self.connection.trafficlight.setRedYellowGreenState(node.get("sumo_tls_id",nid), state)
+            if not self.trace and self.time % self.check_every:
+                continue  # unverified step: set above, readback skipped (never when tracing)
             actual = self.connection.trafficlight.getRedYellowGreenState(node.get("sumo_tls_id",nid))
             if actual != state:
                 raise RuntimeError("SUMO did not execute the requested signal state")
@@ -251,7 +258,8 @@ class SumoRuntime:
                                            "external_due_count": len(external_ages),
                                            "external_wait_sum_s": sum(external_ages),
                                            "oldest_external_wait_s": max(external_ages, default=0.)})
-            self.schema_validator.validate(data)
+            if self.time % self.check_every == 0:
+                self.schema_validator.validate(data)
             result[nid] = data
         return result
 

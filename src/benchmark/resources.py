@@ -30,10 +30,16 @@ def _unlock(handle):
 
 
 @contextmanager
-def simulator_slot(limit=4, timeout=120):
-    """Hold one of at most four machine-local simulator slots until shutdown."""
-    if type(limit) is not int or not 1 <= limit <= 4:
-        raise ValueError("SUMO worker limit must be between one and four")
+def simulator_slot(limit=None, timeout=120):
+    """Hold one machine-local simulator slot until shutdown: four by default.
+
+    EDGEFLOW_SUMO_SLOTS (up to 16) raises the default for hosts with spare cores; an explicit limit stays 1-4.
+    """
+    upper = 4
+    if limit is None:
+        limit, upper = int(os.environ.get("EDGEFLOW_SUMO_SLOTS", 4)), 16
+    if type(limit) is not int or not 1 <= limit <= upper:
+        raise ValueError(f"SUMO worker limit must be between one and {'four' if upper == 4 else upper}")
     user = str(os.getuid()) if hasattr(os, "getuid") else getpass.getuser()
     directory = Path(tempfile.gettempdir()) / f"edgeflow-sumo-{user}"
     directory.mkdir(mode=0o700, exist_ok=True)
