@@ -30,7 +30,7 @@ def _unlock(handle):
 
 
 @contextmanager
-def simulator_slot(limit=None, timeout=120):
+def simulator_slot(limit=None, timeout=3600):  # long: queued validation workers wait for a free slot
     """Hold one machine-local simulator slot until shutdown: four by default.
 
     EDGEFLOW_SUMO_SLOTS (up to 16) raises the default for hosts with spare cores; an explicit limit stays 1-4.

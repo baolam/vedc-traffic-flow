@@ -2,6 +2,7 @@
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import uuid
 from pathlib import Path
@@ -114,7 +115,12 @@ class SumoRuntime:
     def __init__(self, topology_path, network_path, output, scenario="balanced", seed=20000,
                  demand_s=1800, drain_s=600, intensity=1.0, trace=True,
                  wait_penalty_lambda=0., benchmark_mode=False, check_every=1):
-        import traci
+        # EDGEFLOW_LIBSUMO=1 runs SUMO in-process (no socket round-trips); one simulation per process.
+        self.libsumo = os.environ.get("EDGEFLOW_LIBSUMO") == "1"
+        if self.libsumo:
+            import libsumo as traci
+        else:
+            import traci
         import traci.constants as tc
         self.tc = tc
         self.connection = None
@@ -168,11 +174,12 @@ class SumoRuntime:
         self.metadata = {"topology_id": self.topology["topology_id"], "topology_sha256": file_hash(topology_path),
                          "network_sha256": file_hash(network_path), "demand_sha256": file_hash(routes_path),
                          "scenario": scenario, "seed": seed, "timing": TIMING, "demand_s": demand_s,
-                         "drain_s": drain_s, "intensity": intensity, "provenance": "sumo_traci",
+                         "drain_s": drain_s, "intensity": intensity, "provenance": "sumo_libsumo" if self.libsumo else "sumo_traci",
                          "runtime_sha256": file_hash(__file__),
                          "reward_version": "wait_tail_v1", "wait_penalty_lambda": self.wait_penalty_lambda,
                          "python": platform.python_version(), "versions": {
-                             name: importlib.metadata.version(name) for name in ("eclipse-sumo", "traci", "numpy")}}
+                             name: importlib.metadata.version(name) for name in ("eclipse-sumo", "traci", "numpy")
+                             + (("libsumo",) if self.libsumo else ())}}
         (self.output / "metadata.json").write_text(json.dumps(self.metadata, indent=2))
         label = uuid.uuid4().hex
         try:
@@ -184,8 +191,9 @@ class SumoRuntime:
                          "--time-to-teleport", "-1", "--no-step-log", "true", "--duration-log.disable", "true",
                          "--tripinfo-output", str((self.output / "tripinfo.xml").resolve()),
                          "--tripinfo-output.write-unfinished", "true", "--tripinfo-output.write-undeparted", "true",
-                         "--error-log", str((self.output / "sumo-error.log").resolve())] + (["--lateral-resolution", ".4"] if benchmark_mode else []), label=label, verbose=False)
-            self.connection = traci.getConnection(label)
+                         "--error-log", str((self.output / "sumo-error.log").resolve())] + (["--lateral-resolution", ".4"] if benchmark_mode else []),
+                         **({} if self.libsumo else dict(label=label, verbose=False)))
+            self.connection = traci if self.libsumo else traci.getConnection(label)
             for node in self.topology["nodes"]:
                 for app in node["approaches"]:
                     self.connection.edge.subscribe(self.edge_ids[app], (tc.LAST_STEP_VEHICLE_ID_LIST,

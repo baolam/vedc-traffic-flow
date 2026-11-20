@@ -124,9 +124,11 @@ def stage_train(suite, root, algorithms, seeds, recipe=None, wall_limit_s=None, 
         if "intensity_by_case" not in m:
             raise ValueError(f"Run the workloads stage first: {m['id']} has no calibrated demand")
     refs = stage_references(suite, root, recipe)
-    workers = max(1, min(suite["workers"], 8 // jobs))  # validation workers per job; at most ~8 simulators
-    if jobs > 1:  # a job is either rolling out or validating, so peak simulators = jobs * workers
-        os.environ["EDGEFLOW_SUMO_SLOTS"] = str(max(4, jobs * workers))  # inherited by the spawned jobs
+    workers = suite["workers"]  # validation workers per job; they queue for machine-wide simulator slots
+    if jobs > 1:  # slots ~ cores: overlapping validations wait instead of oversubscribing the CPU
+        os.environ["EDGEFLOW_SUMO_SLOTS"] = str(max(4, min(16, (os.cpu_count() or 4) - 2, jobs * workers)))
+    for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):  # one core per simulator/learner process
+        os.environ.setdefault(var, "1")
     runs = [(m, a, s) for m in suite["maps"] for a in algorithms for s in seeds]
 
     def args(m, a, s):
@@ -292,6 +294,8 @@ def stage_report(root):
 
 def main(argv=None):
     from .resources import coordinator
+
+    os.environ.setdefault("EDGEFLOW_LIBSUMO", "1")  # in-process SUMO; same results as TraCI at the same SUMO version
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepared", required=True, help="audited prepared.json (maps, networks, topologies)")
