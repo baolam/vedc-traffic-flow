@@ -20,33 +20,6 @@ def freeze_models(suite, selections):
     return frozen
 
 
-def tune_and_calibrate(mapping, root, workers):
-    """Training-seed Fixed-Time tuning, then development-seed load calibration; mutates `mapping`."""
-    from .calibration import calibrate
-    from .scheduling import run_tasks
-
-    root = Path(root)
-    protocol = dict(demand_s=1800, drain_s=600, trace=True, benchmark_mode=True)
-    topology = json.loads(Path(mapping["topology_path"]).read_text())
-    candidates = []
-    for green in (10, 20, 30):
-        controller = dict(
-            type="fixed_time",
-            parameters=dict(phase_splits={n["node_id"]: [green] * len(n["phases"]) for n in topology["nodes"]}),
-        )
-        tasks = [
-            (dict(map=mapping, scenario=s, seed=seed, controller=controller), protocol, str(root / "cases"))
-            for s in ["balanced"]
-            for seed in SEEDS["train"][:3]
-        ]
-        rows = run_tasks(tasks, workers)
-        candidates.append((sum(r["delay_per_scheduled_s"] for r in rows) / len(rows), green, controller))
-    chosen = min(candidates, key=lambda r: (r[0], r[1]))[2]
-    mapping["controller_overrides"] = {"fixed_time": chosen}
-    calibrate(mapping, root, chosen, workers=workers)
-    return mapping
-
-
 def run_training(suite, root):
     from .scheduling import run_tasks
     from .train import train_map
@@ -54,7 +27,25 @@ def run_training(suite, root):
     root = Path(root)
     protocol = dict(demand_s=1800, drain_s=600, trace=True, benchmark_mode=True)
     for mapping in suite["maps"]:
-        tune_and_calibrate(mapping, root, suite["workers"])
+        topology = json.loads(Path(mapping["topology_path"]).read_text())
+        candidates = []
+        for green in (10, 20, 30):
+            controller = dict(
+                type="fixed_time",
+                parameters=dict(phase_splits={n["node_id"]: [green] * len(n["phases"]) for n in topology["nodes"]}),
+            )
+            tasks = [
+                (dict(map=mapping, scenario=s, seed=seed, controller=controller), protocol, str(root / "cases"))
+                for s in ["balanced"]
+                for seed in SEEDS["train"][:3]
+            ]
+            rows = run_tasks(tasks, suite["workers"])
+            candidates.append((sum(r["delay_per_scheduled_s"] for r in rows) / len(rows), green, controller))
+        chosen = min(candidates, key=lambda r: (r[0], r[1]))[2]
+        mapping["controller_overrides"] = {"fixed_time": chosen}
+        from .calibration import calibrate
+
+        calibrate(mapping, root, chosen, workers=suite["workers"])
         mapping["models"] = {
             str(seed): train_map(
                 mapping, root / "training" / mapping["id"] / str(seed), seed, seconds=7200, decisions=100000

@@ -40,8 +40,9 @@ def calibrate(mapping, root, controller, pilot=False, workers=4):
             (dict(map=mapping, scenario="balanced", seed=seed, controller=controller), config, str(root / "cases"))
             for seed in SEEDS["development"]
         ]
-        rows = run_tasks(tasks, workers)
-        stable = all(r["scheduled"] > 0 and r["completed"] >= 0.98 * r["scheduled"] for r in rows)
+        rows = run_tasks(tasks, workers, continue_on_error=True)
+        # A collision/teleport (invalid run) under load means the load exceeds capacity, not a crash.
+        stable = all(r is not None and r["scheduled"] > 0 and r["completed"] >= 0.98 * r["scheduled"] for r in rows)
         observations.append(dict(intensity=intensity, stable=stable))
         return stable
 

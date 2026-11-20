@@ -32,15 +32,40 @@ def load_suite(prepared, root, maps=None):
     return suite
 
 
-def stage_workloads(suite, root):
-    from .campaign import tune_and_calibrate
+def calibrate_then_tune(mapping, root, workers):
+    """Calibrate demand against default Fixed-Time, then tune its green at that load (train seeds only).
 
+    Tuning first would run Fixed-Time at uncalibrated, often gridlocked demand; invalid candidates
+    are infeasible and, if none survive, the default Fixed-Time is kept.
+    """
+    from .calibration import calibrate
+    from .scheduling import run_tasks
+
+    root = Path(root)
+    calibrate(mapping, root, dict(type="fixed_time"), workers=workers)
+    topology = json.loads(Path(mapping["topology_path"]).read_text())
+    protocol = dict(PROTOCOL, intensity=mapping["intensity_by_case"].get("balanced", 1.0), trace=False)
+    candidates = []
+    for green in (10, 20, 30):
+        controller = dict(type="fixed_time", parameters=dict(
+            phase_splits={n["node_id"]: [green] * len(n["phases"]) for n in topology["nodes"]}))
+        rows = run_tasks([(dict(map=mapping, scenario="balanced", seed=s, controller=controller), protocol,
+                           str(root / "cases")) for s in SEEDS["train"][:3]], workers, continue_on_error=True)
+        if all(r is not None for r in rows):
+            candidates.append((sum(r["delay_per_scheduled_s"] for r in rows) / len(rows), green, controller))
+    mapping["controller_overrides"] = {"fixed_time": min(candidates, key=lambda c: c[:2])[2]} if candidates else {}
+    mapping["fixed_time_tuning"] = [dict(green_s=g, mean_delay_s=d) for d, g, _ in candidates]
+    return mapping
+
+
+def stage_workloads(suite, root):
     path = Path(root) / "workloads.json"
     saved = json.loads(path.read_text()) if path.exists() else {}
     for m in suite["maps"]:
         if m["id"] not in saved:
-            tune_and_calibrate(m, root, suite["workers"])
-            saved[m["id"]] = {k: m[k] for k in ("controller_overrides", "intensity_by_case", "calibration_mode")}
+            calibrate_then_tune(m, root, suite["workers"])
+            saved[m["id"]] = {k: m[k] for k in ("controller_overrides", "intensity_by_case", "calibration_mode",
+                                                "fixed_time_tuning")}
             write_json(path, saved)  # per map, so an interrupted calibration resumes
 
 

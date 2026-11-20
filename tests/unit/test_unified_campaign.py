@@ -97,3 +97,49 @@ def test_test_split_rejects_protocol_overrides(tmp_path):
     with pytest.raises(ValueError, match="frozen protocol"):
         main(["--prepared", str(prepared), "--root", str(tmp_path / "r"), "--stage", "evaluate",
               "--split", "test", "--demand-s", "60"])
+
+
+def fake_scheduler(monkeypatch, behaviour):
+    import src.benchmark.scheduling as scheduling
+    monkeypatch.setattr(scheduling, "run_tasks", lambda tasks, workers=4, continue_on_error=False: behaviour(tasks))
+
+
+def mapping(tmp_path):
+    topology = tmp_path / "t.json"
+    topology.write_text(json.dumps(dict(nodes=[dict(node_id="J1", phases=[{}, {}])])))
+    return dict(id="m", topology_path=str(topology), network_path="n", cases=["balanced"])
+
+
+def test_calibration_treats_invalid_runs_under_load_as_unstable(tmp_path, monkeypatch):
+    from src.benchmark.calibration import calibrate
+
+    def behaviour(tasks):
+        load = tasks[0][1]["intensity"]
+        return [None if load > 1 else dict(scheduled=10, completed=10, delay_per_scheduled_s=1.0) for _ in tasks]
+
+    fake_scheduler(monkeypatch, behaviour)
+    m = calibrate(mapping(tmp_path), tmp_path, dict(type="fixed_time"))
+    assert 0 < m["intensity_by_case"]["balanced"] <= 1
+
+
+def test_tuning_keeps_valid_candidates_and_falls_back_when_none(tmp_path, monkeypatch):
+    from src.benchmark.unified_campaign import calibrate_then_tune
+
+    def run(delay_by_green, fail_all=False):
+        def behaviour(tasks):
+            splits = tasks[0][0]["controller"].get("parameters", {}).get("phase_splits")
+            if splits is None:  # calibration probe: stable up to load 1, invalid beyond
+                ok = tasks[0][1]["intensity"] <= 1
+                return [dict(scheduled=10, completed=10, delay_per_scheduled_s=1.0) if ok else None for _ in tasks]
+            green = splits["J1"][0]
+            if fail_all or green == 10:
+                return [None for _ in tasks]
+            return [dict(scheduled=10, completed=10, delay_per_scheduled_s=delay_by_green[green]) for _ in tasks]
+        return behaviour
+
+    fake_scheduler(monkeypatch, run({20: 50.0, 30: 40.0}))
+    m = calibrate_then_tune(mapping(tmp_path), tmp_path, 1)
+    assert m["controller_overrides"]["fixed_time"]["parameters"]["phase_splits"]["J1"] == [30, 30]
+    assert [t["green_s"] for t in m["fixed_time_tuning"]] == [20, 30]  # green 10 was invalid, dropped
+    fake_scheduler(monkeypatch, run({}, fail_all=True))
+    assert calibrate_then_tune(mapping(tmp_path), tmp_path, 1)["controller_overrides"] == {}
