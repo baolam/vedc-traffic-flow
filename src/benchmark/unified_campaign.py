@@ -14,12 +14,13 @@ from pathlib import Path
 
 import numpy as np
 
-from contracts.benchmark import SEEDS, UNIFIED_CAMPAIGN as C, UNIFIED_DQN
+from contracts.benchmark import SEEDS, UNIFIED_CAMPAIGN as C
+from src.control.unified_dqn import PHASE_ALGORITHMS
 from .evidence import digest, file_hash, write_json
 from .suite import expand, identity
 
 PROTOCOL = dict(demand_s=1800, drain_s=600, trace=True, benchmark_mode=True)
-ALGORITHMS = tuple(UNIFIED_DQN["algorithms"])
+ALGORITHMS = PHASE_ALGORITHMS  # algorithms with a trainer; extended as trainers land
 
 
 def stage_prepare(root, base_prepared, suite_yaml):

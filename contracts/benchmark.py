@@ -59,9 +59,13 @@ UNIFIED_DQN = dict(
         phase_dqn_unified=("scalar_phase_scorer", "wait_tail_v1"),
         shared_dqn_unified=("padded_vector_head", "wait_tail_v1"),
         presslight_unified=("scalar_phase_scorer", "node_pressure_v1"),
+        fair_cycle_unified=("candidate_pair_scorer", "wait_tail_v1"),
     ),
     hidden=64,
 )
+# Cycle-residual action: a 5 s green transfer donor->recipient among native phases, or no-op (slot GRID-1).
+# Candidate input = donor row + recipient row (OBSERVATION_SPEC features each) + these extras.
+CYCLE_DQN = dict(schema="cycle_candidates_v1", extras=["is_noop", "donor_green", "recipient_green", "cycle_length"])
 # Frozen first recipe (unverified starting point, see docs/engineering/research/INITIAL_RL_HYPERPARAMETERS.md).
 DQN_RECIPE = dict(
     version="unified_dqn_recipe_v1", gamma_5=0.99, reference_s=5, lr=3e-4, replay=200000, batch=256,

@@ -12,12 +12,16 @@ from .phase_dqn import phase_mask
 FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 
 
+PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
+PHASE_ALGORITHMS = tuple(a for a, (arch, _) in U["algorithms"].items() if arch in PHASE_ARCHITECTURES)
+
+
 def input_dim(architecture):
-    return FEATURES if architecture == "scalar_phase_scorer" else FEATURES * MAX_PHASES
+    return dict(scalar_phase_scorer=FEATURES, padded_vector_head=FEATURES * MAX_PHASES)[architecture]
 
 
 def output_dim(architecture):
-    return 1 if architecture == "scalar_phase_scorer" else MAX_PHASES
+    return dict(scalar_phase_scorer=1, padded_vector_head=MAX_PHASES)[architecture]
 
 
 def pad_rows(observation):
@@ -46,6 +50,8 @@ class UnifiedDQNController(BaseController):
         with open(model_path, encoding="utf-8") as handle:
             self.artifact = a = json.load(handle)
         validate_payload(a, "unified_dqn_model")
+        if a["algorithm"] not in PHASE_ALGORITHMS:
+            raise ValueError("Not a phase-selection model; use its own controller")
         architecture, reward = U["algorithms"][a["algorithm"]]
         if (a["architecture"], a["reward_version"]) != (architecture, reward):
             raise ValueError("Artifact architecture/reward do not match its algorithm")

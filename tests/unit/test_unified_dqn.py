@@ -5,7 +5,7 @@ import pytest
 
 from contracts.benchmark import OBSERVATION_SPEC, TIMING, UNIFIED_DQN
 from src.control.factory import create_controller
-from src.control.unified_dqn import MAX_PHASES, input_dim, output_dim, pad_node, phase_scores
+from src.control.unified_dqn import PHASE_ALGORITHMS, MAX_PHASES, input_dim, output_dim, pad_node, phase_scores
 from src.rl.policy import NumpyPolicy
 from tests.unit.test_observation import chain, telemetry
 
@@ -29,7 +29,7 @@ def write(tmp_path, a):
     return str(path)
 
 
-@pytest.mark.parametrize("algorithm", UNIFIED_DQN["algorithms"])
+@pytest.mark.parametrize("algorithm", PHASE_ALGORITHMS)
 def test_controller_runs_and_returns_legal_phase(tmp_path, algorithm):
     top = chain()
     tel = telemetry(top)
@@ -68,7 +68,7 @@ def test_rejects_wrong_map_spec_algorithm_and_shape(tmp_path):
         create_controller("phase_dqn_unified")
 
 
-@pytest.mark.parametrize("algorithm", UNIFIED_DQN["algorithms"])
+@pytest.mark.parametrize("algorithm", PHASE_ALGORITHMS)
 def test_decisions_depend_on_weights(tmp_path, algorithm):
     top = chain()
     a = create_controller(algorithm, model_path=write(tmp_path, artifact(algorithm, seed=1)))

@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from contracts.benchmark import DQN_RECIPE, OBSERVATION_SPEC, UNIFIED_DQN
-from src.control.unified_dqn import FEATURES, MAX_PHASES, UnifiedDQNController
+from src.control.unified_dqn import PHASE_ALGORITHMS, FEATURES, MAX_PHASES, UnifiedDQNController
 from src.rl.unified_train import Replay, build_net, discount, export_artifact, node_pressure_reward, q_all
 from tests.unit.test_observation import chain, telemetry, set_queue
 
@@ -39,7 +39,7 @@ def test_replay_ring_and_state_roundtrip():
     assert other.sample(8, np.random.default_rng(0))["s"].shape == (8, MAX_PHASES, FEATURES)
 
 
-@pytest.mark.parametrize("algorithm", UNIFIED_DQN["algorithms"])
+@pytest.mark.parametrize("algorithm", PHASE_ALGORITHMS)
 def test_exported_numpy_policy_matches_torch_and_loads(tmp_path, algorithm):
     architecture = UNIFIED_DQN["algorithms"][algorithm][0]
     net = build_net(architecture)
@@ -54,3 +54,10 @@ def test_exported_numpy_policy_matches_torch_and_loads(tmp_path, algorithm):
     x = torch.rand(4, MAX_PHASES, FEATURES)
     assert q_all(architecture, net, x).shape == (4, MAX_PHASES)
     assert OBSERVATION_SPEC["max_phases"] == MAX_PHASES
+
+
+def test_trainer_refuses_algorithms_outside_the_phase_family(tmp_path):
+    from src.rl.unified_train import train_run
+
+    with pytest.raises(ValueError, match="No trainer"):
+        train_run({}, "fair_cycle_unified", 17, tmp_path)

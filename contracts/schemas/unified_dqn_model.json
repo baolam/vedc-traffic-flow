@@ -4,8 +4,8 @@
   "required": ["schema", "algorithm", "architecture", "reward_version", "observation", "timing", "topology_id", "weights", "provenance"],
   "properties": {
     "schema": {"const": "unified_dqn_v1"},
-    "algorithm": {"enum": ["phase_dqn_unified", "shared_dqn_unified", "presslight_unified"]},
-    "architecture": {"enum": ["scalar_phase_scorer", "padded_vector_head"]},
+    "algorithm": {"enum": ["phase_dqn_unified", "shared_dqn_unified", "presslight_unified", "fair_cycle_unified"]},
+    "architecture": {"enum": ["scalar_phase_scorer", "padded_vector_head", "candidate_pair_scorer"]},
     "reward_version": {"enum": ["wait_tail_v1", "node_pressure_v1"]},
     "observation": {"type": "object", "required": ["version", "features", "radius_hops", "max_phases", "normalization"]},
     "timing": {"type": "object"},

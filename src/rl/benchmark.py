@@ -23,7 +23,7 @@ def run_case(config, controller, scenario, seed, output):
         runtime = SumoRuntime(**environment, output=output, scenario=scenario, seed=seed)
         if controller["type"] in ("shared_dqn", "fair_cycle_rl", "phase_dqn",
                                   "graph_mappo", "local_mappo", "phase_dqn_unified",
-                                  "shared_dqn_unified", "presslight_unified"):
+                                  "shared_dqn_unified", "presslight_unified", "fair_cycle_unified"):
             for key in ("network_sha256", "topology_sha256"):
                 if policy.artifact["provenance"][key] != runtime.metadata[key]:
                     raise ValueError(f"Model {key} mismatch")

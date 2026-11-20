@@ -7,6 +7,7 @@ from .graph_mappo import GraphMAPPOController
 from .fair_cycle import FairCycleController
 from .phase_dqn import PhaseDQNController
 from .unified_dqn import UnifiedDQNController
+from .cycle_dqn import FairCycleNativeController, FairCycleUnifiedController
 
 CONTROLLER_REGISTRY = {"fixed_time": FixedTimeController, "actuated": ActuatedController,
                        "max_queue": MaxQueueController, "max_pressure": MaxPressureController,
@@ -16,7 +17,9 @@ CONTROLLER_REGISTRY = {"fixed_time": FixedTimeController, "actuated": ActuatedCo
                        "fair_cycle_rl": FairCycleRLController, "phase_dqn": PhaseDQNController,
                        "graph_mappo": GraphMAPPOController, "local_mappo": GraphMAPPOController,
                        "phase_dqn_unified": UnifiedDQNController, "shared_dqn_unified": UnifiedDQNController,
-                       "presslight_unified": UnifiedDQNController}
+                       "presslight_unified": UnifiedDQNController,
+                       "fair_cycle_native": FairCycleNativeController,
+                       "fair_cycle_unified": FairCycleUnifiedController}
 
 
 def create_controller(name, parameters=None, model_path=None):
@@ -25,6 +28,6 @@ def create_controller(name, parameters=None, model_path=None):
     params = dict(parameters or {})
     if name in ("shared_dqn", "fair_cycle_rl", "graph_mappo", "local_mappo",
                 "presslight_rl", "rl", "phase_dqn", "phase_dqn_unified",
-                "shared_dqn_unified", "presslight_unified"):
+                "shared_dqn_unified", "presslight_unified", "fair_cycle_unified"):
         params["model_path"] = model_path
     return CONTROLLER_REGISTRY[name](**params)

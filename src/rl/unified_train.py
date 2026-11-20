@@ -18,7 +18,7 @@ from contracts.benchmark import DQN_RECIPE, OBSERVATION_SPEC as OBS, SEEDS, TIMI
 from src.benchmark.evidence import digest, file_hash, write_json
 from src.control.observation import flow_index, observe_node
 from src.control.phase_dqn import phase_mask
-from src.control.unified_dqn import FEATURES, MAX_PHASES, input_dim, output_dim, pad_rows
+from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
 from src.rl.policy import NumpyPolicy
 from src.rl.selection import validation_score
 from src.rl.stopping import Plateau
@@ -124,6 +124,8 @@ def reference_rows(spec, recipe, root, workers):
 def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, device="cuda", workers=4,
               cases_root=None, reference=None):
     """Train one learner seed on one map; returns the result summary (also written to result.json)."""
+    if algorithm not in PHASE_ALGORITHMS:
+        raise ValueError(f"No trainer for {algorithm} in this module (phase-selection family only)")
     recipe = {**DQN_RECIPE, **(recipe or {})}
     architecture, reward_version = U["algorithms"][algorithm]
     if device == "cuda" and not torch.cuda.is_available():
