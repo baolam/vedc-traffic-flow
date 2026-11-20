@@ -66,3 +66,20 @@ def test_rejects_wrong_map_spec_algorithm_and_shape(tmp_path):
             create_controller("phase_dqn_unified", model_path=write(tmp_path, bad))
     with pytest.raises(ValueError):
         create_controller("phase_dqn_unified")
+
+
+@pytest.mark.parametrize("algorithm", UNIFIED_DQN["algorithms"])
+def test_decisions_depend_on_weights(tmp_path, algorithm):
+    top = chain()
+    a = create_controller(algorithm, model_path=write(tmp_path, artifact(algorithm, seed=1)))
+    b = create_controller(algorithm, model_path=write(tmp_path, artifact(algorithm, seed=2)))
+    rng = np.random.default_rng(0)
+    differing = 0
+    for _ in range(30):
+        tel = telemetry(top)
+        for node in tel.values():
+            node["approaches"][0]["queue_vehicles"], node["approaches"][1]["queue_vehicles"] = rng.random(2) * 20
+            node["current_phase_id"] = node["node_id"] + "_P" + str(rng.integers(2))
+        ca, cb = a.compute_commands(tel, top), b.compute_commands(tel, top)
+        differing += sum(ca[k]["target_phase_id"] != cb[k]["target_phase_id"] for k in ca)
+    assert differing > 0

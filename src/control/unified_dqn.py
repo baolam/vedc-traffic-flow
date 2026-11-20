@@ -20,12 +20,16 @@ def output_dim(architecture):
     return 1 if architecture == "scalar_phase_scorer" else MAX_PHASES
 
 
-def pad_node(observation):
+def pad_rows(observation):
     if len(observation) > MAX_PHASES:
         raise ValueError(f"More than {MAX_PHASES} phases is unsupported")
     padded = np.zeros((MAX_PHASES, FEATURES), np.float32)
     padded[: len(observation)] = observation
-    return padded.reshape(-1)
+    return padded
+
+
+def pad_node(observation):
+    return pad_rows(observation).reshape(-1)
 
 
 def phase_scores(architecture, policy, observation):

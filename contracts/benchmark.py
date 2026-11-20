@@ -60,6 +60,14 @@ UNIFIED_DQN = dict(
     ),
     hidden=64,
 )
+# Frozen first recipe (unverified starting point, see docs/engineering/research/INITIAL_RL_HYPERPARAMETERS.md).
+DQN_RECIPE = dict(
+    version="unified_dqn_recipe_v1", gamma_5=0.99, reference_s=5, lr=3e-4, replay=200000, batch=256,
+    learning_starts=5000, update_every_decisions=4, target_every_updates=1000, grad_clip=10,
+    epsilon_end=0.05, epsilon_decay_sim_s=125000, validate_every_episodes=20,
+    min_sim_s=250000, min_episodes=100, min_case_visits=10, patience=10, rel_improvement=0.01,
+    cap_sim_s=2500000, demand_s=1800, drain_s=600,
+)
 PHASE_NORMALIZATION = dict(
     queue_vehicles=20,
     service_age_s=60,
