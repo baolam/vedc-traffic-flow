@@ -16,6 +16,12 @@ def prepare_map(spec, output):
     connections = [c for c in root.findall("connection") if c.get("from") in edges and c.get("to") in edges]
     incoming = {c.get("from") for c in connections}
     exits = set(edges) - incoming
+    mode = spec.get("route_origins", "approach")
+    if mode not in ("approach", "boundary"):
+        raise ValueError("route_origins must be 'approach' or 'boundary'")
+    # boundary: demand enters only where no controlled signal feeds the approach
+    controlled = {c.get("from") for c in connections if c.get("tl")}
+    fed = {c.get("to") for c in connections if c.get("from") in controlled} if mode == "boundary" else set()
     adjacency = {key: [] for key in edges}
     for c in connections:
         adjacency[c.get("from")].append(c.get("to"))
@@ -64,6 +70,8 @@ def prepare_map(spec, output):
             )
         )
         for app in approaches:
+            if app in fed:
+                continue
             queue = deque([[app]])
             seen = {app}
             found = None

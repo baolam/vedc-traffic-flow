@@ -35,6 +35,7 @@ maps:
   topology_path: contracts/topology/hcm_neighborhood_v3_benchmark_v1.json
   cases: *id001
   source_id: hcm_neighborhood_benchmark_v3
+  route_origins: boundary  # demand enters only at approaches no controlled signal feeds
 - id: hanoi_dong_da_v1
   network_path: networks/hanoi_dong_da_v1/network.net.xml
   topology_path: contracts/topology/hanoi_dong_da_v1.json
