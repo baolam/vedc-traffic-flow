@@ -5,6 +5,7 @@ reward over that cycle, bootstrapped with gamma_5 ** (cycle_seconds / 5). One op
 n_nodes completed cycle transitions (the joint-decision-equivalent). Rollouts drive the same
 FairCycleNativeController selector hook that the deployed controller uses.
 """
+import copy
 import json
 import uuid
 from types import SimpleNamespace
@@ -153,7 +154,7 @@ def export(spec, algorithm, net, seed, path):
                (("w1", net[0].weight), ("b1", net[0].bias), ("w2", net[2].weight), ("b2", net[2].bias))}
     probe = np.random.default_rng(9182).random((16, GRID, CANDIDATE_DIM), dtype=np.float32)
     with torch.no_grad():
-        expected = net.cpu()(torch.as_tensor(probe)).squeeze(-1).numpy()
+        expected = copy.deepcopy(net).cpu()(torch.as_tensor(probe)).squeeze(-1).numpy()  # never move the training net
     got = NumpyPolicy(weights).predict(probe.reshape(-1, CANDIDATE_DIM)).reshape(16, GRID)
     np.testing.assert_allclose(got, expected, rtol=1e-4, atol=1e-5)
     architecture, reward = U["algorithms"][algorithm]

@@ -60,6 +60,8 @@ UNIFIED_DQN = dict(
         shared_dqn_unified=("padded_vector_head", "wait_tail_v1"),
         presslight_unified=("scalar_phase_scorer", "node_pressure_v1"),
         fair_cycle_unified=("candidate_pair_scorer", "wait_tail_v1"),
+        graph_mappo_unified=("graph_actor_critic", "wait_tail_v1"),
+        local_mappo_unified=("graph_actor_critic", "wait_tail_v1"),  # same model, self-only communication
     ),
     hidden=64,
 )
@@ -77,6 +79,19 @@ DQN_RECIPE = dict(
 # Cycle-residual DQN recipe: phase recipe with its own cadence (one optimizer step per joint cycle decision).
 CYCLE_RECIPE = dict(DQN_RECIPE, version="unified_cycle_recipe_v1", learning_starts=1024, target_every_updates=200,
                     replay=50000, wait_penalty_lambda=0.5)
+# Unified MAPPO: local node features (radius 0) + two attention layers = exactly two hops of communication.
+UNIFIED_MAPPO = dict(
+    schema="unified_mappo_v1", hidden=64, heads=4, layers=2, relation_dim=4,
+    node_dim=OBSERVATION_SPEC["max_phases"] * len(OBSERVATION_SPEC["features"]) + OBSERVATION_SPEC["max_phases"] + 2,
+    node_extras=["greens_by_phase", "phase_count", "cycle_length"],
+)
+MAPPO_RECIPE = dict(
+    DQN_RECIPE, version="unified_mappo_recipe_v1", update_epochs=5, num_minibatches=1, episodes_per_update=8,
+    clip_epsilon=.2, entropy_coefficient=.01, value_coefficient=.5, max_gradient_norm=.5, target_kl=.03,
+    gae_lambda=.95, value_normalization=True, advantage_normalization=True, validate_every_episodes=16,
+    min_episodes=64, min_case_visits=10, patience=5, cap_episodes=512, min_sim_s=0, epsilon_decay_sim_s=1,
+    wait_penalty_lambda=0.0,
+)
 PHASE_NORMALIZATION = dict(
     queue_vehicles=20,
     service_age_s=60,

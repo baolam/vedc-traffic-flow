@@ -20,7 +20,8 @@ from src.benchmark.evidence import digest, file_hash, write_json
 from src.control.observation import flow_index, observe_node
 from src.control.phase_dqn import phase_mask
 from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
-from src.rl import cycle_family
+from src.control.mappo_unified import MAPPO_ALGORITHMS
+from src.rl import cycle_family, mappo_family
 from src.rl.dqn_common import invalid_episode, optimize_step
 from src.rl.policy import NumpyPolicy
 from src.rl.selection import validation_score
@@ -91,7 +92,7 @@ def export_artifact(spec, algorithm, net, seed, path):
                (("w1", net[0].weight), ("b1", net[0].bias), ("w2", net[2].weight), ("b2", net[2].bias))}
     probe = torch.as_tensor(np.random.default_rng(9182).random((16, MAX_PHASES, FEATURES), dtype=np.float32))
     with torch.no_grad():
-        expected = q_all(architecture, net.cpu(), probe).numpy()
+        expected = q_all(architecture, copy.deepcopy(net).cpu(), probe).numpy()  # never move the training net
     policy = NumpyPolicy(weights)
     got = (policy.predict(probe.numpy().reshape(-1, FEATURES)).reshape(16, MAX_PHASES)
            if architecture == "scalar_phase_scorer" else policy.predict(probe.numpy().reshape(16, -1)))
@@ -202,6 +203,8 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
         family = PHASE_FAMILY
     elif algorithm == "fair_cycle_unified":
         family = cycle_family.FAMILY
+    elif algorithm in MAPPO_ALGORITHMS:
+        family = mappo_family.FAMILY
     else:
         raise ValueError(f"No trainer for {algorithm}")
     recipe = {**family.recipe, **(recipe or {})}
@@ -293,7 +296,8 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
         family.episode(ctx)
         counters["episode"] += 1
         counters["wall_s"] = base_wall + time.monotonic() - start
-        capped = counters["sim_s"] >= recipe["cap_sim_s"]
+        capped_episodes = bool(recipe.get("cap_episodes")) and counters["episode"] >= recipe["cap_episodes"]
+        capped = counters["sim_s"] >= recipe["cap_sim_s"] or capped_episodes
         timed_out = wall_limit_s is not None and counters["wall_s"] >= wall_limit_s
         if counters["episode"] % recipe["validate_every_episodes"] == 0 or capped or timed_out:
             plateau_stop = validate()
@@ -303,7 +307,7 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
             if mature and plateau_stop:
                 stop_reason = "plateau"
             elif capped:
-                stop_reason = "budget_limited_simulated_seconds"
+                stop_reason = "budget_limited_episodes" if capped_episodes else "budget_limited_simulated_seconds"
             elif timed_out:
                 stop_reason = "budget_limited_wall_clock"
             save()

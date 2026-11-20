@@ -60,6 +60,10 @@ class FairCycleNativeController(BaseController):
     def reset(self):
         self._state.clear()
 
+    def plans(self):
+        """Greens of each node's running cycle (empty before its first cycle)."""
+        return {nid: list(state["greens"]) for nid, state in self._state.items()}
+
     def _start_cycle(self, node, view, idx):
         local = {a["approach_id"]: a for a in view[node["node_id"]]["approaches"]}
         base = allocate_greens([FairCycleController._pressure(p, local, view) for p in node["phases"]])
