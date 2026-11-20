@@ -9,6 +9,7 @@ import random
 import time
 import uuid
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import torch
@@ -19,6 +20,8 @@ from src.benchmark.evidence import digest, file_hash, write_json
 from src.control.observation import flow_index, observe_node
 from src.control.phase_dqn import phase_mask
 from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
+from src.rl import cycle_family
+from src.rl.dqn_common import invalid_episode, optimize_step
 from src.rl.policy import NumpyPolicy
 from src.rl.selection import validation_score
 from src.rl.stopping import Plateau
@@ -121,12 +124,87 @@ def reference_rows(spec, recipe, root, workers):
                       for c in spec["cases"] for s in SEEDS["validation"]], workers)
 
 
+def phase_update(ctx):
+    r, arch = ctx.recipe, ctx.architecture
+    batch = ctx.replay.sample(r["batch"], ctx.rng)
+    s, s2, m2 = ctx.tensor(batch["s"]), ctx.tensor(batch["s2"]), ctx.tensor(batch["m2"], torch.bool)
+    action = ctx.tensor(batch["action"], torch.int64)
+    with torch.no_grad():
+        choice = q_all(arch, ctx.net, s2).masked_fill(~m2, -torch.inf).argmax(1, keepdim=True)
+        future = q_all(arch, ctx.target, s2).gather(1, choice).squeeze(1)
+        gamma = r["gamma_5"] ** (ctx.tensor(batch["dt"]) / r["reference_s"])
+        expected = ctx.tensor(batch["reward"]) + gamma * (~ctx.tensor(batch["terminal"], torch.bool)) * future
+    optimize_step(ctx, nn.functional.smooth_l1_loss(
+        q_all(arch, ctx.net, s).gather(1, action[:, None]).squeeze(1), expected))
+
+
+def phase_episode(ctx):
+    r, c, rng, arch = ctx.recipe, ctx.counters, ctx.rng, ctx.architecture
+    case = ctx.cases[c["episode"] % len(ctx.cases)]
+    runtime = SumoRuntime(ctx.spec["topology_path"], ctx.spec["network_path"], ctx.output / f"episode-{uuid.uuid4().hex}",
+                          seed=SEEDS["train"][c["episode"] % len(SEEDS["train"])], scenario=case,
+                          demand_s=r["demand_s"], drain_s=r["drain_s"], benchmark_mode=True,
+                          trace=False, intensity=ctx.spec.get("intensity_by_case", {}).get(case, 1.0),
+                          check_every=ctx.check_every)
+    try:
+        nodes = runtime.topology["nodes"]
+        flow = flow_index(runtime.topology)
+
+        def observe():  # computed once per step and reused as the next step's state
+            return ([pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes],
+                    [np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]), (0, MAX_PHASES - len(n["phases"])))
+                     for n in nodes])
+
+        done = False
+        rows, masks = observe()
+        while not done:
+            with torch.no_grad():
+                q = q_all(arch, ctx.net, ctx.tensor(np.stack(rows))).masked_fill(
+                    ~ctx.tensor(np.stack(masks), torch.bool), -torch.inf).argmax(1).cpu().numpy()
+            eps, explore = ctx.epsilon(), rng.random(len(nodes))
+            actions = [int(rng.choice(np.flatnonzero(m))) if explore[i] < eps else int(q[i])
+                       for i, m in enumerate(masks)]
+            before = runtime.time
+            try:
+                _, reward, terminated, truncated = runtime.step({n["node_id"]: actions[i] for i, n in enumerate(nodes)})
+            except InvalidRun as error:
+                invalid_episode(ctx, error)
+                return False
+            dt = runtime.time - before
+            next_rows, next_masks = observe()
+            for i, n in enumerate(nodes):
+                ctx.replay.add(s=rows[i], action=actions[i],
+                               reward=reward if ctx.reward_version == "wait_tail_v1"
+                               else node_pressure_reward(n, runtime.telemetry),
+                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
+            rows, masks = next_rows, next_masks
+            c["sim_s"] += dt
+            c["decisions"] += 1
+            c["inserts"] += len(nodes)
+            ready = ctx.replay.size >= r["learning_starts"] and min(c["visits"].values()) >= 1
+            if ready and c["decisions"] % r["update_every_decisions"] == 0:
+                ctx.update()
+            done = terminated or truncated
+        c["visits"][case] += 1
+        return True
+    finally:
+        runtime.close()
+
+
+PHASE_FAMILY = SimpleNamespace(build_net=build_net, new_replay=Replay, update=phase_update, episode=phase_episode,
+                               export=export_artifact, recipe=DQN_RECIPE)
+
+
 def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, device="cuda", workers=4,
               cases_root=None, reference=None):
     """Train one learner seed on one map; returns the result summary (also written to result.json)."""
-    if algorithm not in PHASE_ALGORITHMS:
-        raise ValueError(f"No trainer for {algorithm} in this module (phase-selection family only)")
-    recipe = {**DQN_RECIPE, **(recipe or {})}
+    if algorithm in PHASE_ALGORITHMS:
+        family = PHASE_FAMILY
+    elif algorithm == "fair_cycle_unified":
+        family = cycle_family.FAMILY
+    else:
+        raise ValueError(f"No trainer for {algorithm}")
+    recipe = {**family.recipe, **(recipe or {})}
     architecture, reward_version = U["algorithms"][algorithm]
     if device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA training requested but unavailable")
@@ -136,11 +214,11 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
     np.random.seed(seed)
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
-    cases, flow = spec["cases"], None
-    net, plateau = build_net(architecture).to(device), Plateau(recipe["patience"], recipe["rel_improvement"])
+    cases = spec["cases"]
+    net, plateau = family.build_net(architecture).to(device), Plateau(recipe["patience"], recipe["rel_improvement"])
     target = copy.deepcopy(net)
     optimizer = torch.optim.Adam(net.parameters(), lr=recipe["lr"])
-    replay = Replay(recipe["replay"])
+    replay = family.new_replay(recipe["replay"])
     counters = dict(sim_s=0.0, decisions=0, inserts=0, updates=0, episode=0, wall_s=0.0,
                     visits={c: 0 for c in cases}, invalid_episodes=0)
     history, best = [], None
@@ -178,82 +256,15 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
     def tensor(x, dtype=torch.float32):
         return torch.as_tensor(x, dtype=dtype, device=device)
 
-    def update():
-        batch = replay.sample(recipe["batch"], rng)
-        s, s2, m2 = tensor(batch["s"]), tensor(batch["s2"]), tensor(batch["m2"], torch.bool)
-        action = tensor(batch["action"], torch.int64)
-        with torch.no_grad():
-            choice = q_all(architecture, net, s2).masked_fill(~m2, -torch.inf).argmax(1, keepdim=True)
-            future = q_all(architecture, target, s2).gather(1, choice).squeeze(1)
-            gamma = recipe["gamma_5"] ** (tensor(batch["dt"]) / recipe["reference_s"])
-            expected = tensor(batch["reward"]) + gamma * (~tensor(batch["terminal"], torch.bool)) * future
-        loss = nn.functional.smooth_l1_loss(q_all(architecture, net, s).gather(1, action[:, None]).squeeze(1), expected)
-        if not torch.isfinite(loss):
-            raise RuntimeError("Nonfinite training loss")
-        optimizer.zero_grad()
-        loss.backward()
-        nn.utils.clip_grad_norm_(net.parameters(), recipe["grad_clip"])
-        optimizer.step()
-        counters["updates"] += 1
-        if counters["updates"] % recipe["target_every_updates"] == 0:
-            target.load_state_dict(net.state_dict())
-
-    def episode():
-        nonlocal flow
-        case = cases[counters["episode"] % len(cases)]
-        runtime = SumoRuntime(spec["topology_path"], spec["network_path"], output / f"episode-{uuid.uuid4().hex}",
-                              seed=SEEDS["train"][counters["episode"] % len(SEEDS["train"])], scenario=case,
-                              demand_s=recipe["demand_s"], drain_s=recipe["drain_s"], benchmark_mode=True,
-                              trace=False, intensity=spec.get("intensity_by_case", {}).get(case, 1.0),
-                              check_every=TRAIN_CHECK_EVERY)
-        try:
-            nodes = runtime.topology["nodes"]
-            flow = flow_index(runtime.topology)
-            def observe():  # computed once per step and reused as the next step's state
-                return ([pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes],
-                        [np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]), (0, MAX_PHASES - len(n["phases"])))
-                         for n in nodes])
-
-            done = False
-            rows, masks = observe()
-            while not done:
-                with torch.no_grad():
-                    q = q_all(architecture, net, tensor(np.stack(rows))).masked_fill(
-                        ~tensor(np.stack(masks), torch.bool), -torch.inf).argmax(1).cpu().numpy()
-                eps, explore = epsilon(), rng.random(len(nodes))
-                actions = [int(rng.choice(np.flatnonzero(m))) if explore[i] < eps else int(q[i])
-                           for i, m in enumerate(masks)]
-                before = runtime.time
-                try:
-                    _, reward, terminated, truncated = runtime.step({n["node_id"]: actions[i] for i, n in enumerate(nodes)})
-                except InvalidRun as error:
-                    counters["invalid_episodes"] += 1
-                    with (output / "invalid-episodes.jsonl").open("a") as handle:
-                        handle.write(json.dumps(dict(episode=counters["episode"], reason=str(error))) + "\n")
-                    return False
-                dt = runtime.time - before
-                next_rows, next_masks = observe()
-                for i, n in enumerate(nodes):
-                    replay.add(s=rows[i], action=actions[i],
-                               reward=reward if reward_version == "wait_tail_v1"
-                               else node_pressure_reward(n, runtime.telemetry),
-                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
-                rows, masks = next_rows, next_masks
-                counters["sim_s"] += dt
-                counters["decisions"] += 1
-                counters["inserts"] += len(nodes)
-                ready = replay.size >= recipe["learning_starts"] and min(counters["visits"].values()) >= 1
-                if ready and counters["decisions"] % recipe["update_every_decisions"] == 0:
-                    update()
-                done = terminated or truncated
-            counters["visits"][case] += 1
-            return True
-        finally:
-            runtime.close()
+    ctx = SimpleNamespace(spec=spec, algorithm=algorithm, architecture=architecture, reward_version=reward_version,
+                          recipe=recipe, device=device, rng=rng, counters=counters, output=output, cases=cases,
+                          net=net, target=target, optimizer=optimizer, replay=replay, epsilon=epsilon, tensor=tensor,
+                          check_every=TRAIN_CHECK_EVERY)
+    ctx.update = lambda: family.update(ctx)
 
     def validate():
         candidate = output / "candidates" / f"episode-{counters['episode']:06d}.json"
-        export_artifact(spec, algorithm, net, seed, candidate)
+        family.export(spec, algorithm, net, seed, candidate)
         rows = evaluate_candidate(spec, algorithm, seed, candidate, recipe, cases_root, workers)
         result = validation_score(rows, reference, cases, SEEDS["validation"])
         decision = plateau.update(result["score"], result["feasible"])
@@ -279,7 +290,7 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
 
     start, base_wall, stop_reason = time.monotonic(), counters["wall_s"], None
     while stop_reason is None:
-        episode()
+        family.episode(ctx)
         counters["episode"] += 1
         counters["wall_s"] = base_wall + time.monotonic() - start
         capped = counters["sim_s"] >= recipe["cap_sim_s"]

@@ -56,8 +56,8 @@ def test_exported_numpy_policy_matches_torch_and_loads(tmp_path, algorithm):
     assert OBSERVATION_SPEC["max_phases"] == MAX_PHASES
 
 
-def test_trainer_refuses_algorithms_outside_the_phase_family(tmp_path):
+def test_trainer_refuses_algorithms_without_a_trainer(tmp_path):
     from src.rl.unified_train import train_run
 
     with pytest.raises(ValueError, match="No trainer"):
-        train_run({}, "fair_cycle_unified", 17, tmp_path)
+        train_run({}, "graph_mappo", 17, tmp_path)  # MAPPO has its own trainer, not this one

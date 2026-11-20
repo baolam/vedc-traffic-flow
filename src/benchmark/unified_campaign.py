@@ -20,7 +20,7 @@ from .evidence import digest, file_hash, write_json
 from .suite import expand, identity
 
 PROTOCOL = dict(demand_s=1800, drain_s=600, trace=True, benchmark_mode=True)
-ALGORITHMS = PHASE_ALGORITHMS  # algorithms with a trainer; extended as trainers land
+ALGORITHMS = PHASE_ALGORITHMS + ("fair_cycle_unified",)  # algorithms with a trainer; extended as trainers land
 
 
 def stage_prepare(root, base_prepared, suite_yaml):
@@ -44,6 +44,9 @@ def load_suite(prepared, root, maps=None):
     saved = json.loads(workloads.read_text()) if workloads.exists() else {}
     for m in suite["maps"]:
         m.pop("models", None)  # legacy phase_dqn pilots must not leak into this campaign
+        extras = m.setdefault("extra_controllers", [])  # the cycle baseline every learned residual is judged against
+        if not any(c["type"] == "fair_cycle_native" for c in extras):
+            extras.append(dict(type="fair_cycle_native"))
         m.update(saved.get(m["id"], {}))
     return suite
 

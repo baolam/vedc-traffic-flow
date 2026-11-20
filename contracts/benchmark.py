@@ -74,6 +74,9 @@ DQN_RECIPE = dict(
     min_sim_s=250000, min_episodes=100, min_case_visits=10, patience=10, rel_improvement=0.01,
     cap_sim_s=2500000, demand_s=1800, drain_s=600,
 )
+# Cycle-residual DQN recipe: phase recipe with its own cadence (one optimizer step per joint cycle decision).
+CYCLE_RECIPE = dict(DQN_RECIPE, version="unified_cycle_recipe_v1", learning_starts=1024, target_every_updates=200,
+                    replay=50000, wait_penalty_lambda=0.5)
 PHASE_NORMALIZATION = dict(
     queue_vehicles=20,
     service_age_s=60,

@@ -189,3 +189,16 @@ def test_train_stage_requires_workloads_first(tmp_path):
 
     with pytest.raises(ValueError, match="workloads"):
         stage_train(dict(workers=4, maps=[dict(id="m")]), tmp_path, ["phase_dqn_unified"], [17])
+
+
+def test_every_map_gets_the_native_cycle_baseline_once(tmp_path):
+    from src.benchmark.unified_campaign import load_suite
+
+    prepared = tmp_path / "p.json"
+    prepared.write_text(json.dumps(dict(workers=1, maps=[
+        dict(id="a", extra_controllers=[dict(type="fair_cycle")]), dict(id="b")])))
+    suite = load_suite(prepared, tmp_path)
+    assert [[c["type"] for c in m["extra_controllers"]] for m in suite["maps"]] == [
+        ["fair_cycle", "fair_cycle_native"], ["fair_cycle_native"]]
+    again = load_suite(prepared, tmp_path)
+    assert again == suite  # loading is idempotent
