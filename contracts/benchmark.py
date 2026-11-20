@@ -37,6 +37,18 @@ PHASE_FEATURES = [
     "all_red",
     "confidence",
 ]
+OBSERVATION_SPEC = dict(
+    version="raw_two_hop_v1",
+    radius_hops=2,
+    features=[
+        "served_queue", "served_occupancy",
+        "down1_queue", "down1_occupancy", "down2_queue", "down2_occupancy",
+        "up1_queue", "up1_occupancy", "up2_queue", "up2_occupancy",
+        "nonserved_queue", "service_age", "elapsed_green", "is_current",
+        "green", "yellow", "all_red", "confidence",
+    ],
+    normalization=dict(queue_vehicles=20, service_age_s=60, elapsed_green_s=60),
+)
 PHASE_NORMALIZATION = dict(
     queue_vehicles=20,
     service_age_s=60,
