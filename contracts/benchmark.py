@@ -8,6 +8,8 @@ SEEDS = dict(
     development=list(range(90001, 90004)),
 )
 LEARNER_SEEDS = [17, 29, 43]
+# Five independent whole-system training runs per map and algorithm; LEARNER_SEEDS stays frozen for old protocols.
+UNIFIED_CAMPAIGN = dict(version="unified_campaign_v1", learner_seeds=[17, 29, 43, 59, 71])
 # Native-phase fair cycle: length max(base, per_phase * P) s incl. clearance_s per phase; greens quantized.
 CYCLE_RULE = dict(version="multiphase_cycle_v1", base_s=70, per_phase_s=25, clearance_s=5,
                   min_green_s=10, max_green_s=60, quantum_s=5)

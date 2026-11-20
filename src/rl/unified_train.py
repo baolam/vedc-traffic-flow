@@ -118,7 +118,8 @@ def reference_rows(spec, recipe, root, workers):
                       for c in spec["cases"] for s in SEEDS["validation"]], workers)
 
 
-def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, device="cuda", workers=4):
+def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, device="cuda", workers=4,
+              cases_root=None):
     """Train one learner seed on one map; returns the result summary (also written to result.json)."""
     recipe = {**DQN_RECIPE, **(recipe or {})}
     architecture, reward_version = U["algorithms"][algorithm]
@@ -158,9 +159,10 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
         rng.bit_generator.state = saved["rng"]
         if (output / "result.json").exists():
             return json.loads((output / "result.json").read_text())
+    cases_root = Path(cases_root or output / "validation-cases")
     reference_file = output / "reference.json"
     if not reference_file.exists():
-        write_json(reference_file, reference_rows(spec, recipe, output / "validation-cases", workers))
+        write_json(reference_file, reference_rows(spec, recipe, cases_root, workers))
     reference = json.loads(reference_file.read_text())
 
     def epsilon():
@@ -242,7 +244,7 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
     def validate():
         candidate = output / "candidates" / f"episode-{counters['episode']:06d}.json"
         export_artifact(spec, algorithm, net, seed, candidate)
-        rows = evaluate_candidate(spec, algorithm, seed, candidate, recipe, output / "validation-cases", workers)
+        rows = evaluate_candidate(spec, algorithm, seed, candidate, recipe, cases_root, workers)
         result = validation_score(rows, reference, cases, SEEDS["validation"])
         decision = plateau.update(result["score"], result["feasible"])
         entry = dict(episode=counters["episode"], sim_s=counters["sim_s"], decisions=counters["decisions"],
