@@ -109,7 +109,10 @@ def export_artifact(spec, algorithm, net, seed, path):
 def evaluate_candidate(spec, algorithm, seed, path, recipe, root, workers):
     from src.benchmark.scheduling import run_tasks
 
-    protocol = dict(demand_s=recipe["demand_s"], drain_s=recipe["drain_s"], trace=True, benchmark_mode=True)
+    # Validation only ranks checkpoints: no signal trace, thinned schema/readback checks (check_every). Final test
+    # evaluation keeps the full per-step checks; tests/unit/test_unified_train.py pins metric equivalence.
+    protocol = dict(demand_s=recipe["demand_s"], drain_s=recipe["drain_s"], trace=False, benchmark_mode=True,
+                    check_every=TRAIN_CHECK_EVERY)
     controller = dict(type=algorithm, model_path=str(path), learner_seed=seed, parameters={})
     tasks = [(dict(map=spec, scenario=c, seed=s, controller=controller), protocol, str(root))
              for c in spec["cases"] for s in SEEDS["validation"]]

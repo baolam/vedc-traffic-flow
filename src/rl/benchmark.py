@@ -19,7 +19,7 @@ def run_case(config, controller, scenario, seed, output):
         policy.reset()
         environment = {key: value for key, value in config["environment"].items()
                        if key in ("topology_path", "network_path", "demand_s", "drain_s", "intensity",
-                                  "trace", "wait_penalty_lambda", "benchmark_mode")}
+                                  "trace", "wait_penalty_lambda", "benchmark_mode", "check_every")}
         runtime = SumoRuntime(**environment, output=output, scenario=scenario, seed=seed)
         if controller["type"] in ("shared_dqn", "fair_cycle_rl", "phase_dqn",
                                   "graph_mappo", "local_mappo", "phase_dqn_unified",

@@ -61,3 +61,18 @@ def test_trainer_refuses_algorithms_without_a_trainer(tmp_path):
 
     with pytest.raises(ValueError, match="No trainer"):
         train_run({}, "graph_mappo", 17, tmp_path)  # MAPPO has its own trainer, not this one
+
+
+def test_validation_uses_light_checks_but_same_cases_and_seeds(monkeypatch, tmp_path):
+    import src.benchmark.scheduling as scheduling
+    from contracts.benchmark import DQN_RECIPE, SEEDS
+    from src.rl.unified_train import TRAIN_CHECK_EVERY, evaluate_candidate
+
+    seen = {}
+    monkeypatch.setattr(scheduling, "run_tasks", lambda tasks, workers: seen.update(tasks=tasks) or [])
+    spec = dict(id="m", cases=["a", "b"])
+    evaluate_candidate(spec, "phase_dqn_unified", 17, tmp_path / "m.json", DQN_RECIPE, tmp_path, 2)
+    protocols = {tuple(sorted(t[1].items())) for t in seen["tasks"]}
+    assert len(protocols) == 1 and dict(protocols.pop())["trace"] is False
+    assert dict(seen["tasks"][0][1])["check_every"] == TRAIN_CHECK_EVERY
+    assert {(t[0]["scenario"], t[0]["seed"]) for t in seen["tasks"]} == {(c, s) for c in "ab" for s in SEEDS["validation"]}
