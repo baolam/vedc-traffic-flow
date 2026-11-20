@@ -107,7 +107,7 @@ class Ctx:
 
     def __init__(self, nodes=N, **recipe):
         self.net = mf.build_net()
-        self.recipe = {**MAPPO_RECIPE, "target_kl": 1.0, **recipe}
+        self.recipe = {**MAPPO_RECIPE, "target_kl": 1.0, "num_minibatches": 1, **recipe}
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=3e-3)
         self.counters, self.device = dict(updates=0), "cpu"
         self.graph = mf.GraphTensors(Graph(chain(nodes)), "cpu")
@@ -207,3 +207,10 @@ def test_deployed_controller_rejects_bad_models_and_partial_snapshots(tmp_path):
     with pytest.raises(ValueError, match="another map"):
         other.compute_command("A", tel["A"], two, tel, 0)
     assert UNIFIED_MAPPO["node_dim"] == NODE_DIM and GRID == 65
+
+
+def test_minibatching_gives_one_optimizer_step_per_chunk():
+    ctx = Ctx(update_epochs=2, num_minibatches=4)
+    batch, _ = synthetic_batch(size=64)
+    mf.ppo_update(ctx, batch)
+    assert ctx.counters["mappo_last_update"]["critic_steps"] == 8

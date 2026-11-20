@@ -86,10 +86,10 @@ UNIFIED_MAPPO = dict(
     node_extras=["greens_by_phase", "phase_count", "cycle_length"],
 )
 MAPPO_RECIPE = dict(
-    DQN_RECIPE, version="unified_mappo_recipe_v2", update_epochs=5, num_minibatches=1, episodes_per_update=8,
+    DQN_RECIPE, version="unified_mappo_recipe_v3", update_epochs=5, num_minibatches=8, episodes_per_update=16,
     clip_epsilon=.2, entropy_coefficient=.01, value_coefficient=.5, max_gradient_norm=.5, target_kl=.03,
-    gae_lambda=.95, value_normalization=True, advantage_normalization=True, validate_every_episodes=32,
-    min_episodes=64, min_case_visits=10, patience=3, cap_episodes=512, min_sim_s=0, epsilon_decay_sim_s=1,
+    gae_lambda=.95, value_normalization=True, advantage_normalization=True, validate_every_episodes=64,
+    min_episodes=400, min_case_visits=10, patience=3, cap_episodes=512, min_sim_s=0, epsilon_decay_sim_s=1,
     wait_penalty_lambda=0.0,
 )
 PHASE_NORMALIZATION = dict(

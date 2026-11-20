@@ -302,18 +302,21 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
         capped_episodes = bool(recipe.get("cap_episodes")) and counters["episode"] >= recipe["cap_episodes"]
         capped = counters["sim_s"] >= recipe["cap_sim_s"] or capped_episodes
         timed_out = wall_limit_s is not None and counters["wall_s"] >= wall_limit_s
-        if counters["episode"] % recipe["validate_every_episodes"] == 0 or capped or timed_out:
+        mature = (counters["sim_s"] >= max(recipe["min_sim_s"], recipe["epsilon_decay_sim_s"])
+                  and counters["episode"] >= recipe["min_episodes"]
+                  and min(counters["visits"].values()) >= recipe["min_case_visits"])
+        # No validation during warmup: its candidates cannot be selected or stop the run; caps still validate once.
+        due = counters["episode"] % recipe["validate_every_episodes"] == 0
+        if (mature and due) or capped or timed_out:
             plateau_stop = validate()
-            mature = (counters["sim_s"] >= max(recipe["min_sim_s"], recipe["epsilon_decay_sim_s"])
-                      and counters["episode"] >= recipe["min_episodes"]
-                      and min(counters["visits"].values()) >= recipe["min_case_visits"])
             if mature and plateau_stop:
                 stop_reason = "plateau"
             elif capped:
                 stop_reason = "budget_limited_episodes" if capped_episodes else "budget_limited_simulated_seconds"
             elif timed_out:
                 stop_reason = "budget_limited_wall_clock"
-            save()
+        if due or capped or timed_out:
+            save()  # warmup intervals still checkpoint so a restart does not lose them
     converged = stop_reason == "plateau" and best is not None  # a plateau with no feasible checkpoint is not convergence
     summary = dict(algorithm=algorithm, topology_id=spec["id"], learner_seed=seed, stop_reason=stop_reason,
                    converged=converged, status="selected" if best is not None else "no_feasible_checkpoint",
