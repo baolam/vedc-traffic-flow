@@ -153,8 +153,12 @@ class SumoRuntime:
         else:
             self.scheduled = generate_demand(self.topology, scenario, seed, demand_s, intensity, routes_path)
         self.scheduled_by_route = {app: [] for node in self.topology["nodes"] for app in node["approaches"]}
+        # Due-but-undeparted vehicles, kept incrementally (insertion order == scheduled order, so sums are unchanged).
+        self._due_at, self._due = {}, {}
+        self._due_by_route = {app: {} for app in self.scheduled_by_route}
         for vid, row in self.scheduled.items():
             self.scheduled_by_route[row["route"]].append((vid, row))
+            self._due_at.setdefault(int(np.floor(row["depart"])) + 1, []).append(vid)  # first t with depart < t
         self.departed, self.arrived = set(), set()
         self.previous_ids = {}
         self.approach_seen = {app: set() for node in self.topology["nodes"] for app in node["approaches"]}
@@ -255,8 +259,7 @@ class SumoRuntime:
                 active_ids = edge[self.tc.LAST_STEP_VEHICLE_ID_LIST]
                 stopped_waits = [self.approach_wait[app].get(vid, 0.) for vid in active_ids
                                  if self.active_speeds.get(vid, 1.) <= .1]
-                external_ages = [self.time - row["depart"] for vid, row in self.scheduled_by_route[app]
-                                 if row["depart"] < self.time and vid not in self.departed]
+                external_ages = [self.time - self.scheduled[vid]["depart"] for vid in self._due_by_route[app]]
                 data["approaches"].append({"approach_id": app, "queue_vehicles": edge[self.tc.LAST_STEP_VEHICLE_HALTING_NUMBER],
                                            "occupancy_ratio": occupancy_ratio(edge[self.tc.LAST_STEP_OCCUPANCY]),
                                            "mean_speed_mps": max(0., edge[self.tc.LAST_STEP_MEAN_SPEED]),
@@ -341,16 +344,23 @@ class SumoRuntime:
             sim, vehicles = self.connection.simulation, self.connection.vehicle
             if sim.getCollidingVehiclesNumber() or sim.getStartingTeleportNumber():
                 raise InvalidRun("Collision or teleport invalidates this run")
+            for vid in self._due_at.pop(self.time, ()):
+                if vid in self.departed:  # left on time, never waited outside the network
+                    continue
+                self._due[vid] = None
+                self._due_by_route[self.scheduled[vid]["route"]][vid] = None
             for vid in sim.getDepartedIDList():
                 self.departed.add(vid)
                 vehicles.subscribe(vid, (self.tc.VAR_SPEED, self.tc.VAR_ROAD_ID))
+                if self._due.pop(vid, 0) is None:
+                    del self._due_by_route[self.scheduled[vid]["route"]][vid]
             self.arrived.update(sim.getArrivedIDList())
             vehicle_data = vehicles.getAllSubscriptionResults()
             active = set(vehicle_data)
             self.active_speeds = {vid: float(data[self.tc.VAR_SPEED]) for vid, data in vehicle_data.items()}
             if self.departed != active | self.arrived or active & self.arrived:
                 raise InvalidRun("Unexplained vehicle-accounting loss")
-            pending = [vid for vid, row in self.scheduled.items() if row["depart"] < self.time and vid not in self.departed]
+            pending = self._due
             weighted_wait_cost += sum(min(1., self.time-self.scheduled[vid]["depart"])
                                       * (1. + self.wait_penalty_lambda
                                          * max(0., self.time-self.scheduled[vid]["depart"]) / 120.)

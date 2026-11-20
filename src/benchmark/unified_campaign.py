@@ -124,7 +124,7 @@ def stage_train(suite, root, algorithms, seeds, recipe=None, wall_limit_s=None, 
         if "intensity_by_case" not in m:
             raise ValueError(f"Run the workloads stage first: {m['id']} has no calibrated demand")
     refs = stage_references(suite, root, recipe)
-    workers = max(1, min(suite["workers"], 16 // jobs))  # ~0.7 GB each, so total processes stay ~2x jobs at most
+    workers = max(1, min(suite["workers"], 20 // jobs))  # validation workers are ~0.2 GB (no torch); jobs ~1.1 GB
     if jobs > 1:  # slots ~ cores: overlapping validations wait instead of oversubscribing the CPU
         os.environ["EDGEFLOW_SUMO_SLOTS"] = str(max(4, min(16, (os.cpu_count() or 4) - 2, jobs * workers)))
     for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS"):  # one core per simulator/learner process
