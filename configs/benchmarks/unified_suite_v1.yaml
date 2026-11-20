@@ -1,0 +1,61 @@
+# Maps for the unified campaign: suite_v1 with the HCM entry replaced by the repaired v3 network
+# (engineering-repaired, NOT qualified; see docs/HCM_BENCHMARK_V3_SETUP.md). Other entries are unchanged.
+version: 1
+workers: 4
+maps:
+- id: four_intersection_rl_v1
+  network_path: networks/four_intersection_rl_v1/network.net.xml
+  topology_path: contracts/topology/four_intersection_rl_v1.json
+  cases:
+  - balanced
+  - directional_surge
+  - directional_surge_ew
+  - downstream_bottleneck
+  - sparse
+  - near_capacity
+  - oversaturated
+  - directional_reversal
+  extra_controllers:
+  - type: fair_cycle
+- id: grid4x4_benchmark_v1
+  network_path: services/simulator/sumo_configs/grid4x4/grid4x4.net.xml
+  topology_path: contracts/topology/grid4x4.json
+  cases: &id001
+  - balanced
+  - directional_reversal
+  - downstream_bottleneck
+  source_id: grid4x4
+- id: cologne8_benchmark_v1
+  network_path: services/simulator/sumo_configs/cologne8/cologne8.net.xml
+  topology_path: contracts/topology/cologne8.json
+  cases: *id001
+  source_id: cologne8
+- id: hcm_neighborhood_v3_benchmark_v1
+  network_path: networks/hcm_neighborhood_benchmark_v3/network.net.xml
+  topology_path: contracts/topology/hcm_neighborhood_v3_benchmark_v1.json
+  cases: *id001
+  source_id: hcm_neighborhood_benchmark_v3
+- id: hanoi_dong_da_v1
+  network_path: networks/hanoi_dong_da_v1/network.net.xml
+  topology_path: contracts/topology/hanoi_dong_da_v1.json
+  cases: *id001
+  bbox:
+  - 105.81
+  - 21.005
+  - 105.84
+  - 21.03
+- id: jakarta_menteng_v1
+  network_path: networks/jakarta_menteng_v1/network.net.xml
+  topology_path: contracts/topology/jakarta_menteng_v1.json
+  cases: *id001
+  bbox:
+  - 106.825
+  - -6.205
+  - 106.855
+  - -6.175
+  lefthand: true
+controllers:
+- type: fixed_time
+- type: actuated
+- type: max_pressure
+- type: edgeflow

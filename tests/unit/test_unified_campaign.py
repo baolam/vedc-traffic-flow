@@ -143,3 +143,22 @@ def test_tuning_keeps_valid_candidates_and_falls_back_when_none(tmp_path, monkey
     assert [t["green_s"] for t in m["fixed_time_tuning"]] == [20, 30]  # green 10 was invalid, dropped
     fake_scheduler(monkeypatch, run({}, fail_all=True))
     assert calibrate_then_tune(mapping(tmp_path), tmp_path, 1)["controller_overrides"] == {}
+
+
+def test_prepare_reuses_audited_maps_and_prepares_only_new_ones(tmp_path, monkeypatch):
+    import src.benchmark.prepare as prepare
+    from src.benchmark.unified_campaign import stage_prepare
+
+    base = tmp_path / "base.json"
+    base.write_text(json.dumps(dict(version=1, workers=2, controllers=[dict(type="fixed_time")],
+                                    maps=[dict(id="old", topology_path="/audited/old.json"),
+                                          dict(id="dropped", topology_path="/x")])))
+    suite = tmp_path / "suite.yaml"
+    suite.write_text("maps:\n- id: old\n  network_path: n\n- id: new\n  network_path: n2\n")
+    calls = []
+    monkeypatch.setattr(prepare, "prepare_map", lambda spec, out: calls.append(spec["id"]) or dict(spec, topology_path=str(out)))
+    maps = stage_prepare(tmp_path / "root", base, suite)
+    assert calls == ["new"] and [m["id"] for m in maps] == ["old", "new"]
+    out = json.loads((tmp_path / "root" / "prepared.json").read_text())
+    assert out["workers"] == 2 and out["controllers"] == [dict(type="fixed_time")]  # base settings preserved
+    assert out["maps"][0]["topology_path"] == "/audited/old.json"

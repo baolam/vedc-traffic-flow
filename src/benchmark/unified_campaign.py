@@ -21,6 +21,20 @@ PROTOCOL = dict(demand_s=1800, drain_s=600, trace=True, benchmark_mode=True)
 ALGORITHMS = tuple(UNIFIED_DQN["algorithms"])
 
 
+def stage_prepare(root, base_prepared, suite_yaml):
+    """Write root/prepared.json for the maps in suite_yaml, reusing audited entries and preparing only new ones."""
+    import yaml
+    from .prepare import prepare_map
+
+    root = Path(root)
+    base = json.loads(Path(base_prepared).read_text())
+    have = {m["id"]: m for m in base["maps"]}
+    wanted = yaml.safe_load(Path(suite_yaml).read_text())["maps"]
+    maps = [have[m["id"]] if m["id"] in have else prepare_map(m, root / "inputs" / m["id"]) for m in wanted]
+    write_json(root / "prepared.json", dict(base, maps=maps))
+    return maps
+
+
 def load_suite(prepared, root, maps=None):
     suite = json.loads(Path(prepared).read_text())
     suite["maps"] = [m for m in suite["maps"] if not maps or m["id"] in maps]
@@ -234,8 +248,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepared", required=True, help="audited prepared.json (maps, networks, topologies)")
     parser.add_argument("--root", required=True)
-    parser.add_argument("--stage", required=True, choices=["workloads", "train", "freeze", "evaluate", "report"])
+    parser.add_argument("--stage", required=True, choices=["prepare", "workloads", "train", "freeze", "evaluate", "report"])
     parser.add_argument("--split", choices=["validation", "test"], default="validation")
+    parser.add_argument("--suite", help="map list YAML (prepare stage); --prepared is then the reusable base")
     parser.add_argument("--maps", nargs="*")
     parser.add_argument("--algorithms", nargs="*", default=list(ALGORITHMS), choices=ALGORITHMS)
     parser.add_argument("--seeds", nargs="*", type=int, default=C["learner_seeds"])
@@ -247,6 +262,9 @@ def main(argv=None):
     a = parser.parse_args(argv)
     root = Path(a.root).resolve()
     root.mkdir(parents=True, exist_ok=True)
+    if a.stage == "prepare":
+        stage_prepare(root, a.prepared, a.suite)
+        return 0
     suite = load_suite(a.prepared, root, a.maps)
     protocol = dict(PROTOCOL, **{k: v for k, v in (("demand_s", a.demand_s), ("drain_s", a.drain_s)) if v})
     if a.split == "test" and a.stage not in ("evaluate", "report"):
