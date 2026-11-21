@@ -193,6 +193,30 @@ class TestSignalFaultAndDatabase:
         assert stats["total_telemetry_records"] == 1
         assert stats["command_success_rate_percent"] == 100.0
 
+    def test_station_registry_replace_and_query(self, temp_db):
+        """Verify the station_registry cache round-trips contracts_sdk.list_station_records()
+        and that replace_station_registry() is a full replace, not an upsert."""
+        records = contracts_sdk.list_station_records()
+        temp_db.replace_station_registry(records)
+
+        all_rows = temp_db.query_stations()
+        assert len(all_rows) == len(records)
+
+        hcm_rows = temp_db.query_stations(topology_id="hcm_corridor")
+        assert len(hcm_rows) == 50
+        assert all(r["lat"] is not None and r["lng"] is not None for r in hcm_rows)
+
+        sim_rows = temp_db.query_stations(topology_id="four_intersection_v1")
+        assert len(sim_rows) == 4
+        assert all(r["lat"] is None for r in sim_rows)
+
+        search_rows = temp_db.query_stations(q="J1")
+        assert any(r["node_id"] == "J1" for r in search_rows)
+
+        # A second rebuild from a smaller record set must not leave stale rows behind.
+        temp_db.replace_station_registry(contracts_sdk.list_station_records("four_intersection_v1"))
+        assert len(temp_db.query_stations()) == 4
+
     # =========================================================================
     # 3. Virtual ESP32 Simulator Fault Emission
     # =========================================================================

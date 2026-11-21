@@ -139,6 +139,27 @@ class DatabaseManager:
             );
             """)
 
+            # Materialized, read-only cache of contracts/topology/*.json node metadata, rebuilt
+            # wholesale (see replace_station_registry) each time the API starts -- contracts/
+            # stays the sole source of truth, this table just makes it queryable/joinable.
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS station_registry (
+                topology_id TEXT NOT NULL,
+                node_id TEXT NOT NULL,
+                name TEXT,
+                street_name TEXT,
+                lat REAL,
+                lng REAL,
+                x REAL,
+                y REAL,
+                type TEXT,
+                approach_count INTEGER,
+                phase_count INTEGER,
+                updated_at_ms INTEGER NOT NULL,
+                PRIMARY KEY (topology_id, node_id)
+            );
+            """)
+
             # Indexes for high-performance time-series queries
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_faults_node_time ON signal_fault_events(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_faults_category ON signal_fault_events(category, timestamp_ms);")
@@ -146,6 +167,7 @@ class DatabaseManager:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_commands_node_time ON control_commands_history(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_acks_node_time ON control_acks_history(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_health_node_time ON device_health_history(node_id, timestamp_ms);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_station_registry_topology ON station_registry(topology_id);")
             conn.commit()
             logger.info(f"Database initialized successfully at {self.db_path} (WAL mode).")
 
@@ -408,6 +430,51 @@ class DatabaseManager:
             params.append(node_id)
         query += " ORDER BY timestamp_ms DESC LIMIT ?;"
         params.append(min(limit, 500))
+
+        with self._get_connection() as conn:
+            return [dict(r) for r in conn.execute(query, params).fetchall()]
+
+    def replace_station_registry(self, records: List[Dict[str, Any]]):
+        """Wholesale-replace the station_registry cache with a freshly derived set of records
+        (see contracts_sdk.list_station_records). Full delete+insert, not an upsert, so a node
+        or scenario removed from contracts/topology/ since the last rebuild doesn't linger."""
+        now_ms = int(time.time() * 1000)
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM station_registry;")
+            cursor.executemany(
+                """INSERT INTO station_registry
+                   (topology_id, node_id, name, street_name, lat, lng, x, y, type,
+                    approach_count, phase_count, updated_at_ms)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+                [
+                    (
+                        r["topology_id"], r["node_id"], r.get("name"), r.get("street_name"),
+                        r.get("lat"), r.get("lng"), r.get("x"), r.get("y"), r.get("type"),
+                        r.get("approach_count"), r.get("phase_count"), now_ms,
+                    )
+                    for r in records
+                ],
+            )
+            conn.commit()
+
+    def query_stations(
+        self,
+        topology_id: Optional[str] = None,
+        q: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Query the materialized station registry, optionally scoped to one scenario and/or
+        filtered by a case-insensitive substring match against node_id/name/street_name."""
+        query = "SELECT * FROM station_registry WHERE 1=1"
+        params: List[Any] = []
+        if topology_id:
+            query += " AND topology_id = ?"
+            params.append(topology_id)
+        if q:
+            query += " AND (node_id LIKE ? OR name LIKE ? OR street_name LIKE ?)"
+            like = f"%{q}%"
+            params.extend([like, like, like])
+        query += " ORDER BY topology_id, node_id;"
 
         with self._get_connection() as conn:
             return [dict(r) for r in conn.execute(query, params).fetchall()]

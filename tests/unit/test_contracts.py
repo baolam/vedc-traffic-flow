@@ -116,6 +116,37 @@ def test_one_word_topology_names_and_aliases():
 
 
 
+def test_list_station_records():
+    topologies = contracts_sdk.list_topologies()
+    records = contracts_sdk.list_station_records()
+
+    # Every registered topology is represented, and the total record count matches the sum
+    # of each topology's own node count.
+    assert set(r["topology_id"] for r in records) == set(topologies)
+    expected_total = sum(len(contracts_sdk.load_topology(tid).get("nodes", [])) for tid in topologies)
+    assert len(records) == expected_total
+
+    # Purely simulated scenarios have no geo coordinates -- fields resolve to None, not absent.
+    four_intersection = [r for r in records if r["topology_id"] == "four_intersection_v1"]
+    assert len(four_intersection) == 4
+    assert all(r["lat"] is None and r["lng"] is None for r in four_intersection)
+    j1 = next(r for r in four_intersection if r["node_id"] == "J1")
+    assert j1["name"] == "Intersection 1"
+    assert j1["approach_count"] == 4
+    assert j1["phase_count"] == 2
+
+    # hcm_corridor has both geo coordinates and a SUMO node "type" (priority/traffic_light/...).
+    hcm = [r for r in records if r["topology_id"] == "hcm_corridor"]
+    assert len(hcm) == 50
+    assert all(r["lat"] is not None and r["lng"] is not None for r in hcm)
+    assert all(r["type"] is not None for r in hcm)
+
+    # Scoping to one topology_id returns only that scenario's records.
+    scoped = contracts_sdk.list_station_records("junction")
+    assert len(scoped) == 1
+    assert scoped[0]["topology_id"] == "junction"
+
+
 def test_signal_fault_topics_and_schema():
     import topics
     import jsonschema

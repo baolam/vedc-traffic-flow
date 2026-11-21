@@ -88,6 +88,17 @@ except ImportError:
     import contracts.contracts_sdk as contracts_sdk
     from contracts import topics
 
+def rebuild_station_registry():
+    """Wholesale-rebuild the station_registry DB cache from contracts/topology/*.json. Run once
+    at process start -- contracts/ stays the sole source of truth; this just makes every
+    scenario's station metadata queryable in one place without re-parsing JSON on every request."""
+    try:
+        db.replace_station_registry(contracts_sdk.list_station_records())
+    except Exception as e:
+        logger.warning(f"Station registry rebuild failed (continuing with stale/empty cache): {e}")
+
+rebuild_station_registry()
+
 try:
     from sumo_converter import SumoNetworkConverter
 except ImportError:
@@ -457,6 +468,7 @@ def api_root():
             "/api/v1/topologies",
             "/api/v1/topologies/{topology_id}",
             "/api/v1/topologies/convert-sumo",
+            "/api/v1/stations",
             "/api/v1/vision/live-frame",
             "/api/v1/vision/live-status/{node_id}",
             "/api/v1/vision/live-stream/{node_id}"
@@ -1240,6 +1252,16 @@ def get_topology_contract(topology_id: str):
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Topology contract '{topology_id}' not found.")
 
+@app.get("/api/v1/stations")
+def list_stations(topology_id: Optional[str] = None, q: Optional[str] = None):
+    """
+    Materialized station registry (id/name/lat/lng/type/...) across every scenario, rebuilt
+    from contracts/topology/*.json each time the API starts. Optional topology_id scopes to one
+    scenario; optional q substring-filters node_id/name/street_name.
+    """
+    records = db.query_stations(topology_id=topology_id, q=q)
+    return {"total": len(records), "stations": records}
+
 @app.post("/api/v1/topologies/convert-sumo")
 def convert_sumo_xml(xml_content: str = Body(..., media_type="text/xml"), topology_id: str = "sumo_converted_v1"):
     """Parses SUMO .net.xml payload and returns canonical topology contract JSON with explicit phase approaches."""
@@ -1339,7 +1361,7 @@ def get_vision_demo_video(node_id: Optional[str] = None, topology_id: Optional[s
 
 
 # ============================================================================
-# Live Video Stream (Raspberry Pi -> API -> Dashboard, see services/vision/video_sync.py)
+# Live Video Stream (Raspberry Pi -> API -> Dashboard, see services/vision/streaming/live_stream.py)
 # ============================================================================
 # In-memory only (by design): the latest JPEG per node_id, overwritten on every push. This is a
 # live view, not an archive -- nothing here is persisted to disk or to LIVE_STATE.

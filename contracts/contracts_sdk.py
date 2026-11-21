@@ -141,6 +141,38 @@ def get_topology_summary(topology_id: str) -> Dict[str, Any]:
     return contract.summary()
 
 
+def list_station_records(topology_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Flatten topology node entries into canonical flat station records: topology_id, node_id,
+    name, street_name, lat, lng, x, y, type, approach_count, phase_count. Fields absent on a
+    given node (e.g. lat/lng on purely simulated scenarios) resolve to None rather than being
+    omitted, so every record has the same shape regardless of which topology it came from.
+    Pass a specific topology_id to scope to one scenario, or omit to flatten every registered
+    topology -- this is the single canonical source for any station/device registry built on
+    top of contracts/, per AGENTS.md's Schema Authority rule.
+    """
+    topology_ids = [topology_id] if topology_id else list_topologies()
+    records = []
+    for tid in topology_ids:
+        topo = load_topology(tid)
+        canonical_tid = topo.get("topology_id", tid)
+        for node in topo.get("nodes", []):
+            records.append({
+                "topology_id": canonical_tid,
+                "node_id": node["node_id"],
+                "name": node.get("name"),
+                "street_name": node.get("street_name"),
+                "lat": node.get("lat"),
+                "lng": node.get("lng"),
+                "x": node.get("x"),
+                "y": node.get("y"),
+                "type": node.get("type"),
+                "approach_count": len(node.get("approaches") or []),
+                "phase_count": len(node.get("phases") or []),
+            })
+    return records
+
+
 def list_scenarios() -> List[str]:
     """Return list of canonical traffic scenario names."""
     return ScenarioRegistry.list_scenarios()
