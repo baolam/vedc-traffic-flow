@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     enable_hardware_telemetry: bool = Field(default_factory=lambda: os.getenv("ENABLE_HARDWARE_TELEMETRY", "true").lower() == "true")
 
     # Optional Live Video Stream: pushes annotated camera frames (one JPEG per frame) to the
-    # platform API over HTTP (services/vision/video_sync.py), alongside the normal MQTT
+    # platform API over HTTP (services/vision/streaming/live_stream.py), alongside the normal MQTT
     # telemetry, so the dashboard can show a real live view (MJPEG) of this node. Off by default
     # -- enabling it is a deliberate choice for a demo/showcase node (e.g. the Raspberry Pi
     # vision demo, VISION_NODE_ID=J3), not something every deployment needs.
@@ -100,6 +100,31 @@ class Settings(BaseSettings):
     frame_archive_clip_duration_s: float = Field(default_factory=lambda: float(os.getenv("FRAME_ARCHIVE_CLIP_DURATION_S", "10.0")))
     frame_archive_retention_hours: float = Field(default_factory=lambda: float(os.getenv("FRAME_ARCHIVE_RETENTION_HOURS", "24.0")))
     frame_archive_jpeg_quality: int = Field(default_factory=lambda: int(os.getenv("FRAME_ARCHIVE_JPEG_QUALITY", "80")))
+
+    # Local Device Dashboard (services/vision/local_dashboard/): a standalone web UI served by
+    # this same process (background thread, see supervisor.py) so an operator standing at the
+    # physical device can view live stream/telemetry/health and perform a few direct, local-only
+    # control actions (restart the pipeline, reload ROI, tune confidence threshold) without going
+    # through services/api/graph-control/actuator. On by default since -- unlike video_sync/frame
+    # archive -- this is meant to be the normal way to manage the device, not an opt-in extra.
+    local_dashboard_enabled: bool = Field(
+        default_factory=lambda: os.getenv("LOCAL_DASHBOARD_ENABLED", "true").lower() == "true")
+    local_dashboard_host: str = Field(default_factory=lambda: os.getenv("LOCAL_DASHBOARD_HOST", "0.0.0.0"))
+    local_dashboard_port: int = Field(default_factory=lambda: int(os.getenv("LOCAL_DASHBOARD_PORT", "8080")))
+    # Empty password disables Basic Auth entirely (logged as a warning on startup) -- convenient
+    # for local dev, but every real LAN deployment should set both of these.
+    local_dashboard_username: str = Field(default_factory=lambda: os.getenv("LOCAL_DASHBOARD_USERNAME", "admin"))
+    local_dashboard_password: str = Field(default_factory=lambda: os.getenv("LOCAL_DASHBOARD_PASSWORD", ""))
+    local_dashboard_jpeg_quality: int = Field(
+        default_factory=lambda: int(os.getenv("LOCAL_DASHBOARD_JPEG_QUALITY", "70")))
+
+    # Local SQLite history (telemetry/health/event log) backing the dashboard above -- the same
+    # canonical payloads already published to MQTT, just also kept on-device so an operator can
+    # review history even when disconnected from the central platform.
+    local_db_enabled: bool = Field(default_factory=lambda: os.getenv("LOCAL_DB_ENABLED", "true").lower() == "true")
+    local_db_path: str = Field(default_factory=lambda: os.getenv("LOCAL_DB_PATH", ""))
+    local_db_retention_days: float = Field(
+        default_factory=lambda: float(os.getenv("LOCAL_DB_RETENTION_DAYS", "14.0")))
 
 
 settings = Settings()

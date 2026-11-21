@@ -139,6 +139,9 @@ services:
         condition: service_healthy
     volumes:
       - ./contracts:/contracts
+      - ./data:/data
+    ports:
+      - "8080:8080"
     profiles:
       - vision
       - dev

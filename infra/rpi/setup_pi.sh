@@ -26,7 +26,8 @@ python3 -m venv --system-site-packages "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --upgrade pip
 # Do NOT pip install services/vision/requirements.txt here: a pip numpy/opencv would shadow
 # the apt builds that picamera2 is compiled against and break it with an ABI error.
-"$VENV_DIR/bin/pip" install "paho-mqtt>=1.6.1" "pydantic>=2.0" "pydantic-settings>=2.0" "jsonschema>=4.0"
+"$VENV_DIR/bin/pip" install "paho-mqtt>=1.6.1" "pydantic>=2.0" "pydantic-settings>=2.0" "jsonschema>=4.0" \
+  "fastapi>=0.100.0" "uvicorn>=0.22.0"
 "$VENV_DIR/bin/python" -c "import picamera2, cv2, numpy, paho.mqtt.client; print('imports OK, cv2', cv2.__version__, 'numpy', numpy.__version__)"
 
 echo "== OpenCV DNN version (raw YOLOv8/11 ONNX fails forward() on OpenCV 4.6/4.7)"

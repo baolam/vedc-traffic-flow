@@ -10,6 +10,7 @@ Settings object and hands it to VisionSupervisor.
 
 import logging
 import platform
+import queue
 import signal
 import time
 from pathlib import Path
@@ -29,6 +30,7 @@ try:
     from vision_contracts_helper import load_topology, topics
     from runtime_stats import RuntimeStats
     from telemetry_window import TelemetryWindow
+    from local_dashboard.db import VisionLocalDB, NullLocalDB
 except ImportError:
     from services.vision.vision import build_engine_from_settings
     from services.vision.vision.roi_config import load_roi_config, validate_against_topology
@@ -41,6 +43,7 @@ except ImportError:
     from services.vision.vision_contracts_helper import load_topology, topics
     from services.vision.runtime_stats import RuntimeStats
     from services.vision.telemetry_window import TelemetryWindow
+    from services.vision.local_dashboard.db import VisionLocalDB, NullLocalDB
 
 logger = logging.getLogger("vision-service")
 
@@ -156,6 +159,7 @@ class VisionSupervisor:
         self.active_nodes = [topo_nodes[n] for n in node_ids]
         self.node_ids = node_ids
 
+        self.topology = topology
         self.roi_config = None
         if cfg.roi_config_path:
             self.roi_config = load_roi_config(cfg.roi_config_path)
@@ -164,12 +168,13 @@ class VisionSupervisor:
                         f"{self.roi_config.frame_size[0]}x{self.roi_config.frame_size[1]})")
         elif len(node_ids) > 1:
             raise ValueError("Several nodes on one camera need ROI_CONFIG_PATH (see services/vision/roi_calibrate.py)")
-        frame_size = self.roi_config.frame_size if self.roi_config else (640, 480)
+        # Where the local dashboard's "Save ROI" writes a NEW calibration file when none was
+        # configured -- never used for the initial load above, only as the reload/save target.
+        self.roi_config_path = cfg.roi_config_path or str(
+            Path(__file__).resolve().parent / "rois" / "web_calibrated.json")
 
         # 3. Initialize Vision Perception Engine (vision/)
-        self.engine = build_engine_from_settings(
-            cfg, node_ids, roi_nodes=self.roi_config.nodes if self.roi_config else None,
-            frame_size=frame_size)
+        self.engine = self._build_engine()
         logger.info(f"Perception Engine initialized using backend: [{self.engine.detector.backend}]")
 
         # Optional Live Video Stream (streaming/): pushes this camera's annotated frames to the
@@ -213,6 +218,7 @@ class VisionSupervisor:
             "roi_sha256": self.roi_config.sha256 if self.roi_config else None,
             "telemetry_period_s": cfg.telemetry_period_s,
             "vision_fps_cap": cfg.vision_fps,
+            "confidence_threshold": self.engine.detector.conf_threshold,
             "opencv": cv2.__version__,
             "python": platform.python_version(),
         }
@@ -224,6 +230,86 @@ class VisionSupervisor:
         self.health_topic = topics.get_health_topic("vision")
         self.mqtt = MqttGateway(cfg, self.phase_tracker, self.health_topic)
         self.mqtt.connect()
+
+        # 5. Local on-device history (local_dashboard/db.py): the same telemetry/health payloads
+        # already published to MQTT, just also kept here so an operator can review history even
+        # disconnected from the central platform. A no-op store when disabled.
+        self.local_db = VisionLocalDB(
+            db_path=cfg.local_db_path or None, retention_days=cfg.local_db_retention_days
+        ) if cfg.local_db_enabled else NullLocalDB()
+
+        # Cached copies of the last telemetry/health payloads built below, read by the local
+        # dashboard's /api/status -- avoids recomputing or re-reading hardware sensors on every
+        # browser poll.
+        self.last_telemetry: Dict[str, Any] = {}
+        self.last_health: Dict[str, Any] = {}
+
+        # Commands enqueued by the local dashboard's control endpoints (restart/update_settings/
+        # reload_roi), applied between ticks on this same thread -- see _apply_pending_commands().
+        self.pending_commands: "queue.Queue" = queue.Queue()
+
+        # 6. Local Device Dashboard (local_dashboard/server.py): best-effort, optional -- a
+        # missing dependency or port conflict must never take down the camera/telemetry pipeline.
+        self.local_dashboard = None
+        if cfg.local_dashboard_enabled:
+            try:
+                try:
+                    from local_dashboard.server import LocalDashboardServer
+                except ImportError:
+                    from services.vision.local_dashboard.server import LocalDashboardServer
+                self.local_dashboard = LocalDashboardServer(self)
+                self.local_dashboard.start()
+                logger.info(f"Local Dashboard    : ENABLED -> http://{cfg.local_dashboard_host}:{cfg.local_dashboard_port}")
+            except Exception as e:
+                logger.warning(f"Local dashboard disabled (failed to start): {e}")
+                self.local_dashboard = None
+
+    def _build_engine(self):
+        """(Re)builds the perception engine from the current settings + ROI config. Used at
+        startup and again by the local dashboard's restart/reload-ROI commands."""
+        frame_size = self.roi_config.frame_size if self.roi_config else (640, 480)
+        return build_engine_from_settings(
+            self.cfg, self.node_ids, roi_nodes=self.roi_config.nodes if self.roi_config else None,
+            frame_size=frame_size)
+
+    def _apply_pending_commands(self) -> None:
+        """Drains commands the local dashboard queued from its own thread, applying each on this
+        (the tick loop's) thread -- so the engine/settings are never mutated concurrently."""
+        while True:
+            try:
+                cmd = self.pending_commands.get_nowait()
+            except queue.Empty:
+                return
+            try:
+                kind = cmd.get("type")
+                if kind == "restart":
+                    new_engine, old_engine = self._build_engine(), self.engine
+                    self.engine = new_engine
+                    old_engine.close()
+                    logger.info("Perception engine restarted via local dashboard.")
+                    self.local_db.record_event("restarted")
+                elif kind == "update_settings":
+                    for key, value in cmd.get("fields", {}).items():
+                        if key == "confidence_threshold":
+                            self.engine.detector.conf_threshold = value
+                            self.identity["confidence_threshold"] = value
+                    logger.info(f"Runtime settings updated via local dashboard: {cmd.get('fields')}")
+                elif kind == "reload_roi":
+                    new_roi_path = cmd.get("roi_config_path", self.roi_config_path)
+                    new_roi_config = load_roi_config(new_roi_path)
+                    validate_against_topology(new_roi_config, self.topology, self.node_ids)
+                    self.roi_config_path, self.roi_config = new_roi_path, new_roi_config
+                    # Only swap in the new engine (built from self.roi_config above) once it
+                    # succeeds -- a failure here must never leave self.engine half-closed.
+                    new_engine, old_engine = self._build_engine(), self.engine
+                    self.engine = new_engine
+                    old_engine.close()
+                    self.identity["roi_sha256"] = self.roi_config.sha256
+                    logger.info(f"ROI reloaded via local dashboard: {self.roi_config_path}")
+                    self.local_db.record_event("roi_reloaded", {"path": self.roi_config_path})
+            except Exception as e:
+                logger.error(f"Failed to apply local dashboard command {cmd}: {e}")
+                self.local_db.record_event("command_failed", {"command": cmd, "error": str(e)})
 
     def run(self) -> None:
         """Continuous Vision Perception & Telemetry Loop."""
@@ -239,6 +325,7 @@ class VisionSupervisor:
             logger.info("🚀 Starting Continuous Edge Vision Ingestion Loop...")
             while True:
                 frame_started = time.monotonic()
+                self._apply_pending_commands()
 
                 # One frame, one detection pass for every node this camera covers
                 per_node = self.engine.process_frame_nodes()
@@ -246,13 +333,20 @@ class VisionSupervisor:
                 if frame_info:
                     self.window.add(per_node, frame_info["captured_at_ms"])
                     self.stats.record(True, {k: v for k, v in frame_info.items() if k != "captured_at_ms"})
-                    if (self.live_stream is not None or self.frame_archive.enabled) and self.engine.last_rendered is not None:
+                    needs_overlay = (self.live_stream is not None or self.frame_archive.enabled
+                                     or self.local_dashboard is not None)
+                    if needs_overlay and self.engine.last_rendered is not None:
                         raw_frame, assigned_boxes, _all_boxes = self.engine.last_rendered
                         annotated = draw_sync_overlay(raw_frame, self.engine.roi_manager.rois, assigned_boxes,
                                                       self.node_ids[0], frame_info["captured_at_ms"])
                         if self.live_stream is not None:
                             self.live_stream.push_frame(annotated)
                         self.frame_archive.maybe_capture(self.node_ids[0], annotated, frame_info["captured_at_ms"])
+                        if self.local_dashboard is not None:
+                            ok, buf = cv2.imencode(".jpg", annotated,
+                                                   [cv2.IMWRITE_JPEG_QUALITY, cfg.local_dashboard_jpeg_quality])
+                            if ok:
+                                self.local_dashboard.update_frame(self.node_ids[0], buf.tobytes())
                 else:
                     self.window.add_failure()
                     self.stats.record(False)
@@ -279,6 +373,8 @@ class VisionSupervisor:
                         telemetry_payload = build_telemetry(node, self.window.aggregate(node_id), sim_time_s,
                                                             timestamp_ms, current_phase_id=phase_id)
                         approaches = telemetry_payload["approaches"]
+                        self.local_db.record_telemetry(telemetry_payload)
+                        self.last_telemetry[node_id] = telemetry_payload
                         if not self.mqtt.publish_telemetry(node_id, telemetry_payload):
                             total_q = sum(a.get("queue_vehicles", 0) for a in approaches)
                             logger.info(f"Extracted Telemetry [{node_id}]: Total Queue = {total_q:.1f} veh | "
@@ -300,6 +396,8 @@ class VisionSupervisor:
                     logger.info(f"Runtime: {format_runtime(snapshot, hardware)}")
                     sources = {node_id: self.phase_tracker.current(node_id)[1] for node_id in self.node_ids}
                     health = build_health(self.identity, snapshot, hardware, int(time.time() * 1000), sources)
+                    self.local_db.record_health(health)
+                    self.last_health = health
                     self.mqtt.publish_health(health)
 
                 # Cap processing at VISION_FPS without sleeping past the next publish; back off on camera errors
@@ -317,4 +415,7 @@ class VisionSupervisor:
             self.live_stream.close()
         self.frame_archive.close()
         self.mqtt.disconnect()
+        if self.local_dashboard is not None:
+            self.local_dashboard.stop()
+        self.local_db.close()
         logger.info("Perception Engine stopped safely.")

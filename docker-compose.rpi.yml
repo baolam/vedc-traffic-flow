@@ -63,6 +63,9 @@ services:
       - DETECTION_MODEL_PATH=${DETECTION_MODEL_PATH:-models/yolov8n.onnx}
       - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD:-0.4}
       - ENABLE_HARDWARE_TELEMETRY=true
+      - LOCAL_DASHBOARD_ENABLED=${LOCAL_DASHBOARD_ENABLED:-true}
+      - LOCAL_DASHBOARD_USERNAME=${LOCAL_DASHBOARD_USERNAME:-admin}
+      - LOCAL_DASHBOARD_PASSWORD=${LOCAL_DASHBOARD_PASSWORD:-}
       - PYTHONPATH=/app:/contracts:/app/contracts
     devices:
       - "/dev/video0:/dev/video0"
@@ -71,6 +74,9 @@ services:
       - ./contracts:/app/contracts:ro
       - ./models:/models:ro
       - /sys/class/thermal:/sys/class/thermal:ro
+      - ./data:/data
+    ports:
+      - "8080:8080"
     profiles:
       - vision
       - edge-node

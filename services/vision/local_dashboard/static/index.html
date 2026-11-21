@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>EdgeFlow AI -- Vision Local Dashboard</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>EdgeFlow AI <span class="muted">/ Vision Local Dashboard</span></h1>
+    <div id="status-pill" class="pill neutral">connecting...</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="live">Live</button>
+    <button class="tab-btn" data-tab="history">History</button>
+    <button class="tab-btn" data-tab="roi">ROI Calibration</button>
+  </nav>
+
+  <main>
+    <section id="tab-live" class="tab-panel active">
+      <div class="grid">
+        <div class="card">
+          <h2>Video Stream</h2>
+          <div id="streams"></div>
+        </div>
+        <div class="card">
+          <h2>Runtime</h2>
+          <div id="runtime-cards" class="stat-cards"></div>
+        </div>
+        <div class="card">
+          <h2>Controls</h2>
+          <button id="btn-restart">Restart Pipeline</button>
+          <div class="control-row">
+            <label for="conf-threshold">Confidence threshold</label>
+            <input id="conf-threshold" type="number" min="0.01" max="0.99" step="0.01" />
+            <button id="btn-apply-conf">Apply</button>
+          </div>
+          <div id="control-feedback" class="muted"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab-panel">
+      <div class="grid">
+        <div class="card">
+          <h2>Telemetry History</h2>
+          <button id="btn-refresh-telemetry">Refresh</button>
+          <table id="telemetry-table"><thead><tr><th>Time</th><th>Node</th><th>Phase</th><th>Approaches</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="card">
+          <h2>Health History</h2>
+          <button id="btn-refresh-health">Refresh</button>
+          <table id="health-table"><thead><tr><th>Time</th><th>Status</th><th>FPS</th><th>CPU temp</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="card">
+          <h2>Event Log</h2>
+          <button id="btn-refresh-events">Refresh</button>
+          <table id="events-table"><thead><tr><th>Time</th><th>Event</th><th>Detail</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-roi" class="tab-panel">
+      <div class="card">
+        <h2>ROI Calibration</h2>
+        <p class="muted">Click on the image to add a polygon point for the selected node/approach. Close a
+          polygon, pick the next approach, repeat for every approach of every active node, then Save.</p>
+        <div class="control-row">
+          <label for="roi-node">Node</label>
+          <select id="roi-node"></select>
+          <label for="roi-approach">Approach</label>
+          <select id="roi-approach"></select>
+          <button id="btn-roi-refresh-snapshot">Refresh Snapshot</button>
+          <button id="btn-roi-close-polygon">Close Polygon</button>
+          <button id="btn-roi-undo">Undo Point</button>
+          <button id="btn-roi-save">Save ROI</button>
+        </div>
+        <div id="roi-canvas-wrap">
+          <img id="roi-snapshot" alt="latest camera snapshot" />
+          <canvas id="roi-canvas"></canvas>
+        </div>
+        <div id="roi-feedback" class="muted"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
