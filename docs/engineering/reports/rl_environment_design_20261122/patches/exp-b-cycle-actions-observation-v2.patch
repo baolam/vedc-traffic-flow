@@ -1,0 +1,338 @@
+diff --git a/contracts/benchmark.py b/contracts/benchmark.py
+index b5f8ddd..686ac64 100644
+--- a/contracts/benchmark.py
++++ b/contracts/benchmark.py
+@@ -43,7 +43,7 @@ PHASE_FEATURES = [
+     "confidence",
+ ]
+ OBSERVATION_SPEC = dict(
+-    version="raw_two_hop_v1",
++    version="raw_two_hop_v2",
+     radius_hops=2,
+     max_phases=8,
+     features=[
+@@ -51,9 +51,9 @@ OBSERVATION_SPEC = dict(
+         "down1_queue", "down1_occupancy", "down2_queue", "down2_occupancy",
+         "up1_queue", "up1_occupancy", "up2_queue", "up2_occupancy",
+         "nonserved_queue", "service_age", "elapsed_green", "is_current",
+-        "green", "yellow", "all_red", "confidence",
++        "green", "yellow", "all_red", "wait_age", "external_backlog", "confidence",
+     ],
+-    normalization=dict(queue_vehicles=20, service_age_s=60, elapsed_green_s=60),
++    normalization=dict(queue_vehicles=20, service_age_s=60, elapsed_green_s=60, wait_age_s=60),
+ )
+ UNIFIED_DQN = dict(
+     schema="unified_dqn_v1",
+diff --git a/src/control/cycle_dqn.py b/src/control/cycle_dqn.py
+index 145d90c..033ff96 100644
+--- a/src/control/cycle_dqn.py
++++ b/src/control/cycle_dqn.py
+@@ -4,6 +4,7 @@ Both use the cycle rule in contracts (CYCLE_RULE). At each node's cycle start a
+ transfer (donor -> recipient) or no-op; training and deployment share that single code path.
+ """
+ import json
++import os
+ import uuid
+ 
+ import numpy as np
+@@ -12,7 +13,7 @@ from contracts.benchmark import CYCLE_DQN as D, CYCLE_RULE as R, OBSERVATION_SPE
+ from contracts.contracts_sdk import validate_payload
+ from src.rl.policy import NumpyPolicy
+ from .controllers import BaseController
+-from .cycle_plan import apply_transfer, cycle_length, damped_greens
++from .cycle_plan import apply_transfer, cycle_length, damped_greens, green_budget
+ from .fair_cycle import FairCycleController
+ from .observation import flow_index, observe_node
+ from .unified_dqn import FEATURES, MAX_PHASES, pad_rows
+@@ -21,6 +22,11 @@ GRID = MAX_PHASES * MAX_PHASES + 1  # slot donor * MAX_PHASES + recipient, last
+ NOOP = GRID - 1
+ CANDIDATE_DIM = 2 * FEATURES + len(D["extras"])
+ _DONOR, _RECIPIENT = np.divmod(np.arange(NOOP), MAX_PHASES)
++# Experiment (EDGEFLOW_CYCLE_ACTIONS=1): two unused diagonal slots shorten / lengthen this node's cycle by one
++# quantum, persistently (the offset carries over to later cycles). shortcut: reuses illegal donor==recipient
++# slots to keep the head size; give them their own slots if this becomes part of the design.
++CYCLE_ACTIONS = os.environ.get("EDGEFLOW_CYCLE_ACTIONS") == "1"
++SHORTEN, LENGTHEN = 0, MAX_PHASES + 1  # slots (0, 0) and (1, 1)
+ 
+ 
+ def candidate_mask(greens, phases):
+@@ -29,6 +35,10 @@ def candidate_mask(greens, phases):
+     legal = ((_DONOR < p) & (_RECIPIENT < p) & (_DONOR != _RECIPIENT)
+              & (g[..., _DONOR] - R["quantum_s"] >= R["min_green_s"])
+              & (g[..., _RECIPIENT] + R["quantum_s"] <= R["max_green_s"]))
++    if CYCLE_ACTIONS:
++        total, q = g.sum(-1), R["quantum_s"]
++        legal[..., SHORTEN] = (total - q >= R["min_green_s"] * p[..., 0]) & (p[..., 0] >= 2)
++        legal[..., LENGTHEN] = (total + q <= R["max_green_s"] * p[..., 0]) & (p[..., 0] >= 2)
+     return np.concatenate([legal, np.ones(legal.shape[:-1] + (1,), bool)], axis=-1)
+ 
+ 
+@@ -57,23 +67,34 @@ class FairCycleNativeController(BaseController):
+         self.selector = selector  # (node, view, base_greens) -> slot in [0, GRID)
+         self._state = {}
+         self._pressure_sum = {}  # node -> (per-phase pressure sums, samples) over the running cycle
++        self._offset = {}  # node -> persistent green-budget offset (cycle-length actions)
+ 
+     def reset(self):
+         self._state.clear()
+         self._pressure_sum.clear()
++        self._offset.clear()
+ 
+     def plans(self):
+         """Greens of each node's running cycle (empty before its first cycle)."""
+         return {nid: list(state["greens"]) for nid, state in self._state.items()}
+ 
+     def _start_cycle(self, node, view, idx, weights):
+-        base = damped_greens(weights)
++        nid, n = node["node_id"], len(weights)
++        budget = green_budget(n) + self._offset.get(nid, 0)
++        base = damped_greens(weights, budget=budget)
+         greens, slot = base, NOOP
+         if self.selector is not None:
+             slot = int(self.selector(node, view, base))
+-            if slot != NOOP:
++            if CYCLE_ACTIONS and slot in (SHORTEN, LENGTHEN):
++                delta = R["quantum_s"] if slot == LENGTHEN else -R["quantum_s"]
++                self._offset[nid] = self._offset.get(nid, 0) + delta
++                greens = damped_greens(weights, budget=budget + delta)
++            elif slot != NOOP:
+                 greens = apply_transfer(base, *divmod(slot, MAX_PHASES))
+-        assert sum(greens) + R["clearance_s"] * len(greens) == cycle_length(len(greens))
++        assert sum(greens) + R["clearance_s"] * n == cycle_length(n) + self._offset.get(nid, 0)
++        if os.environ.get("EDGEFLOW_OFFSET_LOG"):  # experiment: record the cycle length each node runs
++            with open(f"{os.environ['EDGEFLOW_OFFSET_LOG']}.{os.getpid()}", "a") as f:
++                f.write(f"{nid} {n} {cycle_length(n) + self._offset.get(nid, 0)}\n")
+         return dict(idx=idx, greens=greens, base=base, slot=slot)
+ 
+     def compute_command(self, node_id, telemetry, topology, network_state=None, current_time_s=None):
+diff --git a/src/control/cycle_plan.py b/src/control/cycle_plan.py
+index 8e5a525..d3f32b2 100644
+--- a/src/control/cycle_plan.py
++++ b/src/control/cycle_plan.py
+@@ -1,8 +1,14 @@
+ """Native-phase fair-cycle timing: cycle length, green allocation and legal 5 s transfers."""
++import os
++
+ from contracts.benchmark import CYCLE_RULE as R
+ 
++_CYCLE_G = os.environ.get("EDGEFLOW_CYCLE_G")  # experiment: cycle = phases * (g + clearance)
++
+ 
+ def cycle_length(phases):
++    if _CYCLE_G:
++        return phases * (int(_CYCLE_G) + R["clearance_s"])
+     return max(R["base_s"], R["per_phase_s"] * phases)
+ 
+ 
+@@ -13,34 +19,38 @@ def green_budget(phases):
+     return budget
+ 
+ 
+-def allocate_greens(weights):
++def allocate_greens(weights, budget=None):
+     """Minimum green each, then 5 s units by D'Hondt on weights; ties go to the lowest index."""
+     phases = len(weights)
++    budget = green_budget(phases) if budget is None else budget
+     if any(w < 0 for w in weights):
+         raise ValueError("Negative allocation weight")
++    if not R["min_green_s"] * phases <= budget <= R["max_green_s"] * phases:
++        raise ValueError("Green budget outside the min/max green bounds")
+     greens = [R["min_green_s"]] * phases
+-    for _ in range((green_budget(phases) - sum(greens)) // R["quantum_s"]):
++    for _ in range((budget - sum(greens)) // R["quantum_s"]):
+         open_ = [i for i in range(phases) if greens[i] < R["max_green_s"]]
+         best = max(open_, key=lambda i: (weights[i] / (greens[i] - R["min_green_s"] + R["quantum_s"]), -i))
+         greens[best] += R["quantum_s"]
+     return greens
+ 
+ 
+-def damped_greens(weights, share=None):
++def damped_greens(weights, share=None, budget=None):
+     """Greens `share` of the way from the equal split to the pressure split, quantized with the budget exact.
+ 
+     Leftover quanta go to the largest remainders; equal remainders (common: half an odd quantum count) go to the
+     phase the pressure split favours more, so rounding follows demand, never a fixed phase position.
+     """
+     share = R["adapt_share"] if share is None else share
+-    equal, full = allocate_greens([1.0] * len(weights)), allocate_greens(weights)
++    budget = green_budget(len(weights)) if budget is None else budget
++    equal, full = allocate_greens([1.0] * len(weights), budget), allocate_greens(weights, budget)
+     target = [e + share * (f - e) for e, f in zip(equal, full)]
+     q = R["quantum_s"]
+     greens = [int(t // q) * q for t in target]
+-    left = (green_budget(len(weights)) - sum(greens)) // q
++    left = (budget - sum(greens)) // q
+     for i in sorted(range(len(target)), key=lambda i: (-(target[i] - greens[i]), -(full[i] - equal[i]), -weights[i], i))[:left]:
+         greens[i] += q
+-    assert sum(greens) == green_budget(len(weights)) and all(R["min_green_s"] <= g <= R["max_green_s"] for g in greens)
++    assert sum(greens) == budget and all(R["min_green_s"] <= g <= R["max_green_s"] for g in greens)
+     return greens
+ 
+ 
+diff --git a/src/control/fair_cycle.py b/src/control/fair_cycle.py
+index aafa01a..d3c2ad2 100644
+--- a/src/control/fair_cycle.py
++++ b/src/control/fair_cycle.py
+@@ -1,9 +1,12 @@
+ """Wait-aware cyclic timing with a hard minimum service allocation."""
+ import math
++import os
+ import uuid
+ 
+ from .controllers import BaseController
+ 
++_OCC_K = float(os.environ.get("EDGEFLOW_OCC_K", 0))  # experiment: moving-vehicle proxy
++
+ 
+ class FairCycleController(BaseController):
+     """Serve both canonical phases every cycle and adapt their green split.
+@@ -43,7 +46,8 @@ class FairCycleController(BaseController):
+             demand = (float(item.get("queue_vehicles", 0))
+                       + float(item.get("external_due_count", 0))
+                       + (float(item.get("stopped_wait_sum_s", 0))
+-                         + float(item.get("external_wait_sum_s", 0))) / 120.)
++                         + float(item.get("external_wait_sum_s", 0))) / 120.
++                      + _OCC_K * float(item.get("occupancy_ratio", 0)))
+             downstream_occupancy = 0.
+             to_node, to_approach = movement.get("to_node"), movement.get("to_approach")
+             if to_node and to_approach and to_node in network_state:
+diff --git a/src/control/mappo_unified.py b/src/control/mappo_unified.py
+index 0098e4e..66013ba 100644
+--- a/src/control/mappo_unified.py
++++ b/src/control/mappo_unified.py
+@@ -65,7 +65,8 @@ def snapshot_features(nodes, view, plans, flow, acting=None):
+         if greens is not None:
+             padded[:phases] = greens
+         rows = pad_rows(observe_node(node, view, flow, 0)).reshape(-1)  # radius 0: own telemetry only
+-        x[i] = np.concatenate([rows, padded / R["max_green_s"], [phases / MAX_PHASES, cycle_length(phases) / 200]])
++        cycle = sum(greens) + R["clearance_s"] * phases if greens is not None else cycle_length(phases)
++        x[i] = np.concatenate([rows, padded / R["max_green_s"], [phases / MAX_PHASES, cycle / 200]])
+     return x
+ 
+ 
+diff --git a/src/control/observation.py b/src/control/observation.py
+index dfabc70..05ed272 100644
+--- a/src/control/observation.py
++++ b/src/control/observation.py
+@@ -1,4 +1,4 @@
+-"""Map-independent raw-telemetry observation (raw_two_hop_v1) with an enforced hop radius."""
++"""Map-independent raw-telemetry observation (raw_two_hop_v2) with an enforced hop radius."""
+ import numpy as np
+ from contracts.benchmark import OBSERVATION_SPEC as SPEC
+ 
+@@ -56,6 +56,9 @@ def observe_node(node, telemetry, index, radius=SPEC["radius_hops"]):
+             own["elapsed_green_s"] / SPEC["normalization"]["elapsed_green_s"],
+             float(phase["phase_id"] == own["current_phase_id"]),
+             *[float(state == s) for s in ("GREEN", "YELLOW", "ALL_RED")],
++            # optional telemetry fields (absent -> 0); oldest wait of a served vehicle, stopped on the approach or not yet able to enter the map
++            max(max(a.get("oldest_stopped_wait_s", 0.), a.get("oldest_external_wait_s", 0.)) for a in served) / SPEC["normalization"]["wait_age_s"],
++            sum(a.get("external_due_count", 0) for a in served) / Q,  # vehicles held outside the map (spillback past the boundary)
+             min(confidence),
+         ])
+     result = np.asarray(rows, dtype=np.float32)
+diff --git a/src/rl/dqn_common.py b/src/rl/dqn_common.py
+index e80b0fa..0786098 100644
+--- a/src/rl/dqn_common.py
++++ b/src/rl/dqn_common.py
+@@ -1,4 +1,6 @@
+ """Pieces shared by the DQN families (phase selection, cycle residual)."""
++import os
++
+ import torch
+ from torch import nn
+ 
+@@ -23,3 +25,15 @@ def invalid_episode(ctx, error):
+     ctx.counters["invalid_episodes"] += 1
+     with (ctx.output / "invalid-episodes.jsonl").open("a") as handle:
+         handle.write(json.dumps(dict(episode=ctx.counters["episode"], reason=str(error))) + "\n")
++
++
++_TAIL = tuple(float(x) for x in os.environ["EDGEFLOW_TAIL"].split(",")) if os.environ.get("EDGEFLOW_TAIL") else None
++
++
++def tail_penalty(items):
++    """Experiment: lambda * sum over approaches of the oldest wait beyond T seconds (per 60 s); 0 when disabled."""
++    if _TAIL is None:
++        return 0.0
++    lam, limit = _TAIL
++    return lam * sum(max(0.0, max(a["oldest_stopped_wait_s"], a["oldest_external_wait_s"]) - limit) / 60.0
++                     for a in items)
+diff --git a/src/rl/mappo_family.py b/src/rl/mappo_family.py
+index 14682a5..4c265e2 100644
+--- a/src/rl/mappo_family.py
++++ b/src/rl/mappo_family.py
+@@ -24,7 +24,7 @@ from src.control.cycle_dqn import GRID, NOOP, FairCycleNativeController, candida
+ from src.control.mappo_unified import HEADS, HIDDEN, NODE_DIM, REL_DIM, Graph, actor_logits, snapshot_features
+ from src.control.observation import flow_index
+ from src.rl.cycle_family import pad_greens
+-from src.rl.dqn_common import invalid_episode
++from src.rl.dqn_common import invalid_episode, tail_penalty
+ from src.rl.graph_mappo import masked_distribution
+ from src.simulation.runtime import InvalidRun, SumoRuntime
+ 
+@@ -271,8 +271,10 @@ def episode(ctx):
+                 invalid_episode(ctx, error)
+                 return False
+             scale = 20 * (runtime.time - before)  # the runtime's scalar reward uses 20 * nodes * interval
++            items = {a["approach_id"]: a for t in runtime.telemetry.values() for a in t["approaches"]}
+             for nid, p in pending.items():  # R = sum gamma_5 ** ((t_k - t_start) / 5) * r_k over the node's cycle
+-                reward = -sum(runtime.approach_cost[a] for a in scopes[nid]) / scale
++                reward = (-sum(runtime.approach_cost[a] for a in scopes[nid]) / scale
++                          - tail_penalty([items[a] for a in scopes[nid]]))
+                 p["ret"] += r["gamma_5"] ** ((before - p["t0"]) / r["reference_s"]) * reward
+             c["sim_s"] += runtime.time - before
+             c["decisions"] += 1
+diff --git a/src/rl/unified_train.py b/src/rl/unified_train.py
+index f239f0b..5ac8400 100644
+--- a/src/rl/unified_train.py
++++ b/src/rl/unified_train.py
+@@ -5,6 +5,7 @@ Test seeds are never touched: validation uses SEEDS["validation"] only.
+ """
+ import copy
+ import json
++import os
+ import shutil
+ import random
+ import time
+@@ -23,12 +24,14 @@ from src.control.phase_dqn import phase_mask
+ from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
+ from src.control.mappo_unified import MAPPO_ALGORITHMS
+ from src.rl import cycle_family, mappo_family
+-from src.rl.dqn_common import invalid_episode, optimize_step
++from src.rl.dqn_common import invalid_episode, optimize_step, tail_penalty
+ from src.rl.policy import NumpyPolicy
+ from src.rl.selection import validation_score
+ from src.rl.stopping import Plateau
+ from src.simulation.runtime import InvalidRun, SumoRuntime
+ 
++NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
++
+ 
+ TRAIN_CHECK_EVERY = 25  # schema/readback cadence in training rollouts only; evaluation checks every step
+ 
+@@ -154,6 +157,12 @@ def phase_episode(ctx):
+     try:
+         nodes = runtime.topology["nodes"]
+         flow = flow_index(runtime.topology)
++        scopes = mappo_family.reward_scopes(nodes) if NODE_REWARD else None
++
++        def node_reward(nid, dt):  # experiment: MAPPO's node_wait_v1 (own + fed approaches) plus the tail term
++            items = {a["approach_id"]: a for t in runtime.telemetry.values() for a in t["approaches"]}
++            return (-sum(runtime.approach_cost[a] for a in scopes[nid]) / (20 * dt)
++                    - tail_penalty([items[a] for a in scopes[nid]]))
+ 
+         def observe():  # computed once per step and reused as the next step's state
+             return ([pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes],
+@@ -179,8 +188,10 @@ def phase_episode(ctx):
+             next_rows, next_masks = observe()
+             for i, n in enumerate(nodes):
+                 ctx.replay.add(s=rows[i], action=actions[i],
+-                               reward=reward if ctx.reward_version == "wait_tail_v1"
+-                               else node_pressure_reward(n, runtime.telemetry),
++                               reward=node_reward(n["node_id"], dt) if NODE_REWARD and ctx.reward_version == "wait_tail_v1"
++                               else reward if ctx.reward_version == "wait_tail_v1"
++                               else node_pressure_reward(n, runtime.telemetry) - tail_penalty(
++                                   [a for a in runtime.telemetry[n["node_id"]]["approaches"]]),
+                                s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
+             rows, masks = next_rows, next_masks
+             c["sim_s"] += dt
