@@ -73,6 +73,13 @@ def _linear(layer, values):
     return values @ np.asarray(layer["weight"], np.float32).T + np.asarray(layer["bias"], np.float32)
 
 
+def with_noop_prior(logits, legal):
+    """Add log(legal transfers) to the no-op logit, so the learned no-op bias is a phase-count-free prior."""
+    logits = np.array(logits, np.float64)
+    logits[..., GRID - 1] += np.log(np.maximum(1, np.asarray(legal)[..., :GRID - 1].sum(-1)))
+    return logits
+
+
 def actor_logits(weights, x, graph):
     """Framework-free forward pass; mirrors the torch actor exactly. x (N, NODE_DIM) -> (N, GRID)."""
     hidden = np.maximum(_linear(weights["encoder"], x), 0)
@@ -131,4 +138,5 @@ class UnifiedMAPPOController(FairCycleNativeController):
         logits = actor_logits(self.weights, x, self._graph)[self._graph.node_ids.index(nid)]
         greens = np.zeros(MAX_PHASES, np.float32)
         greens[:phases] = base
-        return int(np.argmax(np.where(candidate_mask(greens, phases), logits, -np.inf)))
+        legal = candidate_mask(greens, phases)
+        return int(np.argmax(np.where(legal, with_noop_prior(logits, legal), -np.inf)))

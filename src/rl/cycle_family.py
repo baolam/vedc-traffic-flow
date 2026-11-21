@@ -7,6 +7,7 @@ FairCycleNativeController selector hook that the deployed controller uses.
 """
 import copy
 import json
+import shutil
 import uuid
 from types import SimpleNamespace
 
@@ -147,6 +148,7 @@ def episode(ctx):
         return True
     finally:
         runtime.close()
+        shutil.rmtree(runtime.output, ignore_errors=True)  # per-episode SUMO output is never read again
 
 
 def export(spec, algorithm, net, seed, path):

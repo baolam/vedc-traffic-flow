@@ -300,6 +300,8 @@ class SumoRuntime:
                 raise RuntimeError(ack["reason"])
             commands[nid] = {"requested_action": int(action), "applied_action": applied, "command": command, "ack": ack}
         weighted_wait_cost = 0.
+        # Same cost split by approach (entry approach for vehicles still outside); other lanes are unattributed.
+        self.approach_cost = cost = dict.fromkeys(self.approach_wait, 0.)
         crossing_total = {}
         interval = min(5, self.horizon-self.time)
         for _ in range(interval):
@@ -361,16 +363,21 @@ class SumoRuntime:
             if self.departed != active | self.arrived or active & self.arrived:
                 raise InvalidRun("Unexplained vehicle-accounting loss")
             pending = self._due
-            weighted_wait_cost += sum(min(1., self.time-self.scheduled[vid]["depart"])
-                                      * (1. + self.wait_penalty_lambda
-                                         * max(0., self.time-self.scheduled[vid]["depart"]) / 120.)
-                                      for vid in pending)
+            outside = 0
+            for vid in pending:
+                age = self.time-self.scheduled[vid]["depart"]
+                w = min(1., age) * (1. + self.wait_penalty_lambda * max(0., age) / 120.)
+                outside += w
+                cost[self.scheduled[vid]["route"]] += w
+            weighted_wait_cost += outside
             for vid in active:
                 if vehicle_data[vid][self.tc.VAR_SPEED] <= .1:
                     self.waiting[vid] += 1
-                    weighted_wait_cost += 1. + self.wait_penalty_lambda * self.waiting[vid] / 120.
+                    w = 1. + self.wait_penalty_lambda * self.waiting[vid] / 120.
+                    weighted_wait_cost += w
                     road = self.logical_edges.get(vehicle_data[vid][self.tc.VAR_ROAD_ID],vehicle_data[vid][self.tc.VAR_ROAD_ID])
                     if road in self.approach_wait:
+                        cost[road] += w
                         ledger = self.approach_wait[road]
                         ledger[vid] = ledger.get(vid, 0) + 1
             for node in self.topology["nodes"]:

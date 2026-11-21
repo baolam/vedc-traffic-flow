@@ -5,6 +5,7 @@ Test seeds are never touched: validation uses SEEDS["validation"] only.
 """
 import copy
 import json
+import shutil
 import random
 import time
 import uuid
@@ -193,6 +194,7 @@ def phase_episode(ctx):
         return True
     finally:
         runtime.close()
+        shutil.rmtree(runtime.output, ignore_errors=True)  # per-episode SUMO output is never read again
 
 
 PHASE_FAMILY = SimpleNamespace(build_net=build_net, new_replay=Replay, update=phase_update, episode=phase_episode,

@@ -67,3 +67,19 @@ def test_libsumo_backend_reproduces_traci(tmp_path, monkeypatch):
         out[backend] = json.loads(res.stdout.strip().splitlines()[-1])
     assert out["0"]["rewards"] == out["1"]["rewards"]
     assert (out["0"]["provenance"], out["1"]["provenance"]) == ("sumo_traci", "sumo_libsumo")
+
+
+def test_approach_costs_split_the_scalar_reward(tmp_path):
+    runtime = SumoRuntime(TOPOLOGY, NETWORK, tmp_path / "run", demand_s=120, drain_s=0, trace=False)
+    try:
+        split = 0.0
+        for k in range(24):
+            before = runtime.time
+            reward = runtime.step({n["node_id"]: (k // 4) % 2 for n in runtime.topology["nodes"]})[1]
+            total = -reward * 20 * len(runtime.topology["nodes"]) * (runtime.time - before)
+            attributed = sum(runtime.approach_cost.values())
+            assert min(runtime.approach_cost.values()) >= 0 and attributed <= total + 1e-9
+            split += attributed
+        assert split > 0  # queues formed on approaches and were attributed
+    finally:
+        runtime.close()

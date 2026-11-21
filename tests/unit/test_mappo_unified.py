@@ -214,3 +214,31 @@ def test_minibatching_gives_one_optimizer_step_per_chunk():
     batch, _ = synthetic_batch(size=64)
     mf.ppo_update(ctx, batch)
     assert ctx.counters["mappo_last_update"]["critic_steps"] == 8
+
+
+@pytest.mark.parametrize("phases", [2, 4, 8])
+def test_fresh_policy_starts_near_the_noop_prior_and_deployment_uses_the_same_offset(phases):
+    from src.control.mappo_unified import with_noop_prior
+
+    torch.manual_seed(phases)
+    net, graph = mf.build_net(), Graph(chain(N), local_only=False)
+    x = np.random.default_rng(phases).random((N, NODE_DIM), dtype=np.float32)
+    legal = candidate_mask(np.r_[[30.0] * phases, [0.0] * (8 - phases)], phases)
+    logits = torch_logits(net, x, graph)[0]
+    p_train = mf.policy(torch.as_tensor(logits), torch.as_tensor(legal)).probs.numpy()
+    assert abs(p_train[GRID - 1] - UNIFIED_MAPPO["noop_prior"]) < 0.1  # same prior whatever the phase count
+    deployed = np.where(legal, with_noop_prior(logits, legal), -np.inf)
+    np.testing.assert_allclose(np.exp(deployed - deployed.max()) / np.exp(deployed - deployed.max()).sum(), p_train,
+                               rtol=1e-5, atol=1e-6)
+
+
+def test_node_reward_scope_is_own_plus_fed_downstream_approaches():
+    scopes = mf.reward_scopes(chain(3)["nodes"])
+    assert scopes == {"A": ["A_S", "A_W", "B_W"], "B": ["B_S", "B_W", "C_W"], "C": ["C_S", "C_W"]}
+
+
+def test_episode_output_folder_is_removed_after_the_episode():
+    import inspect
+    from src.rl import cycle_family, unified_train
+    for module in (mf, cycle_family, unified_train):
+        assert "shutil.rmtree(runtime.output" in inspect.getsource(module)

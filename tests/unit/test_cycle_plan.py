@@ -43,7 +43,7 @@ def test_transfer_conserves_budget_and_rejects_illegal():
 def test_infeasible_phase_count_rejected():
     with pytest.raises(ValueError):
         allocate_greens([1])
-    assert CYCLE_RULE["version"] == "multiphase_cycle_v2" and CYCLE_RULE["adapt_share"] == 0.5
+    assert CYCLE_RULE["version"] == "multiphase_cycle_v4" and CYCLE_RULE["adapt_share"] == 1.0
 
 
 @pytest.mark.parametrize("phases", [2, 3, 4, 8])

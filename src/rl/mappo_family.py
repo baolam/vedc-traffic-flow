@@ -1,11 +1,14 @@
 """Unified MAPPO (graph_mappo_unified / local_mappo_unified) for the shared train_run driver.
 
-On-policy: eight complete episodes per update. Each transition is one node's own cycle (asynchronous cycles),
+On-policy: `episodes_per_update` complete episodes per update. Each transition is one node's own cycle (asynchronous cycles),
 the critic is centralized over the whole graph snapshot (training only), and GAE runs per node chain with
-gamma_5 ** (dt / 5) and gae_lambda ** (dt / 5) for a cycle of dt simulated seconds.
+gamma_5 ** (dt / 5) and gae_lambda ** (dt / 5) for a cycle of dt simulated seconds. Rewards are per node
+(node_wait_v1): waiting cost on the node's own approaches plus the downstream approaches its movements feed.
 """
+import math
 import copy
 import json
+import shutil
 import uuid
 from types import SimpleNamespace
 
@@ -17,7 +20,7 @@ from torch.nn import functional as F
 from contracts.benchmark import (CYCLE_DQN as D, CYCLE_RULE, MAPPO_RECIPE, OBSERVATION_SPEC as OBS, SEEDS, TIMING,
                                  UNIFIED_DQN as U, UNIFIED_MAPPO as M)
 from src.benchmark.evidence import file_hash, write_json
-from src.control.cycle_dqn import GRID, FairCycleNativeController, candidate_mask
+from src.control.cycle_dqn import GRID, NOOP, FairCycleNativeController, candidate_mask
 from src.control.mappo_unified import HEADS, HIDDEN, NODE_DIM, REL_DIM, Graph, actor_logits, snapshot_features
 from src.control.observation import flow_index
 from src.rl.cycle_family import pad_greens
@@ -66,6 +69,8 @@ class Actor(nn.Module):
         self.encoder = nn.Linear(NODE_DIM, HIDDEN)
         self.attention = nn.ModuleList([Attention() for _ in range(M["layers"])])
         self.head = nn.Linear(HIDDEN, GRID)
+        with torch.no_grad():  # P(no-op) starts at noop_prior on every node (see with_noop_prior)
+            self.head.bias[NOOP] = math.log(M["noop_prior"] / (1 - M["noop_prior"]))
 
     def forward(self, x, g):
         hidden = torch.relu(self.encoder(x))
@@ -132,6 +137,19 @@ class NullReplay:
         pass
 
 
+def policy(logits, legal):
+    """Masked categorical with the no-op prior offset (same as deployment's with_noop_prior)."""
+    offset = torch.log(legal[..., :NOOP].sum(-1).clamp_min(1).to(logits.dtype))
+    return masked_distribution(torch.cat((logits[..., :NOOP], logits[..., NOOP:] + offset[..., None]), -1), legal)
+
+
+def reward_scopes(nodes):
+    """node -> approaches whose waiting cost is its reward: its own plus the downstream approaches it feeds."""
+    return {n["node_id"]: sorted(set(n["approaches"]) | {m["to_approach"] for p in n["phases"] for m in p["movements"]
+                                                         if m.get("to_node") and m.get("to_approach")})
+            for n in nodes}
+
+
 def build_net(_architecture=None):
     return MappoNet()
 
@@ -173,7 +191,7 @@ def ppo_update(ctx, batch):
             rows = torch.arange(len(idx), device=dev)
             ctx.optimizer.zero_grad(set_to_none=True)
             if not stopped:
-                distribution = masked_distribution(net.actor(x[idx], ctx.graph)[rows, node[idx]], legal[idx])
+                distribution = policy(net.actor(x[idx], ctx.graph)[rows, node[idx]], legal[idx])
                 log_ratio = distribution.log_prob(slot[idx]) - old_logp[idx]
                 ratio = log_ratio.exp()
                 kl = ((ratio - 1.0) - log_ratio).mean()
@@ -218,7 +236,7 @@ def episode(ctx):
     try:
         nodes, flow = runtime.topology["nodes"], flow_index(runtime.topology)
         index = {n["node_id"]: i for i, n in enumerate(nodes)}
-        pending, chains = {}, {n["node_id"]: [] for n in nodes}
+        pending, chains, scopes = {}, {n["node_id"]: [] for n in nodes}, reward_scopes(nodes)
 
         def close(nid, next_value, terminal):
             p = pending.pop(nid)
@@ -231,7 +249,7 @@ def episode(ctx):
             mask = candidate_mask(pad_greens(base), phases)
             with torch.no_grad():
                 xt = ctx.tensor(x)[None]
-                distribution = masked_distribution(ctx.net.actor(xt, ctx.graph)[:, index[nid]], ctx.tensor(mask[None], torch.bool))
+                distribution = policy(ctx.net.actor(xt, ctx.graph)[:, index[nid]], ctx.tensor(mask[None], torch.bool))
                 slot = distribution.sample()
                 value = float(ctx.net.denormalize(ctx.net.critic(xt)[0, index[nid]].double()))
             if nid in pending:
@@ -247,12 +265,14 @@ def episode(ctx):
             commands = controller.compute_commands(runtime.telemetry, runtime.topology, current_time_s=runtime.time)
             before = runtime.time
             try:
-                _, reward, terminated, truncated = runtime.step(
+                _, _, terminated, truncated = runtime.step(
                     {nid: phase_ids[nid].index(commands[nid]["target_phase_id"]) for nid in phase_ids})
             except InvalidRun as error:
                 invalid_episode(ctx, error)
                 return False
-            for p in pending.values():  # R = sum gamma_5 ** ((t_k - t_start) / 5) * r_k over the node's cycle
+            scale = 20 * (runtime.time - before)  # the runtime's scalar reward uses 20 * nodes * interval
+            for nid, p in pending.items():  # R = sum gamma_5 ** ((t_k - t_start) / 5) * r_k over the node's cycle
+                reward = -sum(runtime.approach_cost[a] for a in scopes[nid]) / scale
                 p["ret"] += r["gamma_5"] ** ((before - p["t0"]) / r["reference_s"]) * reward
             c["sim_s"] += runtime.time - before
             c["decisions"] += 1
@@ -275,6 +295,7 @@ def episode(ctx):
         return True
     finally:
         runtime.close()
+        shutil.rmtree(runtime.output, ignore_errors=True)  # per-episode SUMO output is never read again
 
 
 def actor_weights(actor):

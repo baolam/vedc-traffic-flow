@@ -11,10 +11,11 @@ LEARNER_SEEDS = [17, 29, 43]
 # Five independent whole-system training runs per map and algorithm; LEARNER_SEEDS stays frozen for old protocols.
 UNIFIED_CAMPAIGN = dict(version="unified_campaign_v1", learner_seeds=[17, 29, 43, 59, 71])
 # Native-phase fair cycle: length max(base, per_phase * P) s incl. clearance_s per phase; greens quantized.
-# adapt_share: native greens move this fraction of the way from the equal split toward the pressure split
-# (chosen on development seeds: full adaptation over-reacts to noisy pressure).
-CYCLE_RULE = dict(version="multiphase_cycle_v2", base_s=70, per_phase_s=25, clearance_s=5,
-                  min_green_s=10, max_green_s=60, quantum_s=5, adapt_share=0.5)
+# adapt_share: native greens move this fraction of the way from the equal split toward the pressure split.
+# 1.0 chosen after the HCM sweep: the equal split gridlocks HCM (share 0.0: 58.8% completion) and the full pressure
+# split beats Fixed-Time there by 45%; on the 4-node map 0.25 is best (1.0 fails its tails), a known trade-off.
+CYCLE_RULE = dict(version="multiphase_cycle_v4", base_s=70, per_phase_s=25, clearance_s=5,
+                  min_green_s=10, max_green_s=60, quantum_s=5, adapt_share=1.0)
 FLEET = dict(motorcycle=65, car=25, taxi=4, bus=3, truck=3)
 CORE_CASES = [
     "balanced",
@@ -62,8 +63,9 @@ UNIFIED_DQN = dict(
         shared_dqn_unified=("padded_vector_head", "wait_tail_v1"),
         presslight_unified=("scalar_phase_scorer", "node_pressure_v1"),
         fair_cycle_unified=("candidate_pair_scorer", "wait_tail_v1"),
-        graph_mappo_unified=("graph_actor_critic", "wait_tail_v1"),
-        local_mappo_unified=("graph_actor_critic", "wait_tail_v1"),  # same model, self-only communication
+        # node_wait_v1: each node's waiting cost on its own approaches plus the downstream approaches it feeds.
+        graph_mappo_unified=("graph_actor_critic", "node_wait_v1"),
+        local_mappo_unified=("graph_actor_critic", "node_wait_v1"),  # same model, self-only communication
     ),
     hidden=64,
 )
@@ -83,12 +85,14 @@ CYCLE_RECIPE = dict(DQN_RECIPE, version="unified_cycle_recipe_v3", learning_star
                     replay=50000, wait_penalty_lambda=0.5)
 # Unified MAPPO: local node features (radius 0) + two attention layers = exactly two hops of communication.
 UNIFIED_MAPPO = dict(
-    schema="unified_mappo_v1", hidden=64, heads=4, layers=2, relation_dim=4,
+    # The no-op logit gets + log(legal transfers), so its head bias sets P(no-op) whatever the phase count;
+    # the bias starts at log(noop_prior / (1 - noop_prior)) (residual policies start near the base plan).
+    schema="unified_mappo_v2", hidden=64, heads=4, layers=2, relation_dim=4, noop_prior=0.7,
     node_dim=OBSERVATION_SPEC["max_phases"] * len(OBSERVATION_SPEC["features"]) + OBSERVATION_SPEC["max_phases"] + 2,
     node_extras=["greens_by_phase", "phase_count", "cycle_length"],
 )
 MAPPO_RECIPE = dict(
-    DQN_RECIPE, version="unified_mappo_recipe_v3", update_epochs=5, num_minibatches=8, episodes_per_update=16,
+    DQN_RECIPE, version="unified_mappo_recipe_v4", update_epochs=5, num_minibatches=8, episodes_per_update=16,
     clip_epsilon=.2, entropy_coefficient=.01, value_coefficient=.5, max_gradient_norm=.5, target_kl=.03,
     gae_lambda=.95, value_normalization=True, advantage_normalization=True, validate_every_episodes=64,
     min_episodes=400, min_case_visits=10, patience=3, cap_episodes=512, min_sim_s=0, epsilon_decay_sim_s=1,
