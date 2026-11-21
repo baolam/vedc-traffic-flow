@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Video, Radio, Car, Gauge, Wifi } from 'lucide-react';
 import PhaseIndicator from '../components/PhaseIndicator';
 import RaspberryPiAlertOverlay from '../components/RaspberryPiAlertOverlay';
+import StationContextBar from '../components/StationContextBar';
 
 const DEMO_NODE_ID = 'J3';
 
@@ -65,7 +66,14 @@ const RaspberryPiDemo = () => {
   const streamLost = liveStatusChecked && !isLive;
 
   return (
-    <div className="page-container" style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '24px' }}>
+    <>
+      <StationContextBar activeNodeId={DEMO_NODE_ID} />
+      {/* No minHeight: '100vh' here -- that forced this page to be at least a full viewport tall
+          even though its real content (video + MQTT panel) is short, leaving a dead gray strip
+          below once RaspberryPiAlertOverlay's fixed-position modal isn't covering it. The
+          surrounding .page-container class already gives it flex:1 inside .main-content, which is
+          all the height it needs. */}
+      <div className="page-container" style={{ backgroundColor: '#f8fafc', padding: '24px' }}>
       <RaspberryPiAlertOverlay
         nodeId={DEMO_NODE_ID}
         telemetryLost={telemetryLost}
@@ -168,7 +176,8 @@ const RaspberryPiDemo = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
