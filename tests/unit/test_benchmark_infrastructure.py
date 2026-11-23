@@ -259,3 +259,18 @@ def test_slot_limit_env_raises_the_default_only(monkeypatch):
     with pytest.raises(ValueError):
         with simulator_slot():
             pass
+
+
+def test_max_red_restricts_mask_to_the_starved_approach(monkeypatch):
+    import src.control.phase_dqn as pd
+
+    node = dict(phases=[dict(phase_id=f"p{i}", approaches=[f"a{i}"], movements=[]) for i in range(3)])
+    t = dict(current_phase_id="p0", signal_state="GREEN", elapsed_green_s=20,
+             approaches=[dict(approach_id=f"a{i}", oldest_stopped_wait_s=w) for i, w in enumerate((0, 30, 50))])
+    assert pd.phase_mask(node, t).tolist() == [True, True, True]  # gate off by default
+    monkeypatch.setattr(pd, "MAX_RED_S", 40.0)
+    assert pd.phase_mask(node, t).tolist() == [False, False, True]
+    t["approaches"][2]["oldest_stopped_wait_s"] = 35
+    assert pd.phase_mask(node, t).tolist() == [True, True, True]
+    t["elapsed_green_s"] = 5  # min green still wins
+    assert pd.phase_mask(node, t).tolist() == [True, False, False]

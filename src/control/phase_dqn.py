@@ -1,12 +1,15 @@
 """Map-bound phase scoring with framework-free production inference."""
 
 import json
+import os
 import uuid
 import numpy as np
 from contracts.benchmark import PHASE_FEATURES, PHASE_NORMALIZATION, TIMING
 from contracts.contracts_sdk import validate_payload
 from src.rl.policy import NumpyPolicy
 from .controllers import BaseController
+
+MAX_RED_S = float(os.environ.get("EDGEFLOW_MAX_RED", 0))  # experiment: force service of an approach stopped > T s
 
 
 def phase_mask(node, telemetry):
@@ -23,6 +26,12 @@ def phase_mask(node, telemetry):
         mask[current] = False
     if not mask.any():
         raise ValueError("No legal signal phase")
+    if MAX_RED_S and mask.sum() > 1:
+        waits = {a["approach_id"]: a.get("oldest_stopped_wait_s", 0.0) for a in telemetry["approaches"]}
+        worst = max(waits, key=waits.get)
+        serve = mask & np.array([worst in p["approaches"] for p in node["phases"]])
+        if waits[worst] > MAX_RED_S and serve.any():
+            return serve
     return mask
 
 
