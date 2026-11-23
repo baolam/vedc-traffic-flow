@@ -69,10 +69,33 @@ def test_validation_uses_light_checks_but_same_cases_and_seeds(monkeypatch, tmp_
     from src.rl.unified_train import TRAIN_CHECK_EVERY, evaluate_candidate
 
     seen = {}
-    monkeypatch.setattr(scheduling, "run_tasks", lambda tasks, workers: seen.update(tasks=tasks) or [])
+    monkeypatch.setattr(scheduling, "run_tasks", lambda tasks, workers, continue_on_error=False: seen.update(tasks=tasks) or [])
     spec = dict(id="m", cases=["a", "b"])
     evaluate_candidate(spec, "phase_dqn_unified", 17, tmp_path / "m.json", DQN_RECIPE, tmp_path, 2)
     protocols = {tuple(sorted(t[1].items())) for t in seen["tasks"]}
     assert len(protocols) == 1 and dict(protocols.pop())["trace"] is False
     assert dict(seen["tasks"][0][1])["check_every"] == TRAIN_CHECK_EVERY
     assert {(t[0]["scenario"], t[0]["seed"]) for t in seen["tasks"]} == {(c, s) for c in "ab" for s in SEEDS["validation"]}
+
+
+def test_invalid_validation_case_makes_candidate_infeasible_not_fatal(monkeypatch):
+    import src.benchmark.scheduling as scheduling
+    from src.rl import unified_train as ut
+    from src.rl.selection import validation_score
+
+    spec = dict(cases=["balanced"])
+    good = dict(scenario="balanced", valid=True, scheduled=1, completed=1, collisions=0, teleports=0,
+                accounting_losses=0, delay_per_scheduled_s=1.0, p95_wait_s=1, worst_approach_wait_s=1,
+                max_approach_p95_wait_s=1)
+    seen = {}
+
+    def fake(tasks, workers, continue_on_error=False):
+        seen["continue"] = continue_on_error
+        return [None] + [dict(good, seed=t[0]["seed"]) for t in tasks[1:]]
+
+    monkeypatch.setattr(scheduling, "run_tasks", fake)
+    rows = ut.evaluate_candidate(spec, "phase_dqn_unified", 17, "x.json", ut.DQN_RECIPE, ".", 1)
+    assert seen["continue"] and len(rows) == len(ut.SEEDS["validation"]) - 1
+    ref = [dict(good, seed=s) for s in ut.SEEDS["validation"]]
+    result = validation_score(rows, ref, ["balanced"], ut.SEEDS["validation"])
+    assert not result["feasible"]

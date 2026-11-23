@@ -120,7 +120,8 @@ def evaluate_candidate(spec, algorithm, seed, path, recipe, root, workers):
     controller = dict(type=algorithm, model_path=str(path), learner_seed=seed, parameters={})
     tasks = [(dict(map=spec, scenario=c, seed=s, controller=controller), protocol, str(root))
              for c in spec["cases"] for s in SEEDS["validation"]]
-    return run_tasks(tasks, workers)
+    # A collision/teleport (InvalidRun) fails that case only: the candidate scores as incomplete -> infeasible.
+    return [r for r in run_tasks(tasks, workers, continue_on_error=True) if r is not None]
 
 
 def reference_rows(spec, recipe, root, workers):
