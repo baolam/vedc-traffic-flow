@@ -33,6 +33,7 @@ from src.simulation.runtime import InvalidRun, SumoRuntime
 
 NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
 MP_EXPLORE = float(os.environ.get("EDGEFLOW_MP_EXPLORE", 0))  # experiment: share of exploratory actions from max_pressure
+PRESSURE_BETA = float(os.environ.get("EDGEFLOW_PRESSURE_BETA", 0))  # experiment: node reward += beta * -|pressure|/20
 
 
 TRAIN_CHECK_EVERY = 25  # schema/readback cadence in training rollouts only; evaluation checks every step
@@ -162,10 +163,12 @@ def phase_episode(ctx):
         flow = flow_index(runtime.topology)
         scopes = mappo_family.reward_scopes(nodes) if NODE_REWARD else None
 
-        def node_reward(nid, dt):  # experiment: MAPPO's node_wait_v1 (own + fed approaches) plus the tail term
+        def node_reward(node, dt):  # experiment: MAPPO's node_wait_v1 (own + fed approaches) plus the tail term
+            nid = node["node_id"]
             items = {a["approach_id"]: a for t in runtime.telemetry.values() for a in t["approaches"]}
+            pressure = PRESSURE_BETA * node_pressure_reward(node, runtime.telemetry) if PRESSURE_BETA else 0.0
             return (-sum(runtime.approach_cost[a] for a in scopes[nid]) / (20 * dt)
-                    - tail_penalty([items[a] for a in scopes[nid]]))
+                    - tail_penalty([items[a] for a in scopes[nid]]) + pressure)
 
         mp = MaxPressureController() if MP_EXPLORE else None
 
@@ -201,7 +204,7 @@ def phase_episode(ctx):
             next_rows, next_masks = observe()
             for i, n in enumerate(nodes):
                 ctx.replay.add(s=rows[i], action=actions[i],
-                               reward=node_reward(n["node_id"], dt) if NODE_REWARD and ctx.reward_version == "wait_tail_v1"
+                               reward=node_reward(n, dt) if NODE_REWARD and ctx.reward_version == "wait_tail_v1"
                                else reward if ctx.reward_version == "wait_tail_v1"
                                else node_pressure_reward(n, runtime.telemetry) - tail_penalty(
                                    [a for a in runtime.telemetry[n["node_id"]]["approaches"]]),
