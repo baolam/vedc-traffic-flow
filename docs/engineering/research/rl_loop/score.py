@@ -13,8 +13,12 @@ NOISE_S = 3.0  # single-seed noise floor measured in the 2026-11-22 report
 
 def targets():
     data = json.loads(COMPARISON.read_text())
-    return {m: min((r["score"], c) for c, r in rows.items() if c in DETERMINISTIC and r.get("feasible"))
+    best = {m: min((r["score"], c) for c, r in rows.items() if c in DETERMINISTIC and r.get("feasible"))
             for m, rows in data.items()}
+    override = HERE / "targets.json"  # maps recalibrated after the report (Jakarta/Hanoi re-downloaded 2026-11-24)
+    if override.exists():
+        best.update({m: tuple(v) for m, v in json.loads(override.read_text()).items()})
+    return best
 
 
 def map_result(root, m, seed):

@@ -20,12 +20,12 @@
 | Min | Step | Command |
 |---|---|---|
 | 0–10 | Choose the top open hypothesis from the backlog. Implement it as **one env-gated change** (default off, so the baseline is unchanged). Run `make contracts` and the unit tests the change touches. | — |
-| 10–55 | Train the screening panel (cologne, Jakarta, HCM) in parallel: 3 jobs, CPU, 40 min wall limit plus a final validation. | `EDGEFLOW_<GATE>=… docs/engineering/research/rl_loop/run.sh itNN` |
+| 10–55 | Train all six maps in parallel: 6 jobs, CPU, 40 min wall limit plus a final validation. | `EDGEFLOW_<GATE>=… docs/engineering/research/rl_loop/run.sh itNN` |
 | 55–60 | Score the run, record it in the ledger, then keep or revert the change. | `python docs/engineering/research/rl_loop/score.py itNN "<hypothesis>" --record` |
 
 **Loop recipe:** `loop_dqn_recipe_v1` = DQN recipe v3 with `min_episodes 80, min_sim_s 0, validate_every 20, patience 4`. The campaign's 400-episode warmup hides phase DQN's early peak (episodes 60–120). In-training validation already uses the validation seeds and the guardrail against tuned Fixed-Time, so the selected score in `result.json` compares directly with the deterministic table. No separate evaluation pass is needed.
 
-**Panel:** cologne, Jakarta and HCM are the maps where E6 is closest to the target. They cost about 3–7 s per episode, so each gets a few hundred episodes in 40 min. grid4x4 (8.6 s/ep), Hanoi and 4-node are promotion maps only.
+**Panel:** all six maps, trained as 6 parallel jobs (user decision, 2026-11-24). The Jakarta and Hanoi OSM networks were re-downloaded on 2026-11-24 because the frozen originals were deleted with `artifacts/benchmarks/development`. Their topologies match the committed contracts, but the networks differ, so both maps were recalibrated with new workloads, references and deterministic baselines. Their targets come from `targets.json`, not from the report. The old data is in `artifacts/benchmarks/unified-v1/archive-osm-20261120/`. cologne, grid4x4 and 4-node were regenerated from committed sources and verified byte-identical.
 
 ## Decision rules
 
