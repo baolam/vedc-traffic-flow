@@ -21,6 +21,7 @@ from contracts.benchmark import DQN_RECIPE, OBSERVATION_SPEC as OBS, SEEDS, TIMI
 from src.benchmark.evidence import digest, file_hash, write_json
 from src.control.observation import flow_index, observe_node
 from src.control.phase_dqn import phase_mask
+from src.control.controllers import MaxPressureController
 from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
 from src.control.mappo_unified import MAPPO_ALGORITHMS
 from src.rl import cycle_family, mappo_family
@@ -31,6 +32,7 @@ from src.rl.stopping import Plateau
 from src.simulation.runtime import InvalidRun, SumoRuntime
 
 NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
+MP_EXPLORE = float(os.environ.get("EDGEFLOW_MP_EXPLORE", 0))  # experiment: share of exploratory actions from max_pressure
 
 
 TRAIN_CHECK_EVERY = 25  # schema/readback cadence in training rollouts only; evaluation checks every step
@@ -165,6 +167,17 @@ def phase_episode(ctx):
             return (-sum(runtime.approach_cost[a] for a in scopes[nid]) / (20 * dt)
                     - tail_penalty([items[a] for a in scopes[nid]]))
 
+        mp = MaxPressureController() if MP_EXPLORE else None
+
+        def explore(n, m):  # experiment: exploration follows max_pressure's (legal) choice with prob MP_EXPLORE
+            if mp is not None and rng.random() < MP_EXPLORE:
+                nid = n["node_id"]
+                target = mp.compute_command(nid, runtime.telemetry[nid], runtime.topology, runtime.telemetry)["target_phase_id"]
+                a = [p["phase_id"] for p in n["phases"]].index(target)
+                if m[a]:
+                    return a
+            return int(rng.choice(np.flatnonzero(m)))
+
         def observe():  # computed once per step and reused as the next step's state
             return ([pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes],
                     [np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]), (0, MAX_PHASES - len(n["phases"])))
@@ -176,9 +189,8 @@ def phase_episode(ctx):
             with torch.no_grad():
                 q = q_all(arch, ctx.net, ctx.tensor(np.stack(rows))).masked_fill(
                     ~ctx.tensor(np.stack(masks), torch.bool), -torch.inf).argmax(1).cpu().numpy()
-            eps, explore = ctx.epsilon(), rng.random(len(nodes))
-            actions = [int(rng.choice(np.flatnonzero(m))) if explore[i] < eps else int(q[i])
-                       for i, m in enumerate(masks)]
+            eps, draws = ctx.epsilon(), rng.random(len(nodes))
+            actions = [explore(nodes[i], m) if draws[i] < eps else int(q[i]) for i, m in enumerate(masks)]
             before = runtime.time
             try:
                 _, reward, terminated, truncated = runtime.step({n["node_id"]: actions[i] for i, n in enumerate(nodes)})
@@ -289,7 +301,8 @@ def train_run(spec, algorithm, seed, output, recipe=None, wall_limit_s=None, dev
         result = validation_score(rows, reference, cases, SEEDS["validation"])
         decision = plateau.update(result["score"], result["feasible"])
         entry = dict(episode=counters["episode"], sim_s=counters["sim_s"], decisions=counters["decisions"],
-                     updates=counters["updates"], score=result["score"], feasible=result["feasible"],
+                     updates=counters["updates"], feasible=result["feasible"],
+                     score=result["score"] if np.isfinite(result["score"]) else None,  # inf = invalid/incomplete; JSON-safe
                      reasons=result["reasons"], improved_best=decision["improved_best"], stale=plateau.stale)
         history.append(entry)
         nonlocal best

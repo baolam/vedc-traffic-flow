@@ -29,7 +29,7 @@ def map_result(root, m, seed):
     sel = r.get("selected")
     last = h[-1] if h else {}
     return dict(score=round(sel["score"], 1) if sel else None, episode=sel and sel["episode"],
-                best_infeasible=None if sel else min((x["score"] for x in h), default=None),
+                best_infeasible=None if sel else min((x["score"] for x in h if x["score"] is not None), default=None),
                 reasons=None if sel else last.get("reasons"), episodes=r["counters"]["episode"],
                 wall_min=round(r["counters"]["wall_s"] / 60), stop=r["stop_reason"])
 
