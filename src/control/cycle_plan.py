@@ -1,8 +1,14 @@
 """Native-phase fair-cycle timing: cycle length, green allocation and legal 5 s transfers."""
+import os
+
 from contracts.benchmark import CYCLE_RULE as R
+
+_CYCLE_G = os.environ.get("EDGEFLOW_CYCLE_G")  # experiment: cycle = phases * (g + clearance)
 
 
 def cycle_length(phases):
+    if _CYCLE_G:
+        return phases * (int(_CYCLE_G) + R["clearance_s"])
     return max(R["base_s"], R["per_phase_s"] * phases)
 
 

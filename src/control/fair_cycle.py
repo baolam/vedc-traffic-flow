@@ -1,8 +1,11 @@
 """Wait-aware cyclic timing with a hard minimum service allocation."""
 import math
+import os
 import uuid
 
 from .controllers import BaseController
+
+_OCC_K = float(os.environ.get("EDGEFLOW_OCC_K", 0))  # experiment: moving-vehicle proxy
 
 
 class FairCycleController(BaseController):
@@ -43,7 +46,8 @@ class FairCycleController(BaseController):
             demand = (float(item.get("queue_vehicles", 0))
                       + float(item.get("external_due_count", 0))
                       + (float(item.get("stopped_wait_sum_s", 0))
-                         + float(item.get("external_wait_sum_s", 0))) / 120.)
+                         + float(item.get("external_wait_sum_s", 0))) / 120.
+                      + _OCC_K * float(item.get("occupancy_ratio", 0)))
             downstream_occupancy = 0.
             to_node, to_approach = movement.get("to_node"), movement.get("to_approach")
             if to_node and to_approach and to_node in network_state:

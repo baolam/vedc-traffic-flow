@@ -1,4 +1,6 @@
 """Pieces shared by the DQN families (phase selection, cycle residual)."""
+import os
+
 import torch
 from torch import nn
 
@@ -23,3 +25,15 @@ def invalid_episode(ctx, error):
     ctx.counters["invalid_episodes"] += 1
     with (ctx.output / "invalid-episodes.jsonl").open("a") as handle:
         handle.write(json.dumps(dict(episode=ctx.counters["episode"], reason=str(error))) + "\n")
+
+
+_TAIL = tuple(float(x) for x in os.environ["EDGEFLOW_TAIL"].split(",")) if os.environ.get("EDGEFLOW_TAIL") else None
+
+
+def tail_penalty(items):
+    """Experiment: lambda * sum over approaches of the oldest wait beyond T seconds (per 60 s); 0 when disabled."""
+    if _TAIL is None:
+        return 0.0
+    lam, limit = _TAIL
+    return lam * sum(max(0.0, max(a["oldest_stopped_wait_s"], a["oldest_external_wait_s"]) - limit) / 60.0
+                     for a in items)

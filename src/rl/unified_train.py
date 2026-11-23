@@ -5,6 +5,7 @@ Test seeds are never touched: validation uses SEEDS["validation"] only.
 """
 import copy
 import json
+import os
 import shutil
 import random
 import time
@@ -23,11 +24,13 @@ from src.control.phase_dqn import phase_mask
 from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
 from src.control.mappo_unified import MAPPO_ALGORITHMS
 from src.rl import cycle_family, mappo_family
-from src.rl.dqn_common import invalid_episode, optimize_step
+from src.rl.dqn_common import invalid_episode, optimize_step, tail_penalty
 from src.rl.policy import NumpyPolicy
 from src.rl.selection import validation_score
 from src.rl.stopping import Plateau
 from src.simulation.runtime import InvalidRun, SumoRuntime
+
+NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
 
 
 TRAIN_CHECK_EVERY = 25  # schema/readback cadence in training rollouts only; evaluation checks every step
@@ -154,6 +157,12 @@ def phase_episode(ctx):
     try:
         nodes = runtime.topology["nodes"]
         flow = flow_index(runtime.topology)
+        scopes = mappo_family.reward_scopes(nodes) if NODE_REWARD else None
+
+        def node_reward(nid, dt):  # experiment: MAPPO's node_wait_v1 (own + fed approaches) plus the tail term
+            items = {a["approach_id"]: a for t in runtime.telemetry.values() for a in t["approaches"]}
+            return (-sum(runtime.approach_cost[a] for a in scopes[nid]) / (20 * dt)
+                    - tail_penalty([items[a] for a in scopes[nid]]))
 
         def observe():  # computed once per step and reused as the next step's state
             return ([pad_rows(observe_node(n, runtime.telemetry, flow)) for n in nodes],
@@ -179,8 +188,10 @@ def phase_episode(ctx):
             next_rows, next_masks = observe()
             for i, n in enumerate(nodes):
                 ctx.replay.add(s=rows[i], action=actions[i],
-                               reward=reward if ctx.reward_version == "wait_tail_v1"
-                               else node_pressure_reward(n, runtime.telemetry),
+                               reward=node_reward(n["node_id"], dt) if NODE_REWARD and ctx.reward_version == "wait_tail_v1"
+                               else reward if ctx.reward_version == "wait_tail_v1"
+                               else node_pressure_reward(n, runtime.telemetry) - tail_penalty(
+                                   [a for a in runtime.telemetry[n["node_id"]]["approaches"]]),
                                s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
             rows, masks = next_rows, next_masks
             c["sim_s"] += dt

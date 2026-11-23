@@ -24,7 +24,7 @@ from src.control.cycle_dqn import GRID, NOOP, FairCycleNativeController, candida
 from src.control.mappo_unified import HEADS, HIDDEN, NODE_DIM, REL_DIM, Graph, actor_logits, snapshot_features
 from src.control.observation import flow_index
 from src.rl.cycle_family import pad_greens
-from src.rl.dqn_common import invalid_episode
+from src.rl.dqn_common import invalid_episode, tail_penalty
 from src.rl.graph_mappo import masked_distribution
 from src.simulation.runtime import InvalidRun, SumoRuntime
 
@@ -271,8 +271,10 @@ def episode(ctx):
                 invalid_episode(ctx, error)
                 return False
             scale = 20 * (runtime.time - before)  # the runtime's scalar reward uses 20 * nodes * interval
+            items = {a["approach_id"]: a for t in runtime.telemetry.values() for a in t["approaches"]}
             for nid, p in pending.items():  # R = sum gamma_5 ** ((t_k - t_start) / 5) * r_k over the node's cycle
-                reward = -sum(runtime.approach_cost[a] for a in scopes[nid]) / scale
+                reward = (-sum(runtime.approach_cost[a] for a in scopes[nid]) / scale
+                          - tail_penalty([items[a] for a in scopes[nid]]))
                 p["ret"] += r["gamma_5"] ** ((before - p["t0"]) / r["reference_s"]) * reward
             c["sim_s"] += runtime.time - before
             c["decisions"] += 1
