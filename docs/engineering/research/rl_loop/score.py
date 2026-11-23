@@ -68,6 +68,7 @@ if __name__ == "__main__":
     print("verdict:", v)
     if a.record:
         row = dict(iteration=a.iteration, hypothesis=a.hypothesis, seed=a.seed, verdict=v, maps=new,
-                   gates=(root / "gates.env").read_text().split(), commit=(root / "commit").read_text().strip())
+                   gates=(root / "gates.env").read_text().split(), commit=(root / "commit").read_text().strip(),
+                   recipe=json.loads((root / "recipe.json").read_text()) if (root / "recipe.json").exists() else None)
         with LEDGER.open("a") as f:
             f.write(json.dumps(row) + "\n")
