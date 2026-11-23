@@ -28,8 +28,10 @@ if str(contracts_dir) not in sys.path:
 
 try:
     import contracts_sdk
+    import naming
 except ImportError:
     import contracts.contracts_sdk as contracts_sdk
+    import contracts.naming as naming
 
 def load_topology(topology_id: str = "four_intersection_v1") -> Dict[str, Any]:
     return contracts_sdk.load_topology(topology_id)
@@ -39,6 +41,13 @@ def load_schema(schema_name: str) -> Dict[str, Any]:
 
 def validate_payload(payload: Dict[str, Any], schema_name: str) -> None:
     contracts_sdk.validate_payload(payload, schema_name)
+
+def default_display_name(approach_id: str, display_names: Dict[str, str] = None) -> str:
+    """The Vietnamese-language name to show a human for this approach, falling back to the raw
+    id unchanged when it doesn't follow the compass naming convention -- see
+    contracts/naming.py. Used entirely offline (no network call) so it works on a vision device
+    disconnected from the central platform, same as load_topology above."""
+    return naming.default_display_name(approach_id, display_names)
 
 try:
     import topics

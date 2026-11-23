@@ -23,6 +23,7 @@ from typing import Dict, List, Optional
 
 import cv2
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 CURR_DIR = Path(__file__).resolve().parent
 if str(CURR_DIR) not in sys.path:
@@ -30,7 +31,7 @@ if str(CURR_DIR) not in sys.path:
 
 from vision.roi_config import RoiConfig, load_roi_config, save_roi_config, validate_against_topology  # noqa: E402
 from vision.video_source import create_video_source  # noqa: E402
-from vision_contracts_helper import load_topology  # noqa: E402
+from vision_contracts_helper import load_topology, default_display_name  # noqa: E402
 
 NODE_COLORS = [(0, 200, 255), (255, 120, 0), (0, 255, 120), (200, 0, 255)]
 
@@ -57,21 +58,62 @@ def capture_frame(video: str, width: int, height: int, out: Path,
     return frame
 
 
-def render_overlay(image: np.ndarray, config: RoiConfig) -> np.ndarray:
-    """Draws every calibrated polygon with its approach ID onto a copy of the image."""
+def _unicode_font(size: int) -> ImageFont.FreeTypeFont:
+    """A PIL TrueType font covering Vietnamese diacritics. cv2.putText's Hershey fonts are
+    ASCII-only -- they mangle "Hướng Bắc vào" into "H??ng B?c vào" -- so approach labels are
+    drawn with PIL instead (see render_overlay). Tries fonts that ship by default on Raspberry
+    Pi OS/Debian (DejaVu Sans) and on Windows/macOS, since this tool is also run on whatever
+    machine has a display, per the module docstring; falls back to PIL's built-in bitmap font
+    (ASCII only, the same degraded behavior this replaces) if none of them are installed."""
+    candidates = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Debian / Raspberry Pi OS
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",  # Windows
+        "C:/Windows/Fonts/arial.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",  # macOS
+    ]
+    for path in candidates:
+        try:
+            return ImageFont.truetype(path, size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def render_overlay(image: np.ndarray, config: RoiConfig,
+                    display_names: Optional[Dict[str, Dict[str, str]]] = None) -> np.ndarray:
+    """Draws every calibrated polygon onto a copy of the image, labeled with a human-readable
+    name (see contracts/naming.py) on top and the raw approach ID underneath in smaller text --
+    a technician matching this overlay against wiring/firmware docs (which use the raw ID)
+    still needs it visible. display_names is {node_id: {approach_id: display_name}}; pass None
+    (or omit an entry) to just label with the raw approach ID, same as before this was added."""
     if image.shape[:2] != (config.frame_size[1], config.frame_size[0]):
         image = cv2.resize(image, config.frame_size, interpolation=cv2.INTER_AREA)
     overlay = image.copy()
+    labels = []
     for index, (node_id, approaches) in enumerate(sorted(config.nodes.items())):
         color = NODE_COLORS[index % len(NODE_COLORS)]
+        node_names = (display_names or {}).get(node_id, {})
         for approach_id, polygon in approaches.items():
             points = np.array(polygon, np.int32)
             cv2.fillPoly(overlay, [points], color)
             cv2.polylines(image, [points], True, color, 2)
             cx, cy = points.mean(axis=0).astype(int)
-            cv2.putText(image, approach_id, (int(cx) - 30, int(cy)), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
-                        (255, 255, 255), 1, cv2.LINE_AA)
-    return cv2.addWeighted(overlay, 0.25, image, 0.75, 0)
+            friendly_name = default_display_name(approach_id, node_names)
+            labels.append((friendly_name, approach_id, int(cx), int(cy)))
+    blended = cv2.addWeighted(overlay, 0.25, image, 0.75, 0)
+
+    # Text needs real Unicode glyph rendering (Vietnamese diacritics), which cv2.putText can't
+    # do -- hand the text layer off to PIL, then convert back to the BGR array every caller
+    # (cv2.imwrite, the "check" CLI command) expects.
+    pil_image = Image.fromarray(cv2.cvtColor(blended, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(pil_image)
+    font, font_small = _unicode_font(15), _unicode_font(12)
+    for friendly_name, approach_id, cx, cy in labels:
+        draw.text((cx - 30, cy - 18), friendly_name, font=font, fill=(255, 255, 255))
+        if friendly_name != approach_id:
+            draw.text((cx - 30, cy + 2), approach_id, font=font_small, fill=(200, 200, 200))
+    return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
 
 def draw_polygons(image: np.ndarray, approach_order: List[str]) -> Dict[str, List[List[int]]]:
@@ -164,15 +206,21 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"Saved {args.out}")
         return 0
 
+    topology = load_topology(args.topology)
     config = load_roi_config(args.config)
-    validate_against_topology(config, load_topology(args.topology), node_ids)
+    validate_against_topology(config, topology, node_ids)
     print(f"OK: {args.config} covers {', '.join(node_ids)} at {config.frame_size[0]}x{config.frame_size[1]} "
           f"(sha256 {config.sha256})")
     if args.image and args.out:
         image = cv2.imread(str(args.image))
         if image is None:
             raise FileNotFoundError(args.image)
-        cv2.imwrite(str(args.out), render_overlay(image, config))
+        topo_nodes = {n["node_id"]: n for n in topology.get("nodes", [])}
+        display_names = {
+            node_id: topo_nodes[node_id].get("approach_display_names", {})
+            for node_id in node_ids if node_id in topo_nodes
+        }
+        cv2.imwrite(str(args.out), render_overlay(image, config, display_names))
         print(f"Overlay written to {args.out}")
     return 0
 

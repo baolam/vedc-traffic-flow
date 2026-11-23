@@ -12,9 +12,9 @@ function fmtTime(ms) {
 // ---------------------------------------------------------------------------
 // Tabs
 // ---------------------------------------------------------------------------
-$$(".tab-btn").forEach((btn) => {
+$$(".switch").forEach((btn) => {
   btn.addEventListener("click", () => {
-    $$(".tab-btn").forEach((b) => b.classList.remove("active"));
+    $$(".switch").forEach((b) => b.classList.remove("active"));
     $$(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     $(`#tab-${btn.dataset.tab}`).classList.add("active");
@@ -29,9 +29,16 @@ let knownNodeIds = [];
 function renderStreams(nodeIds) {
   if (JSON.stringify(nodeIds) === JSON.stringify(knownNodeIds)) return;
   knownNodeIds = nodeIds;
-  $("#streams").innerHTML = nodeIds.map(
-    (id) => `<div><div class="muted">${id}</div><img src="/stream/${id}" alt="live stream ${id}" /></div>`
-  ).join("");
+  $("#streams").innerHTML = nodeIds.map((id) => `
+    <div class="video-screen">
+      <img src="/stream/${id}" alt="live stream ${id}" />
+      <div class="hud-bar">
+        <span class="hud-dot" aria-hidden="true"></span>
+        <span class="hud-node">${id}</span>
+        <span class="hud-fps" data-hud-fps>-- fps</span>
+      </div>
+    </div>
+  `).join("");
 }
 
 function renderRuntimeCards(stats, health) {
@@ -48,6 +55,7 @@ function renderRuntimeCards(stats, health) {
   $("#runtime-cards").innerHTML = cards.map(
     ([label, value]) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div></div>`
   ).join("");
+  $$("[data-hud-fps]").forEach((el) => { el.textContent = `${stats.processed_fps ?? "--"} fps`; });
 }
 
 function setStatusPill(ok, text) {
@@ -63,7 +71,9 @@ async function pollStatus() {
     const data = await res.json();
     renderStreams(data.node_ids || []);
     renderRuntimeCards(data.stats || {}, data.last_health);
-    setStatusPill(true, (data.last_health && data.last_health.status) || "RUNNING");
+    setStatusPill(true, (data.last_health && data.last_health.status) || "running");
+    $("#node-id-label").textContent = (data.node_ids && data.node_ids[0]) || "--";
+    $("#status-time").textContent = new Date().toLocaleTimeString();
     if (!$("#conf-threshold").value && data.identity) {
       $("#conf-threshold").value = data.identity.confidence_threshold || "";
     }
@@ -77,10 +87,15 @@ setInterval(pollStatus, 2000);
 // ---------------------------------------------------------------------------
 // Controls
 // ---------------------------------------------------------------------------
+function setFeedback(el, ok, text) {
+  el.textContent = text;
+  el.className = "feedback " + (ok ? "ok" : "err");
+}
+
 $("#btn-restart").addEventListener("click", async () => {
-  $("#control-feedback").textContent = "Restarting...";
+  setFeedback($("#control-feedback"), true, "Restarting...");
   const res = await fetch("/api/control/restart", { method: "POST" });
-  $("#control-feedback").textContent = res.ok ? "Restart requested." : "Restart failed.";
+  setFeedback($("#control-feedback"), res.ok, res.ok ? "Restart requested." : "Restart failed.");
 });
 
 $("#btn-apply-conf").addEventListener("click", async () => {
@@ -91,7 +106,7 @@ $("#btn-apply-conf").addEventListener("click", async () => {
     body: JSON.stringify({ confidence_threshold: value }),
   });
   const body = await res.json();
-  $("#control-feedback").textContent = res.ok ? "Applied." : `Failed: ${body.detail}`;
+  setFeedback($("#control-feedback"), res.ok, res.ok ? "Applied." : `Failed: ${body.detail}`);
 });
 
 // ---------------------------------------------------------------------------
@@ -129,7 +144,7 @@ refreshTelemetry(); refreshHealth(); refreshEvents();
 // ---------------------------------------------------------------------------
 // ROI calibration
 // ---------------------------------------------------------------------------
-let roiState = { frameSize: [640, 480], approaches: {}, polygons: {}, currentPoints: [] };
+let roiState = { frameSize: [640, 480], approaches: {}, approachDisplayNames: {}, polygons: {}, currentPoints: [] };
 
 function roiKey() {
   return `${$("#roi-node").value}::${$("#roi-approach").value}`;
@@ -165,9 +180,27 @@ function redrawRoiCanvas() {
   };
 
   Object.entries(roiState.polygons).forEach(([key, points]) => {
-    drawPoly(points, key === roiKey() ? "#0284c7" : "#16a34a", true);
+    drawPoly(points, key === roiKey() ? "#4fa3c7" : "#3f8f63", true);
   });
-  drawPoly(roiState.currentPoints, "#dc2626", false);
+  drawPoly(roiState.currentPoints, "#b8503d", false);
+  renderRoiLegend();
+}
+
+function roiDisplayName(nodeId, approachId) {
+  return (roiState.approachDisplayNames[nodeId] || {})[approachId] || approachId;
+}
+
+function renderRoiLegend() {
+  const items = [];
+  Object.entries(roiState.approaches).forEach(([nodeId, approaches]) => {
+    approaches.forEach((a) => {
+      const done = !!roiState.polygons[`${nodeId}::${a}`];
+      const name = roiDisplayName(nodeId, a);
+      const label = name === a ? `${nodeId} / ${a}` : `${nodeId} / ${name} (${a})`;
+      items.push(`<li class="${done ? "done" : "pending"}"><span class="dot"></span>${label}</li>`);
+    });
+  });
+  $("#roi-legend").innerHTML = items.join("") || `<li class="muted">No approaches loaded yet.</li>`;
 }
 
 async function loadRoi() {
@@ -175,6 +208,7 @@ async function loadRoi() {
   const data = await res.json();
   roiState.frameSize = data.frame_size;
   roiState.approaches = data.approaches;
+  roiState.approachDisplayNames = data.approach_display_names || {};
   roiState.polygons = {};
   if (data.current) {
     Object.entries(data.current.nodes).forEach(([nodeId, apps]) => {
@@ -189,8 +223,11 @@ async function loadRoi() {
   redrawRoiCanvas();
 }
 function updateApproachOptions() {
-  const approaches = roiState.approaches[$("#roi-node").value] || [];
-  $("#roi-approach").innerHTML = approaches.map((a) => `<option value="${a}">${a}</option>`).join("");
+  const nodeId = $("#roi-node").value;
+  const approaches = roiState.approaches[nodeId] || [];
+  $("#roi-approach").innerHTML = approaches.map(
+    (a) => `<option value="${a}">${roiDisplayName(nodeId, a)}</option>`
+  ).join("");
 }
 $("#roi-node").addEventListener("change", () => { updateApproachOptions(); redrawRoiCanvas(); });
 $("#roi-approach").addEventListener("change", redrawRoiCanvas);
@@ -200,15 +237,25 @@ $("#btn-roi-refresh-snapshot").addEventListener("click", () => {
   if (nodeId) $("#roi-snapshot").src = `/snapshot/${nodeId}?t=${Date.now()}`;
 });
 
-$("#roi-canvas").addEventListener("click", (e) => {
+function roiPointFromEvent(e) {
   const canvas = $("#roi-canvas");
   const rect = canvas.getBoundingClientRect();
   const sx = roiState.frameSize[0] / canvas.width;
   const sy = roiState.frameSize[1] / canvas.height;
-  const x = Math.round((e.clientX - rect.left) * sx);
-  const y = Math.round((e.clientY - rect.top) * sy);
-  roiState.currentPoints.push([x, y]);
+  return [Math.round((e.clientX - rect.left) * sx), Math.round((e.clientY - rect.top) * sy)];
+}
+
+$("#roi-canvas").addEventListener("click", (e) => {
+  roiState.currentPoints.push(roiPointFromEvent(e));
   redrawRoiCanvas();
+});
+
+$("#roi-canvas").addEventListener("mousemove", (e) => {
+  const [x, y] = roiPointFromEvent(e);
+  $("#roi-coords").textContent = `x ${x}  y ${y}`;
+});
+$("#roi-canvas").addEventListener("mouseleave", () => {
+  $("#roi-coords").textContent = "x --  y --";
 });
 
 $("#btn-roi-undo").addEventListener("click", () => {
@@ -218,12 +265,12 @@ $("#btn-roi-undo").addEventListener("click", () => {
 
 $("#btn-roi-close-polygon").addEventListener("click", () => {
   if (roiState.currentPoints.length < 3) {
-    $("#roi-feedback").textContent = "A polygon needs at least 3 points.";
+    setFeedback($("#roi-feedback"), false, "A polygon needs at least 3 points.");
     return;
   }
   roiState.polygons[roiKey()] = roiState.currentPoints;
   roiState.currentPoints = [];
-  $("#roi-feedback").textContent = `Polygon saved for ${roiKey()}. Pick the next approach.`;
+  setFeedback($("#roi-feedback"), true, `Polygon saved for ${roiKey()}. Pick the next approach.`);
   redrawRoiCanvas();
 });
 
@@ -238,7 +285,7 @@ $("#btn-roi-save").addEventListener("click", async () => {
     ([nodeId, approaches]) => approaches.some((a) => !(nodes[nodeId] && nodes[nodeId][a]))
   );
   if (missing.length) {
-    $("#roi-feedback").textContent = `Missing polygons for: ${missing.map(([n]) => n).join(", ")}`;
+    setFeedback($("#roi-feedback"), false, `Missing polygons for: ${missing.map(([n]) => n).join(", ")}`);
     return;
   }
   const res = await fetch("/api/roi", {
@@ -247,7 +294,7 @@ $("#btn-roi-save").addEventListener("click", async () => {
     body: JSON.stringify({ camera: "local_dashboard", frame_size: roiState.frameSize, nodes }),
   });
   const body = await res.json();
-  $("#roi-feedback").textContent = res.ok ? `Saved to ${body.path}. Pipeline reloading.` : `Failed: ${body.detail}`;
+  setFeedback($("#roi-feedback"), res.ok, res.ok ? `Saved to ${body.path}. Pipeline reloading.` : `Failed: ${body.detail}`);
 });
 
 loadRoi();

@@ -105,3 +105,4 @@ def test_single_class_model_detects_and_maps_box_back_to_frame(monkeypatch, mode
 
     assert boxes == [(600, 340, 80, 40)]
     assert detector.last_scores == pytest.approx([0.9])
+    assert detector.last_class_ids == [0]

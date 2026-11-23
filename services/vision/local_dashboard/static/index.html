@@ -2,88 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>EdgeFlow AI -- Vision Local Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EdgeFlow AI — Vision Local Dashboard</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header>
-    <h1>EdgeFlow AI <span class="muted">/ Vision Local Dashboard</span></h1>
-    <div id="status-pill" class="pill neutral">connecting...</div>
-  </header>
-
-  <nav class="tabs">
-    <button class="tab-btn active" data-tab="live">Live</button>
-    <button class="tab-btn" data-tab="history">History</button>
-    <button class="tab-btn" data-tab="roi">ROI Calibration</button>
-  </nav>
-
-  <main>
-    <section id="tab-live" class="tab-panel active">
-      <div class="grid">
-        <div class="card">
-          <h2>Video Stream</h2>
-          <div id="streams"></div>
-        </div>
-        <div class="card">
-          <h2>Runtime</h2>
-          <div id="runtime-cards" class="stat-cards"></div>
-        </div>
-        <div class="card">
-          <h2>Controls</h2>
-          <button id="btn-restart">Restart Pipeline</button>
-          <div class="control-row">
-            <label for="conf-threshold">Confidence threshold</label>
-            <input id="conf-threshold" type="number" min="0.01" max="0.99" step="0.01" />
-            <button id="btn-apply-conf">Apply</button>
-          </div>
-          <div id="control-feedback" class="muted"></div>
-        </div>
+  <div class="rig">
+    <header class="nameplate">
+      <div class="nameplate-id">
+        <span class="brand">EdgeFlow AI</span>
+        <span class="unit">Vision node — local dashboard</span>
       </div>
-    </section>
+      <div class="nameplate-readout">
+        <span id="node-id-label" class="node-id">--</span>
+        <span id="status-pill" class="pill neutral">connecting</span>
+      </div>
+      <div class="nameplate-time">
+        <span class="muted">Last poll</span>
+        <span id="status-time" class="mono">--:--:--</span>
+      </div>
+    </header>
 
-    <section id="tab-history" class="tab-panel">
-      <div class="grid">
-        <div class="card">
-          <h2>Telemetry History</h2>
-          <button id="btn-refresh-telemetry">Refresh</button>
+    <nav class="switchbank">
+      <button class="switch active" data-tab="live">Live</button>
+      <button class="switch" data-tab="history">History</button>
+      <button class="switch" data-tab="roi">ROI Calibration</button>
+    </nav>
+
+    <main>
+      <section id="tab-live" class="tab-panel active">
+        <div class="live-layout">
+          <div id="streams" class="streams"></div>
+          <div class="ledger-col">
+            <div class="ledger-block">
+              <h2>Runtime</h2>
+              <div id="runtime-cards" class="stat-cards"></div>
+            </div>
+            <div class="ledger-block">
+              <h2>Controls</h2>
+              <button id="btn-restart" class="btn-primary">Restart pipeline</button>
+              <div class="field-row">
+                <label for="conf-threshold">Confidence threshold</label>
+                <div class="field-input">
+                  <input id="conf-threshold" type="number" min="0.01" max="0.99" step="0.01" />
+                  <button id="btn-apply-conf">Apply</button>
+                </div>
+              </div>
+              <p id="control-feedback" class="feedback"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-history" class="tab-panel">
+        <div class="ledger-sheet">
+          <div class="ledger-sheet-head">
+            <h2>Telemetry history</h2>
+            <button id="btn-refresh-telemetry">Refresh</button>
+          </div>
           <table id="telemetry-table"><thead><tr><th>Time</th><th>Node</th><th>Phase</th><th>Approaches</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="card">
-          <h2>Health History</h2>
-          <button id="btn-refresh-health">Refresh</button>
+        <div class="ledger-sheet">
+          <div class="ledger-sheet-head">
+            <h2>Health history</h2>
+            <button id="btn-refresh-health">Refresh</button>
+          </div>
           <table id="health-table"><thead><tr><th>Time</th><th>Status</th><th>FPS</th><th>CPU temp</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="card">
-          <h2>Event Log</h2>
-          <button id="btn-refresh-events">Refresh</button>
+        <div class="ledger-sheet">
+          <div class="ledger-sheet-head">
+            <h2>Event log</h2>
+            <button id="btn-refresh-events">Refresh</button>
+          </div>
           <table id="events-table"><thead><tr><th>Time</th><th>Event</th><th>Detail</th></tr></thead><tbody></tbody></table>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="tab-roi" class="tab-panel">
-      <div class="card">
-        <h2>ROI Calibration</h2>
-        <p class="muted">Click on the image to add a polygon point for the selected node/approach. Close a
-          polygon, pick the next approach, repeat for every approach of every active node, then Save.</p>
+      <section id="tab-roi" class="tab-panel">
+        <h2>ROI calibration</h2>
+        <p class="roi-note">Click the image to plot a polygon point for the selected node and approach. Close
+          the polygon, pick the next approach, and repeat for every approach of every active node, then save.</p>
         <div class="control-row">
           <label for="roi-node">Node</label>
           <select id="roi-node"></select>
           <label for="roi-approach">Approach</label>
           <select id="roi-approach"></select>
-          <button id="btn-roi-refresh-snapshot">Refresh Snapshot</button>
-          <button id="btn-roi-close-polygon">Close Polygon</button>
-          <button id="btn-roi-undo">Undo Point</button>
-          <button id="btn-roi-save">Save ROI</button>
+          <button id="btn-roi-refresh-snapshot">Refresh snapshot</button>
+          <button id="btn-roi-close-polygon">Close polygon</button>
+          <button id="btn-roi-undo">Undo point</button>
+          <button id="btn-roi-save" class="btn-primary btn-inline">Save ROI</button>
         </div>
-        <div id="roi-canvas-wrap">
-          <img id="roi-snapshot" alt="latest camera snapshot" />
-          <canvas id="roi-canvas"></canvas>
+        <div class="roi-layout">
+          <div id="roi-canvas-wrap">
+            <img id="roi-snapshot" alt="latest camera snapshot" />
+            <canvas id="roi-canvas"></canvas>
+            <div id="roi-coords" class="roi-coords">x --  y --</div>
+          </div>
+          <div class="roi-side">
+            <div>
+              <h2>Approaches</h2>
+              <ul id="roi-legend" class="legend"></ul>
+            </div>
+            <p id="roi-feedback" class="feedback"></p>
+          </div>
         </div>
-        <div id="roi-feedback" class="muted"></div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <script src="/app.js"></script>
 </body>

@@ -140,6 +140,14 @@ class TestRoi:
         assert body["approaches"]["J1"] == ["J1_N_IN", "J1_S_IN", "J1_E_IN", "J1_W_IN"]
         assert body["current"] is None
 
+        # Computed entirely offline from the compass convention (contracts/naming.py), even
+        # though this fake node never declares approach_display_names itself -- never an empty
+        # dict, so the ROI calibration UI always has a friendly label to show.
+        assert body["approach_display_names"]["J1"] == {
+            "J1_N_IN": "Hướng Bắc vào", "J1_S_IN": "Hướng Nam vào",
+            "J1_E_IN": "Hướng Đông vào", "J1_W_IN": "Hướng Tây vào",
+        }
+
     def test_post_roi_invalid_rejected_and_not_enqueued(self, client, tmp_path):
         c, supervisor = client
         supervisor.roi_config_path = str(tmp_path / "roi.json")

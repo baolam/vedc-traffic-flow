@@ -28,6 +28,7 @@ class VehicleDetector:
         self.kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         self.net = None
         self.last_scores = []
+        self.last_class_ids = []
         self.last_timings = {}
         self.model_sha256 = None
         if model_path:
@@ -103,6 +104,7 @@ class VehicleDetector:
             rows.append(array)
         if not rows:
             self.last_scores = []
+            self.last_class_ids = []
             return []
         predictions = np.concatenate(rows, axis=0)
         class_ids = np.argmax(predictions[:, offset:], axis=1)
@@ -114,6 +116,7 @@ class VehicleDetector:
         selected, scores, class_ids = predictions[keep, :4].copy(), scores[keep], class_ids[keep]
         if not len(selected):
             self.last_scores = []
+            self.last_class_ids = []
             return []
         if self.output_format == "legacy":
             selected *= self.input_size
@@ -136,11 +139,12 @@ class VehicleDetector:
                 retained.extend(indices[np.asarray(nms).reshape(-1)].tolist())
         retained.sort(key=lambda i: float(scores[i]), reverse=True)
         self.last_scores = [float(scores[i]) for i in retained]
+        self.last_class_ids = [int(class_ids[i]) for i in retained]
         return [tuple(int(x) for x in boxes[i]) for i in retained]
 
     def detect(self, frame):
         if frame is None or frame.size == 0:
-            self.last_scores, self.last_timings = [], {}
+            self.last_scores, self.last_class_ids, self.last_timings = [], [], {}
             return [], 0.0
         started = time.perf_counter()
         if self.net is not None:
@@ -167,6 +171,7 @@ class VehicleDetector:
                     x, y, bw, bh = cv2.boundingRect(contour)
                     boxes.append((round(x * sx), round(y * sy), round(bw * sx), round(bh * sy)))
             self.last_scores = []  # Motion contours have no learned confidence score.
+            self.last_class_ids = []  # Motion contours have no class id either.
         finished = time.perf_counter()
         self.last_timings = {"preprocess_ms": (preprocessed - started) * 1000,
                              "inference_ms": (inferred - preprocessed) * 1000,

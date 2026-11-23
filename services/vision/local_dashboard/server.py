@@ -25,9 +25,9 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import uvicorn
 
 try:
-    from vision_contracts_helper import load_topology
+    from vision_contracts_helper import load_topology, default_display_name
 except ImportError:
-    from services.vision.vision_contracts_helper import load_topology
+    from services.vision.vision_contracts_helper import load_topology, default_display_name
 
 
 def _roi_helpers():
@@ -178,6 +178,17 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
         return {
             "frame_size": [supervisor.engine.width, supervisor.engine.height],
             "approaches": {n["node_id"]: n.get("approaches", []) for n in supervisor.active_nodes},
+            # Computed fully offline from the same topology data active_nodes already carries
+            # (see contracts/naming.py) -- the static UI reads this purely for display, never
+            # as a lookup key, so "approaches" above stays the untouched raw-id list it always
+            # was.
+            "approach_display_names": {
+                n["node_id"]: {
+                    a: default_display_name(a, n.get("approach_display_names", {}))
+                    for a in n.get("approaches", [])
+                }
+                for n in supervisor.active_nodes
+            },
             "current": {
                 "camera": roi.camera,
                 "frame_size": list(roi.frame_size),
