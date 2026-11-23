@@ -10,6 +10,8 @@ from src.rl.policy import NumpyPolicy
 from .controllers import BaseController
 
 MAX_RED_S = float(os.environ.get("EDGEFLOW_MAX_RED", 0))  # experiment: force service of an approach stopped > T s
+# experiment: max-red also counts vehicles held outside the map (simulation-only signal, matches the tail metrics)
+MAX_RED_EXTERNAL = os.environ.get("EDGEFLOW_MAX_RED_EXTERNAL") == "1"
 
 
 def phase_mask(node, telemetry):
@@ -27,7 +29,9 @@ def phase_mask(node, telemetry):
     if not mask.any():
         raise ValueError("No legal signal phase")
     if MAX_RED_S and mask.sum() > 1:
-        waits = {a["approach_id"]: a.get("oldest_stopped_wait_s", 0.0) for a in telemetry["approaches"]}
+        waits = {a["approach_id"]: max(a.get("oldest_stopped_wait_s", 0.0),
+                                       a.get("oldest_external_wait_s", 0.0) if MAX_RED_EXTERNAL else 0.0)
+                 for a in telemetry["approaches"]}
         worst = max(waits, key=waits.get)
         serve = mask & np.array([worst in p["approaches"] for p in node["phases"]])
         if waits[worst] > MAX_RED_S and serve.any():

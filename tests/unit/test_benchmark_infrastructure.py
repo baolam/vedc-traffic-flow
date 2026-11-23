@@ -274,3 +274,16 @@ def test_max_red_restricts_mask_to_the_starved_approach(monkeypatch):
     assert pd.phase_mask(node, t).tolist() == [True, True, True]
     t["elapsed_green_s"] = 5  # min green still wins
     assert pd.phase_mask(node, t).tolist() == [True, False, False]
+
+
+def test_max_red_external_counts_vehicles_held_outside(monkeypatch):
+    import src.control.phase_dqn as pd
+
+    node = dict(phases=[dict(phase_id=f"p{i}", approaches=[f"a{i}"], movements=[]) for i in range(2)])
+    t = dict(current_phase_id="p0", signal_state="GREEN", elapsed_green_s=20,
+             approaches=[dict(approach_id="a0", oldest_stopped_wait_s=0, oldest_external_wait_s=0),
+                         dict(approach_id="a1", oldest_stopped_wait_s=10, oldest_external_wait_s=90)])
+    monkeypatch.setattr(pd, "MAX_RED_S", 40.0)
+    assert pd.phase_mask(node, t).tolist() == [True, True]  # stopped wait alone is below T
+    monkeypatch.setattr(pd, "MAX_RED_EXTERNAL", True)
+    assert pd.phase_mask(node, t).tolist() == [False, True]
