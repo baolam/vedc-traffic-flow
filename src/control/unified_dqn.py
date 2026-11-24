@@ -14,13 +14,19 @@ FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 
 
 PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
-MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: max_pressure residual; nan = off
-_MP = MaxPressureController()
+MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: residual on a base controller; nan = off
+RESIDUAL_BASE = os.environ.get("EDGEFLOW_RESIDUAL_BASE", "max_pressure")  # experiment: the residual's default policy
+_BASE = []
 
 
-def max_pressure_index(node, telemetry, view, topology):
-    """Index of max_pressure's target phase for this node (the residual's default action)."""
-    target = _MP.compute_command(node["node_id"], telemetry, topology, view)["target_phase_id"]
+def base_index(node, telemetry, view, topology):
+    """Index of the base controller's target phase for this node (the residual's default action)."""
+    if not _BASE:
+        from .factory import create_controller  # lazy: factory imports this module
+
+        _BASE.append(MaxPressureController() if RESIDUAL_BASE == "max_pressure" else create_controller(RESIDUAL_BASE))
+    target = _BASE[0].compute_command(node["node_id"], telemetry, topology, view,
+                                      current_time_s=telemetry["timestamp_ms"] / 1000)["target_phase_id"]
     return [p["phase_id"] for p in node["phases"]].index(target)
 
 
@@ -91,7 +97,7 @@ class UnifiedDQNController(BaseController):
                               observe_node(node, view, self._flow(topology), self.radius))
         mask = phase_mask(node, telemetry)
         choice = (int(np.argmax(np.where(mask, values, -np.inf))) if np.isnan(MP_MARGIN)
-                  else residual_choice(values, mask, max_pressure_index(node, telemetry, view, topology)))
+                  else residual_choice(values, mask, base_index(node, telemetry, view, topology)))
         return dict(command_id=str(uuid.uuid4()), node_id=node["node_id"],
                     target_phase_id=node["phases"][choice]["phase_id"],
                     min_green_s=TIMING["min_green_s"], max_green_s=TIMING["max_green_s"], controller=self.name)

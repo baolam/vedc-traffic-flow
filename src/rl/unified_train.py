@@ -196,7 +196,7 @@ def phase_episode(ctx):
             eps, draws = ctx.epsilon(), rng.random(len(nodes))
             if not np.isnan(unified_dqn.MP_MARGIN):  # experiment: greedy action = max_pressure residual
                 q = [unified_dqn.residual_choice(qv[i][:len(n["phases"])], masks[i][:len(n["phases"])],
-                                                 unified_dqn.max_pressure_index(n, runtime.telemetry[n["node_id"]],
+                                                 unified_dqn.base_index(n, runtime.telemetry[n["node_id"]],
                                                                                 runtime.telemetry, runtime.topology))
                      for i, n in enumerate(nodes)]
             actions = [explore(nodes[i], m) if draws[i] < eps else int(q[i]) for i, m in enumerate(masks)]
