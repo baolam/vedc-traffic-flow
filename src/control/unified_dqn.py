@@ -16,25 +16,39 @@ FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
 MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: residual on a base controller; nan = off
 RESIDUAL_BASE = os.environ.get("EDGEFLOW_RESIDUAL_BASE", "max_pressure")  # experiment: the residual's default policy
-_BASE = []
+RESIDUAL_ALT = os.environ.get("EDGEFLOW_RESIDUAL_ALT", "")  # experiment: overrides may only pick this controller's phase
+_BASES = {}  # controller name -> [controller, last sim time seen]
+
+
+def controller_index(name, node, telemetry, view, topology):
+    """Index of a factory controller's target phase for this node."""
+    if name not in _BASES:
+        from .factory import create_controller  # lazy: factory imports this module
+
+        _BASES[name] = [MaxPressureController() if name == "max_pressure" else create_controller(name), -1.0]
+    entry = _BASES[name]
+    now = telemetry["timestamp_ms"] / 1000
+    if now < entry[1]:  # sim clock went back: a new run in this process, so drop the controller's per-node timers
+        entry[0].reset()
+    entry[1] = now
+    target = entry[0].compute_command(node["node_id"], telemetry, topology, view, current_time_s=now)["target_phase_id"]
+    return [p["phase_id"] for p in node["phases"]].index(target)
 
 
 def base_index(node, telemetry, view, topology):
     """Index of the base controller's target phase for this node (the residual's default action)."""
-    if not _BASE:
-        from .factory import create_controller  # lazy: factory imports this module
-
-        _BASE.extend([MaxPressureController() if RESIDUAL_BASE == "max_pressure" else create_controller(RESIDUAL_BASE), -1.0])
-    now = telemetry["timestamp_ms"] / 1000
-    if now < _BASE[1]:  # sim clock went back: a new run in this process, so drop the base's per-node timers
-        _BASE[0].reset()
-    _BASE[1] = now
-    target = _BASE[0].compute_command(node["node_id"], telemetry, topology, view, current_time_s=now)["target_phase_id"]
-    return [p["phase_id"] for p in node["phases"]].index(target)
+    return controller_index(RESIDUAL_BASE, node, telemetry, view, topology)
 
 
-def residual_choice(values, mask, mp_index):
-    """Greedy legal phase, except keep max_pressure's legal phase unless the best Q beats it by MP_MARGIN * |Q|."""
+def alt_index(node, telemetry, view, topology):
+    return controller_index(RESIDUAL_ALT, node, telemetry, view, topology) if RESIDUAL_ALT else None
+
+
+def residual_choice(values, mask, mp_index, alt=None):
+    """Greedy legal phase, except keep the base's legal phase unless the best Q beats it by MP_MARGIN * |Q|.
+    With an alt index (RESIDUAL_ALT), the only allowed override is the alt controller's phase."""
+    if alt is not None and not np.isnan(MP_MARGIN) and mask[mp_index]:
+        mask = mask & np.isin(np.arange(len(mask)), (mp_index, alt))
     masked = np.where(mask, values, -np.inf)
     best = int(np.argmax(masked))
     if np.isnan(MP_MARGIN) or not mask[mp_index]:
@@ -100,7 +114,8 @@ class UnifiedDQNController(BaseController):
                               observe_node(node, view, self._flow(topology), self.radius))
         mask = phase_mask(node, telemetry)
         choice = (int(np.argmax(np.where(mask, values, -np.inf))) if np.isnan(MP_MARGIN)
-                  else residual_choice(values, mask, base_index(node, telemetry, view, topology)))
+                  else residual_choice(values, mask, base_index(node, telemetry, view, topology),
+                                    alt_index(node, telemetry, view, topology)))
         return dict(command_id=str(uuid.uuid4()), node_id=node["node_id"],
                     target_phase_id=node["phases"][choice]["phase_id"],
                     min_green_s=TIMING["min_green_s"], max_green_s=TIMING["max_green_s"], controller=self.name)

@@ -95,3 +95,5 @@ Stopped at it18: a confirmed WIN on 2 maps (stop rule). The flow_theory residual
 | R7 | Cheaper validation for the wall-capped maps (grid4x4 and HCM always hit 40 min) | recipe `validate_every_episodes` | grid4x4, HCM |
 | R8 | n-step returns | `EDGEFLOW_NSTEP` | credit assignment |
 | R9 | Residual on actuated for 4-node | `EDGEFLOW_RESIDUAL_BASE=actuated` | 4-node |
+| R10 | max_queue as the base: with max-red it passes Jakarta's tails (it21 showed flow_theory's tails are what fail Jakarta) | `EDGEFLOW_RESIDUAL_BASE=max_queue` | Jakarta |
+| R11 | Two-expert residual: an override may only take max_pressure's phase, so DQN learns when to trust flow_theory vs max_pressure | `EDGEFLOW_RESIDUAL_ALT=max_pressure` | grid4x4, HCM (max_pressure maps) without losing cologne/Hanoi |

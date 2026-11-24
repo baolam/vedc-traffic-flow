@@ -113,6 +113,9 @@ def test_max_pressure_residual_keeps_mp_unless_q_beats_it_by_margin(monkeypatch)
     monkeypatch.setattr(ud, "MP_MARGIN", 0.01)
     assert ud.residual_choice(q, mask, 0) == 1  # gain 2 > 1: deviate
     assert ud.residual_choice(q, mask, 2) == 1  # max_pressure's phase illegal: greedy
+    q3, all3 = np.array([-100.0, -50.0, -90.0]), np.array([True, True, True])
+    assert ud.residual_choice(q3, all3, 0, 2) == 2  # best phase 1 is not the alt's: the alt (gain 10) wins
+    assert ud.residual_choice(q3, all3, 0, 0) == 0  # alt agrees with the base
 
 
 def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):
@@ -121,7 +124,8 @@ def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):
     calls = []
     base = SimpleNamespace(reset=lambda: calls.append("reset"),
                            compute_command=lambda nid, t, topo, view, current_time_s: {"target_phase_id": "B"})
-    monkeypatch.setattr(ud, "_BASE", [base, -1.0])
+    monkeypatch.setattr(ud, "_BASES", {"max_pressure": [base, -1.0]})
+    monkeypatch.setattr(ud, "RESIDUAL_BASE", "max_pressure")
     node = {"node_id": "J1", "phases": [{"phase_id": "A"}, {"phase_id": "B"}]}
     for t in (5000, 10000, 10000, 5000):
         assert ud.base_index(node, {"timestamp_ms": t}, {}, {}) == 1
