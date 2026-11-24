@@ -1,5 +1,5 @@
 """How often a residual policy overrides max_pressure: one in-process validation run per map and case.
-Usage: PYTHONPATH=. python docs/engineering/research/rl_loop/deviation.py <iter-id> [seed=70001]"""
+Usage: PYTHONPATH=. python docs/engineering/research/rl_loop/deviation.py <iter-id> [seed=70001] [MAP ...]"""
 import json
 import os
 import sys
@@ -33,7 +33,10 @@ if __name__ == "__main__":
     protocol = dict(demand_s=DQN_RECIPE["demand_s"], drain_s=DQN_RECIPE["drain_s"], trace=False, benchmark_mode=True,
                     check_every=25)
     out = {}
+    only = sys.argv[3:]  # optional map filter
     for m in sorted(p.name for p in (root / "training").iterdir()):
+        if only and m not in only:
+            continue
         r = json.loads((root / "training" / m / "phase_dqn_unified/17/result.json").read_text())
         if not r.get("selected"):
             continue
