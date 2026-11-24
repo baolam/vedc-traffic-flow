@@ -15,21 +15,24 @@ from src.simulation.sumo_network_registry import (
 
 
 def test_registry_contains_four_required_networks():
-    """Requirement: four_intersection_v1, tabletop_j1_j2_v1, grid4x4, cologne8, hcm_corridor."""
-    required = ["four_intersection_v1", "tabletop_j1_j2_v1", "grid4x4", "cologne8", "hcm_corridor"]
+    """Requirement: four_intersection_v1, tabletop_j1_j2_v1, tabletop_5nut_v1, grid4x4, cologne8, hcm_corridor."""
+    required = [
+        "four_intersection_v1", "tabletop_j1_j2_v1", "tabletop_5nut_v1",
+        "grid4x4", "cologne8", "hcm_corridor",
+    ]
     for net_id in required:
         assert net_id in NETWORK_REGISTRY
 
 
 def test_preflight_all_networks_pass():
-    """Preflight check across all 5 canonical topologies must pass with 0 failures."""
+    """Preflight check across all 6 canonical topologies must pass with 0 failures."""
     res = run_preflight_check()
     assert res["status"] == "PASS"
     assert len(res["failed_topologies"]) == 0
-    assert len(res["verified_topologies"]) == 5
+    assert len(res["verified_topologies"]) == 6
 
     summary = res["summary"]
-    assert summary["total_controlled_tls"] == 59
+    assert summary["total_controlled_tls"] == 64
     assert summary["total_stable_green_phases"] > 0
     assert summary["total_verified_movements"] > 0
 

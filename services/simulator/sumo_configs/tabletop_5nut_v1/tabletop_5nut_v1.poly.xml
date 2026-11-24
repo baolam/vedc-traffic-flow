@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+
+    <!-- Grass / Lawn Background Surface -->
+    <poly id="bg_grass" type="landuse.grass" color="128,165,104" fill="1" layer="-3" shape="-80,-80 -80,480 680,480 680,-80"/>
+
+    <!-- =================================================================== -->
+    <!-- 1. Central Residential Block (Between J1, J2, J4, J5: 120..280)    -->
+    <!-- =================================================================== -->
+    <!-- Courtyard Lawn -->
+    <poly id="lawn_center" type="landuse.grass" color="115,152,90" fill="1" layer="-2" shape="125,125 275,125 275,275 125,275"/>
+
+    <!-- Houses in Center Block (Red, Blue, Brown Roofs) -->
+    <poly id="bldg_c1" type="building" color="217,83,79" fill="1" layer="1" shape="135,235 175,235 175,265 135,265"/>
+    <poly id="bldg_c2" type="building" color="74,144,226" fill="1" layer="1" shape="185,235 225,235 225,265 185,265"/>
+    <poly id="bldg_c3" type="building" color="198,134,66" fill="1" layer="1" shape="235,235 265,235 265,265 235,265"/>
+
+    <poly id="bldg_c4" type="building" color="74,144,226" fill="1" layer="1" shape="135,185 175,185 175,215 135,215"/>
+    <poly id="bldg_c5" type="building" color="217,83,79" fill="1" layer="1" shape="185,185 225,185 225,215 185,215"/>
+    <poly id="bldg_c6" type="building" color="198,134,66" fill="1" layer="1" shape="235,185 265,185 265,215 235,215"/>
+
+    <poly id="bldg_c7" type="building" color="217,83,79" fill="1" layer="1" shape="135,135 175,135 175,165 135,165"/>
+    <poly id="bldg_c8" type="building" color="198,134,66" fill="1" layer="1" shape="185,135 225,135 225,165 185,165"/>
+    <poly id="bldg_c9" type="building" color="74,144,226" fill="1" layer="1" shape="235,135 265,135 265,165 235,165"/>
+
+    <!-- Trees in Center Block -->
+    <poi id="tree_c1" type="natural.tree" color="46,125,50" layer="2" x="150" y="225" width="10" height="10"/>
+    <poi id="tree_c2" type="natural.tree" color="46,125,50" layer="2" x="250" y="225" width="10" height="10"/>
+    <poi id="tree_c3" type="natural.tree" color="46,125,50" layer="2" x="150" y="175" width="10" height="10"/>
+    <poi id="tree_c4" type="natural.tree" color="46,125,50" layer="2" x="250" y="175" width="10" height="10"/>
+
+    <!-- =================================================================== -->
+    <!-- 2. North-Central Block (Between J1 and J2: 120..280, 320..430)     -->
+    <!-- =================================================================== -->
+    <poly id="bldg_n1" type="building" color="217,83,79" fill="1" layer="1" shape="140,340 180,340 180,380 140,380"/>
+    <poly id="bldg_n2" type="building" color="198,134,66" fill="1" layer="1" shape="200,340 240,340 240,380 200,380"/>
+    <poly id="bldg_n3" type="building" color="74,144,226" fill="1" layer="1" shape="170,390 210,390 210,420 170,420"/>
+
+    <!-- =================================================================== -->
+    <!-- 3. North-East Block (Between J2 and J3: 320..480, 320..430)        -->
+    <!-- =================================================================== -->
+    <poly id="bldg_ne1" type="building" color="74,144,226" fill="1" layer="1" shape="340,340 380,340 380,380 340,380"/>
+    <poly id="bldg_ne2" type="building" color="217,83,79" fill="1" layer="1" shape="400,340 440,340 440,380 400,380"/>
+    <poly id="bldg_ne3" type="building" color="198,134,66" fill="1" layer="1" shape="370,390 410,390 410,420 370,420"/>
+
+    <!-- =================================================================== -->
+    <!-- 4. East Residential Block (Between J2, J3, J5, RES_P: 320..480)    -->
+    <!-- =================================================================== -->
+    <poly id="bldg_e1" type="building" color="217,83,79" fill="1" layer="1" shape="340,220 380,220 380,260 340,260"/>
+    <poly id="bldg_e2" type="building" color="74,144,226" fill="1" layer="1" shape="400,220 440,220 440,260 400,260"/>
+    <poly id="bldg_e3" type="building" color="198,134,66" fill="1" layer="1" shape="340,160 380,160 380,200 340,200"/>
+    <poly id="bldg_e4" type="building" color="217,83,79" fill="1" layer="1" shape="400,160 440,160 440,200 400,200"/>
+    <poi id="tree_e1" type="natural.tree" color="46,125,50" layer="2" x="460" y="210" width="12" height="12"/>
+    <poi id="tree_e2" type="natural.tree" color="46,125,50" layer="2" x="460" y="170" width="12" height="12"/>
+
+    <!-- =================================================================== -->
+    <!-- 5. Southeast Parking Lot & Khu Dân Cư (Around PARKING: 480..620)   -->
+    <!-- =================================================================== -->
+    <!-- Parking Ground Asphalt Pad -->
+    <poly id="parking_lot" type="amenity.parking" color="55,60,65" fill="1" layer="0" shape="470,-40 590,-40 590,40 470,40"/>
+    <!-- Parking bays (White lines) -->
+    <poly id="bay_1" type="parking.bay" color="240,240,240" fill="1" layer="1" shape="480,-35 482,-35 482,25 480,25"/>
+    <poly id="bay_2" type="parking.bay" color="240,240,240" fill="1" layer="1" shape="500,-35 502,-35 502,25 500,25"/>
+    <poly id="bay_3" type="parking.bay" color="240,240,240" fill="1" layer="1" shape="520,-35 522,-35 522,25 520,25"/>
+    <poly id="bay_4" type="parking.bay" color="240,240,240" fill="1" layer="1" shape="540,-35 542,-35 542,25 540,25"/>
+    <poly id="bay_5" type="parking.bay" color="240,240,240" fill="1" layer="1" shape="560,-35 562,-35 562,25 560,25"/>
+    <poly id="bay_6" type="parking.bay" color="240,240,240" fill="1" layer="1" shape="580,-35 582,-35 582,25 580,25"/>
+
+    <!-- Parking Sign POI -->
+    <poi id="poi_parking" type="amenity.parking" color="255,255,255" layer="3" x="530" y="-30" width="14" height="14"/>
+
+</additional>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <!-- 5 Signalized Intersections (J1..J5) structured like four_intersection_v1 -->
+    <node id="J1" x="100" y="300" type="traffic_light"/>
+    <node id="J2" x="300" y="300" type="traffic_light"/>
+    <node id="J3" x="500" y="300" type="traffic_light"/>
+    <node id="J4" x="100" y="100" type="traffic_light"/>
+    <node id="J5" x="300" y="100" type="traffic_light"/>
+
+    <!-- Southeast Residential Area & Parking Lot -->
+    <node id="RES_P"   x="500" y="100" type="priority"/>
+    <node id="PARKING" x="500" y="0"   type="priority"/>
+
+    <!-- Boundary Nodes (Clean 100m-150m arms) -->
+    <node id="N1" x="100" y="450" type="priority"/>
+    <node id="N2" x="300" y="450" type="priority"/>
+    <node id="N3" x="500" y="450" type="priority"/>
+    <node id="W1" x="-50" y="300" type="priority"/>
+    <node id="W4" x="-50" y="100" type="priority"/>
+    <node id="S4" x="100" y="-50" type="priority"/>
+    <node id="S5" x="300" y="-50" type="priority"/>
+    <node id="E3" x="650" y="300" type="priority"/>
+</nodes>

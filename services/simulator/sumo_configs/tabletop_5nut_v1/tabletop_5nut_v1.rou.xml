@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+
+    <!-- Multimodal vehicle types with GUI raster icons (TP.HCM modal split) -->
+    <include href="vehicles.rou.xml"/>
+
+    <!-- ===================================================================== -->
+    <!-- 1. Arterial Corridor Routes structured like four_intersection_v1     -->
+    <!-- ===================================================================== -->
+
+    <!-- J1 routes (North-South through J4; East-West through J2) -->
+    <route id="r_J1_NS" edges="J1_N_IN J4_N_IN J4_S_OUT"/>
+    <route id="r_J1_EW" edges="J1_W_IN J2_W_IN J3_W_IN J3_E_OUT"/>
+
+    <!-- J2 routes (North-South through J5; East-West through J1) -->
+    <route id="r_J2_NS" edges="J2_N_IN J5_N_IN J5_S_OUT"/>
+    <route id="r_J2_EW" edges="J2_E_IN J1_E_IN J1_W_OUT"/>
+
+    <!-- J3 routes (North-South into Residential/Parking; East-West westbound) -->
+    <route id="r_J3_NS" edges="J3_N_IN J3_S_OUT RES_TO_PARKING"/>
+    <route id="r_J3_EW" edges="J3_E_IN J2_E_IN J1_E_IN J1_W_OUT"/>
+
+    <!-- J4 routes (North-South northbound through J1; East-West eastbound) -->
+    <route id="r_J4_NS" edges="J4_S_IN J1_S_IN J1_N_OUT"/>
+    <route id="r_J4_EW" edges="J4_W_IN J5_W_IN J5_E_OUT RES_TO_PARKING"/>
+
+    <!-- J5 routes (North-South northbound through J2; East-West westbound) -->
+    <route id="r_J5_NS" edges="J5_S_IN J2_S_IN J2_N_OUT"/>
+    <route id="r_J5_EW" edges="PARKING_TO_RES J5_E_IN J4_E_IN J4_W_OUT"/>
+
+    <!-- ===================================================================== -->
+    <!-- 2. Flows matching the 10 canonical approaches (J1..J5 x NS/EW)       -->
+    <!-- ===================================================================== -->
+
+    <!-- J1 Flows -->
+    <flow id="f_J1_NS_motorcycle" type="motorcycle" route="r_J1_NS" begin="0" end="3600" period="exp(0.24)"/>
+    <flow id="f_J1_NS_car"        type="car"        route="r_J1_NS" begin="0" end="3600" period="exp(0.09)"/>
+    <flow id="f_J1_NS_taxi"       type="taxi"       route="r_J1_NS" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J1_NS_bus"        type="bus"        route="r_J1_NS" begin="0" end="3600" period="exp(0.01)"/>
+    <flow id="f_J1_NS_truck"      type="truck"      route="r_J1_NS" begin="0" end="3600" period="exp(0.01)"/>
+
+    <flow id="f_J1_EW_motorcycle" type="motorcycle" route="r_J1_EW" begin="0" end="3600" period="exp(0.30)"/>
+    <flow id="f_J1_EW_car"        type="car"        route="r_J1_EW" begin="0" end="3600" period="exp(0.12)"/>
+    <flow id="f_J1_EW_taxi"       type="taxi"       route="r_J1_EW" begin="0" end="3600" period="exp(0.02)"/>
+    <flow id="f_J1_EW_bus"        type="bus"        route="r_J1_EW" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J1_EW_truck"      type="truck"      route="r_J1_EW" begin="0" end="3600" period="exp(0.015)"/>
+
+    <!-- J2 Flows -->
+    <flow id="f_J2_NS_motorcycle" type="motorcycle" route="r_J2_NS" begin="0" end="3600" period="exp(0.25)"/>
+    <flow id="f_J2_NS_car"        type="car"        route="r_J2_NS" begin="0" end="3600" period="exp(0.10)"/>
+    <flow id="f_J2_NS_taxi"       type="taxi"       route="r_J2_NS" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J2_NS_bus"        type="bus"        route="r_J2_NS" begin="0" end="3600" period="exp(0.01)"/>
+    <flow id="f_J2_NS_truck"      type="truck"      route="r_J2_NS" begin="0" end="3600" period="exp(0.01)"/>
+
+    <flow id="f_J2_EW_motorcycle" type="motorcycle" route="r_J2_EW" begin="0" end="3600" period="exp(0.28)"/>
+    <flow id="f_J2_EW_car"        type="car"        route="r_J2_EW" begin="0" end="3600" period="exp(0.11)"/>
+    <flow id="f_J2_EW_taxi"       type="taxi"       route="r_J2_EW" begin="0" end="3600" period="exp(0.018)"/>
+    <flow id="f_J2_EW_bus"        type="bus"        route="r_J2_EW" begin="0" end="3600" period="exp(0.012)"/>
+    <flow id="f_J2_EW_truck"      type="truck"      route="r_J2_EW" begin="0" end="3600" period="exp(0.012)"/>
+
+    <!-- J3 Flows (into Residential/Parking & corridor) -->
+    <flow id="f_J3_NS_motorcycle" type="motorcycle" route="r_J3_NS" begin="0" end="3600" period="exp(0.25)"/>
+    <flow id="f_J3_NS_car"        type="car"        route="r_J3_NS" begin="0" end="3600" period="exp(0.10)"/>
+    <flow id="f_J3_NS_taxi"       type="taxi"       route="r_J3_NS" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J3_NS_bus"        type="bus"        route="r_J3_NS" begin="0" end="3600" period="exp(0.01)"/>
+    <flow id="f_J3_NS_truck"      type="truck"      route="r_J3_NS" begin="0" end="3600" period="exp(0.01)"/>
+
+    <flow id="f_J3_EW_motorcycle" type="motorcycle" route="r_J3_EW" begin="0" end="3600" period="exp(0.28)"/>
+    <flow id="f_J3_EW_car"        type="car"        route="r_J3_EW" begin="0" end="3600" period="exp(0.11)"/>
+    <flow id="f_J3_EW_taxi"       type="taxi"       route="r_J3_EW" begin="0" end="3600" period="exp(0.018)"/>
+    <flow id="f_J3_EW_bus"        type="bus"        route="r_J3_EW" begin="0" end="3600" period="exp(0.012)"/>
+    <flow id="f_J3_EW_truck"      type="truck"      route="r_J3_EW" begin="0" end="3600" period="exp(0.012)"/>
+
+    <!-- J4 Flows -->
+    <flow id="f_J4_NS_motorcycle" type="motorcycle" route="r_J4_NS" begin="0" end="3600" period="exp(0.24)"/>
+    <flow id="f_J4_NS_car"        type="car"        route="r_J4_NS" begin="0" end="3600" period="exp(0.09)"/>
+    <flow id="f_J4_NS_taxi"       type="taxi"       route="r_J4_NS" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J4_NS_bus"        type="bus"        route="r_J4_NS" begin="0" end="3600" period="exp(0.01)"/>
+    <flow id="f_J4_NS_truck"      type="truck"      route="r_J4_NS" begin="0" end="3600" period="exp(0.01)"/>
+
+    <flow id="f_J4_EW_motorcycle" type="motorcycle" route="r_J4_EW" begin="0" end="3600" period="exp(0.28)"/>
+    <flow id="f_J4_EW_car"        type="car"        route="r_J4_EW" begin="0" end="3600" period="exp(0.10)"/>
+    <flow id="f_J4_EW_taxi"       type="taxi"       route="r_J4_EW" begin="0" end="3600" period="exp(0.016)"/>
+    <flow id="f_J4_EW_bus"        type="bus"        route="r_J4_EW" begin="0" end="3600" period="exp(0.012)"/>
+    <flow id="f_J4_EW_truck"      type="truck"      route="r_J4_EW" begin="0" end="3600" period="exp(0.012)"/>
+
+    <!-- J5 Flows (into Residential/Parking & corridor) -->
+    <flow id="f_J5_NS_motorcycle" type="motorcycle" route="r_J5_NS" begin="0" end="3600" period="exp(0.25)"/>
+    <flow id="f_J5_NS_car"        type="car"        route="r_J5_NS" begin="0" end="3600" period="exp(0.10)"/>
+    <flow id="f_J5_NS_taxi"       type="taxi"       route="r_J5_NS" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J5_NS_bus"        type="bus"        route="r_J5_NS" begin="0" end="3600" period="exp(0.01)"/>
+    <flow id="f_J5_NS_truck"      type="truck"      route="r_J5_NS" begin="0" end="3600" period="exp(0.01)"/>
+
+    <flow id="f_J5_EW_motorcycle" type="motorcycle" route="r_J5_EW" begin="0" end="3600" period="exp(0.26)"/>
+    <flow id="f_J5_EW_car"        type="car"        route="r_J5_EW" begin="0" end="3600" period="exp(0.10)"/>
+    <flow id="f_J5_EW_taxi"       type="taxi"       route="r_J5_EW" begin="0" end="3600" period="exp(0.015)"/>
+    <flow id="f_J5_EW_bus"        type="bus"        route="r_J5_EW" begin="0" end="3600" period="exp(0.01)"/>
+    <flow id="f_J5_EW_truck"      type="truck"      route="r_J5_EW" begin="0" end="3600" period="exp(0.01)"/>
+
+</routes>

@@ -129,6 +129,24 @@ NETWORK_REGISTRY: Dict[str, Dict[str, Any]] = {
         "congested_speed_mps": 1.50,
         "primary_surge_axis": "EW",
     },
+    "tabletop_5nut_v1": {
+        "topology_id": "tabletop_5nut_v1",
+        "display_name": "Sa Ban Tabletop 5-Node Grid (J1-J5 + Residential/Parking)",
+        "net_rel_path": "services/simulator/sumo_configs/tabletop_5nut_v1/tabletop_5nut_v1.net.xml",
+        "expected_net_sha256": [
+            "4e5974aee0103d4e0d6e6a8453ad18b20d63b200705494d25cbe88ee654c5d93",  # Canonical (LF)
+            "83940e3222ad31f1a6535dc6efeb1b394f612bde1e16b814c40af7c91f14c113",  # Windows (CRLF)
+        ],
+        "topo_rel_path": "contracts/topology/tabletop_5nut_v1.json",
+        "expected_topo_sha256": [
+            "bdd69ade9985dc94aa1b09a9af7ae0f344fc04afff378c87e7cd152f7479ffbb",
+        ],
+        "controlled_tls_ids": ["J1", "J2", "J3", "J4", "J5"],
+        "bottleneck_edge": "RES_TO_PARKING",
+        "normal_speed_mps": 11.11,
+        "congested_speed_mps": 1.50,
+        "primary_surge_axis": "EW",
+    },
     "hcm_corridor": {
         "topology_id": "hcm_corridor",
         "display_name": "Ho Chi Minh City Arterial Corridor (29 Signalized Intersections)",
@@ -396,21 +414,53 @@ class NetworkMappingResolver:
 
                 # If topology defines canonical phase IDs (e.g. four_intersection_v1 has J1_PHASE_NS, J1_PHASE_EW)
                 canonical_phases = n.get("phases", [])
+                conns_for_tl = tl_links.get(nid, {})
 
-                for p_idx, green_rec in enumerate(stable_greens):
+                def _active_from_edges(state_str: str) -> set:
+                    apps = set()
+                    for lidx, char in enumerate(state_str):
+                        if char in ("G", "g") and lidx in conns_for_tl:
+                            for c_info in conns_for_tl[lidx]:
+                                apps.add(c_info["from_edge"])
+                    return apps
+
+                # Match each canonical phase to the stable-green SUMO phase whose active
+                # approaches overlap it best, instead of assuming tlLogic phases are authored
+                # in the same order as the contract's phases[] list. The two can legitimately
+                # differ per node within a single net.xml (e.g. tabletop_5nut_v1 authors J1-J3
+                # with the EW-green phase first but J4-J5 with NS-green first), and a purely
+                # positional zip silently swaps phase_id <-> state for whichever nodes disagree.
+                used_green_indices: set = set()
+                phase_order: List[tuple] = []  # (canonical_phase_or_None, green_rec)
+                for cp in canonical_phases:
+                    cp_approaches = set(cp.get("approaches", []))
+                    best_gi, best_score = None, 0
+                    for gi, green_rec in enumerate(stable_greens):
+                        if gi in used_green_indices:
+                            continue
+                        score = len(_active_from_edges(green_rec["state"]) & cp_approaches)
+                        if score > best_score:
+                            best_gi, best_score = gi, score
+                    if best_gi is not None:
+                        used_green_indices.add(best_gi)
+                        phase_order.append((cp, stable_greens[best_gi]))
+
+                for gi, green_rec in enumerate(stable_greens):
+                    if gi not in used_green_indices:
+                        phase_order.append((None, green_rec))
+
+                for p_idx, (cp, green_rec) in enumerate(phase_order):
                     state_str = green_rec["state"]
                     raw_sumo_idx = green_rec["raw_index"]
 
-                    # Default phase ID or use canonical if aligned
-                    if p_idx < len(canonical_phases) and canonical_phases[p_idx].get("phase_id"):
-                        phase_id = canonical_phases[p_idx]["phase_id"]
+                    if cp and cp.get("phase_id"):
+                        phase_id = cp["phase_id"]
                     else:
                         phase_id = f"{nid}_PHASE_{p_idx + 1}"
 
                     # Determine which connections and movements are green in this state
                     active_approaches = []
                     movements = []
-                    conns_for_tl = tl_links.get(nid, {})
 
                     for lidx, char in enumerate(state_str):
                         if char in ("G", "g"):

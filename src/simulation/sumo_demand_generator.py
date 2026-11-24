@@ -62,6 +62,20 @@ TABLETOP_J1_J2_ROUTES = [
     {"route_id": "r_J2_EW", "axis": "EW", "edges": ["J2_E_IN", "J1_E_IN"]},
 ]
 
+# 1c. tabletop_5nut_v1 (sa ban 5-node grid with residential area & parking P)
+TABLETOP_5NUT_ROUTES = [
+    {"route_id": "r_EW_top_EB", "axis": "EW", "edges": ["J1_W_IN", "J2_W_IN", "J3_W_IN", "J3_E_OUT"]},
+    {"route_id": "r_EW_top_WB", "axis": "EW", "edges": ["J3_E_IN", "J2_E_IN", "J1_E_IN", "J1_W_OUT"]},
+    {"route_id": "r_EW_bottom_EB", "axis": "EW", "edges": ["J4_W_IN", "J5_W_IN", "J5_E_OUT", "RES_TO_PARKING"]},
+    {"route_id": "r_EW_bottom_WB", "axis": "EW", "edges": ["PARKING_TO_RES", "J5_E_IN", "J4_E_IN", "J4_W_OUT"]},
+    {"route_id": "r_NS_west_SB", "axis": "NS", "edges": ["J1_N_IN", "J4_N_IN", "J4_S_OUT"]},
+    {"route_id": "r_NS_west_NB", "axis": "NS", "edges": ["J4_S_IN", "J1_S_IN", "J1_N_OUT"]},
+    {"route_id": "r_NS_mid_SB", "axis": "NS", "edges": ["J2_N_IN", "J5_N_IN", "J5_S_OUT"]},
+    {"route_id": "r_NS_mid_NB", "axis": "NS", "edges": ["J5_S_IN", "J2_S_IN", "J2_N_OUT"]},
+    {"route_id": "r_res_J3_SB", "axis": "NS", "edges": ["J3_N_IN", "J3_S_OUT", "RES_TO_PARKING"]},
+    {"route_id": "r_res_J3_NB", "axis": "NS", "edges": ["PARKING_TO_RES", "J3_S_IN", "J3_N_OUT"]},
+]
+
 # 2. grid4x4 (16 arterial routes, 8 NS, 8 EW across all rows and columns)
 GRID4X4_ROUTES = [
     # North-South columns
@@ -211,6 +225,7 @@ HCM_ROUTES = [
 TOPOLOGY_ROUTE_REGISTRY: Dict[str, List[Dict[str, Any]]] = {
     "four_intersection_v1": FOUR_INT_ROUTES,
     "tabletop_j1_j2_v1": TABLETOP_J1_J2_ROUTES,
+    "tabletop_5nut_v1": TABLETOP_5NUT_ROUTES,
     "grid4x4": GRID4X4_ROUTES,
     "cologne8": COLOGNE8_ROUTES,
     "hcm_corridor": HCM_ROUTES,

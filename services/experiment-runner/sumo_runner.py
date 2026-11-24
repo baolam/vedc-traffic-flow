@@ -123,7 +123,7 @@ def generate_sumo_routes(
         "corridor": "four_intersection_v1",
     }.get(topology_id, topology_id)
 
-    if demand_topo_id in ["grid4x4", "cologne8", "hcm_corridor", "tabletop_j1_j2_v1"]:
+    if demand_topo_id in ["grid4x4", "cologne8", "hcm_corridor", "tabletop_j1_j2_v1", "tabletop_5nut_v1"]:
         from src.simulation.sumo_demand_generator import SumoDemandGenerator
         out_dir = Path(output_path).parent
         meta = SumoDemandGenerator.generate_frozen_demand(

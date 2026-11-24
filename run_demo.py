@@ -437,7 +437,59 @@ def run_demo_simulation(
     tl_ids = set(traci.trafficlight.getIDList())
     edge_ids = set(traci.edge.getIDList())
 
-    # Init actuator nodes
+    def _resolve_phase_sumo_indices(nid, phase_list):
+        """Map each contract phase_id to its real SUMO tlLogic phase index by matching which
+        approaches are actually green in each candidate phase, instead of assuming tlLogic
+        phases are authored in the same order as the contract's phases[] list. A positional
+        `pidx * 2` guess silently swaps NS/EW (or any two phases) whenever a node's tlLogic
+        doesn't happen to list them in contract order -- see tabletop_5nut_v1 where J1-J3
+        author the EW-green phase before NS-green while J4-J5 do the reverse."""
+        try:
+            logic = traci.trafficlight.getAllProgramLogics(nid)[0]
+            controlled_links = traci.trafficlight.getControlledLinks(nid)
+        except Exception:
+            return {p.get("phase_id"): idx * 2 for idx, p in enumerate(phase_list)}
+
+        link_from_edges = {}
+        for lidx, conns in enumerate(controlled_links):
+            edges = set()
+            for conn in conns:
+                try:
+                    edges.add(traci.lane.getEdgeID(conn[0]))
+                except Exception:
+                    pass
+            link_from_edges[lidx] = edges
+
+        stable_greens = []
+        for raw_idx, phase in enumerate(logic.phases):
+            state = phase.state
+            has_yellow = "y" in state or "Y" in state
+            has_green = "G" in state or "g" in state
+            if not has_yellow and has_green:
+                stable_greens.append((raw_idx, state))
+
+        used = set()
+        mapping = {}
+        for p in phase_list:
+            cp_approaches = set(p.get("approaches", []))
+            best_gi, best_score = None, 0
+            for gi, (raw_idx, state) in enumerate(stable_greens):
+                if gi in used:
+                    continue
+                active = set()
+                for lidx, ch in enumerate(state):
+                    if ch in ("G", "g"):
+                        active |= link_from_edges.get(lidx, set())
+                score = len(active & cp_approaches)
+                if score > best_score:
+                    best_gi, best_score = gi, score
+            if best_gi is not None:
+                used.add(best_gi)
+                mapping[p.get("phase_id")] = stable_greens[best_gi][0]
+        return mapping
+
+    # Init actuator nodes + resolve each controlled node's phase_id -> raw SUMO tlLogic index
+    phase_sumo_indices: Dict[str, Dict[str, int]] = {}
     for node in topology.get("nodes", []):
         nid = node["node_id"]
         phases = node.get("phases", [])
@@ -445,6 +497,8 @@ def run_demo_simulation(
         ns = actuator.get_or_create_node(nid, default_phase=default_phase)
         ns.phase_start_time = 0.0
         ns.state_start_time = 0.0
+        if nid in tl_ids and phases:
+            phase_sumo_indices[nid] = _resolve_phase_sumo_indices(nid, phases)
 
     import queue
     import threading
@@ -680,14 +734,12 @@ def run_demo_simulation(
                             pass
 
                 if node_state.state == "GREEN" and nid in tl_ids:
-                    phase_list = node.get("phases", [])
-                    for pidx, p in enumerate(phase_list):
-                        if p.get("phase_id") == node_state.current_phase_id:
-                            try:
-                                traci.trafficlight.setPhase(nid, pidx * 2)
-                            except Exception:
-                                pass
-                            break
+                    raw_idx = phase_sumo_indices.get(nid, {}).get(node_state.current_phase_id)
+                    if raw_idx is not None:
+                        try:
+                            traci.trafficlight.setPhase(nid, raw_idx)
+                        except Exception:
+                            pass
 
                 current_phases.append(f"{nid}:{active_phase.split('_')[-1]}")
 

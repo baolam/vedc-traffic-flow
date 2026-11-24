@@ -31,7 +31,7 @@ import mqtt_common as mc  # noqa: E402
 
 logger = logging.getLogger("pi-fake-telemetry")
 
-SCENARIOS = ("ns_heavy", "ew_heavy", "balanced", "alternate", "ramp", "camera_lost")
+SCENARIOS = ("ns_heavy", "ew_heavy", "balanced", "alternate", "ramp", "camera_lost", "residential_surge")
 ALTERNATE_PERIOD_S = 60.0      # alternate: heavy side flips every minute
 RAMP_PERIOD_S = 120.0          # ramp: NS queue grows from 0 to RAMP_MAX over this time, then restarts
 RAMP_MAX_VEHICLES = 15.0
@@ -52,7 +52,7 @@ def approach_axis(approach_id: str) -> str:
     raise ValueError(f"Cannot tell the direction of approach '{approach_id}'")
 
 
-def target_queue(scenario: str, axis: str, elapsed_s: float) -> float:
+def target_queue(scenario: str, axis: str, elapsed_s: float, approach_id: Optional[str] = None) -> float:
     """Noise-free queue (vehicles) the scenario wants on one axis at a time since start."""
     if scenario == "ns_heavy":
         return HEAVY_QUEUE if axis == "NS" else LIGHT_QUEUE
@@ -69,6 +69,11 @@ def target_queue(scenario: str, axis: str, elapsed_s: float) -> float:
         return RAMP_MAX_VEHICLES * ((elapsed_s % RAMP_PERIOD_S) / RAMP_PERIOD_S)
     if scenario == "camera_lost":
         return 0.0
+    if scenario == "residential_surge":
+        # Congestion heading into the Southeast residential zone and parking lot
+        if approach_id in ("J3_N_IN", "J5_W_IN", "J2_W_IN", "J1_W_IN"):
+            return HEAVY_QUEUE
+        return LIGHT_QUEUE
     raise ValueError(f"Unknown scenario '{scenario}' (choose from {', '.join(SCENARIOS)})")
 
 
@@ -94,7 +99,7 @@ def build_fake_telemetry(node: Dict[str, Any], scenario: str, elapsed_s: float, 
     lost = scenario == "camera_lost"
     approaches = []
     for approach_id in node["approaches"]:
-        queue = target_queue(scenario, approach_axis(approach_id), elapsed_s)
+        queue = target_queue(scenario, approach_axis(approach_id), elapsed_s, approach_id=approach_id)
         if not lost:
             queue = max(0.0, round(queue + rng.uniform(-1.0, 1.0)))  # whole vehicles, +-1 jitter
         approaches.append(approach_metrics(approach_id, queue, 0.0 if lost else 1.0))
