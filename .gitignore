@@ -176,6 +176,14 @@ src/hardware/secrets.ini
 # Test scenario temporary outputs
 services/simulator/sumo_configs/test_*
 
+# Synthetic dashboard load-test topologies (src/tools/generate_load_test_topology.py) --
+# regenerate on demand, never meant to be a committed scenario
+contracts/topology/load_test_*.json
+
+
+# External GUI labeling tool cloned separately per experiments/auto-label-yolo/README.md --
+# has its own nested .git / remote (T-SW/AutoLabelImg), never meant to be tracked here
+AutoLabelImg/
 
 # Presentations & Large Media
 presentation/
