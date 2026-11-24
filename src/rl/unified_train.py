@@ -34,6 +34,7 @@ from src.simulation.runtime import InvalidRun, SumoRuntime
 
 NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
 MP_EXPLORE = float(os.environ.get("EDGEFLOW_MP_EXPLORE", 0))  # experiment: share of exploratory actions from max_pressure
+EXPLORE_BASE = os.environ.get("EDGEFLOW_EXPLORE_BASE") == "1"  # experiment: MP_EXPLORE follows the residual base
 PRESSURE_BETA = float(os.environ.get("EDGEFLOW_PRESSURE_BETA", 0))  # experiment: node reward += beta * -|pressure|/20
 
 
@@ -173,11 +174,15 @@ def phase_episode(ctx):
 
         mp = MaxPressureController() if MP_EXPLORE else None
 
-        def explore(n, m):  # experiment: exploration follows max_pressure's (legal) choice with prob MP_EXPLORE
+        def explore(n, m, base):  # experiment: exploration follows max_pressure's (legal) choice with prob MP_EXPLORE
             if mp is not None and rng.random() < MP_EXPLORE:
                 nid = n["node_id"]
-                target = mp.compute_command(nid, runtime.telemetry[nid], runtime.topology, runtime.telemetry)["target_phase_id"]
-                a = [p["phase_id"] for p in n["phases"]].index(target)
+                if EXPLORE_BASE and base is not None:  # the residual base's choice instead
+                    a = base
+                else:
+                    target = mp.compute_command(nid, runtime.telemetry[nid], runtime.topology,
+                                                runtime.telemetry)["target_phase_id"]
+                    a = [p["phase_id"] for p in n["phases"]].index(target)
                 if m[a]:
                     return a
             return int(rng.choice(np.flatnonzero(m)))
@@ -194,12 +199,13 @@ def phase_episode(ctx):
                 qv = q_all(arch, ctx.net, ctx.tensor(np.stack(rows))).cpu().numpy()
                 q = np.where(np.stack(masks), qv, -np.inf).argmax(1)
             eps, draws = ctx.epsilon(), rng.random(len(nodes))
-            if not np.isnan(unified_dqn.MP_MARGIN):  # experiment: greedy action = max_pressure residual
-                q = [unified_dqn.residual_choice(qv[i][:len(n["phases"])], masks[i][:len(n["phases"])],
-                                                 unified_dqn.base_index(n, runtime.telemetry[n["node_id"]],
-                                                                                runtime.telemetry, runtime.topology))
+            base = [None] * len(nodes)
+            if not np.isnan(unified_dqn.MP_MARGIN):  # experiment: greedy action = residual on the base controller
+                base = [unified_dqn.base_index(n, runtime.telemetry[n["node_id"]], runtime.telemetry, runtime.topology)
+                        for n in nodes]
+                q = [unified_dqn.residual_choice(qv[i][:len(n["phases"])], masks[i][:len(n["phases"])], base[i])
                      for i, n in enumerate(nodes)]
-            actions = [explore(nodes[i], m) if draws[i] < eps else int(q[i]) for i, m in enumerate(masks)]
+            actions = [explore(nodes[i], m, base[i]) if draws[i] < eps else int(q[i]) for i, m in enumerate(masks)]
             before = runtime.time
             try:
                 _, reward, terminated, truncated = runtime.step({n["node_id"]: actions[i] for i, n in enumerate(nodes)})
