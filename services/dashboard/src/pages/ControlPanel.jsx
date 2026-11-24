@@ -251,7 +251,26 @@ const ControlPanel = () => {
     fetch(`${apiBase}/api/v1/control/override`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ node_id: nodeId, target_phase_id: targetPhaseId })
+      body: JSON.stringify({ node_id: nodeId, target_phase_id: targetPhaseId, topology_id: activeScenarioId })
+    })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          showOverride(nodeId, overrideRequestError(isVi ? `API từ chối: ${data.detail || 'Lỗi không rõ'}` : `API rejected: ${data.detail || 'Unknown error'}`));
+          return;
+        }
+        showOverride(nodeId, describeOverride({ status: 'SENT', target_phase_id: data.target_phase_id }));
+        followOverride(nodeId);
+      })
+      .catch(() => showOverride(nodeId, overrideRequestError(isVi ? 'Không gọi được API: Lệnh chưa tới thiết bị.' : 'API unreachable.')));
+  };
+
+  const handleEmergencyFlash = (nodeId, action = 'activate') => {
+    showOverride(nodeId, null);
+    fetch(`${apiBase}/api/v1/control/emergency-flash`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ node_id: nodeId, action, topology_id: activeScenarioId })
     })
       .then(res => res.json().then(data => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
@@ -676,24 +695,73 @@ const ControlPanel = () => {
                       {isVi ? 'Pha ưu tiên khẩn cấp:' : 'Default Priority Phase:'} <strong style={{ color: '#0f172a' }}>{targetPhase}</strong>
                     </div>
 
-                    <button
-                      className="btn btn-danger"
-                      style={{ 
-                        padding: '9px 14px', 
-                        fontSize: '0.82rem', 
-                        fontWeight: 700, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        gap: '6px',
-                        cursor: isBusy ? 'not-allowed' : 'pointer'
-                      }}
-                      onClick={() => handleEmergencyOverride(nodeId)}
-                      disabled={isBusy}
-                    >
-                      <Play size={14} />
-                      {isVi ? `Ép Xanh Pha Ưu Tiên (${targetPhase})` : `Force Priority Phase (${targetPhase})`}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        className="btn btn-danger"
+                        style={{ 
+                          flex: '1 1 140px',
+                          padding: '9px 12px', 
+                          fontSize: '0.82rem', 
+                          fontWeight: 700, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '6px',
+                          cursor: isBusy ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={() => handleEmergencyOverride(nodeId)}
+                        disabled={isBusy}
+                      >
+                        <Play size={14} />
+                        {isVi ? `Ép Xanh (${targetPhase.replace(nodeId + '_PHASE_', '')})` : `Force Green (${targetPhase.replace(nodeId + '_PHASE_', '')})`}
+                      </button>
+
+                      <button
+                        style={{ 
+                          flex: '1 1 140px',
+                          padding: '9px 12px', 
+                          fontSize: '0.82rem', 
+                          fontWeight: 700, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '6px',
+                          backgroundColor: '#f59e0b',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: isBusy ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={() => handleEmergencyFlash(nodeId, 'activate')}
+                        disabled={isBusy}
+                        title={isVi ? 'Lệnh khẩn cấp: nháy vàng cả 4 đèn' : 'Emergency command: all-yellow flashing'}
+                      >
+                        <Zap size={14} />
+                        {isVi ? 'Nháy Vàng 4 Đèn' : 'Flash All-Yellow'}
+                      </button>
+
+                      <button
+                        style={{ 
+                          padding: '9px 12px', 
+                          fontSize: '0.82rem', 
+                          fontWeight: 700, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '4px',
+                          backgroundColor: '#0284c7',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: (isBusy && !view?.isEmergencyFlash) ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={() => handleEmergencyFlash(nodeId, 'resume')}
+                        disabled={isBusy && !view?.isEmergencyFlash}
+                        title={isVi ? 'Hủy nháy vàng / Phục hồi chu trình an toàn' : 'Resume normal cycle'}
+                      >
+                        {isVi ? 'Phục Hồi' : 'Resume'}
+                      </button>
+                    </div>
 
                     {view && (
                       <div style={{

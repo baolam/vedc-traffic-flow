@@ -9,7 +9,7 @@ import { cleanPhaseName } from '../utils/phaseName';
 import { useLanguage } from '../hooks/useLanguage';
 import { 
   ArrowLeft, Cpu, Activity, ShieldCheck, Gauge, Car, AlertTriangle, Play,
-  ShieldAlert, Radio, Video, Sliders, CheckCircle2, Clock, RefreshCw,
+  ShieldAlert, Radio, Video, Sliders, CheckCircle2, Clock, RefreshCw, RotateCcw,
   Compass, Layers, Zap, BarChart3, Eye, TrendingUp, Check, Info, Server, Wifi,
   Crosshair
 } from 'lucide-react';
@@ -352,7 +352,25 @@ const IntersectionDetail = () => {
     fetch(`${apiBase}/api/v1/control/override`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ node_id: nodeId, target_phase_id: target })
+      body: JSON.stringify({ node_id: nodeId, target_phase_id: target, topology_id: activeScenarioId })
+    })
+      .then(res => res.json().then(data => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setOverrideError(overrideRequestError(`API từ chối: ${data.detail || 'lỗi không rõ'}`));
+          return;
+        }
+        fetchNodeState();
+      })
+      .catch(() => setOverrideError(overrideRequestError('Không gọi được API: lệnh chưa tới thiết bị.')));
+  };
+
+  const handleEmergencyFlash = (action = 'activate') => {
+    setOverrideError(null);
+    fetch(`${apiBase}/api/v1/control/emergency-flash`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ node_id: nodeId, action, topology_id: activeScenarioId })
     })
       .then(res => res.json().then(data => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
@@ -369,6 +387,11 @@ const IntersectionDetail = () => {
   const overrideBusy = Boolean(manualOverride && OVERRIDE_IN_PROGRESS.includes(manualOverride.status));
   const liveClearance = deviceHealth?.actuator?.clearance;
   const isSafeStop = deviceHealth?.actuator?.status === 'SAFE_STOP';
+  const activeFault = deviceHealth?.actuator?.active_fault;
+  const isConflictGuard = activeFault?.fault_code === 'ERR_CONFLICT_GUARD_TRIGGERED';
+  const isHardwareDefect = activeFault?.fault_code === 'ERR_HARDWARE_DEFECT';
+  const isEmergencyFlash = deviceHealth?.actuator?.status === 'EMERGENCY_FLASH';
+  const isDegraded = deviceHealth?.actuator?.status === 'DEGRADED';
 
   const appStats = useMemo(() => nodeTelemetry?.approaches || [], [nodeTelemetry]);
   const sourceType = nodeTelemetry?.source_type || 'system';
@@ -663,16 +686,42 @@ const IntersectionDetail = () => {
           marginBottom: '24px',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: '14px',
           color: overrideBanner.colors.color,
           fontWeight: 600,
           boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
         }}>
-          <ShieldAlert size={26} />
-          <div>
-            <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>{overrideBanner.title}</div>
-            <div style={{ fontSize: '0.88rem', fontWeight: 500, marginTop: '2px' }}>{overrideBanner.detail}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <ShieldAlert size={26} />
+            <div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>{overrideBanner.title}</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 500, marginTop: '2px' }}>{overrideBanner.detail}</div>
+            </div>
           </div>
+          {(Boolean(manualOverride?.target_phase_id?.includes('FLASH')) || isEmergencyFlash) && (
+            <button
+              onClick={() => handleEmergencyFlash('resume')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 6px rgba(2, 132, 199, 0.35)'
+              }}
+            >
+              <RotateCcw size={14} />
+              {isVi ? 'Khôi Phục Chu Trình' : 'Resume Normal Cycle'}
+            </button>
+          )}
         </div>
       )}
 
@@ -728,36 +777,53 @@ const IntersectionDetail = () => {
       )}
 
       {/* Hardware Signal & Fail-Safe Monitor Banner */}
-      {(nodeTelemetry?.status === 'SIGNAL_LOST' || 
+      {(isSafeStop ||
+        isConflictGuard ||
+        isHardwareDefect ||
+        isEmergencyFlash ||
+        isDegraded ||
+        nodeTelemetry?.status === 'SIGNAL_LOST' || 
         nodeTelemetry?.status === 'CAMERA_FAULT' || 
         nodeTelemetry?.status === 'ACTUATOR_FAULT' ||
+        nodeTelemetry?.status === 'HARDWARE_FAULT' ||
         deviceHealth?.camera?.status === 'SIGNAL_LOST' || 
         deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || 
-        deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' || 
-        deviceHealth?.actuator?.status === 'SAFE_STOP') && (
+        deviceHealth?.actuator?.status === 'HEARTBEAT_LOST') && (
         <div style={{
-          backgroundColor: isSafeStop ? '#fffbeb' : '#fef2f2',
-          border: `2px solid ${isSafeStop ? '#f59e0b' : '#ef4444'}`,
+          backgroundColor: isSafeStop || isEmergencyFlash ? '#fffbeb' : '#fef2f2',
+          border: `2px solid ${isSafeStop || isEmergencyFlash ? '#f59e0b' : '#ef4444'}`,
           borderRadius: '12px',
           padding: '16px 20px',
           marginBottom: '24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          color: isSafeStop ? '#92400e' : '#991b1b',
-          boxShadow: `0 4px 14px ${isSafeStop ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)'}`
+          color: isSafeStop || isEmergencyFlash ? '#92400e' : '#991b1b',
+          boxShadow: `0 4px 14px ${isSafeStop || isEmergencyFlash ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)'}`
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <AlertTriangle size={28} color={isSafeStop ? '#d97706' : '#dc2626'} />
+            <AlertTriangle size={28} color={isSafeStop || isEmergencyFlash ? '#d97706' : '#dc2626'} />
             <div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>
                 {isSafeStop
                   ? (isVi ? `🛑 NÚT DỪNG KHẨN CẤP (SAFE-STOP) ĐANG ĐƯỢC NHẤN (${nodeId})` : `🛑 EMERGENCY SAFE-STOP BUTTON ENGAGED (${nodeId})`)
+                  : isConflictGuard
+                  ? (isVi ? `🚨 SỰ CỐ PHẦN CỨNG: XUNG ĐỘT ĐÈN XANH KÉP - CONFLICT GUARD (${nodeId})` : `🚨 CRITICAL HARDWARE FAULT: CONFLICT GUARD TRIGGERED (${nodeId})`)
+                  : isHardwareDefect
+                  ? (isVi ? `🛠️ SỰ CỐ PHẦN CỨNG: LỖI ĐỌC NGƯỢC GPIO / ĐOẢN MẠCH / SỤT ÁP (${nodeId})` : `🛠️ HARDWARE DEFECT: OUTPUT READBACK MISMATCH / BROWNOUT (${nodeId})`)
+                  : isEmergencyFlash
+                  ? (isVi ? `⚡ CHẾ ĐỘ KHẨN CẤP: ĐANG NHÁY VÀNG CẢ 4 CỤM ĐÈN THEO LỆNH HỆ THỐNG (${nodeId})` : `⚡ EMERGENCY FLASH: ALL-YELLOW FLASHING ACTIVE (${nodeId})`)
                   : (isVi ? `CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG (${nodeId})` : `HARDWARE / SIGNAL INTERRUPT ALERT (${nodeId})`)}
               </div>
-              <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: isSafeStop ? '#78350f' : '#7f1d1d' }}>
+              <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: isSafeStop || isEmergencyFlash ? '#78350f' : '#7f1d1d' }}>
                 {isSafeStop
-                  ? (isVi ? 'Nút an toàn trên board đang bị giữ: cả hai hướng đèn nhấp nháy vàng, mọi ControlCommand (tự động hoặc tay) đều bị ESP32 từ chối. Nhả nút → ALL_RED 2 s → trở lại xanh bình thường.' : 'Safe-stop button on board is held: all directions flash yellow, ControlCommands rejected by ESP32. Release button → ALL_RED 2s → nominal.')
+                  ? (isVi ? 'Nút an toàn trên board đang bị giữ: cả hai hướng đèn nhấp nháy vàng, mọi ControlCommand đều bị ESP32 từ chối. Nhả nút → ALL_RED 2 s → trở lại xanh bình thường.' : 'Safe-stop button on board is held: all directions flash yellow, ControlCommands rejected by ESP32. Release button → ALL_RED 2s → nominal.')
+                  : isConflictGuard
+                  ? (isVi ? 'Phát hiện tín hiệu yêu cầu cả hai hướng cùng xanh đồng thời. Mạch bảo vệ phần cứng đã lập tức ép ĐỎ toàn bộ và chuyển nháy vàng an toàn 10s ngăn ngừa va chạm.' : 'Simultaneous green detected on both heads. Hardware conflict guard forced immediate ALL_RED and entered 10s safety flashing.')
+                  : isHardwareDefect
+                  ? (isVi ? `Phát hiện mức điện áp GPIO chân đèn không khớp giá trị ghi (nghi ngờ chập chân / mối hàn) hoặc vi điều khiển sụt áp Brownout. Chi tiết: ${activeFault?.reason || 'Hardware defect detected'}.` : `Output readback mismatch on LED pins or abnormal brownout reset. Details: ${activeFault?.reason || 'Hardware defect'}.`)
+                  : isEmergencyFlash
+                  ? (isVi ? 'Hệ thống đang phát lệnh khẩn cấp nháy vàng 4 đèn tại nút này. Nhấn nút "Phục hồi chu trình" để trở lại trạng thái điều khiển bình thường.' : 'Emergency all-yellow flashing is active. Click "Resume Cycle" to return to normal adaptive operation.')
                   : deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
                   ? (isVi ? 'Không nhận nhịp tim thiết bị quá 30 s (mất nguồn hoặc mạng). Tự động chạy chu kỳ cố định 15 s/pha.' : 'No heartbeat from device for >30s. Actuator automatically falls back to fixed-time 15s/phase.')
                   : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
@@ -768,18 +834,43 @@ const IntersectionDetail = () => {
               </div>
             </div>
           </div>
-          <div style={{
-            fontSize: '0.82rem',
-            fontFamily: 'JetBrains Mono, monospace',
-            fontWeight: 800,
-            backgroundColor: '#ffffff',
-            color: isSafeStop ? '#d97706' : '#dc2626',
-            border: `1.5px solid ${isSafeStop ? '#fcd34d' : '#f87171'}`,
-            padding: '6px 14px',
-            borderRadius: '8px',
-            textTransform: 'uppercase'
-          }}>
-            FAIL-SAFE INTERLOCK
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {isEmergencyFlash && (
+              <button
+                onClick={() => handleEmergencyFlash('resume')}
+                style={{
+                  padding: '7px 14px',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 6px rgba(2, 132, 199, 0.35)'
+                }}
+              >
+                <RotateCcw size={14} />
+                {isVi ? 'Khôi Phục Chu Trình' : 'Resume Cycle'}
+              </button>
+            )}
+            <div style={{
+              fontSize: '0.82rem',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontWeight: 800,
+              backgroundColor: '#ffffff',
+              color: isSafeStop || isEmergencyFlash ? '#d97706' : '#dc2626',
+              border: `1.5px solid ${isSafeStop || isEmergencyFlash ? '#fcd34d' : '#f87171'}`,
+              padding: '6px 14px',
+              borderRadius: '8px',
+              textTransform: 'uppercase'
+            }}>
+              {isSafeStop ? 'SAFE-STOP' : isConflictGuard ? 'CONFLICT GUARD' : isHardwareDefect ? 'HARDWARE DEFECT' : isEmergencyFlash ? 'EMERGENCY FLASH' : 'FAIL-SAFE INTERLOCK'}
+            </div>
           </div>
         </div>
       )}
@@ -842,6 +933,8 @@ const IntersectionDetail = () => {
                 ? '● Actuator Safe-Stop'
                 : deviceHealth?.actuator?.status === 'FALLBACK'
                 ? (isVi ? '● Fallback cố định 15 s/pha' : '● Fallback Fixed 15s/phase')
+                : deviceHealth?.actuator?.last_heartbeat_ms_ago == null
+                ? (isVi ? '● Chưa có board phần cứng cho nút này' : '● No physical board for this node')
                 : t.deviceStatus(deviceHealth?.actuator?.clearance, lastPingMs)}
             </div>
           </div>
@@ -1357,6 +1450,56 @@ const IntersectionDetail = () => {
                   <Play size={14} /> {t.switchPhase(phase.name || phase.phase_id)}
                 </button>
               ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+              <button
+                title={isVi ? 'Lệnh khẩn cấp: nháy vàng cả 4 cụm đèn tại nút' : 'Emergency command: all-yellow flashing on all 4 heads'}
+                onClick={() => handleEmergencyFlash('activate')}
+                disabled={overrideBusy}
+                style={{
+                  flex: '1 1 150px',
+                  padding: '10px 14px',
+                  backgroundColor: '#f59e0b',
+                  color: '#ffffff',
+                  border: '2px solid #d97706',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: overrideBusy ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                }}
+              >
+                <Zap size={14} /> {isVi ? 'Khẩn Cấp: Nháy Vàng 4 Đèn' : 'Emergency: Flash All-Yellow'}
+              </button>
+
+              <button
+                title={isVi ? 'Hủy nháy vàng / Phục hồi chu trình chuyển pha an toàn' : 'Resume normal adaptive cycle'}
+                onClick={() => handleEmergencyFlash('resume')}
+                disabled={overrideBusy && !isEmergencyFlash && !Boolean(manualOverride?.target_phase_id?.includes('FLASH'))}
+                style={{
+                  flex: '0 1 150px',
+                  padding: '10px 14px',
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: '2px solid #0369a1',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: (overrideBusy && !isEmergencyFlash && !Boolean(manualOverride?.target_phase_id?.includes('FLASH'))) ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                }}
+              >
+                {isVi ? 'Phục Hồi Chu Trình' : 'Resume Cycle'}
+              </button>
             </div>
 
             {overrideBusy && (

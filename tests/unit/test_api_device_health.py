@@ -174,3 +174,30 @@ def test_health_reports_controller_seen_in_commands():
         LIVE_STATE.pop("applied_controller", None)
         if "applied_controller" in saved:
             LIVE_STATE["applied_controller"] = saved["applied_controller"]
+
+
+def test_hardware_faults_and_degraded_reported_as_hardware_fault():
+    # 1. Degraded status from ESP32
+    _esp32(status="DEGRADED", clearance="FLASHING_YELLOW")
+    health = compute_node_device_health("J1", _telemetry(), NOW_MS)
+    assert health["actuator"]["status"] == "DEGRADED"
+    assert health["overall_status"] == "HARDWARE_FAULT"
+
+    # 2. Conflict guard fault event active
+    LIVE_STATE.setdefault("signal_faults", {})["J1"] = {
+        "node_id": "J1",
+        "category": "feedback_error",
+        "fault_code": "ERR_CONFLICT_GUARD_TRIGGERED",
+        "severity": "CRITICAL",
+        "reason": "Conflicting green requested -> forced ALL_RED, flashing"
+    }
+    health_fault = compute_node_device_health("J1", _telemetry(), NOW_MS)
+    assert health_fault["overall_status"] == "HARDWARE_FAULT"
+    assert health_fault["actuator"]["active_fault"]["fault_code"] == "ERR_CONFLICT_GUARD_TRIGGERED"
+
+    # 3. Emergency flash status from ESP32
+    _esp32(status="EMERGENCY_FLASH", clearance="FLASHING_YELLOW")
+    LIVE_STATE["signal_faults"].pop("J1", None)
+    health_flash = compute_node_device_health("J1", _telemetry(), NOW_MS)
+    assert health_flash["actuator"]["status"] == "EMERGENCY_FLASH"
+    assert health_flash["overall_status"] == "EMERGENCY_FLASH"

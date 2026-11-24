@@ -39,7 +39,7 @@ import mqtt_common as mc  # noqa: E402
 logger = logging.getLogger("esp32-sim")
 
 GREEN, YELLOW, ALL_RED, FLASH = "GREEN", "YELLOW", "ALL_RED", "FLASHING_YELLOW"
-STARTUP, SAFE_STOP, FAULT = "startup", "safe-stop", "fault"
+STARTUP, SAFE_STOP, FAULT, EMERGENCY = "startup", "safe-stop", "fault", "emergency"
 ABNORMAL_RESETS = ("PANIC", "INT_WDT", "TASK_WDT", "WDT", "BROWNOUT")
 OVERRIDE_ID_PREFIX = "cmd-override-"
 FAULT_QUEUE_SIZE = 8
@@ -120,6 +120,8 @@ class Esp32Logic:
             return "DEGRADED"
         if self.clear_state == FLASH and self.flash_reason == STARTUP:
             return "STARTING"
+        if self.clear_state == FLASH and self.flash_reason == EMERGENCY:
+            return "EMERGENCY_FLASH"
         return "FALLBACK_AUTONOMOUS" if self.fallback else "HEALTHY"
 
     def heads(self, now: float) -> Tuple[str, str]:
@@ -285,7 +287,37 @@ class Esp32Logic:
         if self.safe_stop:
             self.emit_ack(cmd_id, target_str, "REJECTED", "Safe-stop is engaged")
             return
+
+        req_flash = target_str in (
+            f"{self.node_id}_PHASE_FLASH", f"{self.node_id}_FLASH", "FLASH", "FLASHING_YELLOW"
+        ) or doc.get("controller") == "emergency_flash"
+        if req_flash:
+            if self.clear_state == FLASH:
+                if self.flash_reason == EMERGENCY:
+                    self.emit_ack(cmd_id, target_str, "APPLIED", "Signal is already in emergency flashing mode")
+                else:
+                    self.emit_ack(cmd_id, target_str, "REJECTED", f"Signal is in flashing mode ({self.flash_reason})")
+                return
+            self.enter_flash(EMERGENCY, now)
+            self.emit_ack(cmd_id, target_str, "APPLIED", "Emergency all-yellow flash activated by operator command")
+            self.raise_fault("emergency", "ERR_EMERGENCY_OVERRIDE", "WARNING",
+                             "Emergency all-yellow flashing commanded by dashboard", now, target=target_str)
+            return
+
         if self.clear_state == FLASH:
+            if self.flash_reason == EMERGENCY:
+                target = self._parse_phase(target_str)
+                if target:
+                    self.current_phase = target
+                if cmd_id:
+                    self.pending_command_id = cmd_id
+                    self.pending_target = target_str
+                self.exit_flash(now)
+                self.emit_ack(cmd_id, target_str, "ACCEPTED",
+                              "Leaving emergency flash: YELLOW (3s) -> ALL_RED (2s) -> TARGET")
+                self.raise_fault("emergency", "ERR_EMERGENCY_OVERRIDE", "INFO",
+                                 "Emergency flashing mode cancelled by operator command", now, target=target_str)
+                return
             self.emit_ack(cmd_id, target_str, "REJECTED", f"Signal is in flashing mode ({self.flash_reason})")
             return
         if self._expired(doc, now):
@@ -312,6 +344,9 @@ class Esp32Logic:
                 self.emit_ack(cmd_id, target_str, "ACCEPTED", "Transition currently clearing through Yellow/All-Red.")
             return
         if target == self.pending_phase and self.clear_state != GREEN:
+            if cmd_id:
+                self.pending_command_id = cmd_id
+                self.pending_target = target_str
             self.emit_ack(cmd_id, target_str, "ACCEPTED", "Phase transition is already pending and clearing.")
             return
         if self.clear_state != GREEN:

@@ -114,3 +114,38 @@ def test_node_state_exposes_the_override(monkeypatch):
     data = client.get("/api/v1/network/state/J1").json()
     assert data["manual_override"]["target_phase_id"] == "J1_PHASE_EW"
     assert client.get("/api/v1/network/state/J2").json()["manual_override"] is None
+
+
+def test_override_with_flash_publishes_emergency_flash(monkeypatch):
+    mqtt = _FakeMqtt()
+    monkeypatch.setattr(api, "MQTT_CLIENT", mqtt)
+    res = client.post("/api/v1/control/override", json={"node_id": "J1", "target_phase_id": "J1_PHASE_FLASH"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "SENT"
+    topic, cmd = mqtt.published[0]
+    assert topic.endswith("/control/J1/command")
+    assert cmd["controller"] == "emergency_flash"
+    assert cmd["target_phase_id"] == "J1_PHASE_FLASH"
+    assert cmd["min_green_s"] == 0.0
+
+
+def test_emergency_flash_endpoint(monkeypatch):
+    mqtt = _FakeMqtt()
+    monkeypatch.setattr(api, "MQTT_CLIENT", mqtt)
+    res = client.post("/api/v1/control/emergency-flash", json={"node_id": "J1", "action": "activate"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "SENT"
+    assert data["action"] == "activate"
+    topic, cmd = mqtt.published[0]
+    assert cmd["controller"] == "emergency_flash"
+    assert cmd["target_phase_id"] == "J1_PHASE_FLASH"
+
+    # Test resume/deactivate
+    res_resume = client.post("/api/v1/control/emergency-flash", json={"node_id": "J1", "action": "resume", "target_phase_id": "J1_PHASE_NS"})
+    assert res_resume.status_code == 200
+    assert res_resume.json()["action"] == "resume"
+    topic2, cmd2 = mqtt.published[1]
+    assert cmd2["controller"] == "manual_override"
+    assert cmd2["target_phase_id"] == "J1_PHASE_NS"

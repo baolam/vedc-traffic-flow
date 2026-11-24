@@ -117,6 +117,11 @@ class ManualOverrideHold:
         node_id, target = command.get("node_id"), command.get("target_phase_id")
         if not node_id or not target:
             return False
+        is_flash = "FLASH" in str(target).upper() or command.get("controller") == "emergency_flash"
+        if is_flash:
+            self._holds.pop(node_id, None)
+            logger.info(f"[{node_id}] Emergency flash override active -- regular green hold bypassed.")
+            return False
         self._holds[node_id] = {"target": target, "since": self._clock(), "green_since": None}
         logger.info(f"[{node_id}] manual override -> {target}: controller paused until it has been "
                     f"green {self.hold_s:.0f} s")

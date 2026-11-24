@@ -15,22 +15,24 @@ const TONES = {
 export function describeOverride(override) {
   if (!override) return null;
   const target = override.target_phase_id;
+  const isFlash = target && (target.includes('FLASH') || target === 'FLASHING_YELLOW');
   const reason = override.last_reason ? `Thiết bị: "${override.last_reason}". ` : '';
   const views = {
-    SENT: ['info', `Đã gửi lệnh ${target}`, 'Đang chờ thiết bị trả lời…'],
-    WAITING: ['warn', `Chưa đổi sang ${target}`,
-      `${reason}Graph-control gửi lại mỗi giây cho tới khi luật an toàn (xanh tối thiểu 5 s, không cắt ngang vàng/đỏ) cho phép.`],
-    CLEARING: ['warn', `Đang chuyển sang ${target}`, 'Đã nhận lệnh: vàng 3 s → đỏ toàn bộ 2 s → xanh.'],
-    APPLIED: ['ok', `${target} đang xanh theo lệnh tay`,
-      `Giữ ưu tiên thêm ${override.hold_remaining_s ?? '?'} s, sau đó thuật toán điều khiển lại.`],
-    ENDED: ['neutral', `Đã hết ưu tiên ${target}`, 'Thuật toán đã điều khiển lại nút này.'],
-    NOT_APPLIED: ['error', `Không đổi được sang ${target}`,
+    SENT: ['info', isFlash ? 'Đã gửi lệnh nháy vàng khẩn cấp 4 đèn' : `Đã gửi lệnh ${target}`, 'Đang chờ thiết bị trả lời…'],
+    WAITING: ['warn', isFlash ? 'Chưa kích hoạt nháy vàng' : `Chưa đổi sang ${target}`,
+      isFlash ? `${reason || 'Đang chờ thiết bị phản hồi hoặc hoàn tất giải tỏa an toàn…'}` : `${reason}Graph-control gửi lại mỗi giây cho tới khi luật an toàn cho phép.`],
+    CLEARING: ['warn', isFlash ? 'Đang chuyển sang nháy vàng' : `Đang chuyển sang ${target}`,
+      isFlash ? 'Thiết bị đang chuyển trạng thái nháy vàng an toàn.' : 'Đã nhận lệnh: vàng 3 s → đỏ toàn bộ 2 s → xanh.'],
+    APPLIED: ['ok', isFlash ? 'Đang nháy vàng khẩn cấp 4 đèn theo lệnh' : `${target} đang xanh theo lệnh tay`,
+      isFlash ? 'Tất cả 4 cụm đèn đang nhấp nháy vàng cảnh báo. Nhấn phục hồi để trở lại chu trình bình thường.' : `Giữ ưu tiên thêm ${override.hold_remaining_s ?? '?'} s, sau đó thuật toán điều khiển lại.`],
+    ENDED: ['neutral', isFlash ? 'Đã kết thúc nháy vàng' : `Đã hết ưu tiên ${target}`, 'Thuật toán đã điều khiển lại nút này.'],
+    NOT_APPLIED: ['error', isFlash ? 'Không kích hoạt được nháy vàng' : `Không đổi được sang ${target}`,
       `${reason || 'Thiết bị không trả lời (mất kết nối, safe-stop, hoặc graph-control không chạy). '}Lệnh đã bị bỏ.`]
   };
   const view = views[override.status];
   if (!view) return null;
   const [tone, title, detail] = view;
-  return { tone, colors: TONES[tone], title, detail };
+  return { tone, colors: TONES[tone], title, detail, isEmergencyFlash: Boolean(isFlash) };
 }
 
 /** Error text for a failed POST /api/v1/control/override (the command never reached the ESP32). */

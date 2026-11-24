@@ -126,7 +126,8 @@ enum FlashReason
   FLASH_NONE,
   FLASH_STARTUP,
   FLASH_SAFE_STOP,
-  FLASH_FAULT
+  FLASH_FAULT,
+  FLASH_EMERGENCY
 };
 
 PhaseId currentPhase = PHASE_NS;
@@ -380,6 +381,8 @@ const char *healthStatus()
     return "DEGRADED";
   if (clearState == STATE_FLASH && flashReason == FLASH_STARTUP)
     return "STARTING";
+  if (clearState == STATE_FLASH && flashReason == FLASH_EMERGENCY)
+    return "EMERGENCY_FLASH";
   return isLocalFallbackMode ? "FALLBACK_AUTONOMOUS" : "HEALTHY";
 }
 
@@ -497,7 +500,7 @@ void flushFaults(unsigned long now)
 // ====================================================================
 const char *flashReasonName(FlashReason r)
 {
-  return r == FLASH_STARTUP ? "startup" : (r == FLASH_SAFE_STOP ? "safe-stop" : "fault");
+  return r == FLASH_STARTUP ? "startup" : (r == FLASH_SAFE_STOP ? "safe-stop" : (r == FLASH_EMERGENCY ? "emergency" : "fault"));
 }
 
 void enterFlash(FlashReason reason, unsigned long now)
@@ -546,6 +549,17 @@ void serviceFlash(unsigned long now)
 // ====================================================================
 // 9. INCOMING CONTROL COMMAND HANDLER (MQTT CALLBACK)
 // ====================================================================
+bool isFlashPhaseString(const char *phaseStr)
+{
+  if (!phaseStr)
+    return false;
+  String s = String(phaseStr);
+  return (s == String(NODE_ID) + "_PHASE_FLASH" ||
+          s == String(NODE_ID) + "_FLASH" ||
+          s == "FLASH" ||
+          s == "FLASHING_YELLOW");
+}
+
 // Strict mapping of canonical target_phase_id ("<NODE>_PHASE_NS" / "<NODE>_PHASE_EW").
 bool parsePhaseString(const char *phaseStr, PhaseId &out)
 {
@@ -635,14 +649,54 @@ void onMqttCommand(char *topic, byte *payload, unsigned int length)
 
   const char *cmdId = doc["command_id"] | "unknown";
   const char *targetPhaseStr = doc["target_phase_id"] | "";
+  const char *controller = doc["controller"] | "";
 
   if (safeStopActive)
   {
     publishControlAck(cmdId, targetPhaseStr, "REJECTED", "Safe-stop is engaged");
     return;
   }
+
+  bool reqFlash = isFlashPhaseString(targetPhaseStr) || strcmp(controller, "emergency_flash") == 0;
+  if (reqFlash)
+  {
+    if (clearState == STATE_FLASH)
+    {
+      if (flashReason == FLASH_EMERGENCY)
+        publishControlAck(cmdId, targetPhaseStr, "APPLIED", "Signal is already in emergency flashing mode");
+      else
+      {
+        char why[64];
+        snprintf(why, sizeof(why), "Signal is in flashing mode (%s)", flashReasonName(flashReason));
+        publishControlAck(cmdId, targetPhaseStr, "REJECTED", why);
+      }
+      return;
+    }
+    enterFlash(FLASH_EMERGENCY, now);
+    publishControlAck(cmdId, targetPhaseStr, "APPLIED", "Emergency all-yellow flash activated by operator command");
+    raiseFault("emergency", "ERR_EMERGENCY_OVERRIDE", "WARNING", "Emergency all-yellow flashing mode commanded by dashboard", targetPhaseStr);
+    return;
+  }
+
   if (clearState == STATE_FLASH)
   {
+    if (flashReason == FLASH_EMERGENCY)
+    {
+      PhaseId targetPhase;
+      if (parsePhaseString(targetPhaseStr, targetPhase))
+      {
+        currentPhase = targetPhase;
+      }
+      if (cmdId && strlen(cmdId) > 0)
+      {
+        pendingCommandId = cmdId;
+        pendingTargetPhaseStr = targetPhaseStr;
+      }
+      exitFlash(now);
+      publishControlAck(cmdId, targetPhaseStr, "ACCEPTED", "Leaving emergency flashing mode -> YELLOW (3s) -> ALL_RED (2s) -> TARGET");
+      raiseFault("emergency", "ERR_EMERGENCY_OVERRIDE", "INFO", "Emergency flashing mode cancelled by operator command", targetPhaseStr);
+      return;
+    }
     char why[64];
     snprintf(why, sizeof(why), "Signal is in flashing mode (%s)", flashReasonName(flashReason));
     publishControlAck(cmdId, targetPhaseStr, "REJECTED", why);
@@ -687,6 +741,11 @@ void onMqttCommand(char *topic, byte *payload, unsigned int length)
 
   if (targetPhase == pendingPhase && clearState != STATE_GREEN)
   {
+    if (cmdId && strlen(cmdId) > 0)
+    {
+      pendingCommandId = cmdId;
+      pendingTargetPhaseStr = targetPhaseStr;
+    }
     publishControlAck(cmdId, targetPhaseStr, "ACCEPTED", "Phase transition is already pending and clearing.");
     return;
   }

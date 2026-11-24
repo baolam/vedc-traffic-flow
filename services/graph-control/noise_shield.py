@@ -277,7 +277,8 @@ class FaultCircuitBreaker:
         reported_phase = fault.get("current_phase")
 
         if category == "emergency":
-            if fault_code in ("ERR_SAFE_STOP_ENGAGED", "ERR_EMERGENCY_OVERRIDE"):
+            severity = str(fault.get("severity", "")).upper()
+            if fault_code == "ERR_SAFE_STOP_ENGAGED" or (fault_code == "ERR_EMERGENCY_OVERRIDE" and severity != "INFO"):
                 self._tripped[node_id] = {
                     "category": "emergency",
                     "fault_code": fault_code,
@@ -291,14 +292,14 @@ class FaultCircuitBreaker:
                 logger.warning(
                     f"[{node_id}] Circuit breaker OPEN ({fault_code}): commands halted & upstream spillback barrier active"
                 )
-            elif fault_code == "ERR_SAFE_STOP_RELEASED":
+            elif fault_code == "ERR_SAFE_STOP_RELEASED" or (fault_code == "ERR_EMERGENCY_OVERRIDE" and severity == "INFO"):
                 self._tripped.pop(node_id, None)
                 if node_id in self._active_barriers:
                     self._active_barriers.discard(node_id)
                     network_state.pop(node_id, None)
                 if on_node_reset:
                     on_node_reset(node_id)
-                logger.info(f"[{node_id}] Circuit breaker CLOSED (ERR_SAFE_STOP_RELEASED): adaptive control resuming")
+                logger.info(f"[{node_id}] Circuit breaker CLOSED ({fault_code}): adaptive control resuming")
 
         elif category == "feedback_error":
             cooldown = (

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import SafeStopOverlay from './components/SafeStopOverlay';
+import HardwareFaultOverlay from './components/HardwareFaultOverlay';
 import NetworkOverview from './pages/NetworkOverview';
 import IntersectionDetail from './pages/IntersectionDetail';
 import ControlPanel from './pages/ControlPanel';
@@ -18,6 +19,7 @@ function App() {
   return (
     <BrowserRouter>
       <SafeStopOverlay />
+      <HardwareFaultOverlay />
       <div className="app-container">
         <Sidebar />
         <div className="main-content">

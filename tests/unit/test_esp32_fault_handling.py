@@ -282,6 +282,38 @@ def test_schedule_orders_start_and_end_and_reboot_lasts_one_second():
         (10.0, "start", "safe_stop"), (12.0, "start", "reboot"), (13.0, "end", "reboot"), (15.0, "end", "safe_stop")]
 
 
+def test_emergency_flash_command_activates_and_resumes():
+    rig = Rig()
+    rig.keepalive(2)
+    # Send emergency flash command
+    ack = rig.send("FLASH", cmd_id="cmd-override-J1-flash", controller="emergency_flash")
+    assert ack == "APPLIED"
+    assert rig.logic.clear_state == FLASH
+    assert rig.logic.flash_reason == "emergency"
+    assert rig.logic.status == "EMERGENCY_FLASH"
+    assert "ERR_EMERGENCY_OVERRIDE" in rig.codes()
+
+    # Repeated flash command acknowledges already applied
+    ack_dup = rig.send("FLASH", cmd_id="cmd-override-J1-flash-2", controller="emergency_flash")
+    assert ack_dup == "APPLIED"
+
+    # Advance in flash mode
+    rig.advance(3.0)
+    assert rig.logic.clear_state == FLASH
+
+    # Operator resumes by commanding a green phase (e.g. NS)
+    ack_resume = rig.send("NS", cmd_id="cmd-override-J1-resume")
+    assert ack_resume == "ACCEPTED"
+    assert rig.logic.clear_state == YELLOW
+    assert rig.logic.yellow_both is True
+
+    # Check safe clearance: YELLOW (3s) -> ALL_RED (2s) -> GREEN
+    rig.advance(T.clearance_s + 0.1)
+    assert rig.logic.clear_state == GREEN
+    assert rig.logic.current_phase == "NS"
+    assert rig.trace_report().violations == []
+
+
 def test_verify_trace_flags_flashing_straight_to_red():
     bad = [vt.TraceEvent(0, "J1", "Y", "Y", "FLASH"), vt.TraceEvent(500, "J1", "R", "R", "ALL_RED"),
            vt.TraceEvent(2500, "J1", "G", "R", "GREEN")]

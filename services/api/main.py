@@ -198,6 +198,13 @@ class OverrideRequest(BaseModel):
     # 5 s is the ESP32 floor: a larger value only makes the device reject the override for longer
     min_green_s: Optional[float] = 5.0
     max_green_s: Optional[float] = 60.0
+    topology_id: Optional[str] = None
+
+class EmergencyFlashRequest(BaseModel):
+    node_id: str
+    action: str = "activate"  # "activate" or "deactivate" / "resume"
+    target_phase_id: Optional[str] = None
+    topology_id: Optional[str] = None
 
 class ConnectionManager:
     def __init__(self):
@@ -249,6 +256,26 @@ def ingest_health_message(topic: str, payload: Dict[str, Any]) -> None:
     events.insert(0, event_msg)
     LIVE_STATE["recent_inter_service_events"] = events[:50]
 
+    # Health-based reconciliation: if an override was requested and the physical device is
+    # already in that phase/clearance, confirm it without waiting for an isolated MQTT ACK packet.
+    override = LIVE_STATE.setdefault("manual_overrides", {}).get(svc_id)
+    if override and override.get("status") in ("SENT", "WAITING", "CLEARING"):
+        cur_ph = payload.get("current_phase")
+        clr = payload.get("clearance")
+        tgt = override.get("target_phase_id")
+        is_flash_target = bool(tgt and ("FLASH" in str(tgt).upper()))
+        if is_flash_target and (clr == "FLASH" or payload.get("status") == "EMERGENCY_FLASH"):
+            override["status"] = "APPLIED"
+            override["applied_ms"] = override.get("applied_ms") or now_ms
+            override["last_reason"] = "Chế độ nháy vàng khẩn cấp đã kích hoạt trên phần cứng"
+        elif cur_ph == tgt and clr == "GREEN":
+            override["status"] = "APPLIED"
+            override["applied_ms"] = override.get("applied_ms") or now_ms
+            override["last_reason"] = "Pha đèn đã chuyển sang XANH trên thiết bị"
+        elif clr in ("YELLOW", "ALL_RED") and override.get("status") == "SENT":
+            override["status"] = "CLEARING"
+            override["last_reason"] = f"Thiết bị đang giải tỏa qua {clr}"
+
 
 # Dashboard phase override. graph-control re-sends the forced phase until the ESP32 takes it and keeps it green
 # this long (MANUAL_OVERRIDE_HOLD_S, same variable for both services); the API only reports what the ESP32 answers.
@@ -262,7 +289,14 @@ OVERRIDE_ACK_STATUS = {"APPLIED": "APPLIED", "ACCEPTED": "CLEARING",
 def track_override_ack(node_id: str, ack: Dict[str, Any], now_ms: Optional[int] = None) -> None:
     """Follow the ESP32 answers about the overridden phase (to the API command and to graph-control's re-sends)."""
     override = LIVE_STATE.setdefault("manual_overrides", {}).get(node_id)
-    if not override or override["status"] == "APPLIED" or ack.get("target_phase_id") != override["target_phase_id"]:
+    if not override or override["status"] == "APPLIED":
+        return
+    ack_target = ack.get("target_phase_id")
+    target_match = (
+        ack_target == override["target_phase_id"]
+        or ("FLASH" in str(override["target_phase_id"]).upper() and ("FLASH" in str(ack_target).upper() or ack.get("status") == "APPLIED"))
+    )
+    if not target_match:
         return
     status = OVERRIDE_ACK_STATUS.get(ack.get("status"))
     if not status:
@@ -547,6 +581,7 @@ def ingest_control_ack(payload: Dict[str, Any]):
         LIVE_STATE["control_acks"][node_id] = []
     LIVE_STATE["control_acks"][node_id].insert(0, payload)
     LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
+    track_override_ack(node_id, payload)
     return {"status": "SUCCESS", "node_id": node_id}
 
 @app.post("/api/v1/health/heartbeat")
@@ -644,10 +679,17 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
             actuator_status = "SAFE_STOP"
         elif device_status in ("DEGRADED", "UNHEALTHY"):
             actuator_status = device_status
+        elif device_status == "EMERGENCY_FLASH":
+            actuator_status = "EMERGENCY_FLASH"
         elif device_status == "FALLBACK_AUTONOMOUS":
             actuator_status = "FALLBACK"
         else:
             actuator_status = "ACTIVE"
+
+    active_fault = LIVE_STATE.get("signal_faults", {}).get(nid)
+    has_hardware_defect = bool(active_fault and active_fault.get("fault_code") in (
+        "ERR_HARDWARE_DEFECT", "ERR_CONFLICT_GUARD_TRIGGERED"
+    ))
 
     if camera_status == "SIGNAL_LOST":
         overall_status = "SIGNAL_LOST"
@@ -655,6 +697,10 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
         overall_status = "CAMERA_FAULT"
     elif actuator_status in ("HEARTBEAT_LOST", "SAFE_STOP"):
         overall_status = "ACTUATOR_FAULT"
+    elif actuator_status in ("DEGRADED", "UNHEALTHY") or has_hardware_defect:
+        overall_status = "HARDWARE_FAULT"
+    elif actuator_status == "EMERGENCY_FLASH":
+        overall_status = "EMERGENCY_FLASH"
     elif actuator_status == "FALLBACK":
         overall_status = "FALLBACK"
     else:
@@ -672,7 +718,8 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
             "status": actuator_status,
             "last_heartbeat_ms_ago": actuator_age_ms,
             "clearance": clearance,
-            "raw_safe_stop": raw_safe_stop
+            "raw_safe_stop": raw_safe_stop,
+            "active_fault": active_fault
         }
     }
 
@@ -877,6 +924,27 @@ def update_actuator_config(req: ActuatorConfigRequest):
         "timestamp_ms": LIVE_STATE["last_updated_ms"]
     }
 
+def _find_node_spec(node_id: str, preferred_topo_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    topos_to_try = []
+    if preferred_topo_id:
+        topos_to_try.append(preferred_topo_id)
+    active_topo = LIVE_STATE.get("active_topology_id")
+    if active_topo and active_topo not in topos_to_try:
+        topos_to_try.append(active_topo)
+    for candidate in ("tabletop_5nut_v1", "tabletop_j1_j2_v1", "four_intersection_v1", "rpi_demo_v1", "corridor"):
+        if candidate not in topos_to_try:
+            topos_to_try.append(candidate)
+    
+    for tid in topos_to_try:
+        try:
+            t = contracts_sdk.load_topology(tid)
+            for n in t.get("nodes", []):
+                if n["node_id"] == node_id:
+                    return n
+        except Exception:
+            continue
+    return None
+
 @app.post("/api/v1/control/override")
 def trigger_emergency_override(req: OverrideRequest):
     """
@@ -885,27 +953,31 @@ def trigger_emergency_override(req: OverrideRequest):
     phase until it has been green MANUAL_OVERRIDE_HOLD_S. The ESP32 answer is followed in
     GET /api/v1/network/state/{node_id} -> manual_override; "SENT" here only means it left the API.
     """
-    try:
-        topo = contracts_sdk.load_topology(LIVE_STATE["active_topology_id"])
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Cannot load topology: {exc}")
-    node_spec = next((n for n in topo.get("nodes", []) if n["node_id"] == req.node_id), None)
-    if node_spec is None:
-        raise HTTPException(status_code=404, detail=f"Node '{req.node_id}' is not in topology '{LIVE_STATE['active_topology_id']}'.")
-    if req.target_phase_id not in [ph["phase_id"] for ph in node_spec.get("phases", [])]:
-        raise HTTPException(status_code=400, detail=f"Phase '{req.target_phase_id}' does not belong to node '{req.node_id}'.")
+    node_spec = _find_node_spec(req.node_id, req.topology_id)
+    is_flash = (
+        "FLASH" in req.target_phase_id.upper()
+        or req.target_phase_id in (f"{req.node_id}_FLASH", f"{req.node_id}_PHASE_FLASH", "FLASH", "FLASHING_YELLOW")
+    )
+    if not is_flash:
+        if node_spec is None:
+            raise HTTPException(status_code=404, detail=f"Node '{req.node_id}' not found in registered topologies.")
+        if req.target_phase_id not in [ph["phase_id"] for ph in node_spec.get("phases", [])]:
+            raise HTTPException(status_code=400, detail=f"Phase '{req.target_phase_id}' does not belong to node '{req.node_id}'.")
     if not (MQTT_CLIENT and MQTT_CLIENT.is_connected()):
         raise HTTPException(status_code=503, detail="MQTT broker not connected: override not sent to the ESP32.")
 
     now_ms = int(time.time() * 1000)
     cmd_id = f"cmd-override-{req.node_id}-{now_ms}"   # graph-control recognises overrides by this prefix
+    target_phase_id = f"{req.node_id}_PHASE_FLASH" if is_flash else req.target_phase_id
+    controller_name = "emergency_flash" if is_flash else "manual_override"
+    min_green = 0.0 if is_flash else (float(req.min_green_s) if req.min_green_s is not None else 5.0)
     command_payload = {
         "command_id": cmd_id,
         "node_id": req.node_id,
-        "target_phase_id": req.target_phase_id,
-        "min_green_s": float(req.min_green_s) if req.min_green_s is not None else 5.0,
+        "target_phase_id": target_phase_id,
+        "min_green_s": min_green,
         "max_green_s": float(req.max_green_s) if req.max_green_s is not None else 60.0,
-        "controller": "manual_override",
+        "controller": controller_name,
         "timestamp_ms": now_ms,
         "expires_at_ms": now_ms + 10000
     }
@@ -920,22 +992,82 @@ def trigger_emergency_override(req: OverrideRequest):
         raise HTTPException(status_code=503, detail=f"MQTT publish failed (rc={info.rc}): override not sent.")
     LIVE_STATE.setdefault("manual_overrides", {})[req.node_id] = {
         "command_id": cmd_id,
-        "target_phase_id": req.target_phase_id,
+        "target_phase_id": target_phase_id,
         "requested_ms": now_ms,
         "status": "SENT",
         "last_reason": None,
     }
     if req.node_id in LIVE_STATE["nodes"]:
-        LIVE_STATE["nodes"][req.node_id]["pending_phase_id"] = req.target_phase_id
+        LIVE_STATE["nodes"][req.node_id]["pending_phase_id"] = target_phase_id
 
-    logger.info(f"Manual override published to {pub_topic}: {req.node_id} -> {req.target_phase_id} ({cmd_id})")
+    logger.info(f"Manual override published to {pub_topic}: {req.node_id} -> {target_phase_id} ({cmd_id})")
     return {
         "status": "SENT",
         "command_id": cmd_id,
         "node_id": req.node_id,
-        "target_phase_id": req.target_phase_id,
+        "target_phase_id": target_phase_id,
         "hold_s": MANUAL_OVERRIDE_HOLD_S,
         "reason": "Published to the ESP32; its answer appears in /api/v1/network/state/{node_id} -> manual_override.",
+        "timestamp_ms": now_ms
+    }
+
+@app.post("/api/v1/control/emergency-flash")
+def trigger_emergency_flash(req: EmergencyFlashRequest):
+    """
+    Commands emergency all-yellow flashing mode or resumes normal operation for a node.
+    """
+    node_spec = _find_node_spec(req.node_id, req.topology_id)
+    if not (MQTT_CLIENT and MQTT_CLIENT.is_connected()):
+        raise HTTPException(status_code=503, detail="MQTT broker not connected: flash command not sent to the ESP32.")
+
+    now_ms = int(time.time() * 1000)
+    cmd_id = f"cmd-override-{req.node_id}-{now_ms}"
+
+    if req.action in ("deactivate", "resume"):
+        target = req.target_phase_id
+        if not target:
+            phases = node_spec.get("phases", [])
+            target = phases[0]["phase_id"] if phases else f"{req.node_id}_PHASE_NS"
+        controller_name = "manual_override"
+        min_green = 5.0
+    else:
+        target = f"{req.node_id}_PHASE_FLASH"
+        controller_name = "emergency_flash"
+        min_green = 0.0
+
+    command_payload = {
+        "command_id": cmd_id,
+        "node_id": req.node_id,
+        "target_phase_id": target,
+        "min_green_s": min_green,
+        "max_green_s": 60.0,
+        "controller": controller_name,
+        "timestamp_ms": now_ms,
+        "expires_at_ms": now_ms + 10000
+    }
+    try:
+        contracts_sdk.validate_payload(command_payload, "control_command")
+    except Exception as ve:
+        logger.warning(f"ControlCommand validation warning: {ve}")
+
+    pub_topic = topics.get_command_topic(req.node_id)
+    info = MQTT_CLIENT.publish(pub_topic, json.dumps(command_payload))
+    if getattr(info, "rc", 0) != 0:
+        raise HTTPException(status_code=503, detail=f"MQTT publish failed (rc={info.rc}): flash command not sent.")
+    LIVE_STATE.setdefault("manual_overrides", {})[req.node_id] = {
+        "command_id": cmd_id,
+        "target_phase_id": target,
+        "requested_ms": now_ms,
+        "status": "SENT",
+        "last_reason": None,
+    }
+    logger.info(f"Emergency flash ({req.action}) published to {pub_topic}: {req.node_id} -> {target} ({cmd_id})")
+    return {
+        "status": "SENT",
+        "command_id": cmd_id,
+        "node_id": req.node_id,
+        "action": req.action,
+        "target_phase_id": target,
         "timestamp_ms": now_ms
     }
 
@@ -967,8 +1099,20 @@ def get_system_aggregated_reports():
     mean_wait_s = max(2.5, round(total_q * 1.8 / node_count, 1))
     throughput_per_min = max(45, round(total_flow * 60, 1))
 
-    # Evaluate active alerts based on physical criteria (congestion, health)
+    # Evaluate active alerts based on physical criteria (congestion, health, hardware faults)
     active_alerts = []
+    # Hardware faults reported by ESP32 (Conflict Guard, Hardware Defect / GPIO short)
+    for nid, fault in LIVE_STATE.get("signal_faults", {}).items():
+        f_code = fault.get("fault_code", "")
+        if f_code in ("ERR_HARDWARE_DEFECT", "ERR_CONFLICT_GUARD_TRIGGERED"):
+            active_alerts.append({
+                "node_id": nid,
+                "type": "HARDWARE_FAULT",
+                "fault_code": f_code,
+                "severity": "CRITICAL",
+                "message": f"Hardware Fault at {nid}: {f_code} - {fault.get('reason', '')}"
+            })
+
     for nid, n in nodes.items():
         apps = n.get("approaches", [])
         q = sum(a.get("queue_vehicles", 0) for a in apps)

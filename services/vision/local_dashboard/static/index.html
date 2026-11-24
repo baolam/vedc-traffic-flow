@@ -1,113 +1,318 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EdgeFlow AI — Vision Local Dashboard</title>
+  <title>EdgeFlow AI — Vision Local Console</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div class="rig">
+    <!-- Top Command Header -->
     <header class="nameplate">
-      <div class="nameplate-id">
-        <span class="brand">EdgeFlow AI</span>
-        <span class="unit">Vision node — local dashboard</span>
+      <div class="nameplate-brand">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12h5l3 7 4-14 3 7h5"/>
+          </svg>
+        </div>
+        <div class="nameplate-titles">
+          <span class="brand">EdgeFlow AI</span>
+          <span class="unit">Vision Perception Node &bull; On-Device Local Console</span>
+        </div>
       </div>
-      <div class="nameplate-readout">
-        <span id="node-id-label" class="node-id">--</span>
-        <span id="status-pill" class="pill neutral">connecting</span>
+
+      <div class="nameplate-center">
+        <div class="node-badge" title="Mã nút giao nhận diện">
+          <span class="badge-label">NÚT GIAO</span>
+          <span id="node-id-label" class="badge-value">--</span>
+        </div>
+        <div id="status-pill" class="pill neutral" title="Trạng thái dịch vụ thị giác">
+          <span class="pulse-beacon"></span>
+          <span class="status-text">Đang kết nối...</span>
+        </div>
       </div>
-      <div class="nameplate-time">
-        <span class="muted">Last poll</span>
-        <span id="status-time" class="mono">--:--:--</span>
+
+      <div class="nameplate-actions">
+        <div class="last-sync">
+          <span class="sync-label">Cập nhật lúc</span>
+          <span id="status-time" class="sync-time mono">--:--:--</span>
+        </div>
+        <button id="btn-theme-toggle" class="btn-icon" title="Chuyển đổi giao diện Sáng / Tối">
+          <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
       </div>
     </header>
 
-    <nav class="switchbank">
-      <button class="switch active" data-tab="live">Live</button>
-      <button class="switch" data-tab="history">History</button>
-      <button class="switch" data-tab="roi">ROI Calibration</button>
+    <!-- Navigation Switchbank -->
+    <nav class="switchbank" role="tablist">
+      <button class="switch active" data-tab="live" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span>Trực tiếp & Giám sát</span>
+      </button>
+      <button class="switch" data-tab="history" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Lịch sử dữ liệu (On-Device DB)</span>
+      </button>
+      <button class="switch" data-tab="roi" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        <span>Hiệu chỉnh vùng nhận diện (ROI)</span>
+      </button>
     </nav>
 
     <main>
-      <section id="tab-live" class="tab-panel active">
+      <!-- TAB 1: LIVE MONITORING -->
+      <section id="tab-live" class="tab-panel active" role="tabpanel">
         <div class="live-layout">
-          <div id="streams" class="streams"></div>
-          <div class="ledger-col">
-            <div class="ledger-block">
-              <h2>Runtime</h2>
-              <div id="runtime-cards" class="stat-cards"></div>
-            </div>
-            <div class="ledger-block">
-              <h2>Controls</h2>
-              <button id="btn-restart" class="btn-primary">Restart pipeline</button>
-              <div class="field-row">
-                <label for="conf-threshold">Confidence threshold</label>
-                <div class="field-input">
-                  <input id="conf-threshold" type="number" min="0.01" max="0.99" step="0.01" />
-                  <button id="btn-apply-conf">Apply</button>
+          <!-- Main Camera View Column -->
+          <div class="camera-col">
+            <div id="streams" class="streams-container"></div>
+
+            <!-- Approach Telemetry Bar (Quick Traffic Summary) -->
+            <div class="card telemetry-quickbar">
+              <div class="card-head">
+                <div class="card-title">
+                  <span class="dot-indicator"></span>
+                  <h3>Hàng đợi & Lưu lượng các hướng (Active Approaches)</h3>
+                </div>
+                <div class="phase-indicator">
+                  <span class="phase-label">Pha đèn:</span>
+                  <span id="active-phase-badge" class="badge-phase">--</span>
                 </div>
               </div>
-              <p id="control-feedback" class="feedback"></p>
+              <div id="approach-cards-grid" class="approach-grid">
+                <div class="empty-state">Đang tải dữ liệu nhận diện...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Hardware & Direct Controls -->
+          <div class="side-col">
+            <!-- Hardware & Performance Metrics -->
+            <div class="card">
+              <div class="card-head">
+                <h3>Hiệu năng phần cứng & Pipeline</h3>
+                <span id="hardware-device-badge" class="badge-subtle">RPI / Edge</span>
+              </div>
+              <div id="runtime-cards" class="stat-grid"></div>
+            </div>
+
+            <!-- On-Device Direct Controls -->
+            <div class="card">
+              <div class="card-head">
+                <h3>Điều khiển trực tiếp tại nút</h3>
+              </div>
+              <div class="controls-content">
+                <div class="field-group">
+                  <div class="field-label-row">
+                    <label for="conf-threshold">Ngưỡng tin cậy (Confidence)</label>
+                    <span id="conf-val-preview" class="val-pill">0.40</span>
+                  </div>
+                  <div class="field-input-row">
+                    <input id="conf-range" type="range" min="0.10" max="0.95" step="0.05" value="0.40" />
+                    <button id="btn-apply-conf" class="btn-secondary" title="Lưu ngưỡng nhận diện">Áp dụng</button>
+                  </div>
+                  <span class="field-hint">Điều chỉnh độ nhạy mô hình YOLOv8 trên camera thực tế</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="action-buttons-group">
+                  <button id="btn-open-restart-modal" class="btn-danger">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    <span>Khởi động lại Pipeline</span>
+                  </button>
+                  <button id="btn-take-snapshot" class="btn-secondary">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span>Tải ảnh Snapshot hiện tại</span>
+                  </button>
+                </div>
+
+                <p id="control-feedback" class="feedback-msg"></p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="tab-history" class="tab-panel">
-        <div class="ledger-sheet">
-          <div class="ledger-sheet-head">
-            <h2>Telemetry history</h2>
-            <button id="btn-refresh-telemetry">Refresh</button>
+      <!-- TAB 2: HISTORY (ON-DEVICE SQLITE DB) -->
+      <section id="tab-history" class="tab-panel" role="tabpanel">
+        <div class="history-tabs-nav">
+          <div class="history-subnav">
+            <button class="sub-tab active" data-subtab="telemetry">Telemetry Queue</button>
+            <button class="sub-tab" data-subtab="health">Sức khỏe (Health)</button>
+            <button class="sub-tab" data-subtab="events">Nhật ký sự kiện (Events)</button>
           </div>
-          <table id="telemetry-table"><thead><tr><th>Time</th><th>Node</th><th>Phase</th><th>Approaches</th></tr></thead><tbody></tbody></table>
+          <div class="history-actions">
+            <select id="history-limit-select" class="select-sm">
+              <option value="25">25 bản ghi gần nhất</option>
+              <option value="50" selected>50 bản ghi gần nhất</option>
+              <option value="100">100 bản ghi gần nhất</option>
+            </select>
+            <button id="btn-export-csv" class="btn-secondary btn-sm" title="Tải xuống CSV">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Xuất CSV</span>
+            </button>
+            <button id="btn-refresh-history" class="btn-secondary btn-sm">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span>Làm mới</span>
+            </button>
+          </div>
         </div>
-        <div class="ledger-sheet">
-          <div class="ledger-sheet-head">
-            <h2>Health history</h2>
-            <button id="btn-refresh-health">Refresh</button>
+
+        <div class="card history-card">
+          <!-- Subtab 1: Telemetry -->
+          <div id="subpanel-telemetry" class="subpanel active">
+            <div class="table-wrapper">
+              <table id="telemetry-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Thời điểm</th>
+                    <th>Nút giao</th>
+                    <th>Pha tín hiệu</th>
+                    <th>Chi tiết hàng đợi & Lưu lượng (Approaches)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
-          <table id="health-table"><thead><tr><th>Time</th><th>Status</th><th>FPS</th><th>CPU temp</th></tr></thead><tbody></tbody></table>
-        </div>
-        <div class="ledger-sheet">
-          <div class="ledger-sheet-head">
-            <h2>Event log</h2>
-            <button id="btn-refresh-events">Refresh</button>
+
+          <!-- Subtab 2: Health -->
+          <div id="subpanel-health" class="subpanel">
+            <div class="table-wrapper">
+              <table id="health-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Thời điểm</th>
+                    <th>Trạng thái</th>
+                    <th>Tốc độ xử lý (FPS)</th>
+                    <th>Nhiệt độ CPU (°C)</th>
+                    <th>Độ trễ Pipeline (p50/p95)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
-          <table id="events-table"><thead><tr><th>Time</th><th>Event</th><th>Detail</th></tr></thead><tbody></tbody></table>
+
+          <!-- Subtab 3: Events -->
+          <div id="subpanel-events" class="subpanel">
+            <div class="table-wrapper">
+              <table id="events-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Thời điểm</th>
+                    <th>Loại sự kiện</th>
+                    <th>Chi tiết thao tác / Tham số</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="tab-roi" class="tab-panel">
-        <h2>ROI calibration</h2>
-        <p class="roi-note">Click the image to plot a polygon point for the selected node and approach. Close
-          the polygon, pick the next approach, and repeat for every approach of every active node, then save.</p>
-        <div class="control-row">
-          <label for="roi-node">Node</label>
-          <select id="roi-node"></select>
-          <label for="roi-approach">Approach</label>
-          <select id="roi-approach"></select>
-          <button id="btn-roi-refresh-snapshot">Refresh snapshot</button>
-          <button id="btn-roi-close-polygon">Close polygon</button>
-          <button id="btn-roi-undo">Undo point</button>
-          <button id="btn-roi-save" class="btn-primary btn-inline">Save ROI</button>
+      <!-- TAB 3: ROI CALIBRATION -->
+      <section id="tab-roi" class="tab-panel" role="tabpanel">
+        <div class="roi-intro-bar">
+          <div class="intro-text">
+            <h2>Hiệu chuẩn tọa độ đa giác (ROI Calibration)</h2>
+            <p>Nhấp chuột trực tiếp lên ảnh camera để tạo các điểm đỉnh đa giác cho từng làn tiếp cận. Sau khi khép góc đủ các hướng của nút giao, bấm <strong>Lưu cấu hình ROI</strong> để nạp vào Engine.</p>
+          </div>
+          <div class="roi-tool-actions">
+            <button id="btn-roi-refresh-snapshot" class="btn-secondary btn-sm" title="Chụp ảnh mới nhất từ camera">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span>Chụp lại Snapshot</span>
+            </button>
+            <button id="btn-roi-save" class="btn-primary btn-sm">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>Lưu cấu hình ROI</span>
+            </button>
+          </div>
         </div>
+
         <div class="roi-layout">
-          <div id="roi-canvas-wrap">
-            <img id="roi-snapshot" alt="latest camera snapshot" />
-            <canvas id="roi-canvas"></canvas>
-            <div id="roi-coords" class="roi-coords">x --  y --</div>
-          </div>
-          <div class="roi-side">
-            <div>
-              <h2>Approaches</h2>
-              <ul id="roi-legend" class="legend"></ul>
+          <!-- Left: Canvas Area -->
+          <div class="roi-viewport-col">
+            <div class="roi-toolbar">
+              <div class="tool-group">
+                <label for="roi-node">Nút giao:</label>
+                <select id="roi-node" class="select-sm"></select>
+              </div>
+              <div class="tool-group">
+                <label for="roi-approach">Hướng tiếp cận:</label>
+                <select id="roi-approach" class="select-sm"></select>
+              </div>
+              <div class="tool-btn-group">
+                <button id="btn-roi-close-polygon" class="btn-secondary btn-sm" title="Đóng vòng đa giác hiện tại">Khép góc (&ge;3 điểm)</button>
+                <button id="btn-roi-undo" class="btn-secondary btn-sm" title="Xóa điểm vừa vẽ">Hoàn tác điểm</button>
+                <button id="btn-roi-clear-approach" class="btn-danger btn-sm" title="Xóa đa giác của hướng này">Xóa vùng này</button>
+              </div>
             </div>
-            <p id="roi-feedback" class="feedback"></p>
+
+            <div id="roi-canvas-wrap" class="roi-canvas-container">
+              <img id="roi-snapshot" alt="Khung hình camera mới nhất" />
+              <canvas id="roi-canvas"></canvas>
+              <div id="roi-coords" class="roi-hud-coords">Tọa độ: X: -- | Y: --</div>
+              <div id="roi-canvas-loading" class="canvas-loading">Đang nạp ảnh snapshot từ camera...</div>
+            </div>
+          </div>
+
+          <!-- Right: Approaches Legend & Summary -->
+          <div class="roi-meta-col">
+            <div class="card">
+              <div class="card-head">
+                <h3>Danh sách hướng tiếp cận</h3>
+                <span id="roi-completion-badge" class="badge-subtle">0/4 Đã vẽ</span>
+              </div>
+              <ul id="roi-legend" class="roi-legend-list"></ul>
+              <div class="divider"></div>
+              <div class="roi-info-meta">
+                <div class="meta-row">
+                  <span class="meta-key">Kích thước khung:</span>
+                  <span id="roi-framesize-label" class="meta-val mono">-- x --</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-key">Điểm đang chọn:</span>
+                  <span id="roi-current-pts-count" class="meta-val mono">0 điểm</span>
+                </div>
+              </div>
+              <p id="roi-feedback" class="feedback-msg"></p>
+            </div>
           </div>
         </div>
       </section>
     </main>
+
+    <!-- Confirmation Modal for Restart -->
+    <div id="restart-modal" class="modal-backdrop">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-icon danger">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Xác nhận khởi động lại Pipeline</h3>
+        </div>
+        <div class="modal-body">
+          <p>Hành động này sẽ khởi động lại tiến trình thị giác và giải phóng camera/model. Luồng video có thể gián đoạn trong 1-2 giây.</p>
+          <p class="text-muted">Bạn có chắc chắn muốn tiếp tục không?</p>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-modal-cancel" class="btn-secondary">Hủy bỏ</button>
+          <button id="btn-modal-confirm-restart" class="btn-danger">Xác nhận Khởi động lại</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-shelf"></div>
   </div>
 
   <script src="/app.js"></script>
