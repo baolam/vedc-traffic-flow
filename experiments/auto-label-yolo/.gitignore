@@ -1,0 +1,3 @@
+# Generated dataset output (images/labels/review/manifest) -- regenerate via the pipeline
+# scripts; large and fully reproducible from services/vision/input_videos/.
+dataset/
