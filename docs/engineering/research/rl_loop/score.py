@@ -39,13 +39,16 @@ def verdict(new, base):
     lost = any(base.get(m, {}).get("score") is not None and new[m].get("score") is None for m in new)
     gained = any(n.get("score") is not None and (base.get(m, {}).get("score") is None
                                                  or base[m]["score"] - n["score"] >= NOISE_S) for m, n in new.items())
-    return "KEEP" if gained and not lost else "DISCARD"
+    scored = [m for m, n in new.items() if n.get("score") is not None and base.get(m, {}).get("score") is not None]
+    consistent = len(scored) >= 3 and all(new[m]["score"] < base[m]["score"] for m in scored)  # sign test, round 2
+    return "KEEP" if (gained or consistent) and not lost else "DISCARD"
 
 
 assert verdict({"a": {"score": 30.0}}, {"a": {"score": 34.0}}) == "KEEP"
 assert verdict({"a": {"score": 33.0}}, {"a": {"score": 34.0}}) == "DISCARD"
 assert verdict({"a": {"score": 20.0}, "b": {"score": None}}, {"a": {"score": 40.0}, "b": {"score": 9.0}}) == "DISCARD"
 assert verdict({"a": {"score": 50.0}}, {"a": {"score": None}}) == "KEEP"
+assert verdict({k: {"score": 9.0} for k in "abc"}, {k: {"score": 10.0} for k in "abc"}) == "KEEP"
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

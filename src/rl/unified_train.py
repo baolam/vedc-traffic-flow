@@ -34,6 +34,7 @@ from src.simulation.runtime import InvalidRun, SumoRuntime
 
 NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
 MP_EXPLORE = float(os.environ.get("EDGEFLOW_MP_EXPLORE", 0))  # experiment: share of exploratory actions from max_pressure
+RESIDUAL_TARGET = os.environ.get("EDGEFLOW_RESIDUAL_TARGET") == "1"  # experiment: bootstrap from the residual policy
 PRESSURE_BETA = float(os.environ.get("EDGEFLOW_PRESSURE_BETA", 0))  # experiment: node reward += beta * -|pressure|/20
 
 
@@ -73,7 +74,7 @@ class Replay:
         self.a = dict(s=np.zeros((capacity, *shapes["s"]), np.float32), s2=np.zeros((capacity, *shapes["s2"]), np.float32),
                       m2=np.zeros((capacity, *shapes["m2"]), bool), action=np.zeros(capacity, np.int64),
                       reward=np.zeros(capacity, np.float32), terminal=np.zeros(capacity, bool),
-                      dt=np.zeros(capacity, np.float32))
+                      dt=np.zeros(capacity, np.float32), mp2=np.full(capacity, -1, np.int64))
 
     def add(self, **row):
         for key, value in row.items():
@@ -143,7 +144,16 @@ def phase_update(ctx):
     s, s2, m2 = ctx.tensor(batch["s"]), ctx.tensor(batch["s2"]), ctx.tensor(batch["m2"], torch.bool)
     action = ctx.tensor(batch["action"], torch.int64)
     with torch.no_grad():
-        choice = q_all(arch, ctx.net, s2).masked_fill(~m2, -torch.inf).argmax(1, keepdim=True)
+        online = q_all(arch, ctx.net, s2).masked_fill(~m2, -torch.inf)
+        choice = online.argmax(1)
+        if RESIDUAL_TARGET:  # experiment: Double-DQN choice = the max_pressure residual actually executed at s2
+            mp2 = ctx.tensor(batch["mp2"], torch.int64)
+            safe = mp2.clamp(min=0)[:, None]
+            q_mp = online.gather(1, safe).squeeze(1)
+            legal = (mp2 >= 0) & m2.gather(1, safe).squeeze(1)
+            follow = legal & ~(online.max(1).values - q_mp > unified_dqn.MP_MARGIN * q_mp.abs())
+            choice = torch.where(follow, mp2, choice)
+        choice = choice[:, None]
         future = q_all(arch, ctx.target, s2).gather(1, choice).squeeze(1)
         gamma = r["gamma_5"] ** (ctx.tensor(batch["dt"]) / r["reference_s"])
         expected = ctx.tensor(batch["reward"]) + gamma * (~ctx.tensor(batch["terminal"], torch.bool)) * future
@@ -208,13 +218,15 @@ def phase_episode(ctx):
                 return False
             dt = runtime.time - before
             next_rows, next_masks = observe()
+            mp_next = ([unified_dqn.max_pressure_index(n, runtime.telemetry[n["node_id"]], runtime.telemetry, runtime.topology)
+                        for n in nodes] if RESIDUAL_TARGET else [-1] * len(nodes))
             for i, n in enumerate(nodes):
                 ctx.replay.add(s=rows[i], action=actions[i],
                                reward=node_reward(n, dt) if NODE_REWARD and ctx.reward_version == "wait_tail_v1"
                                else reward if ctx.reward_version == "wait_tail_v1"
                                else node_pressure_reward(n, runtime.telemetry) - tail_penalty(
                                    [a for a in runtime.telemetry[n["node_id"]]["approaches"]]),
-                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
+                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt, mp2=mp_next[i])
             rows, masks = next_rows, next_masks
             c["sim_s"] += dt
             c["decisions"] += 1
