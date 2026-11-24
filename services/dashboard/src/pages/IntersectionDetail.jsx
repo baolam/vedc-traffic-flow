@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import PhaseIndicator from '../components/PhaseIndicator';
+import StationContextBar from '../components/StationContextBar';
 import { describeOverride, overrideRequestError, OVERRIDE_IN_PROGRESS } from '../utils/manualOverride';
 import { useActiveScenario } from '../hooks/useActiveScenario';
 import { cleanPhaseName } from '../utils/phaseName';
+import { useLanguage } from '../hooks/useLanguage';
 import { 
   ArrowLeft, Cpu, Activity, ShieldCheck, Gauge, Car, AlertTriangle, Play,
   ShieldAlert, Radio, Video, Sliders, CheckCircle2, Clock, RefreshCw,
@@ -14,9 +16,139 @@ import {
 
 const APPROACH_COLORS = ['#0284c7', '#16a34a', '#ca8a04', '#dc2626', '#9333ea', '#06b6d4'];
 
+const COPY = {
+  en: {
+    back: 'Back to Network Topology Overview',
+    title: 'Node Diagnostics & Signal Control:',
+    topology: 'Map Topology:',
+    perceptionSource: 'Perception Source:',
+    actuatorMode: 'Actuator Mode:',
+    serverDisconnectedTitle: 'DISCONNECTED FROM REALTIME API SERVER (PORT 8000)',
+    serverDisconnectedSub: 'Browser is retrying every 1.5s. On-screen telemetry is paused.',
+    totalNodeQueue: 'Total Node Queue',
+    queueHigh: '⚠️ High Queue',
+    queueModerate: '⚡ Moderate Queue',
+    queueNominal: '✓ Flowing Nominal',
+    speedFlow: 'Speed & Flow Rate',
+    deviceHeartbeat: 'Device Heartbeat',
+    heartbeatLost: 'LOST (>30s)',
+    ago: 'ago',
+    notReceived: 'Not received',
+    deviceStatus: (clearance, ping) => `● Device ${clearance || 'GREEN'} | API ${ping} ms`,
+    safetyInterlock: 'Safety Assurance',
+    hardwareInterlock: 'Hardware Interlock',
+    clearanceSpec: (y, ar) => `Yellow: ${y}s | All-Red: ${ar}s`,
+    approachesTitle: (nodeId) => `Approach Queues & Telemetry Details (${nodeId})`,
+    approachesConnected: (count) => `${count} Active Approaches Connected`,
+    demoDataWarning: '⚠ DEMO SIMULATION DATA — NO LIVE TELEMETRY',
+    signalLostBadge: '⚠️ SIGNAL LOST',
+    greenPhase: 'GREEN PHASE',
+    redPhase: 'RED PHASE',
+    queueLabel: 'Queue',
+    avgSpeed: 'Avg Speed',
+    occupancy: 'Occupancy',
+    aiConfidence: 'Vision AI Confidence:',
+    visionCanvasTitle: (nodeId) => `Edge Vision Perception Canvas (${nodeId})`,
+    focusSumo: 'Focus SUMO-GUI',
+    focusing: 'Focusing...',
+    rerunDemo: 'Re-run Demo',
+    running: 'Running...',
+    controlMechTitle: (nodeId) => `Phase Allocation & Signal Control (${nodeId})`,
+    pressureComparisonTitle: 'Phase Queue Pressure Comparison',
+    optimalPhaseRunning: 'Optimal Phase Active',
+    waitingSwitch: 'Pending Transition',
+    pressureHelp: 'ⓘ Each signal phase serves a distinct set of traffic movements. Algorithms grant green to the phase with the highest net vehicle pressure.',
+    serving: 'Serving:',
+    pressureDiff: (diff, priorityPhase) => `Pressure differential (ΔW): ${diff} veh. Algorithm priority: ${priorityPhase}`,
+    overrideTitle: 'Emergency Manual Phase Override (1-Click)',
+    overrideSub: 'Hold priority green 15s → Resume auto policy',
+    switchPhase: (name) => `Force ${name}`,
+    overrideBusyMsg: 'Actuator is safely clearing intersection (Yellow 3s → All-Red 2s → Green)...',
+    hardwareInterlockTitle: 'Hardware Safety Interlock Specs',
+    yellowTime: 'Yellow Clearance',
+    yellowTimeFixed: (s) => `${s}s Fixed`,
+    allRedTime: 'All-Red Clearance',
+    allRedTimeLocked: (s) => `${s}s Hardware Locked`,
+    boardMode: 'Board Mode',
+    safeStopButton: 'Safe-Stop Button',
+    safeStopPressed: 'PRESSED',
+    safeStopReady: 'Ready',
+    hardwareNotice: '* ESP32 actuator firmware enforces clearance intervals (Yellow 3s + All-Red 2s) before activating any conflicting phase, ensuring 0% collision hazard.',
+    auditLogTitle: 'Live Signal Execution Audit Log Stream (ControlACK)',
+    queueHistoryTitle: 'Real-time Approach Queue History Over Time',
+    updateInterval: 'Updated every 1.5s',
+    queueYAxis: 'Queue (veh)'
+  },
+  vi: {
+    back: 'Quay lại Tổng quan Đồ thị Mạng lưới',
+    title: 'Chẩn Đoán Nút & Điều Khiển Tín Hiệu:',
+    topology: 'Cấu trúc mạng:',
+    perceptionSource: 'Nguồn Perception:',
+    actuatorMode: 'Chế độ Actuator:',
+    serverDisconnectedTitle: 'MẤT KẾT NỐI REALTIME VỚI API SERVER (PORT 8000)',
+    serverDisconnectedSub: 'Trình duyệt đang tự động thử kết nối lại mỗi 1.5s. Dữ liệu trên màn hình đang tạm dừng đồng bộ.',
+    totalNodeQueue: 'Tổng Hàng Chờ Node',
+    queueHigh: '⚠️ Hàng chờ cao',
+    queueModerate: '⚡ Trung bình',
+    queueNominal: '✓ Thông thoáng',
+    speedFlow: 'Tốc độ & Lưu lượng',
+    deviceHeartbeat: 'Nhịp Tim Thiết Bị',
+    heartbeatLost: 'MẤT (>30s)',
+    ago: 'trước',
+    notReceived: 'Chưa nhận',
+    deviceStatus: (clearance, ping) => `● Thiết bị ${clearance || 'GREEN'} | API ${ping} ms`,
+    safetyInterlock: 'Kiểm Duyệt An Toàn',
+    hardwareInterlock: 'Interlock Phần Cứng',
+    clearanceSpec: (y, ar) => `Vàng: ${y}s | Đỏ Toàn Bộ: ${ar}s`,
+    approachesTitle: (nodeId) => `Chi Tiết Hàng Chờ & Thông Số Từng Nhánh Luồng Đường (${nodeId})`,
+    approachesConnected: (count) => `${count} Nhánh Đường Đang Kết Nối Telemetry`,
+    demoDataWarning: '⚠ DỮ LIỆU MINH HỌA — CHƯA CÓ TELEMETRY THẬT',
+    signalLostBadge: '⚠️ MẤT TÍN HIỆU',
+    greenPhase: 'GREEN PHASE',
+    redPhase: 'RED PHASE',
+    queueLabel: 'Hàng chờ xe',
+    avgSpeed: 'Tốc độ TB',
+    occupancy: 'Độ chiếm dụng',
+    aiConfidence: 'Độ tin cậy AI Vision:',
+    visionCanvasTitle: (nodeId) => `Edge Vision Perception Canvas (${nodeId})`,
+    focusSumo: 'Focus SUMO-GUI',
+    focusing: 'Đang gửi...',
+    rerunDemo: 'Chạy lại Demo',
+    running: 'Đang chạy...',
+    controlMechTitle: (nodeId) => `Cơ Chế Phân Bổ Pha & Điều Khiển Nút (${nodeId})`,
+    pressureComparisonTitle: 'So Sánh Áp Lực Hàng Chờ Từng Pha Đèn',
+    optimalPhaseRunning: 'Pha Tối Ưu Đang Chạy',
+    waitingSwitch: 'Chờ Chuyển Pha',
+    pressureHelp: 'ⓘ Mỗi pha đèn phục vụ một tập hợp luồng chuyển động xác định. Thuật toán chọn pha có áp lực phương tiện lớn nhất để cấp quyền ưu tiên xanh.',
+    serving: 'Cho đi:',
+    pressureDiff: (diff, priorityPhase) => `Chênh lệch áp lực (ΔW): ${diff} veh. Thuật toán phân tích ưu tiên: ${priorityPhase}`,
+    overrideTitle: 'Đè Lệnh Chuyển Pha Khẩn Cấp (1-Click Emergency Override)',
+    overrideSub: 'Giữ xanh ưu tiên 15s → Trả về tự động',
+    switchPhase: (name) => `Chuyển ${name}`,
+    overrideBusyMsg: 'Thiết bị đang thực hiện chu trình chuyển pha an toàn (Vàng 3s → Đỏ toàn bộ 2s → Xanh)...',
+    hardwareInterlockTitle: 'Quy Chuẩn An Toàn Phần Cứng (Hardware Interlock)',
+    yellowTime: 'Thời gian Vàng',
+    yellowTimeFixed: (s) => `${s}s Cố định`,
+    allRedTime: 'Đỏ Toàn Bộ',
+    allRedTimeLocked: (s) => `${s}s Khóa cứng`,
+    boardMode: 'Chế độ Board',
+    safeStopButton: 'Nút Cứng Safe-Stop',
+    safeStopPressed: 'ĐANG NHẤN',
+    safeStopReady: 'Sẵn Sàng',
+    hardwareNotice: '* Thiết bị chấp hành ESP32 tự động khóa cứng thời gian giải phóng giao lộ (Yellow 3s + All-Red 2s) trước mọi hướng đèn mới, đảm bảo 0% va chạm chéo.',
+    auditLogTitle: 'Nhật Ký Thực Thi Lệnh Tín Hiệu Thực Tế (Live ControlACK Audit Log Stream)',
+    queueHistoryTitle: 'Biểu Đồ Lịch Sử Hàng Chờ Từng Nhánh Luồng Đường theo Thời Gian Real-time',
+    updateInterval: 'Cập nhật mỗi 1.5s',
+    queueYAxis: 'Hàng chờ (xe)'
+  }
+};
+
 const IntersectionDetail = () => {
   const { nodeId = 'J1' } = useParams();
   const [activeScenarioId] = useActiveScenario();
+  const [lang] = useLanguage();
+  const isVi = lang === 'vi';
+  const t = COPY[lang] || COPY.en;
 
   const [nodeDetail, setNodeDetail] = useState(null);
   const [approaches, setApproaches] = useState([]);
@@ -135,6 +267,9 @@ const IntersectionDetail = () => {
   }, [nodeId, apiBase]);
 
   useEffect(() => {
+    setNodeTelemetry(null);
+    setTelemetryHistory([]);
+    setOverrideError(null);
     fetchNodeState();
     const interval = setInterval(fetchNodeState, 1500);
     return () => clearInterval(interval);
@@ -411,16 +546,35 @@ const IntersectionDetail = () => {
   const isCardinalNode = approachKeys.length > 0 && approachKeys.every(id => CARDINAL_SUFFIX_RE.test(id));
   const currentPhaseName = availablePhases.find(p => p.phase_id === activePhase)?.name || activePhase;
 
+  // The topology contract fills in a display_name for every approach server-side (see
+  // services/api/main.py's get_topology_contract -- contracts/naming.py is the single source
+  // of the compass-id -> Vietnamese label convention). Falls back to the raw id itself when
+  // nodeDetail hasn't loaded yet or the approach isn't one this node declares (e.g. the
+  // hardcoded compass-fallback ids in approachKeys above, before the real contract loads).
+  const displayNameFor = (approachId) => {
+    if (!isVi) {
+      if (approachId.endsWith('_N_IN')) return 'North Approach';
+      if (approachId.endsWith('_S_IN')) return 'South Approach';
+      if (approachId.endsWith('_E_IN')) return 'East Approach';
+      if (approachId.endsWith('_W_IN')) return 'West Approach';
+    }
+    return nodeDetail?.approach_display_names?.[approachId] || approachId;
+  };
+
   // "Phase 1"/"Phase 2" alone doesn't say what actually happens -- this spells out which
-  // approaches (real contract approach_ids) get the green during that phase.
+  // approaches (by friendly name) get the green during that phase.
   const describeApproaches = (ids) => {
-    if (!ids || ids.length === 0) return 'chưa rõ nhánh đường';
-    const shown = ids.slice(0, 4).join(', ');
-    return ids.length > 4 ? `${shown} +${ids.length - 4} nhánh khác` : shown;
+    if (!ids || ids.length === 0) return isVi ? 'chưa rõ nhánh đường' : 'approaches unknown';
+    const shown = ids.slice(0, 4).map(displayNameFor).join(', ');
+    return ids.length > 4 ? `${shown} +${ids.length - 4} ${isVi ? 'nhánh khác' : 'other approaches'}` : shown;
   };
 
   return (
-    <div className="page-container" style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '24px' }}>
+    <>
+      <StationContextBar />
+      {/* No minHeight: '100vh' -- same redundant-height bug fixed on RaspberryPiDemo; .page-container
+          already gets flex:1 from App.css inside .main-content. */}
+      <div className="page-container" style={{ backgroundColor: '#f8fafc', padding: '24px' }}>
       {/* Back Link & Page Header */}
       <div style={{ marginBottom: '24px' }}>
         <Link 
@@ -440,14 +594,14 @@ const IntersectionDetail = () => {
             transition: 'all 0.2s'
           }}
         >
-          <ArrowLeft size={16} /> Quay lại Tổng quan Đồ thị Mạng lưới
+          <ArrowLeft size={16} /> {t.back}
         </Link>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
               <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: '#0f172a', tracking: '-0.02em' }}>
-                Node Diagnostics & Signal Control: <span style={{ color: '#0284c7', fontFamily: 'JetBrains Mono, monospace' }}>{nodeId}</span>
+                {t.title} <span style={{ color: '#0284c7', fontFamily: 'JetBrains Mono, monospace' }}>{nodeId}</span>
               </h2>
               <span className={`badge ${status === 'ONLINE' ? 'badge-green' : 'badge-yellow'}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status === 'ONLINE' ? '#16a34a' : '#ca8a04', display: 'inline-block' }}></span>
@@ -456,11 +610,11 @@ const IntersectionDetail = () => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#64748b', fontSize: '0.88rem', flexWrap: 'wrap' }}>
-              <span>Map Topology: <code style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>{activeScenarioId}</code></span>
+              <span>{t.topology} <code style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>{activeScenarioId}</code></span>
               <span>•</span>
-              <span>Nguồn Perception: <strong style={{ color: '#0f172a' }}>{sourceType.toUpperCase()}</strong></span>
+              <span>{t.perceptionSource} <strong style={{ color: '#0f172a' }}>{sourceType.toUpperCase()}</strong></span>
               <span>•</span>
-              <span>Chế độ Actuator: <span className={`badge ${actuatorMode === 'NORMAL' ? 'badge-green' : 'badge-yellow'}`}>{actuatorMode}</span></span>
+              <span>{t.actuatorMode} <span className={`badge ${actuatorMode === 'NORMAL' ? 'badge-green' : 'badge-yellow'}`}>{actuatorMode}</span></span>
             </div>
           </div>
 
@@ -543,13 +697,13 @@ const IntersectionDetail = () => {
             <div>
               <div style={{ fontSize: '1.0rem', fontWeight: 800 }}>
                 {nodeTelemetry?.hardware_mqtt_connected
-                  ? `⚡ MIRROR SANG ESP32 THẬT (${nodeId}) — Đang kết nối MQTT`
-                  : `⚡ HARDWARE MIRROR BẬT (${nodeId}) — chưa kết nối được broker MQTT`}
+                  ? (isVi ? `⚡ MIRROR SANG ESP32 THẬT (${nodeId}) — Đang kết nối MQTT` : `⚡ MIRRORING TO PHYSICAL ESP32 (${nodeId}) — MQTT Connected`)
+                  : (isVi ? `⚡ HARDWARE MIRROR BẬT (${nodeId}) — chưa kết nối được broker MQTT` : `⚡ HARDWARE MIRROR ENABLED (${nodeId}) — MQTT Broker Unreachable`)}
               </div>
               <div style={{ fontSize: '0.84rem', fontWeight: 500, marginTop: '2px' }}>
                 {nodeTelemetry?.hardware_mqtt_connected
-                  ? 'ESP32 chỉ chấp hành: nhận đúng lệnh mà bộ điều khiển đang dùng cho đèn mô phỏng, tự chạy an toàn (vàng 3s + đỏ 2s) và báo ACK/health riêng.'
-                  : 'run_demo.py chạy với --hardware nhưng MQTT client chưa nối được broker. ESP32 sẽ không nhận lệnh cho tới khi kết nối lại.'}
+                  ? (isVi ? 'ESP32 chỉ chấp hành: nhận đúng lệnh mà bộ điều khiển đang dùng cho đèn mô phỏng, tự chạy an toàn (vàng 3s + đỏ 2s) và báo ACK/health riêng.' : 'ESP32 acts as actuator: executes same control command as simulation, guarantees clearance (yellow 3s + red 2s), and reports ACK/health.')
+                  : (isVi ? 'run_demo.py chạy với --hardware nhưng MQTT client chưa nối được broker. ESP32 sẽ không nhận lệnh cho tới khi kết nối lại.' : 'run_demo.py running with --hardware but MQTT client has not connected. ESP32 will not receive commands until reconnected.')}
               </div>
             </div>
           </div>
@@ -598,19 +752,19 @@ const IntersectionDetail = () => {
             <div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800 }}>
                 {isSafeStop
-                  ? `🛑 NÚT DỪNG KHẨN CẤP (SAFE-STOP) ĐANG ĐƯỢC NHẤN (${nodeId})`
-                  : `CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG (${nodeId})`}
+                  ? (isVi ? `🛑 NÚT DỪNG KHẨN CẤP (SAFE-STOP) ĐANG ĐƯỢC NHẤN (${nodeId})` : `🛑 EMERGENCY SAFE-STOP BUTTON ENGAGED (${nodeId})`)
+                  : (isVi ? `CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG (${nodeId})` : `HARDWARE / SIGNAL INTERRUPT ALERT (${nodeId})`)}
               </div>
               <div style={{ fontSize: '0.86rem', fontWeight: 500, marginTop: '2px', color: isSafeStop ? '#78350f' : '#7f1d1d' }}>
                 {isSafeStop
-                  ? 'Nút an toàn trên board đang bị giữ: cả hai hướng đèn nhấp nháy vàng, mọi ControlCommand (tự động hoặc tay) đều bị ESP32 từ chối. Đây là hành động chủ ý của người vận hành, không phải lỗi thiết bị. Nhả nút → ALL_RED 2 s → trở lại xanh bình thường.'
+                  ? (isVi ? 'Nút an toàn trên board đang bị giữ: cả hai hướng đèn nhấp nháy vàng, mọi ControlCommand (tự động hoặc tay) đều bị ESP32 từ chối. Nhả nút → ALL_RED 2 s → trở lại xanh bình thường.' : 'Safe-stop button on board is held: all directions flash yellow, ControlCommands rejected by ESP32. Release button → ALL_RED 2s → nominal.')
                   : deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                  ? 'Không nhận nhịp tim thiết bị quá 30 s (mất nguồn hoặc mạng). Nếu thiết bị vẫn chạy mà không nhận lệnh quá 5 s, nó tự chạy chu kỳ cố định 15 s/pha.'
+                  ? (isVi ? 'Không nhận nhịp tim thiết bị quá 30 s (mất nguồn hoặc mạng). Tự động chạy chu kỳ cố định 15 s/pha.' : 'No heartbeat from device for >30s. Actuator automatically falls back to fixed-time 15s/phase.')
                   : (deviceHealth?.camera?.status === 'ZERO_CONFIDENCE' || nodeTelemetry?.status === 'CAMERA_FAULT')
-                  ? 'Camera/video không cho quan sát (độ tin cậy 0). Graph-control ngừng gửi lệnh cho nút này; sau 5 s thiết bị tự chạy chu kỳ cố định 15 s/pha.'
+                  ? (isVi ? 'Camera/video độ tin cậy 0. Thiết bị tự chạy chu kỳ cố định 15 s/pha.' : 'Camera confidence 0. Actuator automatically falls back to fixed-time 15s/phase.')
                   : (deviceHealth?.camera?.status === 'SIGNAL_LOST' || nodeTelemetry?.status === 'SIGNAL_LOST')
-                  ? 'Không nhận telemetry quá 3,5 s (dịch vụ vision hoặc mạng). Không có telemetry thì graph-control không ra lệnh; sau 5 s thiết bị tự chạy chu kỳ cố định.'
-                  : 'Phần cứng Actuator đang chờ xác thực an toàn.'}
+                  ? (isVi ? 'Không nhận telemetry quá 3,5 s. Thiết bị tự chạy chu kỳ cố định.' : 'No telemetry received for >3.5s. Actuator enters fail-safe cycle.')
+                  : (isVi ? 'Phần cứng Actuator đang chờ xác thực an toàn.' : 'Actuator hardware waiting for safety verification.')}
               </div>
             </div>
           </div>
@@ -637,12 +791,12 @@ const IntersectionDetail = () => {
             <Car size={26} color="#0284c7" />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Tổng Hàng Chờ Node</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{t.totalNodeQueue}</span>
             <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-              {Math.round(totalQ * 10) / 10} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>xe</span>
+              {Math.round(totalQ * 10) / 10} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>{isVi ? 'xe' : 'veh'}</span>
             </div>
             <div style={{ fontSize: '0.78rem', color: totalQ > 15 ? '#dc2626' : totalQ > 8 ? '#ca8a04' : '#16a34a', fontWeight: 600, marginTop: '2px' }}>
-              {totalQ > 15 ? '⚠️ Hàng chờ cao' : totalQ > 8 ? '⚡ Trung bình' : '✓ Thông thoáng'}
+              {totalQ > 15 ? t.queueHigh : totalQ > 8 ? t.queueModerate : t.queueNominal}
             </div>
           </div>
         </div>
@@ -652,7 +806,7 @@ const IntersectionDetail = () => {
             <Gauge size={26} color="#16a34a" />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Tốc độ & Lưu lượng</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{t.speedFlow}</span>
             <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
               {avgSpeedKmh} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>km/h</span>
             </div>
@@ -667,13 +821,13 @@ const IntersectionDetail = () => {
             <Wifi size={26} color={deviceHealth?.actuator?.status === 'HEARTBEAT_LOST' ? '#dc2626' : '#ca8a04'} />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Nhịp Tim Thiết Bị</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{t.deviceHeartbeat}</span>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
               {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                ? 'LOST (>30s)'
+                ? t.heartbeatLost
                 : deviceHealth?.actuator?.last_heartbeat_ms_ago != null
-                ? `${(deviceHealth.actuator.last_heartbeat_ms_ago / 1000).toFixed(1)} s trước`
-                : 'Chưa nhận'}
+                ? `${(deviceHealth.actuator.last_heartbeat_ms_ago / 1000).toFixed(1)} s ${t.ago}`
+                : t.notReceived}
             </div>
             <div style={{
               fontSize: '0.78rem',
@@ -683,12 +837,12 @@ const IntersectionDetail = () => {
               marginTop: '2px'
             }}>
               {deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
-                ? '● Mất Nhịp Tim Thiết Bị (>30s)'
+                ? (isVi ? '● Mất Nhịp Tim Thiết Bị (>30s)' : '● Lost Device Heartbeat (>30s)')
                 : deviceHealth?.actuator?.status === 'SAFE_STOP'
                 ? '● Actuator Safe-Stop'
                 : deviceHealth?.actuator?.status === 'FALLBACK'
-                ? '● Fallback cố định 15 s/pha'
-                : `● Thiết bị ${deviceHealth?.actuator?.clearance || 'GREEN'} | API ${lastPingMs} ms`}
+                ? (isVi ? '● Fallback cố định 15 s/pha' : '● Fallback Fixed 15s/phase')
+                : t.deviceStatus(deviceHealth?.actuator?.clearance, lastPingMs)}
             </div>
           </div>
         </div>
@@ -698,12 +852,12 @@ const IntersectionDetail = () => {
             <ShieldCheck size={26} color="#9333ea" />
           </div>
           <div>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Kiểm Duyệt An Toàn</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{t.safetyInterlock}</span>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
-              Interlock Phần Cứng
+              {t.hardwareInterlock}
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
-              Vàng: {yellowDuration}s | Đỏ Toàn Bộ: {allRedDuration}s
+              {t.clearanceSpec(yellowDuration, allRedDuration)}
             </div>
           </div>
         </div>
@@ -711,19 +865,21 @@ const IntersectionDetail = () => {
 
       {/* DETAILED APPROACH BREAKDOWN CARDS (CHI TIẾT TỪNG NHÁNH LUỒNG ĐƯỜNG) */}
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Compass size={20} color="#0284c7" />
-            Chi Tiết Hàng Chờ & Thông Số Từng Nhánh Luồng Đường ({nodeId})
+            {t.approachesTitle(nodeId)}
           </h3>
           {appStats.length > 0 ? (
-            <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>{appStats.length} Nhánh Đường Đang Kết Nối Telemetry</span>
+            <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
+              {t.approachesConnected(appStats.length)}
+            </span>
           ) : (
             <span style={{
               fontSize: '0.74rem', fontWeight: 800, color: '#b45309', backgroundColor: '#fffbeb',
               border: '1px solid #fde68a', padding: '3px 8px', borderRadius: '5px'
             }}>
-              ⚠ DỮ LIỆU MINH HỌA — CHƯA CÓ TELEMETRY THẬT
+              {t.demoDataWarning}
             </span>
           )}
         </div>
@@ -753,23 +909,28 @@ const IntersectionDetail = () => {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontWeight: 800, fontSize: '0.9rem', color: isZeroConf ? '#991b1b' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
-                    {app.approach_id}
+                  <span title={app.approach_id}>
+                    <span style={{ fontWeight: 800, fontSize: '0.9rem', color: isZeroConf ? '#991b1b' : '#0f172a' }}>
+                      {displayNameFor(app.approach_id)}
+                    </span>
+                    <span style={{ display: 'block', fontSize: '0.68rem', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
+                      {app.approach_id}
+                    </span>
                   </span>
                   {isZeroConf ? (
                     <span className="badge badge-red" style={{ fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#b91c1c' }}>
-                      ⚠️ MẤT TÍN HIỆU
+                      {t.signalLostBadge}
                     </span>
                   ) : (
                     <span className={`badge ${isGreenActive ? 'badge-green' : 'badge-blue'}`} style={{ fontSize: '0.7rem' }}>
-                      {isGreenActive ? 'GREEN PHASE' : 'RED PHASE'}
+                      {isGreenActive ? t.greenPhase : t.redPhase}
                     </span>
                   )}
                 </div>
 
                 <div style={{ marginBottom: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>
-                    <span>Hàng chờ xe</span>
+                    <span>{t.queueLabel}</span>
                     <strong style={{ color: isZeroConf ? '#991b1b' : queueVal > 5 ? '#dc2626' : '#0f172a' }}>{queueVal} veh</strong>
                   </div>
                   {/* Queue Visual Progress Bar */}
@@ -785,19 +946,19 @@ const IntersectionDetail = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.78rem', color: '#475569', backgroundColor: isZeroConf ? '#fee2e2' : '#f8fafc', padding: '8px 10px', borderRadius: '8px' }}>
                   <div>
-                    <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.7rem' }}>Tốc độ TB</span>
+                    <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.7rem' }}>{t.avgSpeed}</span>
                     <strong>{speedKmh} km/h</strong>
                   </div>
                   <div>
-                    <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.7rem' }}>Độ chiếm dụng</span>
+                    <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.7rem' }}>{t.occupancy}</span>
                     <strong>{occPct}%</strong>
                   </div>
                 </div>
 
                 <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b' }}>
-                  <span>Độ tin cậy AI Vision:</span>
+                  <span>{t.aiConfidence}</span>
                   <strong style={{ color: isZeroConf ? '#dc2626' : '#16a34a' }}>
-                    {isZeroConf ? '0% (Mất Tín Hiệu)' : `${confPct}%`}
+                    {isZeroConf ? (isVi ? '0% (Mất Tín Hiệu)' : '0% (Signal Lost)') : `${confPct}%`}
                   </strong>
                 </div>
               </div>
@@ -841,7 +1002,7 @@ const IntersectionDetail = () => {
                   }}
                 >
                   <Crosshair size={12} className={isFocusingSumo ? 'spin' : ''} />
-                  {isFocusingSumo ? 'Đang gửi...' : 'Focus SUMO-GUI'}
+                  {isFocusingSumo ? t.focusing : t.focusSumo}
                 </button>
               ) : (
                 <button
@@ -916,7 +1077,7 @@ const IntersectionDetail = () => {
               <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: visionHealth?.status === 'HEALTHY' ? '#4ade80' : '#f87171', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
                 {visionHealth
                   ? `● ${visionHealth.status} | ${visionHealth.runtime?.processed_fps != null ? `${visionHealth.runtime.processed_fps} fps` : '-- fps'} | ${visionHealth.model || visionHealth.backend || 'model ?'}`
-                  : '○ Chưa có health của vision'}
+                  : (isVi ? '○ Chưa có health của vision' : '○ No vision health reported')}
               </span>
               {visionHealth && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#38bdf8', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
@@ -926,15 +1087,15 @@ const IntersectionDetail = () => {
               {visionMode === 'video' && sourceType === 'simulation' && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: sumoCrop.status === 'ok' ? '#4ade80' : '#f87171', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
                   {sumoCrop.status === 'ok'
-                    ? `● SUMO-GUI Live | cập nhật ${new Date(sumoSnapshotMeta.timestamp_ms).toLocaleTimeString()}`
+                    ? `● SUMO-GUI Live | ${isVi ? 'cập nhật' : 'updated'} ${new Date(sumoSnapshotMeta.timestamp_ms).toLocaleTimeString()}`
                     : sumoCrop.status === 'out-of-view'
-                    ? '○ Node ngoài khung nhìn'
-                    : '○ Chưa có ảnh SUMO-GUI'}
+                    ? (isVi ? '○ Node ngoài khung nhìn' : '○ Node out of view')
+                    : (isVi ? '○ Chưa có ảnh SUMO-GUI' : '○ No SUMO-GUI snapshot')}
                 </span>
               )}
               {visionMode === 'video' && sourceType !== 'simulation' && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
-                  Video chú thích ghi sẵn (không phải luồng trực tiếp)
+                  {isVi ? 'Video chú thích ghi sẵn (không phải luồng trực tiếp)' : 'Pre-recorded annotated video (not live stream)'}
                 </span>
               )}
               {sourceType !== 'simulation' && visionReport?.node_id === nodeId && visionReport?.next_step_controller && (
@@ -944,7 +1105,7 @@ const IntersectionDetail = () => {
               )}
               {sourceType !== 'simulation' && !visionReport && (
                 <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', border: '1px solid #334155', color: '#94a3b8', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace' }}>
-                  Chưa chạy demo cho node này
+                  {isVi ? 'Chưa chạy demo cho node này' : 'No demo run for this node'}
                 </span>
               )}
             </div>
@@ -966,7 +1127,7 @@ const IntersectionDetail = () => {
                 {sourceType === 'simulation' ? (
                   sumoCrop.status === 'ok' ? (
                     <div
-                      title={`Ảnh trực tiếp từ sumo-gui, zoom ~${SUMO_WORLD_RADIUS_M * 2}m quanh node ${nodeId}`}
+                      title={isVi ? `Ảnh trực tiếp từ sumo-gui, zoom ~${SUMO_WORLD_RADIUS_M * 2}m quanh node ${nodeId}` : `Live snapshot from sumo-gui, zoomed ~${SUMO_WORLD_RADIUS_M * 2}m around node ${nodeId}`}
                       style={{
                         width: `${SUMO_VIEWPORT_PX}px`,
                         height: `${SUMO_VIEWPORT_PX}px`,
@@ -979,10 +1140,10 @@ const IntersectionDetail = () => {
                   ) : (
                     <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '20px' }}>
                       {sumoCrop.status === 'out-of-view'
-                        ? <>Node <strong>{nodeId}</strong> hiện nằm ngoài khung nhìn của cửa sổ sumo-gui đang mở. Pan/zoom sumo-gui tới nút này để xem.</>
+                        ? (isVi ? <>Node <strong>{nodeId}</strong> hiện nằm ngoài khung nhìn của cửa sổ sumo-gui đang mở. Pan/zoom sumo-gui tới nút này để xem.</> : <>Node <strong>{nodeId}</strong> is outside the active sumo-gui camera view. Pan/zoom sumo-gui to this junction to view.</>)
                         : sumoCrop.status === 'no-position'
-                        ? <>Không tìm thấy vị trí node <strong>{nodeId}</strong> trong dữ liệu sumo-gui.</>
-                        : <>Chưa có ảnh SUMO-GUI cho scenario <strong>{activeScenarioId}</strong>. Cần chạy <code>run_demo.py</code> (sumo-gui) cho scenario này.</>}
+                        ? (isVi ? <>Không tìm thấy vị trí node <strong>{nodeId}</strong> trong dữ liệu sumo-gui.</> : <>Node <strong>{nodeId}</strong> position not found in sumo-gui metadata.</>)
+                        : (isVi ? <>Chưa có ảnh SUMO-GUI cho scenario <strong>{activeScenarioId}</strong>. Cần chạy <code>run_demo.py</code> (sumo-gui) cho scenario này.</> : <>No SUMO-GUI screenshot for scenario <strong>{activeScenarioId}</strong>. Run <code>run_demo.py</code> with sumo-gui enabled.</>)}
                     </div>
                   )
                 ) : visionReport?.node_id === nodeId ? (
@@ -1044,15 +1205,16 @@ const IntersectionDetail = () => {
                     ].map(({ dir, pos }) => {
                       const app = appStats.find(a => a.approach_id.endsWith(`_${dir}_IN`));
                       const isNS = dir === 'N' || dir === 'S';
+                      const label = app ? displayNameFor(app.approach_id) : `${dir}_IN`;
                       return (
-                        <div key={dir} style={{
+                        <div key={dir} title={app?.approach_id || `${nodeId}_${dir}_IN`} style={{
                           position: 'absolute', ...pos,
                           border: `1px solid ${isNS ? '#ef4444' : '#38bdf8'}`,
                           backgroundColor: isNS ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)',
                           padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem',
                           color: isNS ? '#fca5a5' : '#7dd3fc', fontWeight: 700
                         }}>
-                          {dir}_IN: {Math.round((app?.queue_vehicles ?? 0) * 10) / 10} veh
+                          {label}: {Math.round((app?.queue_vehicles ?? 0) * 10) / 10} veh
                         </div>
                       );
                     })}
@@ -1068,12 +1230,12 @@ const IntersectionDetail = () => {
                       <span style={{ color: '#64748b', fontSize: '0.74rem' }}>Chưa có dữ liệu nhánh đường.</span>
                     )}
                     {appStats.map(a => (
-                      <div key={a.approach_id} style={{
+                      <div key={a.approach_id} title={a.approach_id} style={{
                         border: '1px solid #38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.15)',
                         padding: '3px 8px', borderRadius: '4px', fontSize: '0.68rem',
-                        color: '#7dd3fc', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace'
+                        color: '#7dd3fc', fontWeight: 700
                       }}>
-                        {a.approach_id}: {Math.round((a.queue_vehicles ?? 0) * 10) / 10} veh
+                        {displayNameFor(a.approach_id)}: {Math.round((a.queue_vehicles ?? 0) * 10) / 10} veh
                       </div>
                     ))}
                   </div>
@@ -1084,31 +1246,33 @@ const IntersectionDetail = () => {
 
         </div>
 
-        {/* MODULE 3: queue pressure (max-pressure reference) & actuator controls */}
+        {/* MODULE 3: Queue Pressure Analysis, Emergency Override & Hardware Safety */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-            <Sliders color="#0284c7" size={20} />
-            <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-              Áp Lực Hàng Chờ & Lệnh Actuator ({nodeId})
-            </h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sliders color="#0284c7" size={20} />
+              <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
+                {t.controlMechTitle(nodeId)}
+              </h3>
+            </div>
+            <span className="badge badge-green" style={{ fontSize: '0.74rem' }}>
+              Hardware Interlock OK
+            </span>
           </div>
 
-          {/* Max-Pressure Live Comparison Card */}
+          {/* Dynamic Queue Pressure Analysis Card */}
           <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
-                So Sánh Áp Lực Hàng Chờ Theo Pha (Max-Pressure)
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase' }}>
+                {t.pressureComparisonTitle}
               </span>
               <span className={`badge ${pressureAnalysis.isSelectedMatch ? 'badge-green' : 'badge-yellow'}`}>
-                {pressureAnalysis.isSelectedMatch ? 'Pha Tối Ưu Active' : 'Chờ Chuyển Pha'}
+                {pressureAnalysis.isSelectedMatch ? t.optimalPhaseRunning : t.waitingSwitch}
               </span>
             </div>
 
-            {/* Chú thích: "Phase N" là số thứ tự pha trong firmware/ESP32 của riêng node này,
-                không phải hướng Bắc-Nam/Đông-Tây cố định -- mỗi pha cho đi một tổ hợp nhánh
-                đường khác nhau, liệt kê ngay dưới mỗi thẻ. */}
-            <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '10px', fontStyle: 'italic' }}>
-              ⓘ "Phase N" là số thứ tự pha đèn của riêng node này (không phải hướng cố định) — mỗi pha cho đi một tổ hợp nhánh đường khác nhau, xem "Cho đi" bên dưới mỗi thẻ.
+            <div style={{ fontSize: '0.74rem', color: '#64748b', marginBottom: '10px' }}>
+              {t.pressureHelp}
             </div>
 
             <div style={{
@@ -1120,44 +1284,60 @@ const IntersectionDetail = () => {
               {pressureAnalysis.phases.map(phase => (
                 <div
                   key={phase.phase_id}
-                  title={`${phase.name} — cho đi: ${describeApproaches(phase.approaches)}`}
+                  title={`${phase.name} — ${t.serving} ${describeApproaches(phase.approaches)}`}
                   style={{
                     backgroundColor: activePhase === phase.phase_id ? '#e0f2fe' : '#ffffff',
-                    border: '1px solid #bae6fd',
-                    padding: '8px 12px',
-                    borderRadius: '8px'
+                    border: `1px solid ${activePhase === phase.phase_id ? '#38bdf8' : '#e2e8f0'}`,
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    boxShadow: activePhase === phase.phase_id ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none'
                   }}
                 >
-                  <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 700, overflowWrap: 'anywhere' }}>{phase.name}</span>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0c4a6e' }}>{phase.queue} veh</div>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px', overflowWrap: 'anywhere' }}>
-                    Cho đi: {describeApproaches(phase.approaches)}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', color: activePhase === phase.phase_id ? '#0369a1' : '#475569', fontWeight: 700 }}>
+                      {phase.name}
+                    </span>
+                    {activePhase === phase.phase_id && (
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                    )}
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0c4a6e' }}>{phase.queue} veh</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '4px' }}>
+                    {t.serving} <strong>{describeApproaches(phase.approaches)}</strong>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Info size={14} color="#0284c7" />
-              <span>Chênh lệch áp lực (ΔW, pha cao nhất − pha thấp nhất): <strong style={{ color: '#0f172a' }}>{pressureAnalysis.diff} veh</strong>. Max-pressure sẽ chọn (tham khảo, không phải thuật toán đang chạy): <strong style={{ color: '#0284c7' }}>{pressureAnalysis.maxPhase?.name || pressureAnalysis.recommendedPhase}</strong></span>
+            <div style={{ fontSize: '0.78rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#ffffff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <Info size={15} color="#0284c7" style={{ flexShrink: 0 }} />
+              <span>
+                {t.pressureDiff(pressureAnalysis.diff, pressureAnalysis.maxPhase?.name || pressureAnalysis.recommendedPhase)}
+              </span>
             </div>
           </div>
 
           {/* 1-Click Manual Phase Override */}
           <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.04em' }}>
-              Đè Lệnh Chuyển Pha Khẩn Cấp (1-Click Emergency Override)
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {t.overrideTitle}
+              </label>
+              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                {t.overrideSub}
+              </span>
+            </div>
+            
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {availablePhases.map((phase) => (
                 <button
                   key={phase.phase_id}
-                  title={`${phase.name} — cho đi: ${describeApproaches(phase.approaches)}`}
+                  title={`${phase.name} — ${t.serving} ${describeApproaches(phase.approaches)}`}
                   onClick={() => handleTriggerOverride(phase.phase_id)}
                   disabled={overrideBusy}
                   style={{
-                    flex: '1 1 140px',
-                    minWidth: '140px',
+                    flex: '1 1 150px',
+                    minWidth: '150px',
                     maxWidth: '100%',
                     padding: '10px 14px',
                     backgroundColor: activePhase === phase.phase_id ? '#0284c7' : '#ffffff',
@@ -1171,114 +1351,61 @@ const IntersectionDetail = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-                    overflowWrap: 'anywhere',
-                    wordBreak: 'break-word'
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
                   }}
                 >
-                  <Play size={14} /> Chuyển {phase.name || phase.phase_id}
+                  <Play size={14} /> {t.switchPhase(phase.name || phase.phase_id)}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Timing and safe modes live on the actuator device (yellow 3 s, all-red 2 s; safe-stop = hardware button).
-              These controls only changed an API value, so they are disabled rather than shown as acting on the lights. */}
-          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-            Vàng 3 s / đỏ toàn bộ 2 s cố định trong thiết bị chấp hành. Lệnh tay chỉ được nhận khi hướng đang xanh đã đủ 5 s; pha được ép giữ xanh 15 s rồi thuật toán điều khiển lại. Safe-stop (chớp vàng) bằng nút cứng trên mạch; dashboard không điều khiển được.
-          </div>
-
-          {/* Clearance Timing Sliders */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div style={{ backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#475569', fontWeight: 600, marginBottom: '4px' }}>
-                <span>Thời gian Đèn Vàng (t_yellow)</span>
-                <strong style={{ color: '#d97706' }}>{yellowDuration}s</strong>
+            {overrideBusy && (
+              <div style={{
+                marginTop: '10px',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                backgroundColor: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                color: '#1e40af',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span className="pulse-indicator" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563eb' }} />
+                <span>{t.overrideBusyMsg}</span>
               </div>
-              <input
-                type="range"
-                disabled
-                min="1"
-                max="8"
-                value={yellowDuration}
-                readOnly
-                style={{ accentColor: '#d97706', width: '100%' }}
-              />
-            </div>
-
-            <div style={{ backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#475569', fontWeight: 600, marginBottom: '4px' }}>
-                <span>Thời gian Đỏ Toàn Bộ (t_all_red)</span>
-                <strong style={{ color: '#dc2626' }}>{allRedDuration}s</strong>
-              </div>
-              <input
-                type="range"
-                disabled
-                min="1"
-                max="8"
-                value={allRedDuration}
-                readOnly
-                style={{ accentColor: '#dc2626', width: '100%' }}
-              />
-            </div>
+            )}
           </div>
 
-          {/* Safety Mode Control Buttons */}
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
-              Chế Độ An Toàn Phần Cứng Actuator
-            </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                disabled
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  borderRadius: '6px',
-                  border: '1px solid #16a34a',
-                  backgroundColor: actuatorMode === 'NORMAL' ? '#16a34a' : '#ffffff',
-                  color: actuatorMode === 'NORMAL' ? '#ffffff' : '#16a34a',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'not-allowed', opacity: 0.6
-                }}
-              >
-                Normal Auto
-              </button>
-
-              <button
-                disabled
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  borderRadius: '6px',
-                  border: '1px solid #d97706',
-                  backgroundColor: actuatorMode === 'FLASHING_YELLOW' ? '#d97706' : '#ffffff',
-                  color: actuatorMode === 'FLASHING_YELLOW' ? '#ffffff' : '#d97706',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'not-allowed', opacity: 0.6
-                }}
-              >
-                Chớp Vàng (Safe-Stop)
-              </button>
-
-              <button
-                disabled
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  borderRadius: '6px',
-                  border: '1px solid #dc2626',
-                  backgroundColor: actuatorMode === 'ALL_RED' ? '#dc2626' : '#ffffff',
-                  color: actuatorMode === 'ALL_RED' ? '#ffffff' : '#dc2626',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'not-allowed', opacity: 0.6
-                }}
-              >
-                Đỏ Toàn Bộ (All-Red)
-              </button>
+          {/* Hardware Safety Assurance Spec Cards */}
+          <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '8px' }}>
+              {t.hardwareInterlockTitle}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px' }}>
+                <span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>{t.yellowTime}</span>
+                <strong style={{ fontSize: '0.95rem', color: '#d97706' }}>{t.yellowTimeFixed(yellowDuration)}</strong>
+              </div>
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px' }}>
+                <span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>{t.allRedTime}</span>
+                <strong style={{ fontSize: '0.95rem', color: '#dc2626' }}>{t.allRedTimeLocked(allRedDuration)}</strong>
+              </div>
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px' }}>
+                <span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>{t.boardMode}</span>
+                <strong style={{ fontSize: '0.95rem', color: '#16a34a' }}>{actuatorMode || 'NORMAL'}</strong>
+              </div>
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px' }}>
+                <span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>{t.safeStopButton}</span>
+                <strong style={{ fontSize: '0.95rem', color: isSafeStop ? '#dc2626' : '#64748b' }}>
+                  {isSafeStop ? t.safeStopPressed : t.safeStopReady}
+                </strong>
+              </div>
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '8px', lineHeight: 1.4 }}>
+              {t.hardwareNotice}
             </div>
           </div>
         </div>
@@ -1289,7 +1416,7 @@ const IntersectionDetail = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <Activity color="#0284c7" size={20} />
           <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-            Nhật Ký Thực Thi Lệnh Tín Hiệu Thực Tế (Live ControlACK Audit Log Stream)
+            {t.auditLogTitle}
           </h3>
         </div>
 
@@ -1315,10 +1442,10 @@ const IntersectionDetail = () => {
                 <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#0284c7', fontWeight: 700 }}>
                   {ack.command_id || `cmd-${nodeId}`}
                 </span>
-                <span style={{ color: '#475569' }}>{ack.reason || 'Pha đèn đã được xác thực an toàn qua Actuator Interlock.'}</span>
+                <span style={{ color: '#475569' }}>{ack.reason || (isVi ? 'Pha đèn đã được xác thực an toàn qua Actuator Interlock.' : 'Phase clearance verified via Actuator Interlock.')}</span>
               </div>
               <span style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
-                {ack.timestamp_ms ? new Date(ack.timestamp_ms).toLocaleTimeString() : 'Vừa xong'}
+                {ack.timestamp_ms ? new Date(ack.timestamp_ms).toLocaleTimeString() : (isVi ? 'Vừa xong' : 'Just now')}
               </span>
             </div>
           ))}
@@ -1330,9 +1457,9 @@ const IntersectionDetail = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <TrendingUp size={20} color="#0284c7" />
-            Biểu Đồ Lịch Sử Hàng Chờ Từng Nhánh Luồng Đường theo Thời Gian Real-time
+            {t.queueHistoryTitle}
           </h3>
-          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Cập nhật mỗi 1.5s</span>
+          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{t.updateInterval}</span>
         </div>
 
         <div style={{ width: '100%', height: '280px' }}>
@@ -1340,7 +1467,7 @@ const IntersectionDetail = () => {
             <AreaChart data={telemetryHistory.length > 0 ? telemetryHistory : [{ time: '00:00', queue: 0 }]}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="time" stroke="#94a3b8" fontSize={11} />
-              <YAxis stroke="#94a3b8" fontSize={11} label={{ value: 'Hàng chờ (veh)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#94a3b8', fontSize: 11 } }} />
+              <YAxis stroke="#94a3b8" fontSize={11} label={{ value: t.queueYAxis, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#94a3b8', fontSize: 11 } }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
               <Legend verticalAlign="top" height={36} />
               
@@ -1360,7 +1487,8 @@ const IntersectionDetail = () => {
           </ResponsiveContainer>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

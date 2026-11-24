@@ -3,11 +3,14 @@ import { Video, Radio, Car, Gauge, Wifi } from 'lucide-react';
 import PhaseIndicator from '../components/PhaseIndicator';
 import RaspberryPiAlertOverlay from '../components/RaspberryPiAlertOverlay';
 import StationContextBar from '../components/StationContextBar';
+import { useLanguage } from '../hooks/useLanguage';
 
 const DEMO_NODE_ID = 'J3';
 
 const RaspberryPiDemo = () => {
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const [lang] = useLanguage();
+  const isVi = lang === 'vi';
 
   const [nodeTelemetry, setNodeTelemetry] = useState(null);
   const [deviceHealth, setDeviceHealth] = useState(null);
@@ -120,7 +123,9 @@ const RaspberryPiDemo = () => {
                 style={{ width: '100%', height: '100%', maxHeight: '420px', objectFit: 'contain' }}
               />
             ) : (
-              <div style={{ color: '#64748b', fontSize: '0.84rem' }}>Chưa có live stream</div>
+              <div style={{ color: '#64748b', fontSize: '0.84rem' }}>
+                {isVi ? 'Chưa có live stream' : 'No live stream available'}
+              </div>
             )}
           </div>
         </div>
@@ -143,8 +148,10 @@ const RaspberryPiDemo = () => {
             }}>
               <Wifi size={13} />
               {hasLiveTelemetry
-                ? `ĐÃ NHẬN (${telemetryAgeMs != null ? `${(telemetryAgeMs / 1000).toFixed(1)}s trước` : 'vừa xong'})`
-                : 'CHƯA CÓ TELEMETRY'}
+                ? (isVi
+                  ? `ĐÃ NHẬN (${telemetryAgeMs != null ? `${(telemetryAgeMs / 1000).toFixed(1)}s trước` : 'vừa xong'})`
+                  : `RECEIVED (${telemetryAgeMs != null ? `${(telemetryAgeMs / 1000).toFixed(1)}s ago` : 'just now'})`)
+                : (isVi ? 'CHƯA CÓ TELEMETRY' : 'NO TELEMETRY')}
             </span>
           </div>
 
@@ -171,7 +178,7 @@ const RaspberryPiDemo = () => {
               fontSize: '0.78rem', color: '#64748b', backgroundColor: '#f8fafc', border: '1px dashed #cbd5e1',
               borderRadius: '8px', padding: '14px', textAlign: 'center'
             }}>
-              Chưa có telemetry
+              {isVi ? 'Chưa có telemetry' : 'No telemetry available'}
             </div>
           )}
         </div>

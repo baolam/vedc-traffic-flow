@@ -83,6 +83,18 @@ body {
   border: 1px solid #bae6fd;
 }
 
+.badge-slate {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* Live telemetry numerals: fixed-width digits so a value ticking up/down doesn't jitter the
+   surrounding layout (e.g. "9 veh" -> "10 veh" shifting everything after it). */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -153,6 +165,28 @@ body {
   }
 }
 
+/* 12-column responsive shell for page-level layouts (e.g. a 60/40 or 70/30 split via
+   `grid-column: span 7` / `span 5`). Collapses to a single column below laptop width so panels
+   stack instead of squeezing. */
+.grid-cols-12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+}
+
+.grid-cols-12 > * {
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .grid-cols-12 {
+    grid-template-columns: 1fr;
+  }
+  .grid-cols-12 > * {
+    grid-column: span 12 !important;
+  }
+}
+
 @media (max-width: 1024px) {
   .grid-cols-4 {
     grid-template-columns: repeat(2, 1fr);
@@ -199,6 +233,69 @@ body {
   animation: live-pulse 2s infinite ease-in-out;
 }
 
+/* Global Select & Input styling for crisp contrast */
+select, input[type="text"], input[type="search"], textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1;
+}
+
+select option {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+/* Control Step Tracker & Timeline styling */
+.control-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.control-step-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.control-step-active {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+
+.control-step-idle {
+  background-color: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Algorithm Info Card */
+.algo-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.algo-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+}
+
+.algo-card-active {
+  border: 2px solid #0284c7;
+  background-color: #f0f9ff;
+}
+
 /* Safe-Stop emergency flash: hard on/off at the board's own 500ms half-period
    (firmware SAFE_STOP_FLASH_MS), so the dashboard flashes in the same rhythm as the physical LEDs. */
 @keyframes safe-stop-flash {
@@ -214,8 +311,7 @@ body {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Raspberry Pi Demo page: connection/signal-lost alert pop-in (independent of safe-stop above,
-   which is specifically the physical emergency button on a controlled intersection). */
+/* Raspberry Pi Demo page: connection/signal-lost alert pop-in */
 @keyframes rpi-alert-pop-in {
   from { opacity: 0; transform: scale(0.92) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }

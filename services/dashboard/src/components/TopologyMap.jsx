@@ -62,6 +62,21 @@ const TopologyMap = ({
       };
     }
 
+    // 1b. Standard positions for 5-node tabletop sa bàn J1-J5 (1800x1200 mm - đội 31µF)
+    const tidCheck = String(topology?.topology_id || '').toLowerCase();
+    if (tidCheck.includes('tabletop_5nut') || (total === 5 && ['J1', 'J2', 'J3', 'J4', 'J5'].every(id => rawNodes.some(n => n.node_id === id)))) {
+      return {
+        nodePositions: {
+          J1: { x: 160, y: 140, name: "Intersection 1 (NW)", street_name: "Sa Bàn 5 nút - Tây Bắc" },
+          J2: { x: 370, y: 140, name: "Intersection 2 (N-Center)", street_name: "Sa Bàn 5 nút - Trung Tâm Bắc" },
+          J3: { x: 580, y: 140, name: "Intersection 3 (NE)", street_name: "Sa Bàn 5 nút - Đông Bắc" },
+          J4: { x: 160, y: 350, name: "Intersection 4 (SW)", street_name: "Sa Bàn 5 nút - Tây Nam" },
+          J5: { x: 370, y: 350, name: "Intersection 5 (S-Center)", street_name: "Sa Bàn 5 nút - Trung Tâm Nam" }
+        },
+        projectionMeta: null
+      };
+    }
+
     // 2. Exact SUMO XY coordinate projection (used for hcm_corridor, the sa ban tabletop
     // corridor (J1/J2), and any other topology whose contract carries real x/y)
     const hasXY = rawNodes.some(n => n.x != null && n.y != null);
@@ -251,15 +266,14 @@ const TopologyMap = ({
 
   const isTabletop = useMemo(() => {
     const tid = String(topology?.topology_id || '').toLowerCase();
-    return tid.includes('tabletop') || (rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id)));
+    return tid.includes('tabletop') || (rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id))) || (rawNodes.length === 5 && ['J1', 'J2', 'J3', 'J4', 'J5'].every(id => rawNodes.some(n => n.node_id === id)));
   }, [topology, rawNodes]);
 
-  // The drawn mat (renderTabletopMat) and its fixed lane coordinates are the 2-node 1200 x 600 mm bạt only.
-  // Other tabletop topologies (tabletop_5nut_v1) keep the generic x/y vector drawing under the same badge.
   const isTwoNodeMat = isTabletop && rawNodes.length === 2 && rawNodes.every(n => ['J1', 'J2'].includes(n.node_id));
+  const isFiveNodeMat = isTabletop && (String(topology?.topology_id || '').toLowerCase().includes('tabletop_5nut') || (rawNodes.length === 5 && ['J1', 'J2', 'J3', 'J4', 'J5'].every(id => rawNodes.some(n => n.node_id === id))));
   const tabletopLabel = isTwoNodeMat
     ? 'Sa Bàn Bạt 1200 × 600 mm (đội 31μF)'
-    : String(topology?.topology_id || '').toLowerCase() === 'tabletop_5nut_v1'
+    : isFiveNodeMat
       ? 'Sa Bàn Bạt 1800 × 1200 mm, 5 nút (đội 31μF)'
       : `Sa Bàn ${rawNodes.length} nút (đội 31μF)`;
 
@@ -456,6 +470,256 @@ const TopologyMap = ({
     );
   };
 
+  const renderTabletop5NutMat = () => {
+    const renderZebraH = (cx, y) => {
+      const startX = cx - 22;
+      return Array.from({ length: 6 }).map((_, i) => (
+        <rect key={`z5h-${cx}-${y}-${i}`} x={startX + i * 8} y={y} width="5" height="13" fill="#F0F0EC" rx="0.5" />
+      ));
+    };
+
+    const renderZebraV = (x, cy) => {
+      const startY = cy - 22;
+      return Array.from({ length: 6 }).map((_, i) => (
+        <rect key={`z5v-${x}-${cy}-${i}`} x={x} y={startY + i * 8} width="13" height="5" fill="#F0F0EC" rx="0.5" />
+      ));
+    };
+
+    const renderHouse = (id, x, y, w, h, roofColor) => (
+      <g key={id}>
+        <rect x={x} y={y} width={w} height={h} rx="2" fill={roofColor} stroke="#2d3748" strokeWidth="0.8" />
+        {/* Windows / Door */}
+        <rect x={x + 3} y={y + 3} width={Math.max(4, (w - 10) / 2)} height={Math.max(3, h - 8)} fill="#fafafa" opacity="0.85" rx="0.5" />
+        <rect x={x + w / 2 + 2} y={y + 3} width={Math.max(4, (w - 10) / 2)} height={Math.max(3, h - 8)} fill="#fafafa" opacity="0.85" rx="0.5" />
+      </g>
+    );
+
+    const renderTree = (id, cx, cy) => (
+      <g key={id}>
+        <circle cx={cx + 1} cy={cy + 1} r="7.5" fill="#1b4332" opacity="0.3" />
+        <circle cx={cx} cy={cy} r="7" fill="#40916c" stroke="#2d6a4f" strokeWidth="1" />
+        <circle cx={cx - 1.5} cy={cy - 1.5} r="4" fill="#74c69d" opacity="0.7" />
+      </g>
+    );
+
+    return (
+      <g id="tabletop-5nut-sa-ban-layer" style={{ pointerEvents: 'none' }}>
+        {/* Soft shadow */}
+        <rect x="16" y="16" width="728" height="468" rx="14" fill="#0f172a" opacity="0.14" />
+
+        {/* 1. Base Grass Lawn Mat (720 x 460 mm canvas representing 1800 x 1200 mm physical sa bàn) */}
+        <rect x="20" y="20" width="720" height="460" rx="12" fill="#80A568" stroke="#5b784a" strokeWidth="2.5" />
+
+        {/* 2. Sidewalk Borders (#D6D2C8) - Wide, crisp pedestrian borders */}
+        <rect x="20" y="107" width="720" height="66" fill="#D6D2C8" />
+        <rect x="20" y="317" width="580" height="66" fill="#D6D2C8" />
+        <rect x="127" y="20" width="66" height="460" fill="#D6D2C8" />
+        <rect x="337" y="20" width="66" height="460" fill="#D6D2C8" />
+        <rect x="547" y="20" width="66" height="363" fill="#D6D2C8" />
+
+        {/* 3. Asphalt Roads (#3E4044) - Wide, bold avenues */}
+        <rect x="20" y="114" width="720" height="52" fill="#3E4044" />
+        <rect x="20" y="324" width="570" height="52" fill="#3E4044" />
+        <rect x="134" y="20" width="52" height="460" fill="#3E4044" />
+        <rect x="344" y="20" width="52" height="460" fill="#3E4044" />
+        <rect x="554" y="20" width="52" height="356" fill="#3E4044" />
+
+        {/* 4. Animated Flow Centerlines (White dashed #F0F0EC with animated stream effect) */}
+        {/* Horizontal top road */}
+        <line x1="20" y1="140" x2="120" y2="140" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="200" y1="140" x2="330" y2="140" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="410" y1="140" x2="540" y2="140" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="620" y1="140" x2="740" y2="140" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+
+        {/* Horizontal bottom road */}
+        <line x1="20" y1="350" x2="120" y2="350" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="200" y1="350" x2="330" y2="350" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="410" y1="350" x2="540" y2="350" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+
+        {/* Vertical West road (J1 - J4) */}
+        <line x1="160" y1="20" x2="160" y2="100" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="160" y1="180" x2="160" y2="310" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="160" y1="390" x2="160" y2="480" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+
+        {/* Vertical Mid road (J2 - J5) */}
+        <line x1="370" y1="20" x2="370" y2="100" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="370" y1="180" x2="370" y2="310" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="370" y1="390" x2="370" y2="480" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+
+        {/* Vertical East road (J3 - Parking) */}
+        <line x1="580" y1="20" x2="580" y2="100" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+        <line x1="580" y1="180" x2="580" y2="310" stroke="#F0F0EC" strokeWidth="2.5" strokeDasharray="14,10" className="flow-active" />
+
+        {/* 5. Crosswalk Zebra Stripes at all 5 signalized intersections */}
+        {/* J1 Crosswalks */}
+        {renderZebraH(160, 97)}
+        {renderZebraH(160, 169)}
+        {renderZebraV(117, 140)}
+        {renderZebraV(189, 140)}
+
+        {/* J2 Crosswalks */}
+        {renderZebraH(370, 97)}
+        {renderZebraH(370, 169)}
+        {renderZebraV(327, 140)}
+        {renderZebraV(399, 140)}
+
+        {/* J3 Crosswalks */}
+        {renderZebraH(580, 97)}
+        {renderZebraH(580, 169)}
+        {renderZebraV(537, 140)}
+        {renderZebraV(609, 140)}
+
+        {/* J4 Crosswalks */}
+        {renderZebraH(160, 307)}
+        {renderZebraH(160, 379)}
+        {renderZebraV(117, 350)}
+        {renderZebraV(189, 350)}
+
+        {/* J5 Crosswalks */}
+        {renderZebraH(370, 307)}
+        {renderZebraH(370, 379)}
+        {renderZebraV(327, 350)}
+        {renderZebraV(399, 350)}
+
+        {/* Stop bars at J1..J5 approaches */}
+        <rect x="134" y="93" width="26" height="3" fill="#F0F0EC" />
+        <rect x="160" y="184" width="26" height="3" fill="#F0F0EC" />
+        <rect x="344" y="93" width="26" height="3" fill="#F0F0EC" />
+        <rect x="370" y="184" width="26" height="3" fill="#F0F0EC" />
+        <rect x="554" y="93" width="26" height="3" fill="#F0F0EC" />
+        <rect x="580" y="184" width="26" height="3" fill="#F0F0EC" />
+        <rect x="134" y="303" width="26" height="3" fill="#F0F0EC" />
+        <rect x="160" y="394" width="26" height="3" fill="#F0F0EC" />
+        <rect x="344" y="303" width="26" height="3" fill="#F0F0EC" />
+        <rect x="370" y="394" width="26" height="3" fill="#F0F0EC" />
+
+        {/* 6. Residential Buildings (Khối nhà dân cư đúng theo ảnh sa bàn) */}
+        {/* Block 1 (Top Left, NW of J1) */}
+        {renderHouse('h_nw1', 35, 32, 28, 24, '#b91c1c')}
+        {renderHouse('h_nw2', 72, 32, 28, 24, '#c2410c')}
+        {renderHouse('h_nw3', 35, 68, 28, 24, '#0369a1')}
+
+        {/* Block 2 (Between J1 and J2 North) */}
+        <rect x="202" y="30" width="36" height="36" rx="2" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+        <rect x="268" y="30" width="36" height="36" rx="2" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+        {renderHouse('h_n1', 208, 74, 28, 24, '#b91c1c')}
+        {renderHouse('h_n2', 268, 74, 28, 24, '#c2410c')}
+
+        {/* Block 3 (Between J2 and J3 North) */}
+        {renderHouse('h_ne1', 432, 70, 26, 22, '#0369a1')}
+        {renderHouse('h_ne2', 462, 70, 26, 22, '#b91c1c')}
+        {renderHouse('h_ne3', 496, 68, 28, 24, '#c2410c')}
+        <rect x="504" y="30" width="38" height="34" rx="2" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+
+        {/* Block 4 (East of J3) */}
+        {renderHouse('h_e1', 630, 32, 24, 24, '#0369a1')}
+        {renderHouse('h_e2', 660, 32, 28, 24, '#b91c1c')}
+        {renderHouse('h_e3', 665, 74, 26, 22, '#c2410c')}
+
+        {/* Block 5 (Central Block between J1, J2, J4, J5) - Dense Urban Core */}
+        {renderHouse('h_c1', 208, 185, 26, 22, '#0369a1')}
+        {renderHouse('h_c2', 268, 185, 26, 22, '#c2410c')}
+        {renderHouse('h_c3', 208, 218, 26, 22, '#b91c1c')}
+        {renderHouse('h_c4', 268, 218, 26, 22, '#b91c1c')}
+        {renderHouse('h_c5', 208, 252, 26, 22, '#c2410c')}
+        {renderHouse('h_c6', 268, 252, 26, 22, '#0369a1')}
+        {renderHouse('h_c7', 208, 286, 26, 22, '#b91c1c')}
+        {renderHouse('h_c8', 268, 286, 26, 22, '#b91c1c')}
+
+        {/* Block 6 (East Central between J2, J3, J5, RES_P) */}
+        {renderHouse('h_ec1', 432, 175, 28, 22, '#b91c1c')}
+        {renderHouse('h_ec2', 464, 175, 28, 22, '#0369a1')}
+        {renderHouse('h_ec3', 432, 210, 28, 22, '#c2410c')}
+        {renderHouse('h_ec4', 464, 210, 28, 22, '#b91c1c')}
+        {renderHouse('h_ec5', 432, 245, 28, 22, '#b91c1c')}
+        {renderHouse('h_ec6', 464, 245, 28, 22, '#c2410c')}
+        {renderHouse('h_ec7', 500, 254, 28, 24, '#b91c1c')}
+        {renderHouse('h_ec8', 532, 254, 28, 24, '#0369a1')}
+
+        {/* Trees */}
+        {renderTree('t1', 512, 185)}
+        {renderTree('t2', 512, 220)}
+        {renderTree('t3', 440, 288)}
+        {renderTree('t4', 475, 292)}
+        {renderTree('t5', 510, 292)}
+        {renderTree('t6', 625, 292)}
+
+        {/* Block 7 (South Central below J5) */}
+        <rect x="412" y="390" width="42" height="32" rx="2" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+        {renderTree('t7', 462, 385)}
+        {renderTree('t8', 462, 420)}
+        {renderHouse('h_sc1', 500, 396, 30, 26, '#0369a1')}
+        {renderHouse('h_sc2', 538, 396, 26, 26, '#b91c1c')}
+        {renderHouse('h_sc3', 580, 396, 36, 26, '#e2e8f0')}
+        {renderHouse('h_sc4', 626, 396, 26, 26, '#b91c1c')}
+        {renderHouse('h_sc5', 668, 396, 30, 26, '#c2410c')}
+
+        {/* 7. SOUTHEAST BÃI ĐỖ XE P & KHU DÂN CƯ BADGE (Góc Đông Nam cực kỳ nổi bật) */}
+        {/* Asphalt Parking Area */}
+        <rect x="548" y="356" width="102" height="66" rx="4" fill="#2d3748" stroke="#1a202c" strokeWidth="1.2" />
+        {/* White parking bay divider lines */}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <line key={`pb-${i}`} x1={558 + i * 16} y1="384" x2={558 + i * 16} y2="422" stroke="#ffffff" strokeWidth="1.5" />
+        ))}
+        <line x1="558" y1="384" x2="638" y2="384" stroke="#ffffff" strokeWidth="1.5" />
+        {/* Large Parking 'P' Symbol */}
+        <text x="592" y="372" fontSize="13" fontWeight="900" fill="#ffffff" textAnchor="middle">P</text>
+        <text x="592" y="380" fontSize="5.5" fontWeight="700" fill="#94a3b8" textAnchor="middle">BÃI ĐỖ XE</text>
+
+        {/* KHU DÂN CƯ Official Badge Card */}
+        <rect x="646" y="320" width="70" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+        {/* Orange roof house icon */}
+        <polygon points="681,327 668,337 694,337" fill="#ea580c" />
+        <rect x="672" y="337" width="18" height="12" fill="#eff6ff" stroke="#ea580c" strokeWidth="1" />
+        <rect x="674" y="340" width="5" height="5" fill="#0284c7" />
+        <rect x="683" y="340" width="5" height="5" fill="#0284c7" />
+        <text x="681" y="357" fontSize="6.8" fontWeight="900" fill="#1e293b" textAnchor="middle">KHU DÂN CƯ</text>
+        <text x="681" y="365" fontSize="5" fontWeight="600" fill="#64748b" textAnchor="middle">residential area</text>
+
+        {/* 8. Intersection Label Badges (J1, J2, J3, J4, J5) */}
+        {/* J1 Badge */}
+        <rect x="80" y="152" width="36" height="24" rx="4" fill="#FAFAF8" stroke="#282828" strokeWidth="1.2" />
+        <text x="98" y="164" fontSize="13" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J1</text>
+
+        {/* J2 Badge */}
+        <rect x="408" y="152" width="36" height="24" rx="4" fill="#FAFAF8" stroke="#282828" strokeWidth="1.2" />
+        <text x="426" y="164" fontSize="13" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J2</text>
+
+        {/* J3 Badge */}
+        <rect x="632" y="152" width="36" height="24" rx="4" fill="#FAFAF8" stroke="#282828" strokeWidth="1.2" />
+        <text x="650" y="164" fontSize="13" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J3</text>
+
+        {/* J4 Badge */}
+        <rect x="80" y="362" width="36" height="24" rx="4" fill="#FAFAF8" stroke="#282828" strokeWidth="1.2" />
+        <text x="98" y="374" fontSize="13" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J4</text>
+
+        {/* J5 Badge */}
+        <rect x="408" y="362" width="36" height="24" rx="4" fill="#FAFAF8" stroke="#282828" strokeWidth="1.2" />
+        <text x="426" y="374" fontSize="13" fontWeight="900" fill="#1e1e1e" textAnchor="middle" dominantBaseline="central">J5</text>
+
+        {/* 9. Hardware Footprints & Competition Labels */}
+        <text x="32" y="445" fontSize="8.5" fontWeight="800" fill="#F7F7F2">EdgeFlow AI · VEDC 2026 · đội 31μF</text>
+        <line x1="32" y1="454" x2="92" y2="454" stroke="#F7F7F2" strokeWidth="1.8" />
+        <line x1="32" y1="451" x2="32" y2="457" stroke="#F7F7F2" strokeWidth="1.5" />
+        <line x1="92" y1="451" x2="92" y2="457" stroke="#F7F7F2" strokeWidth="1.5" />
+        <text x="98" y="454" fontSize="6.5" fontWeight="700" fill="#F7F7F2" dominantBaseline="central">100 mm</text>
+
+        {/* Hardware ESP32 & Pi 5 Indicators */}
+        <rect x="180" y="440" width="48" height="18" rx="3" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+        <text x="204" y="449" fontSize="6" fontWeight="700" fill="#334155" textAnchor="middle" dominantBaseline="central">ESP32 · J4</text>
+
+        <rect x="390" y="440" width="48" height="18" rx="3" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+        <text x="414" y="449" fontSize="6" fontWeight="700" fill="#334155" textAnchor="middle" dominantBaseline="central">ESP32 · J5</text>
+
+        <rect x="445" y="440" width="38" height="18" rx="3" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" />
+        <text x="464" y="449" fontSize="5.5" fontWeight="700" fill="#334155" textAnchor="middle" dominantBaseline="central">HUB USB</text>
+
+        <rect x="490" y="440" width="52" height="18" rx="3" fill="#0284c7" />
+        <text x="516" y="449" fontSize="6" fontWeight="800" fill="#ffffff" textAnchor="middle" dominantBaseline="central">AI BIÊN · PI 5</text>
+      </g>
+    );
+  };
+
   const activeFocusNode = selectedNodeId || hoveredNode;
   const activeFocusData = activeFocusNode ? (nodesData[activeFocusNode] || null) : null;
 
@@ -504,15 +768,35 @@ const TopologyMap = ({
             </span>
           )}
           {selectedNodeId && (
-            <span style={{ 
-              backgroundColor: '#e0f2fe', 
-              color: '#0369a1', 
-              padding: '2px 8px', 
-              borderRadius: '4px', 
+            <span style={{
+              backgroundColor: '#e0f2fe',
+              color: '#0369a1',
+              padding: '2px 8px',
+              borderRadius: '4px',
               fontWeight: 700,
-              fontSize: '0.75rem' 
+              fontSize: '0.75rem'
             }}>
               Inspecting: {selectedNodeId}
+            </span>
+          )}
+          {/* Past the same node-count tier that shrinks nodeRadius/getFontSize to their smallest
+              step, the default fit-to-screen view packs stations too tightly to read their IDs --
+              the zoom controls already solve this (labels scale with the same transform), the gap
+              is just that nothing says so. Hides itself once the operator has actually zoomed in. */}
+          {totalCount > 40 && zoom <= 1.2 && (
+            <span style={{
+              backgroundColor: '#fffbeb',
+              color: '#92400e',
+              border: '1px solid #fde68a',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              fontWeight: 700,
+              fontSize: '0.72rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <ZoomIn size={11} /> {totalCount} nodes — zoom in to read station IDs
             </span>
           )}
         </div>
@@ -661,6 +945,47 @@ const TopologyMap = ({
           style={{ transition: 'transform 0.15s ease-out' }}
         >
           <defs>
+            {/* Dynamic CSS animations for flowing traffic and congestion ripples */}
+            <style>{`
+              @keyframes flowDash {
+                from { stroke-dashoffset: 24; }
+                to { stroke-dashoffset: 0; }
+              }
+              @keyframes rippleWave {
+                0% { r: ${nodeRadius + 4}; opacity: 0.85; stroke-width: 2.5px; }
+                100% { r: ${nodeRadius + 28}; opacity: 0; stroke-width: 0.5px; }
+              }
+              .flow-active {
+                animation: flowDash 1.2s linear infinite;
+              }
+              .pulse-ripple-ring {
+                animation: rippleWave 1.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+              }
+            `}</style>
+
+            {/* Neon Glow Filters */}
+            <filter id="neon-glow-green" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="neon-glow-blue" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="neon-glow-red" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
             {/* Subtle architectural dot grid background pattern */}
             <pattern id="grid-pattern" width="28" height="28" patternUnits="userSpaceOnUse">
               <circle cx="2" cy="2" r="1" fill="#cbd5e1" opacity="0.6" />
@@ -701,6 +1026,9 @@ const TopologyMap = ({
             
             {/* Tabletop Sa Bàn Overlay (Image 2 exact 1200x600 mm layout) */}
             {isTwoNodeMat && renderTabletopMat()}
+
+            {/* Tabletop 5-node Sa Bàn Overlay (VEDC 2026 - 1800x1200 mm 5-nut layout with residential area) */}
+            {isFiveNodeMat && renderTabletop5NutMat()}
 
             {/* Draw Directed Edges & SUMO Roads */}
             {showEdges && edgesToDraw.map((edge) => {
@@ -828,14 +1156,26 @@ const TopologyMap = ({
                     />
                   )}
 
-                  {/* Outer Active Signal Phase Ring (Green for Phase 1, Blue for Phase 2) */}
+                  {/* Congestion Pulse Ripple Effect when totalQueue >= 6 */}
+                  {totalQueue >= 6 && (
+                    <circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      className="pulse-ripple-ring"
+                      fill="none"
+                      stroke={badgeColor}
+                    />
+                  )}
+
+                  {/* Outer Active Signal Phase Ring (Green for Phase 1, Blue for Phase 2) with Glow */}
                   <circle
                     cx={pos.x}
                     cy={pos.y}
                     r={isHighlighted ? outerRadius + 3 : outerRadius}
-                    fill={isNS ? "rgba(16, 185, 129, 0.12)" : "rgba(2, 132, 199, 0.12)"}
+                    fill={isNS ? "rgba(16, 185, 129, 0.16)" : "rgba(2, 132, 199, 0.16)"}
                     stroke={isNS ? "#10b981" : "#0284c7"}
-                    strokeWidth={isHighlighted ? "2.5" : "1.6"}
+                    strokeWidth={isHighlighted ? "2.6" : "1.8"}
+                    filter={isHighlighted || isTabletop ? (isNS ? "url(#neon-glow-green)" : "url(#neon-glow-blue)") : "none"}
                   />
 
                   {/* Node Core Body */}

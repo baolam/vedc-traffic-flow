@@ -4,6 +4,7 @@ import TopologyMap from '../components/TopologyMap';
 import PhaseIndicator from '../components/PhaseIndicator';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useActiveScenario, MAP_ONLY_SCENARIOS } from '../hooks/useActiveScenario';
+import { useLanguage } from '../hooks/useLanguage';
 import { 
   Activity, Car, Gauge, Radio, Search, ChevronRight, ShieldCheck, 
   Terminal, FileText, CheckCircle, AlertTriangle, ChevronDown, ChevronUp,
@@ -18,6 +19,130 @@ const needsAttention = (d) => (d.total_queue || 0) > ATTENTION_QUEUE_VEH || Bool
 // row layout at full length; show a short form and keep the full ID in a title tooltip.
 const shortNodeId = (id) => (id && id.length > 16 ? `${id.slice(0, 10)}…${id.slice(-4)}` : id);
 
+const SCENARIO_PRETTY_NAMES = {
+  en: {
+    four_intersection_v1: 'Four Intersection V1 (4 Stations - SUMO Standard)',
+    tabletop_5nut_v1: 'Tabletop 5-Nut V1 (5 Stations - Lab Tabletop)',
+    cologne8: 'Cologne 8-Junction (8 Stations - Urban Grid)',
+    cologne: 'Cologne Urban Grid (Cologne City Network)',
+    grid4x4: 'Grid 4x4 Corridor (16 Stations - Grid Corridor)',
+    grid16: 'Grid 16-Junction (16 Stations - Grid Network)',
+    hcm_realworld_v1: 'HCM Realworld V1 (793 Cameras HCMC)',
+    three_way_junction_v1: 'Three Way Junction V1 (3 Stations - Y-Junction)',
+    multi_phase_v1: 'Multi Phase V1 (5 Stations - Complex Multi-Phase)',
+    four_intersection_rl_v1: 'Four Intersection RL (4 Stations - RL Training)'
+  },
+  vi: {
+    four_intersection_v1: 'Four Intersection V1 (4 Nút - Chuẩn SUMO)',
+    tabletop_5nut_v1: 'Tabletop 5-Nut V1 (5 Nút - Sa Bàn Lab)',
+    cologne8: 'Cologne 8-Junction (8 Nút - Đô Thị)',
+    cologne: 'Cologne Urban Grid (Mạng Cologne Đô Thị)',
+    grid4x4: 'Grid 4x4 Corridor (16 Nút - Hành Lang Lưới)',
+    grid16: 'Grid 16-Junction (16 Nút - Lưới Hành Lang)',
+    hcm_realworld_v1: 'HCM Realworld V1 (793 Camera TP.HCM)',
+    three_way_junction_v1: 'Three Way Junction V1 (3 Nút - Ngã Ba Chữ Y)',
+    multi_phase_v1: 'Multi Phase V1 (5 Nút - Đa Pha Phức Hợp)',
+    four_intersection_rl_v1: 'Four Intersection RL (4 Nút - Huấn Luyện RL)'
+  }
+};
+
+const COPY = {
+  en: {
+    liveControl: 'LIVE CONTROL',
+    title: 'Traffic Operations Center Overview',
+    subtitle: 'Real-time topology surveillance, queue pressure analysis, and certified safety compliance.',
+    opsCenter: 'Operations Center',
+    engDiag: 'Engineering Diagnostics',
+    backToOps: '← Back to Operations Center',
+    wsLive: 'WebSocket Live (<50ms)',
+    pollingFallback: 'Polling Fallback',
+    mapLabel: 'Map:',
+    stationsLabel: 'stations',
+    totalQueue: 'Total Network Queue',
+    acrossApproaches: 'Across all approaches',
+    meanDelay: 'Mean Network Delay',
+    actuatorClearance: 'Actuator clearance: 5s',
+    syncing: 'SYNCING',
+    throughput: 'Network Throughput',
+    noReports: 'No system reports data yet',
+    activeAlerts: 'Active Alerts & Safety',
+    allNormal: 'All Nominal',
+    attentionNeeded: 'Attention Needed',
+    hardwareInterlock: 'Hardware Interlock',
+    displayMode: 'Display Mode:',
+    splitLayout: 'Split (Map + Stations)',
+    mapOnlyLayout: '🗺️ Fullscreen SUMO Map',
+    listOnlyLayout: '📋 Station List',
+    coordMatch: '1:1 Coordinate match with SUMO-GUI (10.882°N, 106.822°E - HCMC)',
+    mapTitle: (count) => `SUMO Traffic Network Map (${count} Junctions)`,
+    mapSubtitle: 'Coordinates and edges extracted directly from SUMO C++ Engine; click any station for diagnostics',
+    syncingGraph: 'Syncing graph...',
+    junctionMonitoring: 'Junction Monitoring',
+    stationsCount: (filtered, total) => `${filtered} of ${total} stations`,
+    allFilter: (count) => `All (${count})`,
+    attentionFilter: (count) => `Attention (${count})`,
+    normalFilter: (count) => `Normal (${count})`,
+    filterPlaceholder: 'Filter by junction ID (e.g. J1, A0)...',
+    viewDiagnostics: 'View Detailed Diagnostics',
+    systemLogsTitle: 'System Event & Execution Stream',
+    eventsCount: (count) => `${count} Events · Click to expand logs`,
+    eventsCountExpanded: (count) => `${count} Events · Click to collapse`,
+    filterAll: 'All',
+    filterControl: 'Control',
+    filterActuator: 'Actuator',
+    filterWarn: 'Warnings',
+    highlightBtn: (nodeId) => `Highlight ${nodeId}`,
+    noLogsMatch: 'No logs match this filter'
+  },
+  vi: {
+    liveControl: 'ĐIỀU KHIỂN TRỰC TIẾP',
+    title: 'Tổng Quan Trung Tâm Điều Hành Giao Thông',
+    subtitle: 'Giám sát cấu trúc liên kết thời gian thực, phân tích áp lực hàng chờ và tuân thủ an toàn chuẩn hóa.',
+    opsCenter: 'Trung Tâm Vận Hành',
+    engDiag: 'Chẩn Đoán Kỹ Thuật',
+    backToOps: '← Quay Lại Trung Tâm Điều Hành',
+    wsLive: 'WebSocket Trực Tiếp (<50ms)',
+    pollingFallback: 'Dự phòng Polling',
+    mapLabel: 'Bản đồ:',
+    stationsLabel: 'trạm',
+    totalQueue: 'Tổng Hàng Chờ Mạng Lưới',
+    acrossApproaches: 'Trên tất cả các luồng nhánh',
+    meanDelay: 'Độ Trễ Trung Bình Mạng',
+    actuatorClearance: 'Thời gian giải phóng: 5s',
+    syncing: 'ĐANG ĐỒNG BỘ',
+    throughput: 'Thông Lượng Mạng Lưới',
+    noReports: 'Chưa có dữ liệu system reports',
+    activeAlerts: 'Cảnh Báo & An Toàn',
+    allNormal: 'Tất cả bình thường',
+    attentionNeeded: 'Cần chú ý',
+    hardwareInterlock: 'Interlock Phần Cứng',
+    displayMode: 'Chế độ hiển thị:',
+    splitLayout: 'Chia đôi (Bản đồ + Trạm)',
+    mapOnlyLayout: '🗺️ Bản đồ SUMO toàn màn hình',
+    listOnlyLayout: '📋 Danh sách trạm',
+    coordMatch: 'Khớp tọa độ 1:1 với SUMO-GUI (10.882°N, 106.822°E - TP.HCM)',
+    mapTitle: (count) => `Bản đồ Mạng lưới Giao thông SUMO (${count} Nút Giao)`,
+    mapSubtitle: 'Tọa độ và cung đường trích xuất trực tiếp từ SUMO C++ Engine; nhấp vào trạm để xem chi tiết',
+    syncingGraph: 'Đang đồng bộ đồ thị...',
+    junctionMonitoring: 'Danh Sách Giám Sát Nút Giao',
+    stationsCount: (filtered, total) => `${filtered} / ${total} trạm`,
+    allFilter: (count) => `Tất cả (${count})`,
+    attentionFilter: (count) => `Cần chú ý (${count})`,
+    normalFilter: (count) => `Bình thường (${count})`,
+    filterPlaceholder: 'Lọc nhanh ID nút (vd: J1, A0)...',
+    viewDiagnostics: 'Xem Chi Tiết Chẩn Đoán',
+    systemLogsTitle: 'Dòng Sự Kiện & Lệnh Thực Thi Hệ Thống',
+    eventsCount: (count) => `${count} Sự kiện · Nhấp để mở rộng nhật ký`,
+    eventsCountExpanded: (count) => `${count} Sự kiện · Nhấp để thu gọn`,
+    filterAll: 'Tất cả',
+    filterControl: 'Lệnh điều khiển',
+    filterActuator: 'Phần cứng',
+    filterWarn: 'Cảnh báo',
+    highlightBtn: (nodeId) => `Định vị ${nodeId}`,
+    noLogsMatch: 'Không có nhật ký nào khớp bộ lọc'
+  }
+};
+
 // System Log timestamps: the API formats "timestamp" with the SERVER/container's own local clock
 // (often UTC in Docker, unrelated to the operator's timezone), so it can look hours off on screen.
 // timestamp_ms is an unambiguous UTC epoch; format it with the browser's own timezone instead.
@@ -30,6 +155,10 @@ const formatLogTime = (log) => (
 
 const NetworkOverview = () => {
   const navigate = useNavigate();
+  const [lang] = useLanguage();
+  const isVi = lang === 'vi';
+  const t = COPY[lang] || COPY.en;
+  const prettyNames = SCENARIO_PRETTY_NAMES[lang] || SCENARIO_PRETTY_NAMES.en;
 
   const [scenarios, setScenarios] = useState([
     { scenario_id: 'four_intersection_v1', name: 'Four Intersection V1', has_sumo_config: true, total_nodes: 4 },
@@ -338,7 +467,7 @@ const NetworkOverview = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <h2 style={{ fontSize: '1.45rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
-              Traffic Operations Center Overview
+              {t.title}
             </h2>
             <span style={{
               backgroundColor: '#ecfdf5',
@@ -349,11 +478,11 @@ const NetworkOverview = () => {
               fontSize: '0.72rem',
               fontWeight: 700
             }}>
-              LIVE CONTROL
+              {t.liveControl}
             </span>
           </div>
           <p style={{ color: '#64748b', margin: 0, fontSize: '0.85rem' }}>
-            Real-time topology surveillance, queue pressure analysis, and certified safety compliance.
+            {t.subtitle}
           </p>
         </div>
 
@@ -380,7 +509,7 @@ const NetworkOverview = () => {
                 boxShadow: viewMode === 'OPERATIONS' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
               }}
             >
-              Operations Center
+              {t.opsCenter}
             </button>
             <button
               onClick={() => setViewMode('DIAGNOSTICS')}
@@ -396,7 +525,7 @@ const NetworkOverview = () => {
                 boxShadow: viewMode === 'DIAGNOSTICS' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
               }}
             >
-              Engineering Diagnostics
+              {t.engDiag}
             </button>
           </div>
 
@@ -423,7 +552,7 @@ const NetworkOverview = () => {
                 display: 'inline-block'
               }}
             />
-            {wsConnected ? 'WebSocket Live (<50ms)' : 'Polling Fallback'}
+            {wsConnected ? t.wsLive : t.pollingFallback}
           </div>
 
           {/* Scenario Selector Dropdown */}
@@ -438,7 +567,7 @@ const NetworkOverview = () => {
             boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
           }}>
             <Layers size={14} color="#0284c7" />
-            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>Map:</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{t.mapLabel}</span>
             <select
               value={activeScenarioId}
               onChange={handleScenarioChange}
@@ -454,7 +583,7 @@ const NetworkOverview = () => {
             >
               {scenarios.map((sc) => (
                 <option key={sc.scenario_id} value={sc.scenario_id}>
-                  {sc.name || sc.scenario_id} ({sc.total_nodes || '?'} stations)
+                  {prettyNames[sc.scenario_id] || `${sc.name || sc.scenario_id} (${sc.total_nodes || '?'} ${t.stationsLabel})`}
                 </option>
               ))}
             </select>
@@ -468,14 +597,14 @@ const NetworkOverview = () => {
         <div className="card" style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-              Total Network Queue
+              {t.totalQueue}
             </span>
             <div style={{ backgroundColor: 'rgba(2, 132, 199, 0.1)', padding: '8px', borderRadius: '8px' }}>
               <Car size={18} color="#0284c7" />
             </div>
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            {Math.round(totalQueue * 10) / 10} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>veh</span>
+            {Math.round(totalQueue * 10) / 10} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>{isVi ? 'xe' : 'veh'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem' }}>
             <span style={{
@@ -485,9 +614,9 @@ const NetworkOverview = () => {
               backgroundColor: totalQueue > 40 ? '#fee2e2' : totalQueue > 20 ? '#fef9c3' : '#dcfce7',
               color: totalQueue > 40 ? '#b91c1c' : totalQueue > 20 ? '#a16207' : '#15803d'
             }}>
-              {totalQueue > 40 ? 'CONGESTED' : totalQueue > 20 ? 'MODERATE' : 'OPTIMAL'}
+              {totalQueue > 40 ? (isVi ? 'ÙN Ứ' : 'CONGESTED') : totalQueue > 20 ? (isVi ? 'TRUNG BÌNH' : 'MODERATE') : (isVi ? 'TỐI ƯU' : 'OPTIMAL')}
             </span>
-            <span style={{ color: '#64748b' }}>Across all approaches</span>
+            <span style={{ color: '#64748b' }}>{t.acrossApproaches}</span>
           </div>
         </div>
 
@@ -495,14 +624,14 @@ const NetworkOverview = () => {
         <div className="card" style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-              Mean Network Delay
+              {t.meanDelay}
             </span>
             <div style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)', padding: '8px', borderRadius: '8px' }}>
               <Gauge size={18} color="#16a34a" />
             </div>
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            {systemReports ? systemReports.mean_network_wait_time_s : '—'} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>sec</span>
+            {systemReports ? systemReports.mean_network_wait_time_s : '—'} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>{isVi ? 'giây' : 'sec'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem' }}>
             <span style={{
@@ -512,9 +641,9 @@ const NetworkOverview = () => {
               backgroundColor: !systemReports ? '#f1f5f9' : systemReports.mean_network_wait_time_s > 15 ? '#fef9c3' : '#dcfce7',
               color: !systemReports ? '#64748b' : systemReports.mean_network_wait_time_s > 15 ? '#a16207' : '#15803d'
             }}>
-              {!systemReports ? 'ĐANG ĐỒNG BỘ' : systemReports.mean_network_wait_time_s > 15 ? 'ELEVATED' : 'TARGET <15s'}
+              {!systemReports ? t.syncing : systemReports.mean_network_wait_time_s > 15 ? (isVi ? 'HƠI CAO' : 'ELEVATED') : (isVi ? 'MỤC TIÊU <15s' : 'TARGET <15s')}
             </span>
-            <span style={{ color: '#64748b' }}>Actuator clearance: 5s</span>
+            <span style={{ color: '#64748b' }}>{t.actuatorClearance}</span>
           </div>
         </div>
 
@@ -522,18 +651,18 @@ const NetworkOverview = () => {
         <div className="card" style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-              Network Throughput
+              {t.throughput}
             </span>
             <div style={{ backgroundColor: 'rgba(202, 138, 4, 0.1)', padding: '8px', borderRadius: '8px' }}>
               <Activity size={18} color="#ca8a04" />
             </div>
           </div>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>
-            {systemReports ? systemReports.total_throughput_veh_per_min : '—'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ca8a04' }}>veh/min</span>
+            {systemReports ? systemReports.total_throughput_veh_per_min : '—'} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ca8a04' }}>{isVi ? 'xe/phút' : 'veh/min'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#64748b' }}>
             <span title="Calculated as sum of all lane flow rates × 60s" style={{ textDecoration: 'underline dotted', cursor: 'help' }}>
-              {systemReports ? `~${Math.round(systemReports.total_throughput_veh_per_min * 60)} veh/h equivalent` : 'Chưa có dữ liệu system reports'}
+              {systemReports ? `~${Math.round(systemReports.total_throughput_veh_per_min * 60)} ${isVi ? 'xe/h tương đương' : 'veh/h equivalent'}` : t.noReports}
             </span>
           </div>
         </div>
@@ -542,7 +671,7 @@ const NetworkOverview = () => {
         <div className="card" style={{ padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-              Active Alerts & Safety
+              {t.activeAlerts}
             </span>
             <div style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)', padding: '8px', borderRadius: '8px' }}>
               <ShieldCheck size={18} color="#9333ea" />
@@ -557,7 +686,7 @@ const NetworkOverview = () => {
               {activeAlertsCount}
             </div>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: activeAlertsCount > 0 ? '#b91c1c' : '#15803d' }}>
-              {activeAlertsCount === 0 ? 'All Normal' : 'Attention Needed'}
+              {activeAlertsCount === 0 ? t.allNormal : t.attentionNeeded}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem' }}>
@@ -569,7 +698,7 @@ const NetworkOverview = () => {
               color: '#065f46',
               border: '1px solid #a7f3d0'
             }}>
-              Hardware Interlock
+              {t.hardwareInterlock}
             </span>
             <span title="Switches green only after yellow 3 s + all-red 2 s clearance" style={{ color: '#64748b', cursor: 'help' }}>
               (Y 3s + all-red 2s)
@@ -578,10 +707,13 @@ const NetworkOverview = () => {
         </div>
       </div>
 
-      {/* 3. Main Operational View Controls: Layout Switcher & Status */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+      {/* 3. Main Operational View vs Engineering Diagnostics Toggle */}
+      {viewMode === 'OPERATIONS' ? (
+        <>
+          {/* Main Operational View Controls: Layout Switcher & Status */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Chế độ hiển thị:</span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>{t.displayMode}</span>
           <div style={{ display: 'flex', backgroundColor: '#e2e8f0', padding: '2px', borderRadius: '7px' }}>
             <button
               onClick={() => setViewLayout('SPLIT')}
@@ -597,7 +729,7 @@ const NetworkOverview = () => {
                 boxShadow: viewLayout === 'SPLIT' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
               }}
             >
-              Chia đôi (Bản đồ + Trạm)
+              {t.splitLayout}
             </button>
             <button
               onClick={() => setViewLayout('MAP_ONLY')}
@@ -613,7 +745,7 @@ const NetworkOverview = () => {
                 boxShadow: viewLayout === 'MAP_ONLY' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
               }}
             >
-              🗺️ Bản đồ SUMO toàn màn hình
+              {t.mapOnlyLayout}
             </button>
             <button
               onClick={() => setViewLayout('LIST_ONLY')}
@@ -629,7 +761,7 @@ const NetworkOverview = () => {
                 boxShadow: viewLayout === 'LIST_ONLY' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
               }}
             >
-              📋 Danh sách trạm
+              {t.listOnlyLayout}
             </button>
           </div>
         </div>
@@ -648,7 +780,7 @@ const NetworkOverview = () => {
             gap: '5px'
           }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span>
-            Khớp tọa độ 1:1 với SUMO-GUI (10.882°N, 106.822°E - TP.HCM)
+            {t.coordMatch}
           </span>
         </div>
       </div>
@@ -666,13 +798,13 @@ const NetworkOverview = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <h3 style={{ fontSize: '1.1rem', margin: '0 0 2px 0', fontWeight: 800, color: '#0f172a' }}>
-                  Bản đồ Mạng lưới Giao thông SUMO ({totalNodesCount} Junctions)
+                  {t.mapTitle(totalNodesCount)}
                 </h3>
                 <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                  Tọa độ và cung đường trích xuất trực tiếp từ SUMO C++ Engine; nhấp vào trạm để xem chi tiết
+                  {t.mapSubtitle}
                 </span>
               </div>
-              {loading && <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600 }}>Syncing graph...</span>}
+              {loading && <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600 }}>{t.syncingGraph}</span>}
             </div>
 
             <TopologyMap
@@ -693,10 +825,10 @@ const NetworkOverview = () => {
             <div style={{ marginBottom: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <h3 style={{ fontSize: '1.05rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-                  Junction Monitoring
+                  {t.junctionMonitoring}
                 </h3>
                 <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
-                {filteredNodes.length} of {totalNodesCount} stations
+                {t.stationsCount(filteredNodes.length, totalNodesCount)}
               </span>
             </div>
 
@@ -716,7 +848,7 @@ const NetworkOverview = () => {
                     color: stationFilter === 'ALL' ? '#ffffff' : '#64748b'
                   }}
                 >
-                  All ({nodeEntries.length})
+                  {t.allFilter(nodeEntries.length)}
                 </button>
                 <button
                   onClick={() => setStationFilter('ATTENTION')}
@@ -731,7 +863,7 @@ const NetworkOverview = () => {
                     color: stationFilter === 'ATTENTION' ? '#ffffff' : '#b91c1c'
                   }}
                 >
-                  Attention ({attentionNodes.length})
+                  {t.attentionFilter(attentionNodes.length)}
                 </button>
                 <button
                   onClick={() => setStationFilter('NORMAL')}
@@ -746,7 +878,7 @@ const NetworkOverview = () => {
                     color: stationFilter === 'NORMAL' ? '#ffffff' : '#15803d'
                   }}
                 >
-                  Normal ({nodeEntries.length - attentionNodes.length})
+                  {t.normalFilter(nodeEntries.length - attentionNodes.length)}
                 </button>
               </div>
 
@@ -754,7 +886,7 @@ const NetworkOverview = () => {
                 <Search size={14} color="#94a3b8" />
                 <input
                   type="text"
-                  placeholder="Filter by junction ID (e.g. J1, A0)..."
+                  placeholder={t.filterPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ border: 'none', backgroundColor: 'transparent', fontSize: '0.78rem', width: '100%', outline: 'none' }}
@@ -796,7 +928,7 @@ const NetworkOverview = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span title={nodeId} style={{ fontWeight: 800, fontSize: '0.88rem', color: isSelected ? '#0284c7' : '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
-                          Station {shortNodeId(nodeId)}
+                          {isVi ? 'Trạm' : 'Station'} {shortNodeId(nodeId)}
                         </span>
                         
                         {/* Health Status */}
@@ -853,7 +985,7 @@ const NetworkOverview = () => {
                           e.stopPropagation();
                           navigate(`/intersections/${nodeId}`);
                         }}
-                        title="View Detailed Diagnostics"
+                        title={t.viewDiagnostics}
                         style={{
                           backgroundColor: 'transparent',
                           border: 'none',
@@ -870,15 +1002,15 @@ const NetworkOverview = () => {
                   {/* Operational Telemetry Metrics */}
                   <div style={{ display: 'flex', gap: '12px', fontSize: '0.74rem', color: '#475569' }}>
                     <span>
-                      Queue: <strong style={{ color: (data.total_queue || 0) > 12 ? '#dc2626' : '#0f172a' }}>
+                      {isVi ? 'Hàng chờ: ' : 'Queue: '}<strong style={{ color: (data.total_queue || 0) > 12 ? '#dc2626' : '#0f172a' }}>
                         {data.total_queue || 0}
-                      </strong> veh
+                      </strong> {isVi ? 'xe' : 'veh'}
                     </span>
                     <span>
-                      Speed: <strong>{data.speed != null ? data.speed : 13.9}</strong> m/s
+                      {isVi ? 'Tốc độ: ' : 'Speed: '}<strong>{data.speed != null ? data.speed : 13.9}</strong> m/s
                     </span>
                     <span>
-                      Flow: <strong>{data.flow || 0.0}</strong> veh/s
+                      {isVi ? 'Lưu lượng: ' : 'Flow: '}<strong>{data.flow || 0.0}</strong> veh/s
                     </span>
                   </div>
                 </div>
@@ -908,7 +1040,7 @@ const NetworkOverview = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Terminal size={18} color="#0284c7" />
             <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
-              System Event & Execution Stream
+              {t.systemLogsTitle}
             </h3>
             <span style={{
               backgroundColor: '#f1f5f9',
@@ -918,13 +1050,13 @@ const NetworkOverview = () => {
               padding: '2px 8px',
               borderRadius: '9999px'
             }}>
-              {filteredLogs.length} Events
+              {filteredLogs.length} {isVi ? 'Sự kiện' : 'Events'}
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              {isLogExpanded ? 'Click to collapse drawer' : 'Click to expand logs'}
+              {isLogExpanded ? (isVi ? 'Nhấp để thu gọn' : 'Click to collapse drawer') : (isVi ? 'Nhấp để mở rộng nhật ký' : 'Click to expand logs')}
             </span>
             <button
               style={{
@@ -1054,7 +1186,7 @@ const NetworkOverview = () => {
                           flexShrink: 0
                         }}
                       >
-                        Highlight {mentionedNode}
+                        {t.highlightBtn(mentionedNode)}
                       </button>
                     )}
                   </div>
@@ -1062,55 +1194,113 @@ const NetworkOverview = () => {
               })}
 
               {filteredLogs.length === 0 && (
-                <div style={{ color: '#64748b' }}>No events matching the filter criteria.</div>
+                <div style={{ color: '#64748b' }}>{t.noLogsMatch}</div>
               )}
             </div>
           </div>
         )}
       </div>
-
-      {/* 5. Engineering Diagnostics Mode (When toggled) */}
-      {viewMode === 'DIAGNOSTICS' && (
-        <div className="card" style={{ marginTop: '20px', border: '1.5px solid #0284c7' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-            <Cpu size={20} color="#0284c7" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
-              Engineering Diagnostics & Inter-Service Message Pipeline
-            </h3>
+      </>
+      ) : (
+        /* 5. Engineering Diagnostics Mode (When toggled) */
+        <div className="card" style={{ border: '2px solid #0284c7', boxShadow: '0 4px 16px rgba(2, 132, 199, 0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Cpu size={22} color="#0284c7" />
+              <div>
+                <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 800, color: '#0f172a' }}>
+                  {isVi ? 'Chẩn Đoán Kỹ Thuật & Luồng Thông Điệp Microservice' : 'Engineering Diagnostics & Inter-Service Message Pipeline'}
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                  {isVi ? 'Giám sát luồng thông điệp kiến trúc Microservice EdgeFlow (Vision → Graph-Control → Actuator)' : 'Microservice architecture message stream (Vision → Graph-Control → Actuator)'}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setViewMode('OPERATIONS')}
+              className="btn btn-primary"
+              style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700 }}
+            >
+              {t.backToOps}
+            </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0f172a', marginBottom: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0f172a', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
                 Perception Stream (Edge Vision)
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
-                Mode: <strong style={{ color: '#0284c7' }}>{sourceMode.toUpperCase()}</strong><br />
-                Broadcasting: <strong>{totalNodesCount}</strong> nodes via MQTT<br />
-                Topic: <code>edgeflow/v1/telemetry/&lt;node_id&gt;</code>
+              <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: '1.6' }}>
+                {isVi ? 'Nguồn:' : 'Source:'} <strong style={{ color: '#0284c7' }}>{sourceMode.toUpperCase()}</strong><br />
+                {isVi ? 'Phát sóng:' : 'Broadcasting:'} <strong>{totalNodesCount}</strong> {isVi ? 'nút giao qua MQTT' : 'junctions via MQTT'}<br />
+                Topic: <code>edgeflow/v1/telemetry/&lt;node_id&gt;</code><br />
+                {isVi ? 'Tần số:' : 'Rate:'} <strong>{isVi ? '1.5s chu kỳ gửi' : '1.5s telemetry interval'}</strong>
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0f172a', marginBottom: '4px' }}>
-                Actuator Safety Invariants
-              </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
-                Transitions: <strong>G → Y (3.0s) → All-Red (2.0s) → G</strong><br />
-                Min Green: <strong>10.0s</strong> | Max Green: <strong>60.0s</strong><br />
-                Conflicting Greens: <strong style={{ color: '#16a34a' }}>0 (Mathematically Impossible)</strong>
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0f172a', marginBottom: '4px' }}>
+            <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0f172a', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0284c7' }} />
                 Graph Controller Decision
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
-                Policy: <strong style={{ color: '#0284c7' }}>{formatControllerName(activeController)}</strong><br />
-                Cycle Interval: <strong>5.0s decision epoch</strong><br />
-                Command Topic: <code>edgeflow/v1/control/&lt;node_id&gt;/command</code>
+              <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: '1.6' }}>
+                {isVi ? 'Thuật toán:' : 'Algorithm:'} <strong style={{ color: '#0284c7' }}>{formatControllerName(activeController)}</strong><br />
+                {isVi ? 'Chu kỳ tính:' : 'Cycle:'} <strong>5.0s decision epoch</strong><br />
+                Command Topic: <code>edgeflow/v1/control/&lt;node_id&gt;/command</code><br />
+                Fairness Guard: <strong>{isVi ? 'Bảo vệ chống đói tín hiệu' : 'Starvation prevention guard'}</strong>
               </div>
+            </div>
+
+            <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0f172a', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                Actuator Safety Invariants
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#475569', lineHeight: '1.6' }}>
+                {isVi ? 'Chu trình:' : 'Cycle:'} <strong>{isVi ? 'Xanh → Vàng (3s) → Đỏ (2s) → Xanh' : 'Green → Yellow (3s) → All-Red (2s) → Green'}</strong><br />
+                {isVi ? 'Xanh tối thiểu:' : 'Min Green:'} <strong>10.0s</strong> | {isVi ? 'Tối đa:' : 'Max:'} <strong>60.0s</strong><br />
+                {isVi ? 'Xung đột pha:' : 'Phase Conflict:'} <strong style={{ color: '#16a34a' }}>{isVi ? '0% (Khóa cứng phần cứng)' : '0% (Hardware locked)'}</strong><br />
+                ACK Topic: <code>edgeflow/v1/actuator/&lt;node_id&gt;/ack</code>
+              </div>
+            </div>
+          </div>
+
+          {/* Full Audit Log View in Diagnostics */}
+          <div style={{ padding: '16px', backgroundColor: '#0f172a', borderRadius: '10px', color: '#f8fafc', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.78rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #334155', paddingBottom: '10px' }}>
+              <span style={{ fontWeight: 800, color: '#38bdf8' }}>LIVE AUDIT LOG STREAM ({filteredLogs.length} events)</span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {['ALL', 'WARN', 'CONTROL', 'ACTUATOR'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setLogFilter(f)}
+                    style={{
+                      backgroundColor: logFilter === f ? '#0284c7' : '#1e293b',
+                      color: logFilter === f ? '#ffffff' : '#94a3b8',
+                      border: 'none',
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {filteredLogs.map((log, index) => (
+                <div key={log.id || index} style={{ display: 'flex', gap: '10px', padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <span style={{ color: '#64748b' }}>[ {formatLogTime(log)} ]</span>
+                  <span style={{ color: log.level === 'WARN' ? '#f59e0b' : log.level === 'ERROR' ? '#ef4444' : '#38bdf8', fontWeight: 700 }}>
+                    [ {log.source?.toUpperCase() || 'SYSTEM'} ]
+                  </span>
+                  <span style={{ flex: 1, color: '#e2e8f0' }}>{log.message}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

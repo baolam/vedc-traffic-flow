@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Trophy, Camera, Video, PlayCircle, Database } from 'lucide-react';
+import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Trophy, Camera, Video, PlayCircle, Database, ShieldCheck } from 'lucide-react';
 import { useActiveScenario } from '../hooks/useActiveScenario';
 import { useLanguage } from '../hooks/useLanguage';
 
@@ -10,7 +10,8 @@ const COPY = {
     groups: {
       live: 'Live Operations',
       sim: 'Simulation & Benchmarks',
-      system: 'System & Hardware'
+      system: 'System & Hardware',
+      admin: 'Management'
     },
     graphTwin: 'Graph Twin G=(V,E)',
     map: 'Map',
@@ -22,40 +23,45 @@ const COPY = {
     groups: {
       live: 'Vận Hành Trực Tiếp',
       sim: 'Mô Phỏng & Benchmark',
-      system: 'Hệ Thống & Phần Cứng'
+      system: 'Hệ Thống & Phần Cứng',
+      admin: 'Quản Lý'
     },
-    graphTwin: 'Graph Twin G=(V,E)',
+    graphTwin: 'Mô Hình Số Digital Twin',
     map: 'Bản đồ',
-    nodes: 'Node',
-    links: 'Liên kết'
+    nodes: 'Nút giao',
+    links: 'Nhánh đường'
   }
 };
 
-// Nav items grouped into operational categories instead of one flat 7-item list, so the sidebar
-// reads as "what kind of thing is this" at a glance (live monitoring vs. simulation/analysis vs.
-// hardware configuration) rather than an undifferentiated stack of routes.
-const NAV_GROUPS = (firstNode) => [
+// Nav items grouped into operational categories with bilingual labels.
+const NAV_GROUPS = (firstNode, isVi = false) => [
   {
     key: 'live',
     items: [
-      { to: '/', label: 'Overview Operations', icon: LayoutDashboard },
-      { to: `/intersections/${firstNode}`, label: 'Station Details', icon: Network },
-      { to: '/cameras', label: 'HCM Camera Network', icon: Camera }
+      { to: '/', label: isVi ? 'Tổng Quan Mạng Lưới' : 'Overview Operations', icon: LayoutDashboard },
+      { to: `/intersections/${firstNode}`, label: isVi ? 'Chi Tiết Nút Giao' : 'Station Details', icon: Network },
+      { to: '/cameras', label: isVi ? 'Bản Đồ Camera HCM' : 'HCM Camera Network', icon: Camera }
     ]
   },
   {
     key: 'sim',
     items: [
-      { to: '/flowtheory-demo', label: 'FlowTheory CTM Demo', icon: PlayCircle },
-      { to: '/benchmark', label: 'Benchmark Campaign', icon: Trophy }
+      { to: '/flowtheory-demo', label: isVi ? 'Mô Phỏng CTM (FlowTheory)' : 'FlowTheory CTM Demo', icon: PlayCircle },
+      { to: '/benchmark', label: isVi ? 'Báo Cáo Benchmark' : 'Benchmark Campaign', icon: Trophy }
     ]
   },
   {
     key: 'system',
     items: [
-      { to: '/experiments', label: 'Control & Tuning', icon: Sliders },
-      { to: '/raspberry-pi-demo', label: 'Raspberry Pi Demo', icon: Video },
-      { to: '/stations', label: 'Station Registry', icon: Database }
+      { to: '/experiments', label: isVi ? 'Điều Khiển & Thuật Toán' : 'Control & Tuning', icon: Sliders },
+      { to: '/raspberry-pi-demo', label: isVi ? 'Trực Quan Raspberry Pi' : 'Raspberry Pi Demo', icon: Video },
+      { to: '/stations', label: isVi ? 'Danh Mục Trạm & Nút' : 'Station Registry', icon: Database }
+    ]
+  },
+  {
+    key: 'admin',
+    items: [
+      { to: '/admin', label: isVi ? 'Quản Trị Hệ Thống' : 'Management Console', icon: ShieldCheck }
     ]
   }
 ];
@@ -99,7 +105,8 @@ const Sidebar = ({ collapsed = false, onToggleCollapse }) => {
   }, [activeScenarioId, apiBase]);
 
   const firstNode = topologyStats.nodes.length > 0 ? topologyStats.nodes[0] : 'J1';
-  const navGroups = NAV_GROUPS(firstNode);
+  const isVi = lang === 'vi';
+  const navGroups = NAV_GROUPS(firstNode, isVi);
 
   return (
     <aside style={{

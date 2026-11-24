@@ -11,6 +11,7 @@ import HcmCameraMap from './pages/HcmCameraMap';
 import RaspberryPiDemo from './pages/RaspberryPiDemo';
 import FlowTheorySimulationDemo from './pages/FlowTheorySimulationDemo';
 import Stations from './pages/Stations';
+import AdminConsole from './pages/admin/AdminConsole';
 import './App.css';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/raspberry-pi-demo" element={<RaspberryPiDemo />} />
             <Route path="/flowtheory-demo" element={<FlowTheorySimulationDemo />} />
             <Route path="/stations" element={<Stations />} />
+            <Route path="/admin" element={<AdminConsole />} />
           </Routes>
         </div>
       </div>

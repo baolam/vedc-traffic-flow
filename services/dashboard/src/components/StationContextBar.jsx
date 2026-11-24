@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { getStatusToken } from '../utils/statusTokens';
+import { useLanguage } from '../hooks/useLanguage';
 
 // Past this many stations, rendering every chip in one unbounded horizontal row stops being a
 // "quick switcher" and starts being an unscrollable wall of chips -- show a search box instead of
@@ -24,6 +25,8 @@ const StationContextBar = ({ activeNodeId: activeNodeIdProp }) => {
   const activeNodeId = activeNodeIdProp ?? routeNodeId;
   const [nodes, setNodes] = useState([]);
   const [query, setQuery] = useState('');
+  const [lang] = useLanguage();
+  const isVi = lang === 'vi';
   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
@@ -67,7 +70,7 @@ const StationContextBar = ({ activeNodeId: activeNodeIdProp }) => {
         fontSize: '0.68rem', textTransform: 'uppercase', color: '#94a3b8',
         fontWeight: 800, letterSpacing: '0.5px', flexShrink: 0
       }}>
-        Stations ({nodes.length})
+        {isVi ? `Trạm (${nodes.length})` : `Stations (${nodes.length})`}
       </span>
 
       {nodes.length > SEARCH_THRESHOLD && (
@@ -80,7 +83,7 @@ const StationContextBar = ({ activeNodeId: activeNodeIdProp }) => {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter ID..."
+            placeholder={isVi ? "Lọc ID..." : "Filter ID..."}
             style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.74rem', width: '100%' }}
           />
         </div>
@@ -88,7 +91,9 @@ const StationContextBar = ({ activeNodeId: activeNodeIdProp }) => {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto' }}>
         {visible.length === 0 && (
-          <span style={{ fontSize: '0.76rem', color: '#94a3b8', flexShrink: 0 }}>No station matches "{query}".</span>
+          <span style={{ fontSize: '0.76rem', color: '#94a3b8', flexShrink: 0 }}>
+            {isVi ? `Không tìm thấy trạm nào khớp "${query}".` : `No station matches "${query}".`}
+          </span>
         )}
         {visible.map((n) => {
           const isActive = n.node_id === activeNodeId;
@@ -123,7 +128,7 @@ const StationContextBar = ({ activeNodeId: activeNodeIdProp }) => {
         })}
         {hiddenCount > 0 && (
           <span style={{ fontSize: '0.74rem', color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            +{hiddenCount} more — refine filter
+            {isVi ? `+${hiddenCount} trạm khác — tinh chỉnh bộ lọc` : `+${hiddenCount} more — refine filter`}
           </span>
         )}
       </div>
