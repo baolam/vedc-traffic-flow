@@ -16,6 +16,7 @@ FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
 MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: residual on a base controller; nan = off
 RESIDUAL_BASE = os.environ.get("EDGEFLOW_RESIDUAL_BASE", "max_pressure")  # experiment: the residual's default policy
+RESIDUAL_HOLD = os.environ.get("EDGEFLOW_RESIDUAL_MODE") == "hold"  # experiment: overrides may only keep the current phase
 _BASE = []
 
 
@@ -33,8 +34,15 @@ def base_index(node, telemetry, view, topology):
     return [p["phase_id"] for p in node["phases"]].index(target)
 
 
-def residual_choice(values, mask, mp_index):
-    """Greedy legal phase, except keep max_pressure's legal phase unless the best Q beats it by MP_MARGIN * |Q|."""
+def current_index(node, telemetry):
+    return [p["phase_id"] for p in node["phases"]].index(telemetry["current_phase_id"])
+
+
+def residual_choice(values, mask, mp_index, hold_index=None):
+    """Greedy legal phase, except keep max_pressure's legal phase unless the best Q beats it by MP_MARGIN * |Q|.
+    With RESIDUAL_HOLD the only allowed override is hold_index (the current phase): timing, not phase order."""
+    if RESIDUAL_HOLD and hold_index is not None and not np.isnan(MP_MARGIN) and mask[mp_index]:
+        mask = mask & np.isin(np.arange(len(mask)), (mp_index, hold_index))
     masked = np.where(mask, values, -np.inf)
     best = int(np.argmax(masked))
     if np.isnan(MP_MARGIN) or not mask[mp_index]:
@@ -100,7 +108,8 @@ class UnifiedDQNController(BaseController):
                               observe_node(node, view, self._flow(topology), self.radius))
         mask = phase_mask(node, telemetry)
         choice = (int(np.argmax(np.where(mask, values, -np.inf))) if np.isnan(MP_MARGIN)
-                  else residual_choice(values, mask, base_index(node, telemetry, view, topology)))
+                  else residual_choice(values, mask, base_index(node, telemetry, view, topology),
+                                    current_index(node, telemetry)))
         return dict(command_id=str(uuid.uuid4()), node_id=node["node_id"],
                     target_phase_id=node["phases"][choice]["phase_id"],
                     min_green_s=TIMING["min_green_s"], max_green_s=TIMING["max_green_s"], controller=self.name)

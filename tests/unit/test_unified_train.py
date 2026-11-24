@@ -113,6 +113,10 @@ def test_max_pressure_residual_keeps_mp_unless_q_beats_it_by_margin(monkeypatch)
     monkeypatch.setattr(ud, "MP_MARGIN", 0.01)
     assert ud.residual_choice(q, mask, 0) == 1  # gain 2 > 1: deviate
     assert ud.residual_choice(q, mask, 2) == 1  # max_pressure's phase illegal: greedy
+    monkeypatch.setattr(ud, "RESIDUAL_HOLD", True)
+    q3, all3 = np.array([-100.0, -50.0, -90.0]), np.array([True, True, True])
+    assert ud.residual_choice(q3, all3, 0, 2) == 2  # best phase 1 is neither base nor current: hold beats base by 10
+    assert ud.residual_choice(q3, all3, 0, 0) == 0  # current == base: nothing to override
 
 
 def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):
