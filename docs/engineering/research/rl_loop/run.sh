@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One research-loop iteration: train phase DQN on the screening panel under the loop recipe, ~45 min wall.
+# One research-loop iteration: train phase DQN on the screening panel under the loop recipe, ~45 min wall (WALL=seconds overrides the 2400 s cap).
 # Usage: run.sh <iter-id> [MAP ...]   (hypothesis gates come from the caller's environment, e.g. EDGEFLOW_X=1 run.sh it03)
 set -euo pipefail
 REPO=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
@@ -23,5 +23,5 @@ RECIPE=$(python3 -c 'import json,sys; print(json.dumps({**json.loads(sys.argv[1]
 echo "$RECIPE" > "$ROOT/recipe.json"
 # Loop recipe v2: validate from ep 80 every 20 (keeps the early DQN peak), stop after 8 stale checks (v1 = ep 80 / patience 4 stopped still-improving maps at ~160 eps, 7-25 min).
 exec python -m src.benchmark.unified_campaign --stage train --prepared "$ROOT/prepared.json" --root "$ROOT" \
-  --maps $MAPS --algorithms phase_dqn_unified --seeds ${SEED:-17} --device cpu --jobs 6 --wall-limit-s 2400 \
+  --maps $MAPS --algorithms phase_dqn_unified --seeds ${SEED:-17} --device cpu --jobs 6 --wall-limit-s ${WALL:-2400} \
   --recipe "$RECIPE"
