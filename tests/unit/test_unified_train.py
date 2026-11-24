@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
@@ -112,3 +113,16 @@ def test_max_pressure_residual_keeps_mp_unless_q_beats_it_by_margin(monkeypatch)
     monkeypatch.setattr(ud, "MP_MARGIN", 0.01)
     assert ud.residual_choice(q, mask, 0) == 1  # gain 2 > 1: deviate
     assert ud.residual_choice(q, mask, 2) == 1  # max_pressure's phase illegal: greedy
+
+
+def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):
+    from src.control import unified_dqn as ud
+
+    calls = []
+    base = SimpleNamespace(reset=lambda: calls.append("reset"),
+                           compute_command=lambda nid, t, topo, view, current_time_s: {"target_phase_id": "B"})
+    monkeypatch.setattr(ud, "_BASE", [base, -1.0])
+    node = {"node_id": "J1", "phases": [{"phase_id": "A"}, {"phase_id": "B"}]}
+    for t in (5000, 10000, 10000, 5000):
+        assert ud.base_index(node, {"timestamp_ms": t}, {}, {}) == 1
+    assert calls == ["reset"]

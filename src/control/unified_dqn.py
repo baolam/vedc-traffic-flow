@@ -24,9 +24,12 @@ def base_index(node, telemetry, view, topology):
     if not _BASE:
         from .factory import create_controller  # lazy: factory imports this module
 
-        _BASE.append(MaxPressureController() if RESIDUAL_BASE == "max_pressure" else create_controller(RESIDUAL_BASE))
-    target = _BASE[0].compute_command(node["node_id"], telemetry, topology, view,
-                                      current_time_s=telemetry["timestamp_ms"] / 1000)["target_phase_id"]
+        _BASE.extend([MaxPressureController() if RESIDUAL_BASE == "max_pressure" else create_controller(RESIDUAL_BASE), -1.0])
+    now = telemetry["timestamp_ms"] / 1000
+    if now < _BASE[1]:  # sim clock went back: a new run in this process, so drop the base's per-node timers
+        _BASE[0].reset()
+    _BASE[1] = now
+    target = _BASE[0].compute_command(node["node_id"], telemetry, topology, view, current_time_s=now)["target_phase_id"]
     return [p["phase_id"] for p in node["phases"]].index(target)
 
 

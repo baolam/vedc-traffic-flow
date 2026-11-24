@@ -76,3 +76,22 @@ The first 8 iterations are done. Results and the ablation are in [`RL_RESEARCH_L
 ## Status (round 2 done, 2026-11-24)
 
 Stopped at it18: a confirmed WIN on 2 maps (stop rule). The flow_theory residual at δ 0.20 wins Hanoi (31.2 / 29.0) and cologne (34.3 / 33.5) on both seeds. The max_pressure residual at δ 0.10 also wins Hanoi (29.9 / 29.1). Report: [`RL_RESEARCH_LOOP_ROUND2_REPORT_20261124.md`](../../reports/RL_RESEARCH_LOOP_ROUND2_REPORT_20261124.md).
+
+## Round 3 (it19–it48, user: "Run for 30 more iterations. Try some more new ideas.")
+
+- **Base configuration:** the confirmed round-2 winner, a flow_theory residual at δ 0.20. Gates: `EDGEFLOW_MAX_RED=40 EDGEFLOW_MAX_RED_EXTERNAL=1 EDGEFLOW_MP_EXPLORE=0.5 EDGEFLOW_PRESSURE_BETA=0.5 EDGEFLOW_RESIDUAL_BASE=flow_theory EDGEFLOW_MP_MARGIN=0.20`. The ledger row `r3-base` copies it14 (seed 17), and Jakarta has no passing base there, so a Jakarta pass counts as "becomes feasible". Kept changes stack on this base as before.
+- **Targets and rules:** fair targets, KEEP/DISCARD and the sign test are unchanged. There is no early stop: the user asked for 30 iterations. The "confirmed WIN on 2 maps" stop rule was round 2's.
+- **Confirmations:** seed-29 slots at it28–29, it38–39 and it46–48, for the best new candidates per map.
+- **Backlog** (in priority order; add ideas only with evidence):
+
+| # | Idea | Gate | Targets |
+|---|---|---|---|
+| R1 | Reset the residual base's per-node timers when a new run starts in the same process. A bug: flow_theory carried stale phase-start times across episodes and validation runs. | none (fix) | every flow_theory-base result |
+| R2 | Exploration follows the residual base instead of always following max_pressure | `EDGEFLOW_EXPLORE_BASE=1` | flow_theory base: replay of good trajectories |
+| R3 | Tail guard: no overrides while any approach of the node has waited longer than S | `EDGEFLOW_RESIDUAL_TAIL_S` | Jakarta tails, Hanoi reversal tails |
+| R4 | Hold-only residual: DQN may only choose between the base's phase and the current phase (timing-only overrides) | `EDGEFLOW_RESIDUAL_MODE=hold` | Jakarta over-switching |
+| R5 | Pressure shaping off under the flow_theory base | `EDGEFLOW_PRESSURE_BETA=0` | reward/base mismatch |
+| R6 | Tail-term sweep λ, T (round-1 H5, never run) | `EDGEFLOW_TAIL` | tails |
+| R7 | Cheaper validation for the wall-capped maps (grid4x4 and HCM always hit 40 min) | recipe `validate_every_episodes` | grid4x4, HCM |
+| R8 | n-step returns | `EDGEFLOW_NSTEP` | credit assignment |
+| R9 | Residual on actuated for 4-node | `EDGEFLOW_RESIDUAL_BASE=actuated` | 4-node |
