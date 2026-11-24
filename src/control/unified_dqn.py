@@ -8,7 +8,7 @@ from contracts.contracts_sdk import validate_payload
 from src.rl.policy import NumpyPolicy
 from .controllers import BaseController, MaxPressureController
 from .observation import flow_index, observe_node
-from .phase_dqn import phase_mask
+from .phase_dqn import MAX_RED_EXTERNAL, phase_mask
 
 FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 
@@ -16,6 +16,7 @@ FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
 MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: residual on a base controller; nan = off
 RESIDUAL_BASE = os.environ.get("EDGEFLOW_RESIDUAL_BASE", "max_pressure")  # experiment: the residual's default policy
+RESIDUAL_TAIL_S = float(os.environ.get("EDGEFLOW_RESIDUAL_TAIL_S", 0))  # experiment: no overrides past this wait; 0 = off
 _BASE = []
 
 
@@ -33,12 +34,17 @@ def base_index(node, telemetry, view, topology):
     return [p["phase_id"] for p in node["phases"]].index(target)
 
 
-def residual_choice(values, mask, mp_index):
-    """Greedy legal phase, except keep max_pressure's legal phase unless the best Q beats it by MP_MARGIN * |Q|."""
+def residual_choice(values, mask, mp_index, telemetry=None):
+    """Greedy legal phase, except keep the base's legal phase unless the best Q beats it by MP_MARGIN * |Q|.
+    With RESIDUAL_TAIL_S, the base also decides alone while any approach of the node has waited longer than that."""
     masked = np.where(mask, values, -np.inf)
     best = int(np.argmax(masked))
     if np.isnan(MP_MARGIN) or not mask[mp_index]:
         return best
+    if RESIDUAL_TAIL_S and telemetry and max(
+            max(a.get("oldest_stopped_wait_s", 0.0), a.get("oldest_external_wait_s", 0.0) if MAX_RED_EXTERNAL else 0.0)
+            for a in telemetry["approaches"]) > RESIDUAL_TAIL_S:
+        return mp_index
     return best if masked[best] - masked[mp_index] > MP_MARGIN * abs(masked[mp_index]) else mp_index
 PHASE_ALGORITHMS = tuple(a for a, (arch, _) in U["algorithms"].items() if arch in PHASE_ARCHITECTURES)
 
@@ -100,7 +106,7 @@ class UnifiedDQNController(BaseController):
                               observe_node(node, view, self._flow(topology), self.radius))
         mask = phase_mask(node, telemetry)
         choice = (int(np.argmax(np.where(mask, values, -np.inf))) if np.isnan(MP_MARGIN)
-                  else residual_choice(values, mask, base_index(node, telemetry, view, topology)))
+                  else residual_choice(values, mask, base_index(node, telemetry, view, topology), telemetry))
         return dict(command_id=str(uuid.uuid4()), node_id=node["node_id"],
                     target_phase_id=node["phases"][choice]["phase_id"],
                     min_green_s=TIMING["min_green_s"], max_green_s=TIMING["max_green_s"], controller=self.name)
