@@ -116,6 +116,13 @@ def test_max_pressure_residual_keeps_mp_unless_q_beats_it_by_margin(monkeypatch)
     q3, all3 = np.array([-100.0, -50.0, -90.0]), np.array([True, True, True])
     assert ud.residual_choice(q3, all3, 0, 2) == 2  # best phase 1 is not the alt's: the alt (gain 10) wins
     assert ud.residual_choice(q3, all3, 0, 0) == 0  # alt agrees with the base
+    monkeypatch.setattr(ud, "MP_MARGIN", 0.2)
+    monkeypatch.setattr(ud, "ALT_MARGIN", 0.05)  # two-tier: alt overrides at 5 %, any phase at 20 %
+    assert ud.residual_choice(q3, all3, 0, 2) == 1  # phase 1 gains 50 > 20: free override
+    q4 = np.array([-100.0, -85.0, -90.0])
+    assert ud.residual_choice(q4, all3, 0, 2) == 2  # best gains 15 < 20, alt gains 10 > 5: take the alt
+    assert ud.residual_choice(q4, all3, 0, 1) == 1  # alt is the best: 15 > 5
+    assert ud.residual_choice(np.array([-100.0, -99.0, -97.0]), all3, 0, 1) == 0  # alt gains 1 < 5: base
 
 
 def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):

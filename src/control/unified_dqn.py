@@ -17,6 +17,7 @@ PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
 MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: residual on a base controller; nan = off
 RESIDUAL_BASE = os.environ.get("EDGEFLOW_RESIDUAL_BASE", "max_pressure")  # experiment: the residual's default policy
 RESIDUAL_ALT = os.environ.get("EDGEFLOW_RESIDUAL_ALT", "")  # experiment: overrides may only pick this controller's phase
+ALT_MARGIN = float(os.environ.get("EDGEFLOW_ALT_MARGIN", "nan"))  # experiment: two-tier residual; nan = off
 _BASES = {}  # controller name -> [controller, last sim time seen]
 
 
@@ -46,14 +47,21 @@ def alt_index(node, telemetry, view, topology):
 
 def residual_choice(values, mask, mp_index, alt=None):
     """Greedy legal phase, except keep the base's legal phase unless the best Q beats it by MP_MARGIN * |Q|.
-    With an alt index (RESIDUAL_ALT), the only allowed override is the alt controller's phase."""
-    if alt is not None and not np.isnan(MP_MARGIN) and mask[mp_index]:
+    With an alt index (RESIDUAL_ALT), the only allowed override is the alt controller's phase; with ALT_MARGIN set
+    as well (two-tier), any phase may still override at MP_MARGIN and the alt's phase already at ALT_MARGIN."""
+    two_tier = not np.isnan(ALT_MARGIN)
+    if alt is not None and not two_tier and not np.isnan(MP_MARGIN) and mask[mp_index]:
         mask = mask & np.isin(np.arange(len(mask)), (mp_index, alt))
     masked = np.where(mask, values, -np.inf)
     best = int(np.argmax(masked))
     if np.isnan(MP_MARGIN) or not mask[mp_index]:
         return best
-    return best if masked[best] - masked[mp_index] > MP_MARGIN * abs(masked[mp_index]) else mp_index
+    scale = abs(masked[mp_index])
+    if masked[best] - masked[mp_index] > MP_MARGIN * scale:
+        return best
+    if two_tier and alt is not None and mask[alt] and masked[alt] - masked[mp_index] > ALT_MARGIN * scale:
+        return alt
+    return mp_index
 PHASE_ALGORITHMS = tuple(a for a, (arch, _) in U["algorithms"].items() if arch in PHASE_ARCHITECTURES)
 
 
