@@ -59,3 +59,7 @@ Zero-code entries (H4, H5) can share a slot with a code hypothesis when CPU allo
 ## Running it unattended
 
 Claude can drive the loop with `/loop` in dynamic mode, waking once per iteration (`ScheduleWakeup` about 3000 s after launch). Each wake reads `ledger.jsonl`, scores the finished run, keeps or reverts, implements the next hypothesis and launches it. Run artifacts go to `artifacts/benchmarks/rl-loop/<iter>/` (gitignored). The ledger is committed.
+
+## Status (2026-11-24)
+
+The first 8 iterations are done. Results and the ablation are in [`RL_RESEARCH_LOOP_REPORT_20261124.md`](../../reports/RL_RESEARCH_LOOP_REPORT_20261124.md). The learned wins on Jakarta and Hanoi come from the max-red envelope: deterministic controllers given the same envelope match or beat them.
