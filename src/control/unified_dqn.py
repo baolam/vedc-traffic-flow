@@ -1,11 +1,12 @@
 """Map-independent DQN family (unified_dqn_v1): scalar phase scorer or padded vector head."""
 import json
+import os
 import uuid
 import numpy as np
 from contracts.benchmark import OBSERVATION_SPEC as OBS, TIMING, UNIFIED_DQN as U
 from contracts.contracts_sdk import validate_payload
 from src.rl.policy import NumpyPolicy
-from .controllers import BaseController
+from .controllers import BaseController, MaxPressureController
 from .observation import flow_index, observe_node
 from .phase_dqn import phase_mask
 
@@ -13,6 +14,23 @@ FEATURES, MAX_PHASES = len(OBS["features"]), OBS["max_phases"]
 
 
 PHASE_ARCHITECTURES = ("scalar_phase_scorer", "padded_vector_head")
+MP_MARGIN = float(os.environ.get("EDGEFLOW_MP_MARGIN", "nan"))  # experiment: max_pressure residual; nan = off
+_MP = MaxPressureController()
+
+
+def max_pressure_index(node, telemetry, view, topology):
+    """Index of max_pressure's target phase for this node (the residual's default action)."""
+    target = _MP.compute_command(node["node_id"], telemetry, topology, view)["target_phase_id"]
+    return [p["phase_id"] for p in node["phases"]].index(target)
+
+
+def residual_choice(values, mask, mp_index):
+    """Greedy legal phase, except keep max_pressure's legal phase unless the best Q beats it by MP_MARGIN * |Q|."""
+    masked = np.where(mask, values, -np.inf)
+    best = int(np.argmax(masked))
+    if np.isnan(MP_MARGIN) or not mask[mp_index]:
+        return best
+    return best if masked[best] - masked[mp_index] > MP_MARGIN * abs(masked[mp_index]) else mp_index
 PHASE_ALGORITHMS = tuple(a for a, (arch, _) in U["algorithms"].items() if arch in PHASE_ARCHITECTURES)
 
 
@@ -71,7 +89,9 @@ class UnifiedDQNController(BaseController):
     def _command(self, node, telemetry, view, topology):
         values = phase_scores(self.architecture, self.policy,
                               observe_node(node, view, self._flow(topology), self.radius))
-        choice = int(np.argmax(np.where(phase_mask(node, telemetry), values, -np.inf)))
+        mask = phase_mask(node, telemetry)
+        choice = (int(np.argmax(np.where(mask, values, -np.inf))) if np.isnan(MP_MARGIN)
+                  else residual_choice(values, mask, max_pressure_index(node, telemetry, view, topology)))
         return dict(command_id=str(uuid.uuid4()), node_id=node["node_id"],
                     target_phase_id=node["phases"][choice]["phase_id"],
                     min_green_s=TIMING["min_green_s"], max_green_s=TIMING["max_green_s"], controller=self.name)

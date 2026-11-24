@@ -63,3 +63,9 @@ Claude can drive the loop with `/loop` in dynamic mode, waking once per iteratio
 ## Status (2026-11-24)
 
 The first 8 iterations are done. Results and the ablation are in [`RL_RESEARCH_LOOP_REPORT_20261124.md`](../../reports/RL_RESEARCH_LOOP_REPORT_20261124.md). The learned wins on Jakarta and Hanoi come from the max-red envelope: deterministic controllers given the same envelope match or beat them.
+
+## Round 2 (it08–it19, started 2026-11-24)
+
+- **Fair targets.** `targets.json` now holds, for each map, the best passing deterministic score with or without the max-red envelope. The user kept max-red (T = 40 s, outside waits counted) as part of the envelope. A WIN now means beating deterministic controllers that use the same envelope.
+- **Base.** Every run keeps `EDGEFLOW_MAX_RED=40 EDGEFLOW_MAX_RED_EXTERNAL=1 EDGEFLOW_MP_EXPLORE=0.5 EDGEFLOW_PRESSURE_BETA=0.5`, and the KEEP/DISCARD verdict is measured against it05 (seed 17). T stays at 40 s: tuning it for the learner alone would be unfair.
+- **H6-lite (`EDGEFLOW_MP_MARGIN=δ`).** A max_pressure residual with no contract change. The learner follows max_pressure's phase unless its best legal Q beats max_pressure's phase by δ·|Q|. The same rule applies to training's greedy actions and to controller inference.

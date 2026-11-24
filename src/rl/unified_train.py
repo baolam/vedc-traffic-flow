@@ -23,6 +23,7 @@ from src.control.observation import flow_index, observe_node
 from src.control.phase_dqn import phase_mask
 from src.control.controllers import MaxPressureController
 from src.control.unified_dqn import FEATURES, MAX_PHASES, PHASE_ALGORITHMS, input_dim, output_dim, pad_rows
+from src.control import unified_dqn
 from src.control.mappo_unified import MAPPO_ALGORITHMS
 from src.rl import cycle_family, mappo_family
 from src.rl.dqn_common import invalid_episode, optimize_step, tail_penalty
@@ -190,9 +191,14 @@ def phase_episode(ctx):
         rows, masks = observe()
         while not done:
             with torch.no_grad():
-                q = q_all(arch, ctx.net, ctx.tensor(np.stack(rows))).masked_fill(
-                    ~ctx.tensor(np.stack(masks), torch.bool), -torch.inf).argmax(1).cpu().numpy()
+                qv = q_all(arch, ctx.net, ctx.tensor(np.stack(rows))).cpu().numpy()
+                q = np.where(np.stack(masks), qv, -np.inf).argmax(1)
             eps, draws = ctx.epsilon(), rng.random(len(nodes))
+            if not np.isnan(unified_dqn.MP_MARGIN):  # experiment: greedy action = max_pressure residual
+                q = [unified_dqn.residual_choice(qv[i][:len(n["phases"])], masks[i][:len(n["phases"])],
+                                                 unified_dqn.max_pressure_index(n, runtime.telemetry[n["node_id"]],
+                                                                                runtime.telemetry, runtime.topology))
+                     for i, n in enumerate(nodes)]
             actions = [explore(nodes[i], m) if draws[i] < eps else int(q[i]) for i, m in enumerate(masks)]
             before = runtime.time
             try:

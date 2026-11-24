@@ -99,3 +99,16 @@ def test_invalid_validation_case_makes_candidate_infeasible_not_fatal(monkeypatc
     ref = [dict(good, seed=s) for s in ut.SEEDS["validation"]]
     result = validation_score(rows, ref, ["balanced"], ut.SEEDS["validation"])
     assert not result["feasible"]
+
+
+def test_max_pressure_residual_keeps_mp_unless_q_beats_it_by_margin(monkeypatch):
+    import numpy as np
+    from src.control import unified_dqn as ud
+
+    q, mask = np.array([-100.0, -98.0, -90.0]), np.array([True, True, False])
+    assert ud.residual_choice(q, mask, 0) == 1  # gate off (nan): plain masked greedy
+    monkeypatch.setattr(ud, "MP_MARGIN", 0.05)
+    assert ud.residual_choice(q, mask, 0) == 0  # Q gain 2 < 0.05 * 100: follow max_pressure
+    monkeypatch.setattr(ud, "MP_MARGIN", 0.01)
+    assert ud.residual_choice(q, mask, 0) == 1  # gain 2 > 1: deviate
+    assert ud.residual_choice(q, mask, 2) == 1  # max_pressure's phase illegal: greedy

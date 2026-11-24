@@ -1,10 +1,26 @@
 {
- "jakarta_menteng_v1": [
-  32.2,
+ "cologne8_benchmark_v1": [
+  34.5,
+  "flow_theory+max_red"
+ ],
+ "grid4x4_benchmark_v1": [
+  20.1,
   "max_pressure"
  ],
+ "hcm_neighborhood_v3_benchmark_v1": [
+  72.0,
+  "max_pressure"
+ ],
+ "jakarta_menteng_v1": [
+  23.3,
+  "max_queue+max_red"
+ ],
  "hanoi_dong_da_v1": [
-  43.9,
-  "fixed_time"
+  33.6,
+  "fair_cycle_native+max_red"
+ ],
+ "four_intersection_rl_v1": [
+  68.7,
+  "actuated"
  ]
 }
