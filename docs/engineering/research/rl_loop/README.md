@@ -98,6 +98,7 @@ Stopped at it18: a confirmed WIN on 2 maps (stop rule). The flow_theory residual
 | R10 | max_queue as the base: with max-red it passes Jakarta's tails (it21 showed flow_theory's tails are what fail Jakarta) | `EDGEFLOW_RESIDUAL_BASE=max_queue` | Jakarta |
 | R11 | Two-expert residual: an override may only take max_pressure's phase, so DQN learns when to trust flow_theory vs max_pressure | `EDGEFLOW_RESIDUAL_ALT=max_pressure` | grid4x4, HCM (max_pressure maps) without losing cologne/Hanoi |
 | R12 | Two-tier residual: the alt (max_pressure) phase overrides at a small margin, any phase still at δ (Hanoi needs free overrides, it25/26) | `EDGEFLOW_RESIDUAL_ALT=max_pressure EDGEFLOW_ALT_MARGIN=0.05` | grid4x4, HCM without losing Hanoi |
+| R13 | Slower target network (target sync every 2500 updates instead of 1000, about 20 episodes): grid4x4 peaks at episode 100–120, then declines (it31) | `LOOP_RECIPE_EXTRA='{"target_every_updates": 2500}'` | post-peak decline (grid4x4, HCM) |
 
 - **it28 update:** it20 (`EDGEFLOW_EXPLORE_BASE=1`) is confirmed on seed 29: cologne 33.6 / 33.7 and Hanoi 29.0 / 29.1. It is now KEEP and joins the base gates from it29 on.
 
