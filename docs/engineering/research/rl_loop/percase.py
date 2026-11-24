@@ -1,5 +1,5 @@
 """Per-case validation metrics for one loop iteration's policies (selected policy, else final checkpoint).
-Usage: PYTHONPATH=. python docs/engineering/research/rl_loop/percase.py <iter-id> [MAP ...]
+Usage: [SEED=29] PYTHONPATH=. python docs/engineering/research/rl_loop/percase.py <iter-id> [MAP ...]
 The iteration's gates.env is applied before importing src (gates are read at import and act at inference too).
 Writes artifacts/benchmarks/rl-loop/<iter>/percase.json: {map: {policy, cases: {case: metrics}}}."""
 import json
@@ -11,6 +11,7 @@ REPO = Path(__file__).resolve().parents[4]
 KEYS = ("delay_per_scheduled_s", "p95_wait_s", "worst_approach_wait_s", "max_approach_p95_wait_s", "completed",
         "scheduled", "collisions", "teleports")
 ALG = "phase_dqn_unified"
+SEED = int(os.environ.get("SEED", 17))  # learner seed of the iteration
 
 if __name__ == "__main__":
     it, maps = sys.argv[1], sys.argv[2:]
@@ -31,7 +32,7 @@ if __name__ == "__main__":
                     check_every=25)
     for m in maps:
         spec = load_suite(root / "prepared.json", root, [m])["maps"][0]
-        d = root / "training" / m / ALG / "17"
+        d = root / "training" / m / ALG / str(SEED)
         r = json.loads((d / "result.json").read_text())
         if r.get("selected"):
             path, which = r["selected"]["path"], f"selected ep {r['selected']['episode']}"
@@ -39,8 +40,8 @@ if __name__ == "__main__":
             net = PHASE_FAMILY.build_net(U["algorithms"][ALG][0])
             net.load_state_dict(torch.load(d / "checkpoint.pt", map_location="cpu", weights_only=False)["net"])
             path, which = str(d / "final-policy.json"), "final checkpoint (no feasible checkpoint)"
-            PHASE_FAMILY.export(spec, ALG, net, 17, Path(path))
-        ctl = dict(type=ALG, model_path=path, learner_seed=17, parameters={})
+            PHASE_FAMILY.export(spec, ALG, net, SEED, Path(path))
+        ctl = dict(type=ALG, model_path=path, learner_seed=SEED, parameters={})
         tasks = [(dict(map=spec, scenario=c, seed=s, controller=ctl), protocol, str(root / "percase-cases" / m))
                  for c in spec["cases"] for s in SEEDS["validation"]]
         rows = [x for x in run_tasks(tasks, 4, continue_on_error=True) if x is not None]
