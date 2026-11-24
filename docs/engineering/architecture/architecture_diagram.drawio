@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="drawio" version="26.0.0">
   <diagram name="EdgeFlow AI - Services">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="1360" math="0" shadow="0">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="1520" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -14,8 +14,8 @@
         <mxCell id="dash" value="Dashboard&#xa;(React &#8226; :3000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
           <mxGeometry x="150" y="140" width="180" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="api" value="API Backend&#xa;(FastAPI &#8226; :8000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
-          <mxGeometry x="460" y="140" width="200" height="70" as="geometry" />
+        <mxCell id="api" value="API Backend&#xa;(FastAPI &#8226; :8000)&#xa;Station + Approach Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
+          <mxGeometry x="460" y="140" width="200" height="85" as="geometry" />
         </mxCell>
         <mxCell id="exprunner" value="Experiment-Runner&#xa;(Benchmark Orchestrator)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t1">
           <mxGeometry x="750" y="140" width="200" height="70" as="geometry" />
@@ -59,21 +59,46 @@
 
         <!-- ================= TIER 2 — RASPBERRY PI 5 (EDGE AI PERCEPTION) ================= -->
         <mxCell id="t2" value="TIER 2 &#8212; RASPBERRY PI 5 (EDGE AI PERCEPTION)&#xa;Vision / Perception Service" style="swimlane;startSize=40;fontStyle=1;fontSize=16;align=center;verticalAlign=top;fillColor=#F2FBF5;strokeColor=#82B366;strokeWidth=2;rounded=0;html=1;" vertex="1" parent="1">
-          <mxGeometry x="260" y="680" width="760" height="190" as="geometry" />
+          <mxGeometry x="260" y="680" width="760" height="310" as="geometry" />
         </mxCell>
         <mxCell id="detector" value="YOLOv8 / OpenCV DNN&#xa;Vehicle Detector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
           <mxGeometry x="40" y="60" width="210" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="roi" value="ROI Manager&#xa;(per-approach polygons,&#xa;approach_id mapping)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
+        <mxCell id="roi" value="ROI Manager&#xa;(per-approach polygons,&#xa;approach_id + display_name)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
           <mxGeometry x="270" y="60" width="210" height="90" as="geometry" />
         </mxCell>
         <mxCell id="metricsx" value="Metrics Extractor&#xa;(queue, occupancy,&#xa;dynamic flow rate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
           <mxGeometry x="500" y="60" width="210" height="90" as="geometry" />
         </mxCell>
+        <mxCell id="localdash" value="Local Dashboard&#xa;(FastAPI &#8226; :8080)&#xa;Live view, ROI calibration,&#xa;local SQLite history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=12;fontStyle=1;" vertex="1" parent="t2">
+          <mxGeometry x="270" y="170" width="430" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- Local Dashboard's intra-tier dependencies (same process, in-memory/file, no MQTT) -->
+        <mxCell id="e-detector-localdash" value="annotated frame (JPEG)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=9;endArrow=block;endFill=1;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="t2" source="detector" target="localdash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-roi-localdash" value="ROI config file&#xa;(read / hot-reload)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=9;dashed=1;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="t2" source="roi" target="localdash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-metricsx-localdash" value="telemetry, health&#xa;(cached)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=9;endArrow=block;endFill=1;exitX=0.7;exitY=1;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="t2" source="metricsx" target="localdash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Field technician: direct LAN access, bypasses MQTT broker / Tier 1 entirely;
+             the whole point of the local dashboard is to keep working disconnected. Placed in
+             the clear gap below Tier 2 so this short edge needs no long-distance routing
+             through the j1/j2/vision -> broker corridors on either side. -->
+        <mxCell id="technician" value="Field Technician&#xa;(laptop/phone on LAN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="635" y="1005" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e-technician-localdash" value="HTTP :8080 (direct LAN, works without Tier 1)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=9;dashed=1;strokeColor=#820000;endArrow=block;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.4;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="technician" target="localdash">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
 
         <!-- ================= TIER 3 — PHYSICAL ACTUATORS (ESP32) ================= -->
         <mxCell id="t3" value="TIER 3 &#8212; PHYSICAL ACTUATORS (ESP32)" style="swimlane;startSize=30;fontStyle=1;fontSize=16;align=center;verticalAlign=top;fillColor=#FFF7EC;strokeColor=#D79B00;strokeWidth=2;rounded=0;html=1;" vertex="1" parent="1">
-          <mxGeometry x="290" y="950" width="700" height="220" as="geometry" />
+          <mxGeometry x="290" y="1070" width="700" height="220" as="geometry" />
         </mxCell>
         <mxCell id="j1" value="ESP32 Node &#8212; J1&#xa;Intersection 1&#xa;4 Signal Heads (12 LEDs)&#xa;Safe Clearance State Machine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="t3">
           <mxGeometry x="40" y="60" width="280" height="130" as="geometry" />
@@ -83,37 +108,37 @@
         </mxCell>
 
         <!-- ================= CROSS-TIER EDGES (via MQTT backbone) ================= -->
-        <mxCell id="e-vision-broker" value="&#8594; telemetry/{node_id}, health/{node_id} (publish)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="t2" target="broker">
+        <mxCell id="e-vision-broker" value="&#8594; telemetry/{node_id}, health/{node_id} (publish)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="t2" target="broker">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1060" y="775" />
+              <mxPoint x="1060" y="835" />
               <mxPoint x="1060" y="605" />
-              <mxPoint x="555" y="605" />
+              <mxPoint x="610" y="605" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e-j1-broker" value="&#8592; control/{node}/command&#xa;&#8594; control_ack, health, signal_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="j1" target="broker">
+        <mxCell id="e-j1-broker" value="&#8592; control/{node}/command&#xa;&#8594; control_ack, health, signal_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="j1" target="broker">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="200" y="1075" />
+              <mxPoint x="200" y="1195" />
               <mxPoint x="200" y="625" />
-              <mxPoint x="610" y="625" />
+              <mxPoint x="555" y="625" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="e-j2-broker" value="&#8592; control/{node}/command&#xa;&#8594; control_ack, health, signal_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="j2" target="broker">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1100" y="1075" />
-              <mxPoint x="1100" y="645" />
-              <mxPoint x="665" y="645" />
+              <mxPoint x="1100" y="1195" />
+              <mxPoint x="1100" y="595" />
+              <mxPoint x="665" y="595" />
             </Array>
           </mxGeometry>
         </mxCell>
 
         <!-- ================= LEGEND ================= -->
         <mxCell id="legend" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1200" width="200" height="130" as="geometry" />
+          <mxGeometry x="40" y="1320" width="200" height="160" as="geometry" />
         </mxCell>
         <mxCell id="leg1" value="" style="rounded=1;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="legend">
           <mxGeometry x="10" y="30" width="30" height="16" as="geometry" />
@@ -138,6 +163,12 @@
         </mxCell>
         <mxCell id="leg4t" value="Physical hardware" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend">
           <mxGeometry x="50" y="100" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="" style="line;html=1;strokeColor=#820000;strokeWidth=2;dashed=1;" vertex="1" parent="legend">
+          <mxGeometry x="10" y="132" width="30" height="4" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5t" value="Direct LAN access" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend">
+          <mxGeometry x="50" y="124" width="140" height="20" as="geometry" />
         </mxCell>
 
       </root>

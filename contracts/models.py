@@ -87,6 +87,9 @@ class NodeSpec:
     approaches: List[str] = field(default_factory=list)
     phases: List[PhaseSpec] = field(default_factory=list)
     sumo_links: Optional[List[Dict[str, Any]]] = None
+    # Optional {approach_id: display_name} overrides -- see contracts/naming.py for the
+    # default-name fallback used by every approach not listed here.
+    approach_display_names: Dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "NodeSpec":
@@ -97,6 +100,7 @@ class NodeSpec:
             approaches=list(data.get("approaches", []) or []),
             phases=phases,
             sumo_links=data.get("sumo_links"),
+            approach_display_names=dict(data.get("approach_display_names", {}) or {}),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -108,6 +112,8 @@ class NodeSpec:
         }
         if self.sumo_links is not None:
             result["sumo_links"] = self.sumo_links
+        if self.approach_display_names:
+            result["approach_display_names"] = dict(self.approach_display_names)
         return result
 
     def get_phase(self, phase_id: str) -> Optional[PhaseSpec]:

@@ -8,6 +8,7 @@ if str(contracts_dir) not in sys.path:
     sys.path.insert(0, str(contracts_dir))
 
 import contracts_sdk
+import naming
 
 def test_list_and_load_all_topologies():
     topologies = contracts_sdk.list_topologies()
@@ -145,6 +146,68 @@ def test_list_station_records():
     scoped = contracts_sdk.list_station_records("junction")
     assert len(scoped) == 1
     assert scoped[0]["topology_id"] == "junction"
+
+
+def test_naming_default_display_name():
+    # Single-letter and full-word compass forms both resolve to the same Vietnamese label.
+    assert naming.default_display_name("J1_N_IN") == "Hướng Bắc vào"
+    assert naming.default_display_name("TJ1_NORTH_IN") == "Hướng Bắc vào"
+    assert naming.default_display_name("J1_E_IN") == "Hướng Đông vào"
+
+    # Diagonal approaches get the same base compass label plus a marker.
+    assert naming.default_display_name("MP1_NE_DIAG_IN") == "Hướng Đông Bắc vào (chéo)"
+
+    # IDs that never followed the compass convention (SUMO edge ids, grid lane ids) fall back
+    # to the raw id unchanged -- never raise.
+    for raw_id in ["-132042183", "A0A1", "56de42f611f398ec0c48127d"]:
+        assert naming.parse_approach_id(raw_id) is None
+        assert naming.default_display_name(raw_id) == raw_id
+
+    # An explicit override always wins, even for an id that would otherwise match the
+    # compass convention.
+    overrides = {"J1_N_IN": "Cổng vào chính"}
+    assert naming.default_display_name("J1_N_IN", overrides) == "Cổng vào chính"
+    assert naming.default_display_name("J1_S_IN", overrides) == "Hướng Nam vào"
+
+
+def test_naming_backward_compatible_with_every_existing_topology():
+    # No shipped topology declares approach_display_names yet -- every approach in every
+    # topology must still resolve to a non-empty display name without raising.
+    for topo_id in contracts_sdk.list_topologies():
+        topo = contracts_sdk.load_topology(topo_id)
+        for node in topo.get("nodes", []):
+            overrides = node.get("approach_display_names", {})
+            for approach_id in node.get("approaches", []):
+                name = naming.default_display_name(approach_id, overrides)
+                assert isinstance(name, str) and name
+
+
+def test_list_approach_records():
+    topologies = contracts_sdk.list_topologies()
+    records = contracts_sdk.list_approach_records()
+
+    assert set(r["topology_id"] for r in records) == set(topologies)
+    expected_total = sum(
+        len(node.get("approaches", []))
+        for tid in topologies
+        for node in contracts_sdk.load_topology(tid).get("nodes", [])
+    )
+    assert len(records) == expected_total
+
+    four_intersection = [r for r in records if r["topology_id"] == "four_intersection_v1"]
+    j1_north = next(r for r in four_intersection if r["approach_id"] == "J1_N_IN")
+    assert j1_north["display_name"] == "Hướng Bắc vào"
+    assert j1_north["is_default_name"] is True
+
+    # SUMO-derived topologies have no compass convention -- display_name falls back to the
+    # raw approach_id, same as today's display behavior, and is still flagged as "default".
+    cologne = [r for r in records if r["topology_id"] == "cologne8"]
+    assert all(r["display_name"] == r["approach_id"] for r in cologne)
+    assert all(r["is_default_name"] for r in cologne)
+
+    scoped = contracts_sdk.list_approach_records("junction")
+    assert len(scoped) > 0
+    assert all(r["topology_id"] == "junction" for r in scoped)
 
 
 def test_signal_fault_topics_and_schema():

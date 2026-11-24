@@ -56,7 +56,11 @@ class DatabaseManager:
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.db_path), timeout=10.0, check_same_thread=False)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
+        journal_mode = os.getenv("EDGEFLOW_DB_JOURNAL_MODE", "DELETE")
+        try:
+            conn.execute(f"PRAGMA journal_mode={journal_mode};")
+        except Exception:
+            pass
         conn.execute("PRAGMA synchronous=NORMAL;")
         return conn
 
@@ -160,6 +164,22 @@ class DatabaseManager:
             );
             """)
 
+            # Materialized, read-only cache of each node's approaches, rebuilt wholesale (see
+            # replace_approach_registry) each time the API starts, mirroring station_registry
+            # above one level down -- contracts/ stays the sole source of truth for the
+            # approach_id and its display_name (see contracts/naming.py).
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS approach_registry (
+                topology_id TEXT NOT NULL,
+                node_id TEXT NOT NULL,
+                approach_id TEXT NOT NULL,
+                display_name TEXT,
+                is_default_name INTEGER,
+                updated_at_ms INTEGER NOT NULL,
+                PRIMARY KEY (topology_id, node_id, approach_id)
+            );
+            """)
+
             # Indexes for high-performance time-series queries
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_faults_node_time ON signal_fault_events(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_faults_category ON signal_fault_events(category, timestamp_ms);")
@@ -168,6 +188,8 @@ class DatabaseManager:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_acks_node_time ON control_acks_history(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_health_node_time ON device_health_history(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_station_registry_topology ON station_registry(topology_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_approach_registry_topology ON approach_registry(topology_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_approach_registry_node ON approach_registry(topology_id, node_id);")
             conn.commit()
             logger.info(f"Database initialized successfully at {self.db_path} (WAL mode).")
 
@@ -478,6 +500,57 @@ class DatabaseManager:
 
         with self._get_connection() as conn:
             return [dict(r) for r in conn.execute(query, params).fetchall()]
+
+    def replace_approach_registry(self, records: List[Dict[str, Any]]):
+        """Wholesale-replace the approach_registry cache with a freshly derived set of records
+        (see contracts_sdk.list_approach_records). Full delete+insert, not an upsert, mirroring
+        replace_station_registry, so an approach removed from contracts/topology/ since the
+        last rebuild doesn't linger."""
+        now_ms = int(time.time() * 1000)
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM approach_registry;")
+            cursor.executemany(
+                """INSERT INTO approach_registry
+                   (topology_id, node_id, approach_id, display_name, is_default_name, updated_at_ms)
+                   VALUES (?, ?, ?, ?, ?, ?);""",
+                [
+                    (
+                        r["topology_id"], r["node_id"], r["approach_id"], r.get("display_name"),
+                        int(bool(r.get("is_default_name"))), now_ms,
+                    )
+                    for r in records
+                ],
+            )
+            conn.commit()
+
+    def query_approaches(
+        self,
+        topology_id: Optional[str] = None,
+        node_id: Optional[str] = None,
+        q: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Query the materialized approach registry, optionally scoped to one scenario/node
+        and/or filtered by a case-insensitive substring match against approach_id/display_name."""
+        query = "SELECT * FROM approach_registry WHERE 1=1"
+        params: List[Any] = []
+        if topology_id:
+            query += " AND topology_id = ?"
+            params.append(topology_id)
+        if node_id:
+            query += " AND node_id = ?"
+            params.append(node_id)
+        if q:
+            query += " AND (approach_id LIKE ? OR display_name LIKE ?)"
+            like = f"%{q}%"
+            params.extend([like, like])
+        query += " ORDER BY topology_id, node_id, approach_id;"
+
+        with self._get_connection() as conn:
+            rows = [dict(r) for r in conn.execute(query, params).fetchall()]
+        for r in rows:
+            r["is_default_name"] = bool(r["is_default_name"])
+        return rows
 
     def query_stats(self) -> Dict[str, Any]:
         """Aggregate statistical summary of operations and faults."""

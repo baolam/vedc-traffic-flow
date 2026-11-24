@@ -84,9 +84,11 @@ sumo_snapshot_dir = _get_output_dir() / "sumo_snapshots"
 try:
     import contracts_sdk
     import topics
+    import naming
 except ImportError:
     import contracts.contracts_sdk as contracts_sdk
     from contracts import topics
+    from contracts import naming
 
 def rebuild_station_registry():
     """Wholesale-rebuild the station_registry DB cache from contracts/topology/*.json. Run once
@@ -97,7 +99,16 @@ def rebuild_station_registry():
     except Exception as e:
         logger.warning(f"Station registry rebuild failed (continuing with stale/empty cache): {e}")
 
+def rebuild_approach_registry():
+    """Wholesale-rebuild the approach_registry DB cache from contracts/topology/*.json, mirroring
+    rebuild_station_registry() one level down -- see contracts_sdk.list_approach_records."""
+    try:
+        db.replace_approach_registry(contracts_sdk.list_approach_records())
+    except Exception as e:
+        logger.warning(f"Approach registry rebuild failed (continuing with stale/empty cache): {e}")
+
 rebuild_station_registry()
+rebuild_approach_registry()
 
 try:
     from sumo_converter import SumoNetworkConverter
@@ -469,6 +480,7 @@ def api_root():
             "/api/v1/topologies/{topology_id}",
             "/api/v1/topologies/convert-sumo",
             "/api/v1/stations",
+            "/api/v1/approaches",
             "/api/v1/vision/live-frame",
             "/api/v1/vision/live-status/{node_id}",
             "/api/v1/vision/live-stream/{node_id}"
@@ -1200,8 +1212,10 @@ def list_scenarios():
     for tid in available_ids:
         has_sumo = False
         if sumo_config_dir.exists():
-            sumo_file = sumo_config_dir / f"{tid}.sumocfg"
-            has_sumo = sumo_file.exists()
+            # Newer topologies (tabletop_5nut_v1, tabletop_j1_j2_v1, hcm_corridor) keep their
+            # .sumocfg in a per-topology subdirectory rather than flat under sumo_configs/.
+            has_sumo = (sumo_config_dir / tid / f"{tid}.sumocfg").exists() or \
+                (sumo_config_dir / f"{tid}.sumocfg").exists()
         
         try:
             summary = contracts_sdk.get_topology_summary(tid)
@@ -1245,12 +1259,22 @@ def list_topologies():
 
 @app.get("/api/v1/topologies/{topology_id}")
 def get_topology_contract(topology_id: str):
-    """Returns full canonical JSON contract for a given topology_id."""
+    """Returns full canonical JSON contract for a given topology_id. Every node's
+    approach_display_names is filled in with a computed default (see contracts/naming.py) for
+    any approach the topology author didn't explicitly name, so every consumer of this payload
+    (dashboard included) can just read the field -- no client needs to re-implement the
+    compass-id fallback logic itself."""
     try:
         topology = contracts_sdk.load_topology(topology_id)
-        return topology
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Topology contract '{topology_id}' not found.")
+    for node in topology.get("nodes", []):
+        overrides = node.get("approach_display_names", {})
+        node["approach_display_names"] = {
+            approach_id: naming.default_display_name(approach_id, overrides)
+            for approach_id in node.get("approaches", [])
+        }
+    return topology
 
 @app.get("/api/v1/stations")
 def list_stations(topology_id: Optional[str] = None, q: Optional[str] = None):
@@ -1261,6 +1285,17 @@ def list_stations(topology_id: Optional[str] = None, q: Optional[str] = None):
     """
     records = db.query_stations(topology_id=topology_id, q=q)
     return {"total": len(records), "stations": records}
+
+@app.get("/api/v1/approaches")
+def list_approaches(topology_id: Optional[str] = None, node_id: Optional[str] = None, q: Optional[str] = None):
+    """
+    Materialized approach registry (approach_id/display_name per node) across every scenario,
+    rebuilt from contracts/topology/*.json each time the API starts, mirroring /api/v1/stations
+    one level down. Optional topology_id/node_id scope the results; optional q substring-filters
+    approach_id/display_name.
+    """
+    records = db.query_approaches(topology_id=topology_id, node_id=node_id, q=q)
+    return {"total": len(records), "approaches": records}
 
 @app.post("/api/v1/topologies/convert-sumo")
 def convert_sumo_xml(xml_content: str = Body(..., media_type="text/xml"), topology_id: str = "sumo_converted_v1"):

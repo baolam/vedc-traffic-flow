@@ -63,10 +63,30 @@ def test_get_specific_topology():
     assert data["topology_id"] == "four_intersection_v1"
     assert "nodes" in data
 
+    # Every approach gets a computed display name filled in server-side, even though this
+    # topology never authors approach_display_names itself -- so the dashboard can just read
+    # the field without re-implementing the compass-id fallback.
+    j1 = next(n for n in data["nodes"] if n["node_id"] == "J1")
+    assert j1["approach_display_names"]["J1_N_IN"] == "Hướng Bắc vào"
+    assert set(j1["approach_display_names"].keys()) == set(j1["approaches"])
+
 
 def test_get_unknown_topology_returns_404():
     response = client.get("/api/v1/topologies/non_existent_topology_xyz")
     assert response.status_code == 404
+
+
+def test_list_approaches():
+    response = client.get("/api/v1/approaches", params={"topology_id": "four_intersection_v1"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 16
+    j1_north = next(r for r in data["approaches"] if r["approach_id"] == "J1_N_IN")
+    assert j1_north["display_name"] == "Hướng Bắc vào"
+    assert j1_north["is_default_name"] is True
+
+    scoped = client.get("/api/v1/approaches", params={"node_id": "J1", "topology_id": "four_intersection_v1"})
+    assert scoped.json()["total"] == 4
 
 
 def test_policy_change():

@@ -16,9 +16,11 @@ import jsonschema
 try:
     from .models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec, SignalFaultEvent
     from .scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
+    from .naming import default_display_name
 except ImportError:  # legacy top-level imports
     from models import TopologyContract, NodeSpec, PhaseSpec, MovementSpec, EdgeSpec, SignalFaultEvent
     from scenarios import ScenarioProfile, ScenarioRegistry, CANONICAL_SCENARIOS
+    from naming import default_display_name
 
 
 def get_contracts_dir() -> Path:
@@ -170,6 +172,38 @@ def list_station_records(topology_id: Optional[str] = None) -> List[Dict[str, An
                 "approach_count": len(node.get("approaches") or []),
                 "phase_count": len(node.get("phases") or []),
             })
+    return records
+
+
+def list_approach_records(topology_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Flatten every node's approaches into canonical flat records: topology_id, node_id,
+    approach_id, display_name, is_default_name. display_name is the explicit entry from the
+    node's "approach_display_names" map when the topology author set one, otherwise a name
+    derived from the `<node>_<DIR>_IN` convention (see contracts/naming.py), or the raw
+    approach_id unchanged when it matches neither -- so this never raises and always returns a
+    non-empty display_name. is_default_name is False only when an explicit override was used,
+    letting a future admin view filter for "approaches still using a generated name."
+    Pass a specific topology_id to scope to one scenario, or omit to flatten every registered
+    topology -- mirrors list_station_records() one level down, per AGENTS.md's Schema
+    Authority rule.
+    """
+    topology_ids = [topology_id] if topology_id else list_topologies()
+    records = []
+    for tid in topology_ids:
+        topo = load_topology(tid)
+        canonical_tid = topo.get("topology_id", tid)
+        for node in topo.get("nodes", []):
+            node_id = node["node_id"]
+            overrides = node.get("approach_display_names") or {}
+            for approach_id in node.get("approaches") or []:
+                records.append({
+                    "topology_id": canonical_tid,
+                    "node_id": node_id,
+                    "approach_id": approach_id,
+                    "display_name": default_display_name(approach_id, overrides),
+                    "is_default_name": approach_id not in overrides,
+                })
     return records
 
 

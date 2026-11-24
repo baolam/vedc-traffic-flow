@@ -148,7 +148,7 @@ VIDEO_SYNC_API_URL=http://<ip-laptop-server>:8000
 rồi chạy như Chế độ 1 bình thường (`--profile vision`). Khi đó Pi tự động:
 1. Phát telemetry qua MQTT đúng chuẩn (`edgeflow/v1/telemetry/J3`) — không khác gì node thật.
 2. Đẩy từng khung hình đã chú thích (JPEG, tối đa `VIDEO_SYNC_FPS` khung/giây) lên API qua
-   `POST /api/v1/vision/live-frame` (xem `services/vision/video_sync.py`); API phát lại ngay dưới
+   `POST /api/v1/vision/live-frame` (xem `services/vision/streaming/live_stream.py`); API phát lại ngay dưới
    dạng luồng MJPEG tại `GET /api/v1/vision/live-stream/J3`, và trang dashboard hiển thị luồng đó
    như một camera thật — không có độ trễ của việc ghi/tải file. Kênh này hoàn toàn tách biệt với
    MQTT — tắt nó (`VIDEO_SYNC_ENABLED=false`, mặc định) không ảnh hưởng gì tới telemetry.
