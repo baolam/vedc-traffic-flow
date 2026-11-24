@@ -203,8 +203,7 @@ def phase_episode(ctx):
             if not np.isnan(unified_dqn.MP_MARGIN):  # experiment: greedy action = residual on the base controller
                 base = [unified_dqn.base_index(n, runtime.telemetry[n["node_id"]], runtime.telemetry, runtime.topology)
                         for n in nodes]
-                q = [unified_dqn.residual_choice(qv[i][:len(n["phases"])], masks[i][:len(n["phases"])], base[i],
-                                                 unified_dqn.current_index(n, runtime.telemetry[n["node_id"]]))
+                q = [unified_dqn.residual_choice(qv[i][:len(n["phases"])], masks[i][:len(n["phases"])], base[i])
                      for i, n in enumerate(nodes)]
             actions = [explore(nodes[i], m, base[i]) if draws[i] < eps else int(q[i]) for i, m in enumerate(masks)]
             before = runtime.time
