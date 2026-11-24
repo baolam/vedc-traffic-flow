@@ -72,3 +72,7 @@ The first 8 iterations are done. Results and the ablation are in [`RL_RESEARCH_L
 - **Confirmation batching (round 2).** Small single-seed WINs are not confirmed one by one. The best configuration gets seed 29 in the final slots (it18–it19) instead, because 12 slots cannot pay for a confirmation after every WIN.
 - **Consistent-direction KEEP (round 2).** A change is also kept when it improves every map that has a passing score on both sides (at least 3 maps) and no map loses the guardrail. That is a sign test, p ≈ 0.03 for 5 out of 5 maps. it09 was kept under this rule.
 - **Endgame (decided after it15).** The idea slots ran dry: native cycle as the residual base (it15) was worse than max_pressure everywhere except Hanoi. The four remaining slots go to seed-29 confirmations of the three candidate configurations: it16 = it13 (flow_theory base, δ 0.10), it17 = it11 (max_pressure base, δ 0.10), it18 = it14 (flow_theory base, δ 0.20). it19 is a spare for a rerun if a confirmation run fails. A map WIN counts only if the same configuration wins on both seeds. Choosing the configuration per map uses validation seeds, so it is reported as validation evidence only.
+
+## Status (round 2 done, 2026-11-24)
+
+Stopped at it18: a confirmed WIN on 2 maps (stop rule). The flow_theory residual at δ 0.20 wins Hanoi (31.2 / 29.0) and cologne (34.3 / 33.5) on both seeds. The max_pressure residual at δ 0.10 also wins Hanoi (29.9 / 29.1). Report: [`RL_RESEARCH_LOOP_ROUND2_REPORT_20261124.md`](../../reports/RL_RESEARCH_LOOP_ROUND2_REPORT_20261124.md).
