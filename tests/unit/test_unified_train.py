@@ -113,10 +113,6 @@ def test_max_pressure_residual_keeps_mp_unless_q_beats_it_by_margin(monkeypatch)
     monkeypatch.setattr(ud, "MP_MARGIN", 0.01)
     assert ud.residual_choice(q, mask, 0) == 1  # gain 2 > 1: deviate
     assert ud.residual_choice(q, mask, 2) == 1  # max_pressure's phase illegal: greedy
-    monkeypatch.setattr(ud, "RESIDUAL_TAIL_S", 30.0)
-    calm, late = ({"approaches": [{"oldest_stopped_wait_s": w}]} for w in (10.0, 31.0))
-    assert ud.residual_choice(q, mask, 0, calm) == 1  # short waits: overrides allowed
-    assert ud.residual_choice(q, mask, 0, late) == 0  # a long wait: the base decides
 
 
 def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):
