@@ -130,3 +130,14 @@ def test_residual_base_resets_when_the_sim_clock_goes_back(monkeypatch):
     for t in (5000, 10000, 10000, 5000):
         assert ud.base_index(node, {"timestamp_ms": t}, {}, {}) == 1
     assert calls == ["reset"]
+
+
+def test_nstep_row_discounts_by_elapsed_time_and_bootstraps_from_the_last_state():
+    from src.rl.unified_train import nstep_row
+
+    rows = [dict(s=0, action=1, reward=-1.0, s2=1, m2="m1", terminal=False, dt=5.0),
+            dict(s=1, action=0, reward=-2.0, s2=2, m2="m2", terminal=True, dt=10.0)]
+    out = nstep_row(rows, 0.9, 5)
+    assert out["reward"] == -1.0 + 0.9 * -2.0 and out["dt"] == 15.0
+    assert (out["s"], out["action"], out["s2"], out["m2"], out["terminal"]) == (0, 1, 2, "m2", True)
+    assert nstep_row(rows[:1], 0.9, 5) == rows[0]  # n = 1 is the plain transition

@@ -34,6 +34,7 @@ from src.simulation.runtime import InvalidRun, SumoRuntime
 
 NODE_REWARD = os.environ.get("EDGEFLOW_DQN_NODE_REWARD") == "1"  # experiment: per-node reward for wait_tail_v1
 MP_EXPLORE = float(os.environ.get("EDGEFLOW_MP_EXPLORE", 0))  # experiment: share of exploratory actions from max_pressure
+NSTEP = int(os.environ.get("EDGEFLOW_NSTEP", 1))  # experiment: n-step returns (1 = plain one-step)
 EXPLORE_BASE = os.environ.get("EDGEFLOW_EXPLORE_BASE") == "1"  # experiment: MP_EXPLORE follows the residual base
 PRESSURE_BETA = float(os.environ.get("EDGEFLOW_PRESSURE_BETA", 0))  # experiment: node reward += beta * -|pressure|/20
 
@@ -138,6 +139,16 @@ def reference_rows(spec, recipe, root, workers):
                       for c in spec["cases"] for s in SEEDS["validation"]], workers)
 
 
+def nstep_row(rows, gamma_5, reference_s):
+    """Merge consecutive transitions of one node: discounted reward sum, first state/action, last next state.
+    dt is the total, so the update's gamma_5 ** (dt / reference_s) bootstraps over the whole span."""
+    reward, elapsed = 0.0, 0.0
+    for row in rows:
+        reward += gamma_5 ** (elapsed / reference_s) * row["reward"]
+        elapsed += row["dt"]
+    return dict(rows[0], reward=reward, dt=elapsed, s2=rows[-1]["s2"], m2=rows[-1]["m2"], terminal=rows[-1]["terminal"])
+
+
 def phase_update(ctx):
     r, arch = ctx.recipe, ctx.architecture
     batch = ctx.replay.sample(r["batch"], ctx.rng)
@@ -192,6 +203,14 @@ def phase_episode(ctx):
                     [np.pad(phase_mask(n, runtime.telemetry[n["node_id"]]), (0, MAX_PHASES - len(n["phases"])))
                      for n in nodes])
 
+        pending = [[] for _ in nodes]
+
+        def store(i, row, flush=False):  # experiment: NSTEP > 1 merges the last n transitions of node i
+            pending[i].append(row)
+            while pending[i] and (len(pending[i]) >= NSTEP or flush or row["terminal"]):
+                ctx.replay.add(**nstep_row(pending[i], r["gamma_5"], r["reference_s"]))
+                pending[i].pop(0)
+
         done = False
         rows, masks = observe()
         while not done:
@@ -217,12 +236,12 @@ def phase_episode(ctx):
             dt = runtime.time - before
             next_rows, next_masks = observe()
             for i, n in enumerate(nodes):
-                ctx.replay.add(s=rows[i], action=actions[i],
+                store(i, dict(s=rows[i], action=actions[i],
                                reward=node_reward(n, dt) if NODE_REWARD and ctx.reward_version == "wait_tail_v1"
                                else reward if ctx.reward_version == "wait_tail_v1"
                                else node_pressure_reward(n, runtime.telemetry) - tail_penalty(
                                    [a for a in runtime.telemetry[n["node_id"]]["approaches"]]),
-                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt)
+                               s2=next_rows[i], m2=next_masks[i], terminal=terminated, dt=dt), flush=truncated)
             rows, masks = next_rows, next_masks
             c["sim_s"] += dt
             c["decisions"] += 1
