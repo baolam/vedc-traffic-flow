@@ -14,10 +14,19 @@ core dependency), just not one the rest of this file needs to pay for.
 
 import logging
 import secrets
+import sys
 import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+# Ensure services/vision and repo root are in sys.path when running server.py directly
+_curr_dir = Path(__file__).resolve().parent
+_vision_dir = _curr_dir.parent
+_repo_dir = _vision_dir.parent.parent
+for _p in (str(_vision_dir), str(_repo_dir)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
@@ -243,3 +252,195 @@ class LocalDashboardServer:
         self._server.should_exit = True
         if self._thread.is_alive():
             self._thread.join(timeout=3.0)
+
+
+if __name__ == "__main__":
+    import argparse
+    import cv2
+    import numpy as np
+    import queue
+    import sys
+
+    # Ensure services/vision is on sys.path
+    _parent = str(Path(__file__).resolve().parents[1])
+    if _parent not in sys.path:
+        sys.path.insert(0, _parent)
+
+    try:
+        from local_dashboard.db import VisionLocalDB
+    except ImportError:
+        from services.vision.local_dashboard.db import VisionLocalDB
+
+    parser = argparse.ArgumentParser(description="EdgeFlow AI - Vision Local Dashboard (Standalone Runner)")
+    parser.add_argument("--host", default="0.0.0.0", help="Host interface (default: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=8080, help="HTTP port (default: 8080)")
+    parser.add_argument("--username", default="admin", help="Basic Auth username (default: admin)")
+    parser.add_argument("--password", default="", help="Basic Auth password (default: empty for none)")
+    parser.add_argument("--topology", default="four_intersection_v1", help="Topology contract name")
+    parser.add_argument("--node-id", default="J1", help="Primary node ID (default: J1)")
+    parser.add_argument("--db-path", default="", help="Path to SQLite database (default: services/vision/data/vision.db)")
+    parser.add_argument("--fps", type=float, default=10.0, help="Simulated live frame rate (default: 10.0)")
+    args = parser.parse_args()
+
+    class StandaloneCfg:
+        local_dashboard_host = args.host
+        local_dashboard_port = args.port
+        local_dashboard_username = args.username
+        local_dashboard_password = args.password
+        edgeflow_topology = args.topology
+
+    class StandaloneStats:
+        def __init__(self):
+            self.fps = args.fps
+            self.frames_ok = 0
+            self.frames_failed = 0
+
+        def snapshot(self):
+            return {
+                "processed_fps": round(self.fps, 1),
+                "frames_ok": self.frames_ok,
+                "frames_failed": self.frames_failed,
+                "consecutive_failures": 0,
+                "latency_ms": {"total_ms": {"p50": 14.5, "p95": 21.0}},
+            }
+
+    class StandaloneEngine:
+        width = 640
+        height = 480
+
+    topology = load_topology(args.topology)
+    topo_nodes = {n["node_id"]: n for n in topology.get("nodes", [])}
+    if args.node_id not in topo_nodes:
+        raise ValueError(f"Node '{args.node_id}' not found in topology '{args.topology}'")
+    active_node = topo_nodes[args.node_id]
+
+    db = VisionLocalDB(db_path=args.db_path or None)
+
+    class StandaloneSupervisor:
+        def __init__(self):
+            self.cfg = StandaloneCfg()
+            self.identity = {
+                "service": "vision",
+                "mode": "standalone_dashboard",
+                "node_id": args.node_id,
+                "confidence_threshold": 0.4,
+            }
+            self.stats = StandaloneStats()
+            self.node_ids = [args.node_id]
+            self.active_nodes = [active_node]
+            self.engine = StandaloneEngine()
+            self.roi_config = None
+            self.roi_config_path = str(Path(__file__).resolve().parent.parent / "rois" / f"roi_{args.node_id}.json")
+            self.pending_commands = queue.Queue()
+            self.local_db = db
+            self.last_telemetry = {
+                args.node_id: {
+                    "node_id": args.node_id,
+                    "current_phase_id": f"{args.node_id}_PHASE_NS",
+                    "approaches": [
+                        {"approach_id": app_id, "queue_vehicles": 2.0, "mean_speed_mps": 4.5, "confidence": 1.0}
+                        for app_id in active_node.get("approaches", [])
+                    ],
+                }
+            }
+            self.last_health = {
+                "status": "HEALTHY",
+                "runtime": self.stats.snapshot(),
+                "hardware": {"cpu_temp_c": 47.5, "load_1m": 0.35, "free_mem_mb": 3500},
+                "timestamp_ms": int(time.time() * 1000),
+            }
+
+    supervisor_instance = StandaloneSupervisor()
+    server_instance = LocalDashboardServer(supervisor_instance)
+    server_instance.start()
+
+    print("=================================================================")
+    print(" EdgeFlow AI - Vision Local Dashboard (Standalone Mode)")
+    print(f" URL: http://{args.host}:{args.port}")
+    if args.password:
+        print(f" Authentication: ENABLED (User: {args.username})")
+    else:
+        print(" Authentication: DISABLED (Direct LAN access)")
+    print(f" Target Node: {args.node_id} | Topology: {args.topology}")
+    print(" Press Ctrl+C to stop.")
+    print("=================================================================")
+
+    # Background frame generation loop
+    running = True
+    step = 0
+    dt = 1.0 / max(args.fps, 1.0)
+    last_db_record = 0.0
+
+    try:
+        while running:
+            # Check pending commands from dashboard UI
+            while not supervisor_instance.pending_commands.empty():
+                cmd = supervisor_instance.pending_commands.get_nowait()
+                cmd_type = cmd.get("type")
+                if cmd_type == "update_settings":
+                    for k, v in cmd.get("fields", {}).items():
+                        supervisor_instance.identity[k] = v
+                    logger.info(f"[Dashboard Command] Settings updated: {cmd.get('fields')}")
+                elif cmd_type == "restart":
+                    logger.info("[Dashboard Command] Pipeline restart requested.")
+                    supervisor_instance.local_db.record_event("restarted", {"trigger": "dashboard"})
+                elif cmd_type == "reload_roi":
+                    logger.info(f"[Dashboard Command] ROI reloaded from {cmd.get('roi_config_path')}")
+
+            # Generate synthetic test frame with timestamp & visual elements
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+            # Road background
+            cv2.rectangle(frame, (180, 0), (460, 480), (40, 40, 40), -1)
+            cv2.rectangle(frame, (0, 120), (640, 360), (40, 40, 40), -1)
+            # Center intersection box
+            cv2.rectangle(frame, (180, 120), (460, 360), (50, 50, 50), -1)
+            # Animated vehicle
+            car_y = int(80 + (step * 8) % 320)
+            cv2.rectangle(frame, (230, car_y), (270, car_y + 50), (60, 180, 75), -1)
+            cv2.putText(frame, "CAR #1", (220, car_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+            # Node & Status HUD
+            cv2.putText(frame, f"NODE: {args.node_id} [STANDALONE DASHBOARD]", (20, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 255), 1)
+            cv2.putText(frame, time.strftime("%Y-%m-%d %H:%M:%S"), (20, 55),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 200), 1)
+
+            ok, jpeg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            if ok:
+                server_instance.update_frame(args.node_id, jpeg.tobytes())
+                supervisor_instance.stats.frames_ok += 1
+
+            # Periodically record telemetry and health to local_db (every 2s)
+            now = time.time()
+            if now - last_db_record >= 2.0:
+                last_db_record = now
+                telem_payload = {
+                    "node_id": args.node_id,
+                    "current_phase_id": f"{args.node_id}_PHASE_NS",
+                    "approaches": [
+                        {"approach_id": app_id, "queue_vehicles": float((step % 5) + 1), "confidence": 1.0}
+                        for app_id in active_node.get("approaches", [])
+                    ],
+                    "timestamp_ms": int(now * 1000),
+                }
+                supervisor_instance.local_db.record_telemetry(telem_payload)
+                supervisor_instance.last_telemetry[args.node_id] = telem_payload
+
+                health_payload = {
+                    "status": "HEALTHY",
+                    "runtime": supervisor_instance.stats.snapshot(),
+                    "hardware": {"cpu_temp_c": 46.0 + (step % 4) * 0.5, "load_1m": 0.4},
+                    "timestamp_ms": int(now * 1000),
+                }
+                supervisor_instance.local_db.record_health(health_payload)
+                supervisor_instance.last_health = health_payload
+
+            step += 1
+            time.sleep(dt)
+
+    except KeyboardInterrupt:
+        logger.info("Stopping standalone dashboard...")
+    finally:
+        server_instance.stop()
+        db.close()
+        logger.info("Dashboard stopped.")
