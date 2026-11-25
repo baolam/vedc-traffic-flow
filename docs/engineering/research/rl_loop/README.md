@@ -100,6 +100,7 @@ Stopped at it18: a confirmed WIN on 2 maps (stop rule). The flow_theory residual
 | R12 | Two-tier residual: the alt (max_pressure) phase overrides at a small margin, any phase still at δ (Hanoi needs free overrides, it25/26) | `EDGEFLOW_RESIDUAL_ALT=max_pressure EDGEFLOW_ALT_MARGIN=0.05` | grid4x4, HCM without losing Hanoi |
 | R13 | Slower target network (target sync every 2500 updates instead of 1000, about 20 episodes): grid4x4 peaks at episode 100–120, then declines (it31) | `LOOP_RECIPE_EXTRA='{"target_every_updates": 2500}'` | post-peak decline (grid4x4, HCM) |
 | R14 | Two-tier residual with max_queue as the alt (Jakarta's best passing deterministic controller with max-red is max_queue, 23.3) | `EDGEFLOW_RESIDUAL_ALT=max_queue` | Jakarta |
+| R15 | Time-loss node reward: per-approach cost is 1 − v/v_max per vehicle-second, as in SUMO's timeLoss (the score is timeLoss + departDelay; the old cost counted only stopped seconds). Training cost only, the metrics are unchanged | `EDGEFLOW_TIMELOSS_COST=1` | reward/score mismatch: slow queues |
 
 - **it28 update:** it20 (`EDGEFLOW_EXPLORE_BASE=1`) is confirmed on seed 29: cologne 33.6 / 33.7 and Hanoi 29.0 / 29.1. It is now KEEP and joins the base gates from it29 on.
 
