@@ -18,8 +18,6 @@ from src.control.actuator import ActuatorStateMachine
 from src.control.research import action_mask
 from .build_network import binary, write_xml
 
-TIMELOSS_COST = os.environ.get("EDGEFLOW_TIMELOSS_COST") == "1"  # experiment: node reward matches the delay score
-
 
 class InvalidRun(RuntimeError):
     """Scientific invalidity must not be retried until a favorable run appears."""
@@ -144,7 +142,6 @@ class SumoRuntime:
             raise ValueError("wait_penalty_lambda must be finite and nonnegative")
         self.scenario, self.seed = scenario, int(seed)
         self.wait_penalty_lambda = float(wait_penalty_lambda)
-        self._vmax = {}  # raw edge id -> lane 0 max speed (TIMELOSS_COST)
         self.demand_s, self.horizon = int(demand_s), int(demand_s + drain_s)
         self.edge_ids={a:n.get('sumo_edges',{}).get(a,a) for n in self.topology['nodes'] for a in n['approaches']}
         self.logical_edges={raw:canonical for canonical,raw in self.edge_ids.items()}
@@ -374,21 +371,13 @@ class SumoRuntime:
                 cost[self.scheduled[vid]["route"]] += w
             weighted_wait_cost += outside
             for vid in active:
-                if TIMELOSS_COST:  # experiment: per-approach cost = SUMO-style time loss, 1 - v/v_max per second
-                    raw = vehicle_data[vid][self.tc.VAR_ROAD_ID]
-                    road = self.logical_edges.get(raw, raw)
-                    if road in self.approach_wait:
-                        if raw not in self._vmax:
-                            self._vmax[raw] = max(float(self.connection.lane.getMaxSpeed(f"{raw}_0")), .1)
-                        cost[road] += 1. - min(vehicle_data[vid][self.tc.VAR_SPEED], self._vmax[raw]) / self._vmax[raw]
                 if vehicle_data[vid][self.tc.VAR_SPEED] <= .1:
                     self.waiting[vid] += 1
                     w = 1. + self.wait_penalty_lambda * self.waiting[vid] / 120.
                     weighted_wait_cost += w
                     road = self.logical_edges.get(vehicle_data[vid][self.tc.VAR_ROAD_ID],vehicle_data[vid][self.tc.VAR_ROAD_ID])
                     if road in self.approach_wait:
-                        if not TIMELOSS_COST:
-                            cost[road] += w
+                        cost[road] += w
                         ledger = self.approach_wait[road]
                         ledger[vid] = ledger.get(vid, 0) + 1
             for node in self.topology["nodes"]:
