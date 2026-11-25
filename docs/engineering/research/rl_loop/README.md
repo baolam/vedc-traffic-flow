@@ -111,3 +111,7 @@ Stopped at it18: a confirmed WIN on 2 maps (stop rule). The flow_theory residual
 - **Endgame (it44–48), all confirmation runs.** The ideas have plateaued since it32. it44 = it32 config on seed 41, it45 = it20 config on seed 41, it46 = it36 config (slower target net, HCM 71.6) on seed 29, it47 = it39 config (free-override margin 0.30: Jakarta 23.4, grid4x4 20.3) on seed 29, it48 = spare. A configuration wins a map only if it wins on every seed it was run on.
 - **Disk (it47):** the first it47 run died with ENOSPC (disk 100 % full; the loop used 103 GB of it). Deleted the resume-only `checkpoint.pt` files (about 230 MB each, holding the replay buffer) of every finished iteration except it20/it28/it32/it37/it44/it45, which the round-3 report uses. That freed 58 GB. Scores, histories and exported policies are kept, and runs are reproducible from the ledger's commit and gates. it47 was rerun.
 
+
+## Status (round 3 done, 2026-11-25)
+
+The round ran 30 iterations, it19–it48. Hanoi is a win on all 3 learner seeds under every main configuration. cologne is 3/3 only under the round-2 winner, and its margins are inside the noise. The two-tier residual (it32) makes Jakarta pass on all 3 seeds (23.7–23.8 against 23.3) and takes grid4x4 to 20.7–21.0. Report: [`RL_RESEARCH_LOOP_ROUND3_REPORT_20261125.md`](../../reports/RL_RESEARCH_LOOP_ROUND3_REPORT_20261125.md).
