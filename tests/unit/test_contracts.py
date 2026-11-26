@@ -222,6 +222,7 @@ def test_signal_fault_topics_and_schema():
     assert topics.get_signal_fault_topic("J1", "feedback_error") == "edgeflow/v1/signal_fault/J1/feedback_error"
     assert topics.get_signal_fault_topic("J1", "emergency") == "edgeflow/v1/signal_fault/J1/emergency"
     assert topics.get_signal_fault_topic("J1", "hardware") == "edgeflow/v1/signal_fault/J1/hardware"
+    assert topics.get_signal_fault_topic("J1", "camera") == "edgeflow/v1/signal_fault/J1/camera"
 
     with pytest.raises(ValueError):
         topics.get_signal_fault_topic("J1", "invalid_cat")

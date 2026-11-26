@@ -85,9 +85,24 @@ class VisionLocalDB:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS alert_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                alert_id TEXT NOT NULL,
+                node_id TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                tamper_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                reason TEXT,
+                details_json TEXT,
+                timestamp_ms INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_vision_telemetry_time ON telemetry_history(node_id, timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_vision_health_time ON health_history(timestamp_ms);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_vision_events_time ON event_log(timestamp_ms);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_vision_alerts_time ON alert_log(timestamp_ms);")
             conn.commit()
             logger.info(f"Vision local DB initialized at {self.db_path} (WAL mode).")
 
@@ -149,6 +164,22 @@ class VisionLocalDB:
             (event_type, json.dumps(detail or {}), int(time.time() * 1000)),
         )
 
+    def record_alert(self, alert: Dict[str, Any]):
+        self._enqueue(
+            "INSERT INTO alert_log (alert_id, node_id, severity, tamper_type, status, reason, details_json, timestamp_ms) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+            (
+                alert.get("alert_id", ""),
+                alert.get("node_id", ""),
+                alert.get("severity", "WARNING"),
+                alert.get("tamper_type", "unknown"),
+                alert.get("status", "ACTIVE"),
+                alert.get("reason", ""),
+                json.dumps(alert.get("details", {})),
+                alert.get("timestamp_ms") or int(time.time() * 1000),
+            ),
+        )
+
     # -------------------------------------------------------------------------
     # Queries
     # -------------------------------------------------------------------------
@@ -186,14 +217,96 @@ class VisionLocalDB:
             r["detail"] = json.loads(r.pop("detail_json") or "{}")
         return rows
 
-    def prune(self, now_ms: Optional[int] = None):
-        """Delete rows older than retention_days -- keeps the SD card from filling up."""
-        cutoff_ms = (now_ms or int(time.time() * 1000)) - int(self.retention_days * 86400 * 1000)
+    def query_alerts(self, node_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        sql = "SELECT * FROM alert_log WHERE 1=1"
+        params: List[Any] = []
+        if node_id:
+            sql += " AND node_id = ?"
+            params.append(node_id)
+        sql += " ORDER BY timestamp_ms DESC LIMIT ?;"
+        params.append(min(limit, 1000))
         with self._get_connection() as conn:
-            conn.execute("DELETE FROM telemetry_history WHERE timestamp_ms < ?;", (cutoff_ms,))
-            conn.execute("DELETE FROM health_history WHERE timestamp_ms < ?;", (cutoff_ms,))
-            conn.execute("DELETE FROM event_log WHERE timestamp_ms < ?;", (cutoff_ms,))
+            rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
+        for r in rows:
+            r["details"] = json.loads(r.pop("details_json") or "{}")
+        return rows
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Returns storage metrics, table row counts, and timestamps for internal DB."""
+        file_size = self.db_path.stat().st_size if self.db_path.is_file() else 0
+        wal_path = self.db_path.parent / f"{self.db_path.name}-wal"
+        wal_size = wal_path.stat().st_size if wal_path.is_file() else 0
+
+        counts = {}
+        with self._get_connection() as conn:
+            for tbl in ("telemetry_history", "health_history", "event_log", "alert_log"):
+                try:
+                    c = conn.execute(f"SELECT COUNT(*) FROM {tbl};").fetchone()[0]
+                    counts[tbl] = c
+                except sqlite3.OperationalError:
+                    counts[tbl] = 0
+
+            # Find earliest and latest timestamps across tables
+            min_ts, max_ts = None, None
+            try:
+                row = conn.execute(
+                    "SELECT MIN(timestamp_ms), MAX(timestamp_ms) FROM telemetry_history;"
+                ).fetchone()
+                if row and row[0] is not None:
+                    min_ts, max_ts = row[0], row[1]
+            except sqlite3.OperationalError:
+                pass
+
+        total_rows = sum(counts.values())
+        return {
+            "db_path": str(self.db_path),
+            "file_size_bytes": file_size,
+            "file_size_formatted": f"{file_size / (1024 * 1024):.2f} MB" if file_size >= 1048576 else f"{file_size / 1024:.1f} KB",
+            "wal_size_bytes": wal_size,
+            "wal_size_formatted": f"{wal_size / (1024 * 1024):.2f} MB" if wal_size >= 1048576 else f"{wal_size / 1024:.1f} KB",
+            "table_counts": counts,
+            "total_records": total_rows,
+            "retention_days": self.retention_days,
+            "earliest_timestamp_ms": min_ts,
+            "latest_timestamp_ms": max_ts,
+        }
+
+    def prune(self, now_ms: Optional[int] = None, retention_days: Optional[float] = None) -> Dict[str, int]:
+        """Delete rows older than retention_days -- keeps the SD card from filling up.
+        Returns the number of deleted records per table."""
+        days = retention_days if retention_days is not None else self.retention_days
+        cutoff_ms = (now_ms or int(time.time() * 1000)) - int(days * 86400 * 1000)
+        deleted = {}
+        with self._get_connection() as conn:
+            for tbl in ("telemetry_history", "health_history", "event_log", "alert_log"):
+                cur = conn.execute(f"DELETE FROM {tbl} WHERE timestamp_ms < ?;", (cutoff_ms,))
+                deleted[tbl] = cur.rowcount
             conn.commit()
+        deleted["total_deleted"] = sum(deleted.values())
+        return deleted
+
+    def vacuum(self) -> bool:
+        """Runs SQLite VACUUM to reclaim free space and defragment database pages."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute("VACUUM;")
+            return True
+        except Exception as e:
+            logger.error(f"VACUUM failed: {e}")
+            return False
+
+    def clear(self, tables: Optional[List[str]] = None) -> Dict[str, int]:
+        """Clears specified tables (or all tables if None). Returns deleted row counts."""
+        target_tables = tables or ["telemetry_history", "health_history", "event_log", "alert_log"]
+        deleted = {}
+        with self._get_connection() as conn:
+            for tbl in target_tables:
+                if tbl in ("telemetry_history", "health_history", "event_log", "alert_log"):
+                    cur = conn.execute(f"DELETE FROM {tbl};")
+                    deleted[tbl] = cur.rowcount
+            conn.commit()
+        deleted["total_deleted"] = sum(deleted.values())
+        return deleted
 
 
 class NullLocalDB:
@@ -209,6 +322,9 @@ class NullLocalDB:
     def record_event(self, *args, **kwargs):
         pass
 
+    def record_alert(self, *args, **kwargs):
+        pass
+
     def query_telemetry(self, *args, **kwargs):
         return []
 
@@ -218,8 +334,31 @@ class NullLocalDB:
     def query_events(self, *args, **kwargs):
         return []
 
+    def query_alerts(self, *args, **kwargs):
+        return []
+
     def prune(self, *args, **kwargs):
-        pass
+        return {"total_deleted": 0}
+
+    def vacuum(self, *args, **kwargs):
+        return True
+
+    def clear(self, *args, **kwargs):
+        return {"total_deleted": 0}
+
+    def get_stats(self, *args, **kwargs):
+        return {
+            "db_path": "",
+            "file_size_bytes": 0,
+            "file_size_formatted": "0 KB",
+            "wal_size_bytes": 0,
+            "wal_size_formatted": "0 KB",
+            "table_counts": {},
+            "total_records": 0,
+            "retention_days": 14.0,
+            "earliest_timestamp_ms": None,
+            "latest_timestamp_ms": None,
+        }
 
     def close(self):
         pass

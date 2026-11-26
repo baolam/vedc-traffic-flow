@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Trophy, Camera, Video, PlayCircle, Database, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Network, Sliders, Cpu, ChevronLeft, ChevronRight, Trophy, Camera, Video, PlayCircle, Database, ShieldCheck, Brain } from 'lucide-react';
 import { useActiveScenario } from '../hooks/useActiveScenario';
 import { useLanguage } from '../hooks/useLanguage';
 
@@ -46,8 +46,8 @@ const NAV_GROUPS = (firstNode, isVi = false) => [
   {
     key: 'sim',
     items: [
-      { to: '/flowtheory-demo', label: isVi ? 'Mô Phỏng CTM (FlowTheory)' : 'FlowTheory CTM Demo', icon: PlayCircle },
-      { to: '/benchmark', label: isVi ? 'Báo Cáo Benchmark' : 'Benchmark Campaign', icon: Trophy }
+      { to: '/benchmark', label: isVi ? 'Báo Cáo Benchmark' : 'Benchmark Campaign', icon: Trophy },
+      { to: '/rl-benchmark', label: isVi ? 'Báo Cáo Ứng Dụng RL' : 'RL Benchmark Report', icon: Brain }
     ]
   },
   {

@@ -5,6 +5,7 @@ Supports File streams, Webcams, Raspberry Pi Camera Module 3 / V4L2 devices, and
 
 import time
 import logging
+from pathlib import Path
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
@@ -277,15 +278,41 @@ class SyntheticVideoSource(BaseVideoSource):
         pass
 
 
+def _resolve_video_path(source_str: str) -> Optional[str]:
+    """Helper to resolve video file path from relative, root or input_videos folder."""
+    p = Path(source_str)
+    if p.is_file():
+        return str(p.resolve())
+    curr_dir = Path(__file__).resolve().parent
+    candidates = [
+        curr_dir.parent / "input_videos" / source_str,
+        curr_dir.parent / "input_videos" / f"{source_str}.mp4",
+        curr_dir.parent / source_str,
+        Path.cwd() / source_str,
+        Path.cwd() / "services" / "vision" / "input_videos" / source_str,
+        Path.cwd() / "services" / "vision" / "input_videos" / f"{source_str}.mp4",
+    ]
+    for cand in candidates:
+        if cand.is_file():
+            return str(cand.resolve())
+    return None
+
+
 def create_video_source(source_str: str, width: int = 640, height: int = 480,
                         lens_position: Optional[float] = None,
                         flicker_period_us: int = 10000) -> BaseVideoSource:
     """
     Factory function creating appropriate VideoSource implementation based on source string.
     Supports integer indexes (0, 1) and /dev/video* paths (USB/V4L2 cameras), 'picamera'
-    (CSI Camera Module 3 via Picamera2), 'synthetic', or video files.
+    (CSI Camera Module 3 via Picamera2), 'synthetic', or video files from input_videos.
     """
     source_clean = str(source_str).strip()
+
+    # Check if source_clean resolves to a video file in input_videos or disk
+    resolved_path = _resolve_video_path(source_clean)
+    if resolved_path is not None:
+        return FileVideoSource(resolved_path)
+
     if source_clean.isdigit():
         return PiCameraVideoSource(int(source_clean), width=width, height=height)
     elif source_clean.startswith("/dev/video"):

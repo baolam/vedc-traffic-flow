@@ -90,4 +90,6 @@ def save_roi_config(path: Union[str, Path], camera: str, frame_size: Tuple[int, 
                     nodes: Dict[str, Dict[str, List[List[int]]]]) -> None:
     payload = {"camera": camera, "frame_size": list(frame_size), "nodes": nodes}
     parse_roi_config(payload)  # refuse to write an invalid file
-    Path(path).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

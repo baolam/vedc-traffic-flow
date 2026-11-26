@@ -225,12 +225,121 @@ class TestLocalDB:
         temp_local_db.prune(now_ms=now_ms)
         assert temp_local_db.query_events() == []
 
+    def test_database_stats_and_vacuum_and_clear(self, temp_local_db):
+        temp_local_db.record_event("test_event_1")
+        temp_local_db.record_alert({"alert_id": "a-1", "node_id": "J1", "severity": "WARNING", "tamper_type": "roi_blind", "status": "ACTIVE"})
+        time.sleep(0.3)
+
+        stats = temp_local_db.get_stats()
+        assert stats["total_records"] >= 2
+        assert stats["table_counts"]["event_log"] >= 1
+        assert stats["table_counts"]["alert_log"] >= 1
+        assert "file_size_formatted" in stats
+
+        # Vacuum succeeds
+        assert temp_local_db.vacuum() is True
+
+        # Clear tables
+        cleared = temp_local_db.clear(tables=["event_log", "alert_log"])
+        assert cleared["total_deleted"] >= 2
+        stats_after = temp_local_db.get_stats()
+        assert stats_after["table_counts"]["event_log"] == 0
+        assert stats_after["table_counts"]["alert_log"] == 0
+
     def test_null_local_db_is_a_safe_no_op(self):
         db = NullLocalDB()
         db.record_telemetry({})
         db.record_health({})
         db.record_event("x")
+        db.record_alert({})
         assert db.query_telemetry() == []
         assert db.query_health() == []
         assert db.query_events() == []
+        assert db.query_alerts() == []
+        assert db.vacuum() is True
+        assert db.clear() == {"total_deleted": 0}
+        stats = db.get_stats()
+        assert stats["total_records"] == 0
         db.close()
+
+
+class TestDatabaseEndpoints:
+    def test_database_stats_endpoint(self, client):
+        c, _ = client
+        res = c.get("/api/database/stats", auth=("admin", "secret123"))
+        assert res.status_code == 200
+        data = res.json()
+        assert "total_records" in data
+        assert "table_counts" in data
+
+    def test_database_prune_endpoint(self, client):
+        c, _ = client
+        res = c.post("/api/database/prune", json={"retention_days": 7.0}, auth=("admin", "secret123"))
+        assert res.status_code == 200
+        assert res.json()["ok"] is True
+
+    def test_database_vacuum_endpoint(self, client):
+        c, _ = client
+        res = c.post("/api/database/vacuum", auth=("admin", "secret123"))
+        assert res.status_code == 200
+        assert res.json()["ok"] is True
+
+    def test_database_download_endpoint(self, client):
+        c, _ = client
+        res = c.get("/api/database/download", auth=("admin", "secret123"))
+        assert res.status_code == 200
+        assert len(res.content) > 0
+
+    def test_alerts_endpoint(self, client):
+        c, _ = client
+        res = c.get("/api/alerts", auth=("admin", "secret123"))
+        assert res.status_code == 200
+        data = res.json()
+        assert "active_alerts" in data
+        assert "records" in data
+
+    def test_list_videos_endpoint(self, client):
+        c, _ = client
+        res = c.get("/api/videos", auth=("admin", "secret123"))
+        assert res.status_code == 200
+        data = res.json()
+        assert "current_source" in data
+        assert "videos" in data
+
+    def test_control_video_source_endpoint(self, client):
+        c, supervisor = client
+        res = c.post("/api/control/video-source", json={"video_source": "1.mp4"}, auth=("admin", "secret123"))
+        assert res.status_code == 200
+        assert res.json()["ok"] is True
+        cmd = supervisor.pending_commands.get_nowait()
+        assert cmd == {"type": "update_settings", "fields": {"video_source": "1.mp4"}}
+
+    def test_occlusion_simulation_endpoints(self, client):
+        c, supervisor = client
+        # 1. GET status
+        res = c.get("/api/control/occlusion-simulation", auth=("admin", "secret123"))
+        assert res.status_code == 200
+        data = res.json()
+        assert "mode" in data
+        assert "available_modes" in data
+        assert len(data["available_modes"]) >= 5
+
+        # 2. POST activate simulation
+        res = c.post(
+            "/api/control/occlusion-simulation",
+            json={"mode": "full_occlusion", "target_roi": "J1_N_IN"},
+            auth=("admin", "secret123")
+        )
+        assert res.status_code == 200
+        assert res.json()["ok"] is True
+        assert res.json()["mode"] == "full_occlusion"
+        cmd = supervisor.pending_commands.get_nowait()
+        assert cmd == {"type": "simulate_occlusion", "mode": "full_occlusion", "target_roi": "J1_N_IN"}
+
+        # 3. Invalid mode rejects with HTTP 400
+        bad_res = c.post(
+            "/api/control/occlusion-simulation",
+            json={"mode": "invalid_mode_xyz"},
+            auth=("admin", "secret123")
+        )
+        assert bad_res.status_code == 400

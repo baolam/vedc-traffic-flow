@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 import cv2
 
 try:
-    from vision import build_engine_from_settings
+    from vision import build_engine_from_settings, CameraTamperDetector, CameraAlert
     from vision.roi_config import load_roi_config, validate_against_topology
     from connectivity.hardware_monitor import (get_hardware_diagnostics, get_runtime_hardware,
                                                is_raspberry_pi, read_board_model)
@@ -32,7 +32,7 @@ try:
     from telemetry_window import TelemetryWindow
     from local_dashboard.db import VisionLocalDB, NullLocalDB
 except ImportError:
-    from services.vision.vision import build_engine_from_settings
+    from services.vision.vision import build_engine_from_settings, CameraTamperDetector, CameraAlert
     from services.vision.vision.roi_config import load_roi_config, validate_against_topology
     from services.vision.connectivity.hardware_monitor import (get_hardware_diagnostics, get_runtime_hardware,
                                                                 is_raspberry_pi, read_board_model)
@@ -58,23 +58,27 @@ def resolve_node_ids(cfg) -> List[str]:
     return [cfg.vision_node_id]
 
 
-def health_status(snapshot: Dict[str, Any]) -> str:
-    """DEGRADED as soon as the camera misses a frame; STARTING until the first frame is processed."""
-    if snapshot["consecutive_failures"] > 0:
+def health_status(snapshot: Dict[str, Any], active_alerts: Optional[List[Dict[str, Any]]] = None) -> str:
+    """DEGRADED as soon as the camera misses a frame or active occlusion/tamper alerts exist; STARTING until the first frame is processed."""
+    if snapshot["consecutive_failures"] > 0 or bool(active_alerts):
         return "DEGRADED"
     return "HEALTHY" if snapshot["frames_ok"] > 0 else "STARTING"
 
 
 def build_health(identity: Dict[str, Any], snapshot: Dict[str, Any],
                  hardware: Dict[str, Any], timestamp_ms: int,
-                 phase_sources: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+                 phase_sources: Optional[Dict[str, str]] = None,
+                 active_alerts: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Retained health message carrying measured runtime figures only."""
-    payload = {**identity, "status": health_status(snapshot), "timestamp_ms": timestamp_ms,
-               "runtime": snapshot, "hardware": hardware}
+    payload = {**identity, "status": health_status(snapshot, active_alerts=active_alerts),
+               "timestamp_ms": timestamp_ms, "runtime": snapshot, "hardware": hardware}
     if phase_sources is not None:
         payload["phase_source"] = phase_sources  # per node: esp32_health, or default (not observed)
     if payload["status"] == "DEGRADED":
-        payload["reason"] = f"camera: {snapshot['consecutive_failures']} consecutive frames without image"
+        if snapshot["consecutive_failures"] > 0:
+            payload["reason"] = f"camera: {snapshot['consecutive_failures']} consecutive frames without image"
+        elif active_alerts:
+            payload["reason"] = active_alerts[0].get("reason", "camera occlusion/tampering detected")
     return payload
 
 
@@ -244,6 +248,24 @@ class VisionSupervisor:
         self.last_telemetry: Dict[str, Any] = {}
         self.last_health: Dict[str, Any] = {}
 
+        # Camera Tampering & Occlusion Detection
+        self.tamper_detector = CameraTamperDetector(
+            enabled=cfg.camera_tamper_detection_enabled,
+            min_edge_ratio=cfg.vision_blind_edge_ratio,
+            full_occlusion_edge_ratio=cfg.camera_full_occlusion_edge_ratio,
+            dark_threshold=cfg.camera_dark_threshold,
+            glare_threshold=cfg.camera_glare_threshold,
+            blur_threshold=cfg.camera_blur_threshold,
+            min_duration_s=cfg.camera_tamper_min_duration_s,
+            restore_duration_s=cfg.camera_tamper_restore_duration_s,
+        )
+        self.active_alerts: List[Dict[str, Any]] = []
+        self.occlusion_mode: str = "none"
+        self.occlusion_target_roi: str = ""
+        if hasattr(self.engine, "occlusion_mode"):
+            self.engine.occlusion_mode = "none"
+            self.engine.occlusion_target_roi = ""
+
         # Commands enqueued by the local dashboard's control endpoints (restart/update_settings/
         # reload_roi), applied between ticks on this same thread -- see _apply_pending_commands().
         self.pending_commands: "queue.Queue" = queue.Queue()
@@ -268,9 +290,16 @@ class VisionSupervisor:
         """(Re)builds the perception engine from the current settings + ROI config. Used at
         startup and again by the local dashboard's restart/reload-ROI commands."""
         frame_size = self.roi_config.frame_size if self.roi_config else (640, 480)
-        return build_engine_from_settings(
+        eng = build_engine_from_settings(
             self.cfg, self.node_ids, roi_nodes=self.roi_config.nodes if self.roi_config else None,
             frame_size=frame_size)
+        eng.occlusion_mode = getattr(self, "occlusion_mode", "none")
+        eng.occlusion_target_roi = getattr(self, "occlusion_target_roi", "")
+        return eng
+
+    def get_active_alerts(self) -> List[Dict[str, Any]]:
+        """Returns the list of currently confirmed active camera occlusion/tamper alerts."""
+        return list(self.active_alerts)
 
     def _apply_pending_commands(self) -> None:
         """Drains commands the local dashboard queued from its own thread, applying each on this
@@ -289,10 +318,19 @@ class VisionSupervisor:
                     logger.info("Perception engine restarted via local dashboard.")
                     self.local_db.record_event("restarted")
                 elif kind == "update_settings":
+                    rebuild_needed = False
                     for key, value in cmd.get("fields", {}).items():
                         if key == "confidence_threshold":
                             self.engine.detector.conf_threshold = value
                             self.identity["confidence_threshold"] = value
+                        elif key == "video_source":
+                            self.cfg.video_source = str(value)
+                            self.identity["video_source"] = str(value)
+                            rebuild_needed = True
+                    if rebuild_needed:
+                        new_engine, old_engine = self._build_engine(), self.engine
+                        self.engine = new_engine
+                        old_engine.close()
                     logger.info(f"Runtime settings updated via local dashboard: {cmd.get('fields')}")
                 elif kind == "reload_roi":
                     new_roi_path = cmd.get("roi_config_path", self.roi_config_path)
@@ -307,6 +345,16 @@ class VisionSupervisor:
                     self.identity["roi_sha256"] = self.roi_config.sha256
                     logger.info(f"ROI reloaded via local dashboard: {self.roi_config_path}")
                     self.local_db.record_event("roi_reloaded", {"path": self.roi_config_path})
+                elif kind == "simulate_occlusion":
+                    mode = str(cmd.get("mode", "none"))
+                    target_roi = str(cmd.get("target_roi", ""))
+                    self.occlusion_mode = mode
+                    self.occlusion_target_roi = target_roi
+                    if hasattr(self.engine, "occlusion_mode"):
+                        self.engine.occlusion_mode = mode
+                        self.engine.occlusion_target_roi = target_roi
+                    logger.info(f"Camera occlusion simulation updated: mode={mode}, target_roi={target_roi}")
+                    self.local_db.record_event("occlusion_simulation_changed", {"mode": mode, "target_roi": target_roi})
             except Exception as e:
                 logger.error(f"Failed to apply local dashboard command {cmd}: {e}")
                 self.local_db.record_event("command_failed", {"command": cmd, "error": str(e)})
@@ -317,6 +365,7 @@ class VisionSupervisor:
         period_s = cfg.telemetry_period_s
         sim_time_s = 0.0
         last_health_report = time.time()
+        last_db_prune = time.time()
         frame_interval_s = 1.0 / cfg.vision_fps if cfg.vision_fps > 0 else 0.0
         next_publish = time.monotonic() + period_s
         signal.signal(signal.SIGTERM, _stop_on_sigterm)
@@ -333,20 +382,52 @@ class VisionSupervisor:
                 if frame_info:
                     self.window.add(per_node, frame_info["captured_at_ms"])
                     self.stats.record(True, {k: v for k, v in frame_info.items() if k != "captured_at_ms"})
-                    needs_overlay = (self.live_stream is not None or self.frame_archive.enabled
-                                     or self.local_dashboard is not None)
-                    if needs_overlay and self.engine.last_rendered is not None:
+
+                    if self.engine.last_rendered is not None:
                         raw_frame, assigned_boxes, _all_boxes = self.engine.last_rendered
-                        annotated = draw_sync_overlay(raw_frame, self.engine.roi_manager.rois, assigned_boxes,
-                                                      self.node_ids[0], frame_info["captured_at_ms"])
-                        if self.live_stream is not None:
-                            self.live_stream.push_frame(annotated)
-                        self.frame_archive.maybe_capture(self.node_ids[0], annotated, frame_info["captured_at_ms"])
-                        if self.local_dashboard is not None:
-                            ok, buf = cv2.imencode(".jpg", annotated,
-                                                   [cv2.IMWRITE_JPEG_QUALITY, cfg.local_dashboard_jpeg_quality])
-                            if ok:
-                                self.local_dashboard.update_frame(self.node_ids[0], buf.tobytes())
+                        approaches_by_node = {
+                            n["node_id"]: self.engine.roi_manager.approaches_for_node(n["node_id"])
+                            for n in self.active_nodes
+                        }
+                        active_alert_objs, new_events, _diag = self.tamper_detector.analyze(
+                            raw_frame, self.engine.roi_manager.rois, self.node_ids, approaches_by_node, now_s=time.time()
+                        )
+                        self.active_alerts = [a.to_dict() for a in active_alert_objs]
+
+                        for ev in new_events:
+                            ev_dict = ev.to_dict()
+                            self.local_db.record_alert(ev_dict)
+                            if ev.status == "ACTIVE":
+                                logger.warning(f"🚨 CAMERA ALERT [{ev.severity}] on node {ev.node_id}: {ev.reason}")
+                                if cfg.camera_alert_publish_enabled:
+                                    cur_phase, _ = self.phase_tracker.current(ev.node_id)
+                                    fault_payload = ev.to_signal_fault_event(current_phase=cur_phase)
+                                    self.mqtt.publish_signal_fault(ev.node_id, fault_payload)
+                            elif ev.status == "RESOLVED":
+                                logger.info(f"✅ CAMERA ALERT RESOLVED on node {ev.node_id}: {ev.reason}")
+                                self.local_db.record_event("alert_resolved", ev_dict)
+
+                        needs_overlay = (self.live_stream is not None or self.frame_archive.enabled
+                                         or self.local_dashboard is not None)
+                        if needs_overlay:
+                            annotated = draw_sync_overlay(raw_frame, self.engine.roi_manager.rois, assigned_boxes,
+                                                          self.node_ids[0], frame_info["captured_at_ms"],
+                                                          blind_approaches=self.engine.blind,
+                                                          active_alerts=self.active_alerts)
+                            if self.live_stream is not None:
+                                self.live_stream.push_frame(annotated)
+                            self.frame_archive.maybe_capture(self.node_ids[0], annotated, frame_info["captured_at_ms"])
+                            if self.local_dashboard is not None:
+                                ok, buf = cv2.imencode(".jpg", annotated,
+                                                       [cv2.IMWRITE_JPEG_QUALITY, cfg.local_dashboard_jpeg_quality])
+                                raw_ok, raw_buf = cv2.imencode(".jpg", raw_frame,
+                                                               [cv2.IMWRITE_JPEG_QUALITY, cfg.local_dashboard_jpeg_quality])
+                                if ok:
+                                    self.local_dashboard.update_frame(
+                                        self.node_ids[0],
+                                        buf.tobytes(),
+                                        raw_buf.tobytes() if raw_ok else None
+                                    )
                 else:
                     self.window.add_failure()
                     self.stats.record(False)
@@ -395,10 +476,21 @@ class VisionSupervisor:
                     snapshot = self.stats.snapshot()
                     logger.info(f"Runtime: {format_runtime(snapshot, hardware)}")
                     sources = {node_id: self.phase_tracker.current(node_id)[1] for node_id in self.node_ids}
-                    health = build_health(self.identity, snapshot, hardware, int(time.time() * 1000), sources)
+                    health = build_health(self.identity, snapshot, hardware, int(time.time() * 1000), sources,
+                                          active_alerts=self.active_alerts)
                     self.local_db.record_health(health)
                     self.last_health = health
                     self.mqtt.publish_health(health)
+
+                # Periodic on-device DB maintenance (every 1 hour)
+                if time.time() - last_db_prune >= 3600.0:
+                    last_db_prune = time.time()
+                    try:
+                        pruned = self.local_db.prune()
+                        if pruned.get("total_deleted", 0) > 0:
+                            logger.info(f"Local DB auto-pruned: {pruned}")
+                    except Exception as e:
+                        logger.warning(f"Local DB auto-prune failed: {e}")
 
                 # Cap processing at VISION_FPS without sleeping past the next publish; back off on camera errors
                 wait = min(frame_interval_s - (time.monotonic() - frame_started), next_publish - time.monotonic())

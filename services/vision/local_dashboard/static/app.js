@@ -38,7 +38,7 @@ function showToast(msg, type = "info") {
 // Theme Toggle (Dark / Light Field Mode)
 // ---------------------------------------------------------------------------
 const themeToggleBtn = $("#btn-theme-toggle");
-const currentTheme = localStorage.getItem("edgeflow_vision_theme") || "dark";
+const currentTheme = localStorage.getItem("edgeflow_vision_theme") || "light";
 document.documentElement.setAttribute("data-theme", currentTheme);
 
 if (themeToggleBtn) {
@@ -70,6 +70,10 @@ $$(".switchbank .switch").forEach((btn) => {
       refreshActiveHistory();
     } else if (btn.dataset.tab === "roi") {
       loadRoi();
+    } else if (btn.dataset.tab === "live") {
+      knownNodeIds.forEach(id => {
+        if (window.reloadStream) window.reloadStream(id);
+      });
     }
   });
 });
@@ -92,6 +96,8 @@ $$(".history-subnav .sub-tab").forEach((btn) => {
 // ---------------------------------------------------------------------------
 let knownNodeIds = [];
 let lastStatusData = null;
+let lastSeenAlertIds = new Set();
+let lastObservedStatus = null;
 
 function renderStreams(nodeIds) {
   if (JSON.stringify(nodeIds) === JSON.stringify(knownNodeIds)) return;
@@ -214,13 +220,15 @@ function renderApproachCards(telemetry, approachesMap, approachNamesMap) {
     const speed = data.mean_speed_mps != null ? `${Number(data.mean_speed_mps * 3.6).toFixed(1)} km/h` : "--";
     const displayName = names[appId] || appId;
 
+    const isBlind = data.confidence === 0.0;
+
     return `
-      <div class="approach-card">
+      <div class="approach-card ${isBlind ? 'blind' : ''}">
         <span class="app-name" title="${appId}">${displayName}</span>
         <span class="app-queue">${q} <small style="font-size:0.65rem;font-weight:600;color:var(--text-dim)">xe</small></span>
         <div class="app-meta">
           <span>Vận tốc: ${speed}</span>
-          <span style="color:var(--accent-green)">OK</span>
+          ${isBlind ? '<span style="color:#ef4444;font-weight:700;">CHE KHUẤT</span>' : '<span style="color:var(--accent-green)">OK</span>'}
         </div>
       </div>
     `;
@@ -258,6 +266,79 @@ async function pollStatus() {
     renderStreams(data.node_ids || []);
     renderRuntimeCards(data.stats || {}, data.last_health, data.identity || {});
 
+    // Camera Occlusion & Tamper Alert Banner
+    const activeAlerts = data.active_alerts || [];
+    const alertBanner = $("#camera-alert-banner");
+
+    // Check for newly triggered or resolved alerts and notify operator
+    const currentAlertIds = new Set(activeAlerts.map(a => a.alert_id));
+    for (const a of activeAlerts) {
+      if (!lastSeenAlertIds.has(a.alert_id)) {
+        showToast(`🚨 CẢNH BÁO SỰ CỐ [${(a.tamper_type || "CAMERA").toUpperCase()}]: ${a.reason || "Phát hiện camera bị che khuất!"}`, "error");
+      }
+    }
+    if (lastSeenAlertIds.size > 0 && activeAlerts.length === 0) {
+      showToast("✅ Sự cố che khuất camera đã được khắc phục/giải tỏa bình thường.", "success");
+    }
+    lastSeenAlertIds = currentAlertIds;
+
+    // Service status transitions notification
+    const currentHealthStatus = (data.last_health && data.last_health.status) || "running";
+    if (lastObservedStatus && lastObservedStatus !== currentHealthStatus) {
+      if (currentHealthStatus === "DEGRADED") {
+        showToast(`⚠️ CẢNH BÁO: Dịch vụ chuyển sang trạng thái GIẢM HIỆU NĂNG (${data.last_health?.reason || "Kiểm tra camera"})`, "warning");
+      } else if (currentHealthStatus === "OFFLINE") {
+        showToast("❌ LỖI: Dịch vụ thị giác bị MẤT KẾT NỐI (OFFLINE)!", "error");
+      } else if (currentHealthStatus === "HEALTHY" && (lastObservedStatus === "DEGRADED" || lastObservedStatus === "OFFLINE")) {
+        showToast("✅ Dịch vụ thị giác đã phục hồi trạng thái HOẠT ĐỘNG TỐT.", "success");
+      }
+    }
+    lastObservedStatus = currentHealthStatus;
+
+    if (alertBanner) {
+      if (activeAlerts.length > 0) {
+        alertBanner.classList.remove("hidden");
+        const top = activeAlerts[0];
+        const isCritical = top.severity === "CRITICAL";
+        alertBanner.className = `alert-banner ${isCritical ? "critical" : "warning"}`;
+        const titleEl = $("#alert-title");
+        const descEl = $("#alert-desc");
+        const sevEl = $("#alert-severity");
+        if (titleEl) titleEl.textContent = `CẢNH BÁO: PHÁT HIỆN CAMERA BỊ CHE KHUẤT [${(top.tamper_type || "").toUpperCase()}]`;
+        if (descEl) descEl.textContent = top.reason || "--";
+        if (sevEl) {
+          sevEl.textContent = top.severity || "WARNING";
+          sevEl.className = isCritical ? "badge-critical" : "badge-warning";
+        }
+      } else if (data.last_health && data.last_health.status === "DEGRADED") {
+        alertBanner.classList.remove("hidden");
+        alertBanner.className = "alert-banner warning";
+        const titleEl = $("#alert-title");
+        const descEl = $("#alert-desc");
+        const sevEl = $("#alert-severity");
+        if (titleEl) titleEl.textContent = "CẢNH BÁO: PHẦN CỨNG CAMERA GẶP SỰ CỐ / MẤT TÍN HIỆU";
+        if (descEl) descEl.textContent = data.last_health.reason || "Camera bị gián đoạn hoặc không có khung hình";
+        if (sevEl) {
+          sevEl.textContent = "DEGRADED";
+          sevEl.className = "badge-warning";
+        }
+      } else if (data.last_health && data.last_health.status === "OFFLINE") {
+        alertBanner.classList.remove("hidden");
+        alertBanner.className = "alert-banner critical";
+        const titleEl = $("#alert-title");
+        const descEl = $("#alert-desc");
+        const sevEl = $("#alert-severity");
+        if (titleEl) titleEl.textContent = "LỖI: DỊCH VỤ THỊ GIÁC ĐÃ DỪNG / NGOẠI TUYẾN";
+        if (descEl) descEl.textContent = data.last_health.reason || "Tiến trình giám sát bị ngắt kết nối";
+        if (sevEl) {
+          sevEl.textContent = "OFFLINE";
+          sevEl.className = "badge-critical";
+        }
+      } else {
+        alertBanner.classList.add("hidden");
+      }
+    }
+
     const statusStr = (data.last_health && data.last_health.status) || "running";
     setStatusPill(statusStr);
 
@@ -277,11 +358,64 @@ async function pollStatus() {
       }
     }
 
+    // Sync occlusion simulation status
+    const occMode = data.occlusion_mode || "none";
+    const occBadge = $("#occlusion-status-badge");
+    const occSelect = $("#occlusion-sim-select");
+    const occRoiPicker = $("#occlusion-roi-picker-row");
+    const occRoiSelect = $("#occlusion-roi-select");
+
+    if (occBadge) {
+      if (occMode === "none") {
+        occBadge.textContent = "Bình thường";
+        occBadge.style.color = "var(--accent-green)";
+        occBadge.style.borderColor = "var(--accent-green)";
+      } else {
+        occBadge.textContent = `ĐANG GIẢ LẬP: ${occMode.toUpperCase()}`;
+        occBadge.style.color = "var(--accent-red)";
+        occBadge.style.borderColor = "var(--accent-red)";
+      }
+    }
+    if (occSelect && !occSelect.dataset.userInteracted) {
+      occSelect.value = occMode;
+      if (occRoiPicker) {
+        occRoiPicker.style.display = occMode === "roi_occlusion" ? "flex" : "none";
+      }
+    }
+
+    // Populate ROI approaches into picker if available
+    if (occRoiSelect && data.last_telemetry && data.last_telemetry.approaches) {
+      const apps = data.last_telemetry.approaches;
+      const currentOpts = new Set(Array.from(occRoiSelect.options).map(o => o.value));
+      for (const app of apps) {
+        if (app.approach_id && !currentOpts.has(app.approach_id)) {
+          const opt = document.createElement("option");
+          opt.value = app.approach_id;
+          opt.textContent = `Nhánh: ${app.approach_id}`;
+          occRoiSelect.appendChild(opt);
+        }
+      }
+    }
+
+    // Sync video source badge
+    if (data.identity && data.identity.video_source) {
+      const srcName = String(data.identity.video_source).split("/").pop().split("\\").pop();
+      const vBadge = $("#video-source-badge");
+      if (vBadge) {
+        vBadge.textContent = srcName;
+        vBadge.title = data.identity.video_source;
+      }
+    }
+
     // Refresh telemetry cards
     if (roiState && roiState.approaches) {
       renderApproachCards(data.last_telemetry, roiState.approaches, roiState.approachDisplayNames);
     }
   } catch (e) {
+    if (lastObservedStatus !== "unreachable") {
+      showToast("❌ Mất kết nối tới máy chủ Local Dashboard (Unreachable)", "error");
+      lastObservedStatus = "unreachable";
+    }
     setStatusPill("unreachable");
   }
 }
@@ -323,6 +457,84 @@ if (applyConfBtn && confRange) {
       showToast("Không thể gửi cài đặt đến thiết bị", "error");
     } finally {
       applyConfBtn.disabled = false;
+    }
+  });
+}
+
+// Video Source Switching
+const applyVideoBtn = $("#btn-apply-video-source");
+const videoSelect = $("#video-source-select");
+if (applyVideoBtn && videoSelect) {
+  applyVideoBtn.addEventListener("click", async () => {
+    const src = videoSelect.value;
+    applyVideoBtn.disabled = true;
+    showToast(`Đang chuyển nguồn video sang: ${src}...`, "info");
+    try {
+      const res = await fetch("/api/control/video-source", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ video_source: src }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Đã chuyển nguồn video sang: ${src}`, "success");
+        setTimeout(() => {
+          const activeNode = knownNodeIds[0] || "J1";
+          window.reloadStream(activeNode);
+        }, 1200);
+      } else {
+        showToast(`Đổi nguồn video thất bại: ${data.detail || ""}`, "error");
+      }
+    } catch (err) {
+      showToast("Lỗi kết nối", "error");
+    } finally {
+      applyVideoBtn.disabled = false;
+    }
+  });
+}
+
+// Occlusion Simulation Handling
+const occlusionSelect = $("#occlusion-sim-select");
+const applyOcclusionBtn = $("#btn-apply-occlusion");
+const occlusionRoiPicker = $("#occlusion-roi-picker-row");
+const occlusionRoiSelect = $("#occlusion-roi-select");
+
+if (occlusionSelect) {
+  occlusionSelect.addEventListener("change", () => {
+    occlusionSelect.dataset.userInteracted = "true";
+    if (occlusionRoiPicker) {
+      occlusionRoiPicker.style.display = occlusionSelect.value === "roi_occlusion" ? "flex" : "none";
+    }
+  });
+}
+
+if (applyOcclusionBtn && occlusionSelect) {
+  applyOcclusionBtn.addEventListener("click", async () => {
+    const mode = occlusionSelect.value;
+    const targetRoi = occlusionRoiSelect ? occlusionRoiSelect.value : "";
+    applyOcclusionBtn.disabled = true;
+    showToast(`Đang chuyển trạng thái giả lập sang: ${mode}...`, "info");
+    try {
+      const res = await fetch("/api/control/occlusion-simulation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: mode, target_roi: targetRoi }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        delete occlusionSelect.dataset.userInteracted;
+        if (mode === "none") {
+          showToast("✅ Đã tắt giả lập che khuất. Khôi phục luồng camera bình thường.", "success");
+        } else {
+          showToast(`🚨 Đã kích hoạt giả lập che khuất: [${mode.toUpperCase()}]`, "warning");
+        }
+      } else {
+        showToast(`Lỗi kích hoạt giả lập: ${data.detail || ""}`, "error");
+      }
+    } catch (e) {
+      showToast("Lỗi kết nối khi gửi lệnh giả lập", "error");
+    } finally {
+      applyOcclusionBtn.disabled = false;
     }
   });
 }
@@ -377,9 +589,95 @@ const historyLimitSelect = $("#history-limit-select");
 const refreshHistoryBtn = $("#btn-refresh-history");
 const exportCsvBtn = $("#btn-export-csv");
 
+async function refreshDbStats() {
+  try {
+    const res = await fetch("/api/database/stats");
+    if (!res.ok) return;
+    const stats = await res.json();
+
+    const sizeEl = $("#db-stat-size");
+    if (sizeEl) sizeEl.textContent = stats.file_size_formatted || "--";
+
+    const walEl = $("#db-stat-wal");
+    if (walEl) walEl.textContent = `WAL: ${stats.wal_size_formatted || "0 KB"}`;
+
+    const recEl = $("#db-stat-records");
+    if (recEl) recEl.textContent = (stats.total_records != null ? stats.total_records.toLocaleString() : "--") + " bản ghi";
+
+    const counts = stats.table_counts || {};
+    const countsEl = $("#db-stat-counts");
+    if (countsEl) {
+      countsEl.textContent = `Telem: ${counts.telemetry_history || 0} | Health: ${counts.health_history || 0} | Cảnh báo: ${counts.alert_log || 0}`;
+    }
+
+    const retEl = $("#db-stat-retention");
+    if (retEl) retEl.textContent = `${stats.retention_days || 14} ngày`;
+
+    const pathEl = $("#db-stat-path");
+    if (pathEl) {
+      pathEl.textContent = stats.db_path || "vision.db";
+      pathEl.title = stats.db_path || "";
+    }
+  } catch (err) {
+    console.error("Failed to load db stats:", err);
+  }
+}
+
+// Database Action Buttons
+const dbPruneBtn = $("#btn-db-prune");
+if (dbPruneBtn) {
+  dbPruneBtn.addEventListener("click", async () => {
+    if (!confirm("Bạn có chắc chắn muốn dọn dẹp các bản ghi cũ hơn số ngày lưu trữ không?")) return;
+    dbPruneBtn.disabled = true;
+    try {
+      const res = await fetch("/api/database/prune", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Đã dọn dẹp ${data.deleted?.total_deleted || 0} bản ghi cũ thành công!`, "success");
+        refreshActiveHistory();
+      } else {
+        showToast(`Lỗi dọn dẹp: ${data.detail || "Thất bại"}`, "error");
+      }
+    } catch (e) {
+      showToast("Không thể kết nối đến máy chủ", "error");
+    } finally {
+      dbPruneBtn.disabled = false;
+    }
+  });
+}
+
+const dbVacuumBtn = $("#btn-db-vacuum");
+if (dbVacuumBtn) {
+  dbVacuumBtn.addEventListener("click", async () => {
+    dbVacuumBtn.disabled = true;
+    showToast("Đang tối ưu hóa database (VACUUM)...", "info");
+    try {
+      const res = await fetch("/api/database/vacuum", { method: "POST" });
+      if (res.ok) {
+        showToast("Tối ưu hóa Database (VACUUM) thành công!", "success");
+        refreshDbStats();
+      } else {
+        showToast("Tối ưu hóa thất bại", "error");
+      }
+    } catch (e) {
+      showToast("Lỗi kết nối", "error");
+    } finally {
+      dbVacuumBtn.disabled = false;
+    }
+  });
+}
+
+const dbDownloadBtn = $("#btn-db-download");
+if (dbDownloadBtn) {
+  dbDownloadBtn.addEventListener("click", () => {
+    window.location.href = "/api/database/download";
+    showToast("Đang tải tệp database SQLite xuống...", "info");
+  });
+}
+
 async function refreshActiveHistory() {
   const limit = (historyLimitSelect && historyLimitSelect.value) || 50;
-  await Promise.all([refreshTelemetry(limit), refreshHealth(limit), refreshEvents(limit)]);
+  await Promise.all([refreshDbStats(), refreshTelemetry(limit), refreshHealth(limit), refreshEvents(limit), refreshAlerts(limit)]);
 }
 
 if (refreshHistoryBtn) refreshHistoryBtn.addEventListener("click", refreshActiveHistory);
@@ -465,6 +763,33 @@ async function refreshEvents(limit = 50) {
   `).join("");
 }
 
+async function refreshAlerts(limit = 50) {
+  const res = await fetch(`/api/alerts?limit=${limit}`);
+  const { records } = await res.json();
+  const tbody = $("#alerts-table tbody");
+  if (!tbody) return;
+
+  if (!records || !records.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:24px;">Không có sự cố hoặc cảnh báo camera nào.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = records.map(r => {
+    const sevClass = r.severity === "CRITICAL" ? "offline" : "degraded";
+    const statusClass = r.status === "ACTIVE" ? "offline" : "healthy";
+    return `
+      <tr>
+        <td>${fmtDate(r.timestamp_ms)}</td>
+        <td><strong class="mono">${r.node_id}</strong></td>
+        <td><span class="mono">${r.tamper_type}</span></td>
+        <td><span class="table-badge ${sevClass}">${r.severity}</span></td>
+        <td><span class="table-badge ${statusClass}">${r.status}</span></td>
+        <td>${r.reason || "--"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
 // CSV Export Utility
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener("click", () => {
@@ -509,7 +834,13 @@ let roiState = {
   approachDisplayNames: {},
   polygons: {},
   currentPoints: [],
-  aspectRatio: 16 / 9
+  drawMode: "poly", // "poly" | "rect"
+  mousePos: null, // [x, y] in frame coordinates
+  draggingVertex: null, // { isCurrent, key, index }
+  hoverVertex: null,
+  isBoxing: false,
+  boxStart: null,
+  boxCurrent: null,
 };
 
 function getApproachColor(index) {
@@ -520,6 +851,114 @@ function roiKey() {
   const nodeEl = $("#roi-node");
   const appEl = $("#roi-approach");
   return `${nodeEl ? nodeEl.value : ""}::${appEl ? appEl.value : ""}`;
+}
+
+window.selectRoiApproach = function(approachId) {
+  const appSel = $("#roi-approach");
+  if (appSel) {
+    appSel.value = approachId;
+    roiState.currentPoints = [];
+    redrawRoiCanvas();
+  }
+};
+
+function isPointInPolygon(px, py, polygon) {
+  if (!polygon || polygon.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+    const intersect = ((yi > py) !== (yj > py)) &&
+                      (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function findPolygonAt(frameX, frameY) {
+  const activeNode = $("#roi-node") ? $("#roi-node").value : "";
+  const approaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
+  const currentKey = roiKey();
+
+  // Prioritize activeKey if clicked inside it
+  const currentPoly = roiState.polygons[currentKey];
+  if (currentPoly && currentPoly.length >= 3) {
+    if (isPointInPolygon(frameX, frameY, currentPoly)) {
+      const [, appId] = currentKey.split("::");
+      return { key: currentKey, appId, polygon: currentPoly };
+    }
+  }
+
+  // Check all other approach polygons
+  for (const appId of approaches) {
+    const key = `${activeNode}::${appId}`;
+    if (key === currentKey) continue;
+    const poly = roiState.polygons[key];
+    if (poly && poly.length >= 3) {
+      if (isPointInPolygon(frameX, frameY, poly)) {
+        return { key, appId, polygon: poly };
+      }
+      // Also hit test near centroid badge (within 24px)
+      let cx = 0, cy = 0;
+      poly.forEach(([px, py]) => { cx += px; cy += py; });
+      cx /= poly.length;
+      cy /= poly.length;
+      if (Math.hypot(frameX - cx, frameY - cy) < 24) {
+        return { key, appId, polygon: poly };
+      }
+    }
+  }
+  return null;
+}
+
+function findVertexNear(canvasX, canvasY, thresholdPx = 14) {
+  const canvas = $("#roi-canvas");
+  if (!canvas || !roiState.frameSize[0]) return null;
+  const sx = canvas.width / roiState.frameSize[0];
+  const sy = canvas.height / roiState.frameSize[1];
+
+  // 1. Check current drawing points
+  for (let i = 0; i < roiState.currentPoints.length; i++) {
+    const [px, py] = roiState.currentPoints[i];
+    const cx = px * sx, cy = py * sy;
+    if (Math.hypot(canvasX - cx, canvasY - cy) <= thresholdPx) {
+      return { isCurrent: true, key: null, index: i, cx, cy };
+    }
+  }
+
+  // 2. Check active approach polygon vertices first
+  const activeNode = $("#roi-node") ? $("#roi-node").value : "";
+  const approaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
+  const activeKey = roiKey();
+
+  if (roiState.polygons[activeKey]) {
+    const poly = roiState.polygons[activeKey];
+    for (let i = 0; i < poly.length; i++) {
+      const [px, py] = poly[i];
+      const cx = px * sx, cy = py * sy;
+      if (Math.hypot(canvasX - cx, canvasY - cy) <= thresholdPx) {
+        return { isCurrent: false, key: activeKey, index: i, cx, cy };
+      }
+    }
+  }
+
+  // 3. Check all other approach polygon vertices
+  for (const appId of approaches) {
+    const key = `${activeNode}::${appId}`;
+    if (key === activeKey) continue;
+    const poly = roiState.polygons[key];
+    if (poly) {
+      for (let i = 0; i < poly.length; i++) {
+        const [px, py] = poly[i];
+        const cx = px * sx, cy = py * sy;
+        if (Math.hypot(canvasX - cx, canvasY - cy) <= thresholdPx) {
+          return { isCurrent: false, key, index: i, cx, cy };
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 function updateRoiLegend() {
@@ -540,7 +979,7 @@ function updateRoiLegend() {
     const name = (roiState.approachDisplayNames[activeNode] && roiState.approachDisplayNames[activeNode][a]) || a;
 
     return `
-      <li class="${isCurrent ? 'current' : ''}">
+      <li class="${isCurrent ? 'current' : ''}" onclick="window.selectRoiApproach('${a}')" title="Nhấp để chuyển sang hướng ${name}">
         <div class="roi-legend-left">
           <span class="roi-swatch" style="background:${color}"></span>
           <span>${name} <small class="text-dim">(${a})</small></span>
@@ -565,7 +1004,12 @@ function updateRoiLegend() {
 function redrawRoiCanvas() {
   const canvas = $("#roi-canvas");
   const img = $("#roi-snapshot");
+  const wrap = $("#roi-canvas-wrap");
   if (!canvas || !img) return;
+
+  if (wrap && roiState.frameSize && roiState.frameSize[0] > 0) {
+    wrap.style.aspectRatio = `${roiState.frameSize[0]} / ${roiState.frameSize[1]}`;
+  }
 
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width || roiState.frameSize[0];
@@ -576,11 +1020,16 @@ function redrawRoiCanvas() {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const drawPolygon = (points, strokeColor, fillColor, closed = true) => {
+  const activeNode = $("#roi-node") ? $("#roi-node").value : "";
+  const approaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
+  const currentKey = roiKey();
+
+  const drawPolygon = (points, strokeColor, fillColor, closed = true, isSelected = false, key = null) => {
     if (!points || !points.length) return;
+    ctx.save();
     ctx.strokeStyle = strokeColor;
     ctx.fillStyle = fillColor;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = isSelected ? 3.0 : 2.0;
     ctx.beginPath();
     points.forEach(([x, y], i) => {
       const px = x * sx, py = y * sy;
@@ -592,35 +1041,129 @@ function redrawRoiCanvas() {
     }
     ctx.stroke();
 
-    // Draw vertex handles
-    points.forEach(([x, y]) => {
-      ctx.fillStyle = strokeColor;
+    // Draw vertex handles for all polygons (so any vertex is visibly interactive)
+    points.forEach(([x, y], idx) => {
+      const px = x * sx, py = y * sy;
+      const isHovered = roiState.hoverVertex &&
+                        ((roiState.hoverVertex.isCurrent && points === roiState.currentPoints && roiState.hoverVertex.index === idx) ||
+                         (!roiState.hoverVertex.isCurrent && roiState.hoverVertex.key === key && roiState.hoverVertex.index === idx));
+
       ctx.beginPath();
-      ctx.arc(x * sx, y * sy, 4.5, 0, Math.PI * 2);
+      ctx.arc(px, py, isHovered ? 8.0 : (isSelected ? 6.0 : 4.5), 0, Math.PI * 2);
+      ctx.fillStyle = isHovered ? "#ffffff" : (isSelected ? strokeColor : "#ffffff");
       ctx.fill();
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = isHovered ? strokeColor : (isSelected ? "#ffffff" : strokeColor);
+      ctx.lineWidth = isHovered ? 3.0 : 2.0;
       ctx.stroke();
     });
+    ctx.restore();
   };
 
-  const activeNode = $("#roi-node") ? $("#roi-node").value : "";
-  const approaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
-
-  // Draw completed polygons
+  // 1. Draw completed polygons
   approaches.forEach((appId, idx) => {
     const key = `${activeNode}::${appId}`;
     const poly = roiState.polygons[key];
-    if (poly) {
+    if (poly && poly.length >= 3) {
       const color = getApproachColor(idx);
-      const isSelected = key === roiKey();
-      drawPolygon(poly, color, isSelected ? `${color}40` : `${color}20`, true);
+      const isSelected = key === currentKey;
+      drawPolygon(poly, color, isSelected ? `${color}45` : `${color}18`, true, isSelected, key);
+
+      // Centroid label badge
+      let cx = 0, cy = 0;
+      poly.forEach(([px, py]) => { cx += px * sx; cy += py * sy; });
+      cx /= poly.length;
+      cy /= poly.length;
+
+      const label = (roiState.approachDisplayNames[activeNode] && roiState.approachDisplayNames[activeNode][appId]) || appId;
+      ctx.save();
+      ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+      const tm = ctx.measureText(label);
+      const tw = tm.width;
+      const bw = tw + 14, bh = 20;
+
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = isSelected ? 2.0 : 1.2;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 4);
+      } else {
+        ctx.rect(cx - bw / 2, cy - bh / 2, bw, bh);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, cx, cy);
+      ctx.restore();
     }
   });
 
-  // Draw currently drawing points
+  // 2. Draw currently drawing points (Polygon Mode)
   if (roiState.currentPoints.length) {
-    drawPolygon(roiState.currentPoints, "#ef4444", "rgba(239, 68, 68, 0.25)", false);
+    drawPolygon(roiState.currentPoints, "#ef4444", "rgba(239, 68, 68, 0.25)", false, true);
+
+    // Rubber-band guideline to mouse position
+    if (roiState.mousePos) {
+      const [lastX, lastY] = roiState.currentPoints[roiState.currentPoints.length - 1];
+      const startX = lastX * sx, startY = lastY * sy;
+      let targetX = roiState.mousePos[0] * sx, targetY = roiState.mousePos[1] * sy;
+
+      // Check if near starting point (Snap-to-start)
+      const [firstX, firstY] = roiState.currentPoints[0];
+      const firstCanvasX = firstX * sx, firstCanvasY = firstY * sy;
+      const isNearStart = roiState.currentPoints.length >= 3 &&
+                          Math.hypot(targetX - firstCanvasX, targetY - firstCanvasY) < 18;
+
+      if (isNearStart) {
+        targetX = firstCanvasX;
+        targetY = firstCanvasY;
+      }
+
+      ctx.save();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = isNearStart ? "#22c55e" : "#ef4444";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(targetX, targetY);
+      ctx.stroke();
+
+      if (isNearStart) {
+        // Pulsing close halo
+        ctx.beginPath();
+        ctx.arc(firstCanvasX, firstCanvasY, 12, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(34, 197, 94, 0.35)";
+        ctx.fill();
+        ctx.strokeStyle = "#22c55e";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillStyle = "#22c55e";
+        ctx.fillText("Nhấp để khép góc", firstCanvasX + 16, firstCanvasY - 6);
+      }
+      ctx.restore();
+    }
+  }
+
+  // 3. Draw live box drag preview (Rect Mode)
+  if (roiState.isBoxing && roiState.boxStart && roiState.boxCurrent) {
+    const x1 = roiState.boxStart[0] * sx, y1 = roiState.boxStart[1] * sy;
+    const x2 = roiState.boxCurrent[0] * sx, y2 = roiState.boxCurrent[1] * sy;
+    const bx = Math.min(x1, x2), by = Math.min(y1, y2);
+    const bw = Math.abs(x2 - x1), bh = Math.abs(y2 - y1);
+
+    ctx.save();
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = "#38bdf8";
+    ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.restore();
   }
 
   updateRoiLegend();
@@ -680,12 +1223,41 @@ function refreshRoiSnapshot() {
   const nodeSel = $("#roi-node");
   const nodeId = (nodeSel && nodeSel.value) || knownNodeIds[0] || "J1";
   const img = $("#roi-snapshot");
+  const rawToggle = $("#roi-raw-frame-toggle");
+  const isRaw = rawToggle ? rawToggle.checked : true;
   if (img) {
-    img.src = `/snapshot/${nodeId}?t=${Date.now()}`;
+    img.src = `/snapshot/${nodeId}?raw=${isRaw}&t=${Date.now()}`;
     img.onload = () => {
       redrawRoiCanvas();
     };
   }
+}
+
+const rawFrameToggle = $("#roi-raw-frame-toggle");
+if (rawFrameToggle) {
+  rawFrameToggle.addEventListener("change", () => {
+    refreshRoiSnapshot();
+    showToast(rawFrameToggle.checked ? "Đã chuyển sang ảnh gốc sạch (không viền HUD)" : "Đang hiển thị ảnh kèm khung nhận diện HUD", "info");
+  });
+}
+
+const btnToolPoly = $("#btn-tool-poly");
+const btnToolRect = $("#btn-tool-rect");
+if (btnToolPoly && btnToolRect) {
+  btnToolPoly.addEventListener("click", () => {
+    roiState.drawMode = "poly";
+    btnToolPoly.classList.add("active");
+    btnToolRect.classList.remove("active");
+    showToast("Chế độ: Đa giác tự do (Bấm từng điểm, có đường ngắm preview)", "info");
+  });
+  btnToolRect.addEventListener("click", () => {
+    roiState.drawMode = "rect";
+    btnToolRect.classList.add("active");
+    btnToolPoly.classList.remove("active");
+    roiState.currentPoints = [];
+    redrawRoiCanvas();
+    showToast("Chế độ: Kéo hình hộp (Nhấp giữ và kéo thả chuột để tạo 1 làn đường)", "info");
+  });
 }
 
 const roiNodeSelect = $("#roi-node");
@@ -712,34 +1284,244 @@ if (refreshSnapshotBtn) {
   });
 }
 
-// Canvas Click to Plot Polygon Points
+function markUnsaved(hasChanges) {
+  roiState.hasUnsavedChanges = hasChanges;
+  const saveBtn = $("#btn-roi-save");
+  if (!saveBtn) return;
+  if (hasChanges) {
+    saveBtn.classList.add("btn-save-unsaved");
+    saveBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span>Lưu cấu hình ROI (Cần bấm để áp dụng vào video)</span>
+    `;
+  } else {
+    saveBtn.classList.remove("btn-save-unsaved");
+    saveBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <span>Lưu cấu hình ROI</span>
+    `;
+  }
+}
+
+// Canvas Interactive Event Handling (Click, Drag Vertices, Box Drag, Guidelines)
 const canvas = $("#roi-canvas");
 if (canvas) {
-  canvas.addEventListener("click", (e) => {
+  function getCanvasCoords(e) {
     const rect = canvas.getBoundingClientRect();
     const sx = roiState.frameSize[0] / canvas.width;
     const sy = roiState.frameSize[1] / canvas.height;
-    const x = Math.round((e.clientX - rect.left) * sx);
-    const y = Math.round((e.clientY - rect.top) * sy);
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    const frameX = Math.round(canvasX * sx);
+    const frameY = Math.round(canvasY * sy);
+    return { canvasX, canvasY, frameX, frameY };
+  }
 
-    roiState.currentPoints.push([x, y]);
+  canvas.addEventListener("mousedown", (e) => {
+    if (e.button === 2) return; // Right click handled by contextmenu
+    const { canvasX, canvasY, frameX, frameY } = getCanvasCoords(e);
+
+    // 1. Check if user clicked on any vertex (corner) of ANY bounding box
+    const nearVertex = findVertexNear(canvasX, canvasY, 14);
+    if (nearVertex) {
+      if (!nearVertex.isCurrent && nearVertex.key) {
+        const [, appId] = nearVertex.key.split("::");
+        selectRoiApproach(appId);
+        roiState.currentPoints = [];
+      }
+      roiState.draggingVertex = nearVertex;
+      canvas.style.cursor = "grabbing";
+      return;
+    }
+
+    // 2. Check if user clicked inside ANY existing bounding box / polygon to drag/move it
+    const hitPoly = findPolygonAt(frameX, frameY);
+    if (hitPoly) {
+      selectRoiApproach(hitPoly.appId);
+      roiState.currentPoints = [];
+      roiState.draggingPolygon = {
+        key: hitPoly.key,
+        startX: frameX,
+        startY: frameY,
+        origPoints: hitPoly.polygon.map(p => [...p])
+      };
+      canvas.style.cursor = "move";
+      redrawRoiCanvas();
+      return;
+    }
+
+    // 3. Box Mode: start drag-box on empty space
+    if (roiState.drawMode === "rect") {
+      roiState.isBoxing = true;
+      roiState.boxStart = [frameX, frameY];
+      roiState.boxCurrent = [frameX, frameY];
+      return;
+    }
+
+    // 4. Polygon Mode: Snap to first point to close
+    if (roiState.currentPoints.length >= 3) {
+      const [fx, fy] = roiState.currentPoints[0];
+      const sx = canvas.width / roiState.frameSize[0];
+      const sy = canvas.height / roiState.frameSize[1];
+      if (Math.hypot(canvasX - fx * sx, canvasY - fy * sy) < 18) {
+        const key = roiKey();
+        roiState.polygons[key] = [...roiState.currentPoints];
+        roiState.currentPoints = [];
+        markUnsaved(true);
+        showToast(`Đã khép góc đa giác cho ${key}! Nhớ bấm "Lưu cấu hình ROI" để áp dụng.`, "success");
+        redrawRoiCanvas();
+        return;
+      }
+    }
+
+    // Otherwise add new vertex point
+    roiState.currentPoints.push([frameX, frameY]);
     redrawRoiCanvas();
   });
 
   canvas.addEventListener("mousemove", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const sx = roiState.frameSize[0] / canvas.width;
-    const sy = roiState.frameSize[1] / canvas.height;
-    const x = Math.round((e.clientX - rect.left) * sx);
-    const y = Math.round((e.clientY - rect.top) * sy);
+    const { canvasX, canvasY, frameX, frameY } = getCanvasCoords(e);
+    roiState.mousePos = [frameX, frameY];
 
     const coords = $("#roi-coords");
-    if (coords) coords.textContent = `Tọa độ: X: ${x} | Y: ${y}`;
+    if (coords) coords.textContent = `Tọa độ: X: ${frameX} | Y: ${frameY}`;
+
+    // A. Dragging active vertex
+    if (roiState.draggingVertex) {
+      const { isCurrent, key, index } = roiState.draggingVertex;
+      if (isCurrent && roiState.currentPoints[index]) {
+        roiState.currentPoints[index] = [frameX, frameY];
+      } else if (!isCurrent && roiState.polygons[key] && roiState.polygons[key][index]) {
+        roiState.polygons[key][index] = [frameX, frameY];
+      }
+      markUnsaved(true);
+      redrawRoiCanvas();
+      return;
+    }
+
+    // B. Dragging entire bounding box / polygon
+    if (roiState.draggingPolygon) {
+      const { key, startX, startY, origPoints } = roiState.draggingPolygon;
+      const dx = frameX - startX;
+      const dy = frameY - startY;
+      const [w, h] = roiState.frameSize;
+      roiState.polygons[key] = origPoints.map(([ox, oy]) => [
+        Math.max(0, Math.min(w, ox + dx)),
+        Math.max(0, Math.min(h, oy + dy))
+      ]);
+      markUnsaved(true);
+      redrawRoiCanvas();
+      return;
+    }
+
+    // C. Dragging box rectangle
+    if (roiState.isBoxing) {
+      roiState.boxCurrent = [frameX, frameY];
+      redrawRoiCanvas();
+      return;
+    }
+
+    // D. Hover detection for vertices & bounding boxes
+    const nearVertex = findVertexNear(canvasX, canvasY, 14);
+    roiState.hoverVertex = nearVertex;
+    const hitPoly = findPolygonAt(frameX, frameY);
+
+    if (nearVertex) {
+      canvas.style.cursor = "grab";
+    } else if (hitPoly) {
+      canvas.style.cursor = "move";
+    } else {
+      canvas.style.cursor = roiState.drawMode === "rect" ? "crosshair" : "crosshair";
+    }
+
+    redrawRoiCanvas();
+  });
+
+  canvas.addEventListener("mouseup", (e) => {
+    const { frameX, frameY } = getCanvasCoords(e);
+
+    // End vertex dragging
+    if (roiState.draggingVertex) {
+      roiState.draggingVertex = null;
+      canvas.style.cursor = "crosshair";
+      markUnsaved(true);
+      showToast("Đã đổi tọa độ đỉnh. Hãy bấm 'Lưu cấu hình ROI' để nạp vào video!", "info");
+      redrawRoiCanvas();
+      return;
+    }
+
+    // End polygon dragging
+    if (roiState.draggingPolygon) {
+      roiState.draggingPolygon = null;
+      canvas.style.cursor = "crosshair";
+      markUnsaved(true);
+      showToast("Đã di chuyển vùng làn đường. Hãy bấm 'Lưu cấu hình ROI' để nạp vào video!", "info");
+      redrawRoiCanvas();
+      return;
+    }
+
+    // End box dragging
+    if (roiState.isBoxing) {
+      roiState.isBoxing = false;
+      if (roiState.boxStart) {
+        const [x1, y1] = roiState.boxStart;
+        const [x2, y2] = [frameX, frameY];
+        if (Math.abs(x2 - x1) > 12 && Math.abs(y2 - y1) > 12) {
+          const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+          const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+          const key = roiKey();
+          roiState.polygons[key] = [
+            [minX, minY],
+            [maxX, minY],
+            [maxX, maxY],
+            [minX, maxY]
+          ];
+          markUnsaved(true);
+          showToast(`Đã tạo hình hộp cho hướng ${key}! Bạn có thể kéo 4 đỉnh để nắn chỉnh.`, "success");
+        }
+      }
+      roiState.boxStart = null;
+      roiState.boxCurrent = null;
+      redrawRoiCanvas();
+    }
+  });
+
+  // Right-click cancels any unfinished drawing points
+  canvas.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (roiState.currentPoints.length > 0) {
+      roiState.currentPoints = [];
+      showToast("Đã hủy các điểm đang vẽ dở", "info");
+      redrawRoiCanvas();
+    }
+  });
+
+  canvas.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    if (roiState.currentPoints.length < 3) {
+      showToast("Một vùng đa giác cần tối thiểu 3 điểm đỉnh để khép góc", "info");
+      return;
+    }
+    const key = roiKey();
+    roiState.polygons[key] = [...roiState.currentPoints];
+    roiState.currentPoints = [];
+    markUnsaved(true);
+    showToast(`Đã khép góc đa giác cho ${key}! Nhớ bấm "Lưu cấu hình ROI" để áp dụng.`, "success");
+    redrawRoiCanvas();
   });
 
   canvas.addEventListener("mouseleave", () => {
+    roiState.mousePos = null;
+    roiState.hoverVertex = null;
+    if (roiState.isBoxing) {
+      roiState.isBoxing = false;
+      roiState.boxStart = null;
+      roiState.boxCurrent = null;
+    }
+    roiState.draggingVertex = null;
     const coords = $("#roi-coords");
     if (coords) coords.textContent = "Tọa độ: X: -- | Y: --";
+    redrawRoiCanvas();
   });
 }
 
@@ -758,6 +1540,7 @@ if (closePolyBtn) {
     const key = roiKey();
     roiState.polygons[key] = [...roiState.currentPoints];
     roiState.currentPoints = [];
+    markUnsaved(true);
     showToast(`Đã khép góc đa giác cho ${key}. Tiếp tục chọn hướng kế tiếp!`, "success");
     redrawRoiCanvas();
   });
@@ -776,6 +1559,30 @@ if (undoBtn) {
   });
 }
 
+// Cancel In-progress Drawing Points (Button & Escape Key)
+const cancelDrawBtn = $("#btn-roi-cancel-draw");
+if (cancelDrawBtn) {
+  cancelDrawBtn.addEventListener("click", () => {
+    if (roiState.currentPoints.length > 0) {
+      roiState.currentPoints = [];
+      showToast("Đã hủy các điểm đang vẽ dở", "info");
+      redrawRoiCanvas();
+    } else {
+      showToast("Không có điểm nào đang vẽ dở", "info");
+    }
+  });
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (roiState.currentPoints.length > 0) {
+      roiState.currentPoints = [];
+      showToast("Đã hủy các điểm đang vẽ dở", "info");
+      redrawRoiCanvas();
+    }
+  }
+});
+
 // Clear Single Approach Polygon
 const clearApproachBtn = $("#btn-roi-clear-approach");
 if (clearApproachBtn) {
@@ -784,12 +1591,110 @@ if (clearApproachBtn) {
     if (roiState.polygons[key]) {
       delete roiState.polygons[key];
       roiState.currentPoints = [];
+      markUnsaved(true);
       showToast(`Đã xóa vùng đa giác của ${key}`, "info");
       redrawRoiCanvas();
     } else {
       roiState.currentPoints = [];
       redrawRoiCanvas();
     }
+  });
+}
+
+// Clear All Polygons for Current Node
+const clearAllBtn = $("#btn-roi-clear-all");
+if (clearAllBtn) {
+  clearAllBtn.addEventListener("click", () => {
+    const activeNode = $("#roi-node") ? $("#roi-node").value : "";
+    if (!confirm(`Bạn có chắc muốn xóa tất cả các vùng đa giác của nút ${activeNode}?`)) return;
+
+    const approaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
+    approaches.forEach(a => {
+      delete roiState.polygons[`${activeNode}::${a}`];
+    });
+    roiState.currentPoints = [];
+    markUnsaved(true);
+    showToast(`Đã xóa tất cả vùng của nút ${activeNode}`, "info");
+    redrawRoiCanvas();
+  });
+}
+
+// Preset Default Layout (Auto-generate 4 standard perspective lanes)
+const presetBtn = $("#btn-roi-preset-default");
+if (presetBtn) {
+  presetBtn.addEventListener("click", () => {
+    const activeNode = $("#roi-node") ? $("#roi-node").value : "";
+    const approaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
+    if (!approaches.length) {
+      showToast("Không tìm thấy danh sách hướng tiếp cận", "error");
+      return;
+    }
+
+    const [w, h] = roiState.frameSize;
+    const presets = {};
+
+    // Map cardinal approaches if matching names exist
+    const findApp = (needle) => approaches.find(a => a.toLowerCase().includes(needle));
+    const northApp = findApp("_n_") || approaches[0];
+    const southApp = findApp("_s_") || approaches[1] || approaches[0];
+    const eastApp = findApp("_e_") || approaches[2] || approaches[0];
+    const westApp = findApp("_w_") || approaches[3] || approaches[0];
+
+    if (northApp) {
+      presets[northApp] = [
+        [Math.round(w * 0.25), 0],
+        [Math.round(w * 0.75), 0],
+        [Math.round(w * 0.62), Math.round(h * 0.38)],
+        [Math.round(w * 0.38), Math.round(h * 0.38)],
+      ];
+    }
+    if (southApp && southApp !== northApp) {
+      presets[southApp] = [
+        [Math.round(w * 0.35), Math.round(h * 0.62)],
+        [Math.round(w * 0.65), Math.round(h * 0.62)],
+        [Math.round(w * 0.85), h],
+        [Math.round(w * 0.15), h],
+      ];
+    }
+    if (westApp && westApp !== northApp && westApp !== southApp) {
+      presets[westApp] = [
+        [0, Math.round(h * 0.25)],
+        [Math.round(w * 0.38), Math.round(h * 0.38)],
+        [Math.round(w * 0.35), Math.round(h * 0.62)],
+        [0, Math.round(h * 0.75)],
+      ];
+    }
+    if (eastApp && eastApp !== northApp && eastApp !== southApp && eastApp !== westApp) {
+      presets[eastApp] = [
+        [Math.round(w * 0.62), Math.round(h * 0.38)],
+        [w, Math.round(h * 0.25)],
+        [w, Math.round(h * 0.75)],
+        [Math.round(w * 0.65), Math.round(h * 0.62)],
+      ];
+    }
+
+    // Fallback for any unmapped approaches
+    approaches.forEach((app, idx) => {
+      if (!presets[app]) {
+        const top = Math.round((idx / approaches.length) * h);
+        const bottom = Math.round(((idx + 1) / approaches.length) * h);
+        presets[app] = [
+          [Math.round(w * 0.2), top],
+          [Math.round(w * 0.8), top],
+          [Math.round(w * 0.8), bottom],
+          [Math.round(w * 0.2), bottom],
+        ];
+      }
+    });
+
+    Object.entries(presets).forEach(([app, poly]) => {
+      roiState.polygons[`${activeNode}::${app}`] = poly;
+    });
+
+    roiState.currentPoints = [];
+    markUnsaved(true);
+    showToast(`Đã thiết lập mẫu mặc định cho nút ${activeNode}! Bạn có thể kéo các đỉnh để điều chỉnh.`, "success");
+    redrawRoiCanvas();
   });
 }
 
@@ -804,17 +1709,30 @@ if (saveRoiBtn) {
       nodes[nodeId][approachId] = points;
     });
 
-    const activeNode = $("#roi-node") ? $("#roi-node").value : "";
-    const activeApproaches = (roiState.approaches && roiState.approaches[activeNode]) || [];
-    const missing = activeApproaches.filter(a => !(nodes[activeNode] && nodes[activeNode][a]));
-
-    if (missing.length > 0) {
-      showToast(`Còn thiếu đa giác cho các hướng: ${missing.join(", ")}`, "error");
-      return;
+    // Auto-fill any missing approach with safe default so save never fails
+    const [w, h] = roiState.frameSize;
+    const nodeIds = Object.keys(roiState.approaches || {});
+    for (const nId of nodeIds) {
+      nodes[nId] = nodes[nId] || {};
+      const expectedApps = roiState.approaches[nId] || [];
+      const missing = expectedApps.filter(a => !(nodes[nId] && nodes[nId][a]));
+      if (missing.length > 0) {
+        missing.forEach((app, idx) => {
+          const top = Math.round((idx / missing.length) * h * 0.4);
+          const bottom = Math.round(((idx + 1) / missing.length) * h * 0.4);
+          nodes[nId][app] = [
+            [Math.round(w * 0.2), top],
+            [Math.round(w * 0.8), top],
+            [Math.round(w * 0.8), bottom],
+            [Math.round(w * 0.2), bottom]
+          ];
+          roiState.polygons[`${nId}::${app}`] = nodes[nId][app];
+        });
+      }
     }
 
     saveRoiBtn.disabled = true;
-    saveRoiBtn.textContent = "Đang lưu...";
+    saveRoiBtn.textContent = "Đang lưu & nạp vào video...";
 
     try {
       const res = await fetch("/api/roi", {
@@ -829,7 +1747,14 @@ if (saveRoiBtn) {
 
       const body = await res.json();
       if (res.ok) {
-        showToast(`Đã lưu cấu hình ROI thành công vào ${body.path}! Pipeline đang nạp lại.`, "success");
+        markUnsaved(false);
+        showToast(`Đã lưu cấu hình ROI thành công! Video nhận diện đang nạp lại tọa độ mới.`, "success");
+        setTimeout(() => {
+          knownNodeIds.forEach(id => {
+            if (window.reloadStream) window.reloadStream(id);
+          });
+          refreshRoiSnapshot();
+        }, 1200);
       } else {
         showToast(`Lỗi lưu ROI: ${body.detail}`, "error");
       }
@@ -837,7 +1762,7 @@ if (saveRoiBtn) {
       showToast("Lỗi kết nối khi lưu cấu hình ROI", "error");
     } finally {
       saveRoiBtn.disabled = false;
-      saveRoiBtn.textContent = "Lưu cấu hình ROI";
+      markUnsaved(roiState.hasUnsavedChanges || false);
     }
   });
 }

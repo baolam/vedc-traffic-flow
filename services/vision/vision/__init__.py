@@ -19,6 +19,8 @@ from .roi_config import (
 )
 from .metrics_extractor import MetricsExtractor
 from .engine import PerceptionEngine, build_engine_from_settings
+from .roi_visibility import RoiVisibility
+from .camera_tamper import CameraAlert, CameraTamperDetector
 
 __all__ = [
     "VehicleDetector",
@@ -33,4 +35,7 @@ __all__ = [
     "MetricsExtractor",
     "PerceptionEngine",
     "build_engine_from_settings",
+    "RoiVisibility",
+    "CameraAlert",
+    "CameraTamperDetector",
 ]

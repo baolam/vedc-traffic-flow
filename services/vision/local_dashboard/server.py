@@ -29,8 +29,9 @@ for _p in (str(_vision_dir), str(_repo_dir)):
         sys.path.insert(0, _p)
 
 from fastapi import FastAPI, HTTPException, Request, Depends
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 try:
@@ -62,18 +63,24 @@ _TUNABLE_SETTINGS = {
 
 class FrameCache:
     """Thread-safe {node_id: latest JPEG bytes}, written by the tick loop (supervisor.py, which
-    already depends on cv2 and does the encoding), read by the /stream and /snapshot routes."""
+    already depends on cv2 and does the encoding), read by the /stream and /snapshot routes.
+    Supports storing both annotated HUD frames and pristine raw frames (for ROI calibration)."""
 
     def __init__(self):
         self._lock = threading.Lock()
         self._frames: Dict[str, bytes] = {}
+        self._raw_frames: Dict[str, bytes] = {}
 
-    def update(self, node_id: str, jpeg_bytes: bytes):
+    def update(self, node_id: str, jpeg_bytes: bytes, raw_bytes: Optional[bytes] = None):
         with self._lock:
             self._frames[node_id] = jpeg_bytes
+            if raw_bytes is not None:
+                self._raw_frames[node_id] = raw_bytes
 
-    def get(self, node_id: str) -> Optional[bytes]:
+    def get(self, node_id: str, raw: bool = False) -> Optional[bytes]:
         with self._lock:
+            if raw and node_id in self._raw_frames:
+                return self._raw_frames[node_id]
             return self._frames.get(node_id)
 
 
@@ -82,6 +89,13 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
     identity, stats, node_ids, active_nodes, cfg, pending_commands, local_db, roi_config,
     roi_config_path, last_telemetry, last_health)."""
     app = FastAPI(title="EdgeFlow AI -- Vision Local Dashboard")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     security = HTTPBasic(auto_error=False)
 
     def require_auth(credentials: Optional[HTTPBasicCredentials] = Depends(security)):
@@ -111,13 +125,23 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
 
     @app.get("/api/status")
     def status(_: None = Depends(require_auth)):
+        active_alerts = supervisor.get_active_alerts() if hasattr(supervisor, "get_active_alerts") else []
         return {
             "identity": supervisor.identity,
             "stats": supervisor.stats.snapshot(),
             "node_ids": supervisor.node_ids,
             "last_telemetry": supervisor.last_telemetry,
             "last_health": supervisor.last_health,
+            "active_alerts": active_alerts,
+            "occlusion_mode": getattr(supervisor, "occlusion_mode", "none"),
+            "occlusion_target_roi": getattr(supervisor, "occlusion_target_roi", ""),
         }
+
+    @app.get("/api/alerts")
+    def alerts(node_id: Optional[str] = None, limit: int = 100, _: None = Depends(require_auth)):
+        active_alerts = supervisor.get_active_alerts() if hasattr(supervisor, "get_active_alerts") else []
+        records = supervisor.local_db.query_alerts(node_id=node_id, limit=limit)
+        return {"active_alerts": active_alerts, "records": records}
 
     @app.get("/api/telemetry/history")
     def telemetry_history(node_id: Optional[str] = None, limit: int = 100, _: None = Depends(require_auth)):
@@ -130,6 +154,57 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
     @app.get("/api/events")
     def events(limit: int = 100, _: None = Depends(require_auth)):
         return {"records": supervisor.local_db.query_events(limit=limit)}
+
+    @app.get("/api/database/stats")
+    def database_stats(_: None = Depends(require_auth)):
+        stats = supervisor.local_db.get_stats() if hasattr(supervisor.local_db, "get_stats") else {}
+        return stats
+
+    @app.post("/api/database/prune")
+    async def database_prune(request: Request, _: None = Depends(require_auth)):
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        retention_days = body.get("retention_days")
+        if retention_days is not None:
+            try:
+                retention_days = float(retention_days)
+            except (ValueError, TypeError):
+                raise HTTPException(status_code=400, detail="retention_days must be a number.")
+        deleted = supervisor.local_db.prune(retention_days=retention_days)
+        supervisor.local_db.record_event("database_pruned", {"deleted": deleted, "retention_days": retention_days})
+        return {"ok": True, "deleted": deleted}
+
+    @app.post("/api/database/vacuum")
+    def database_vacuum(_: None = Depends(require_auth)):
+        success = supervisor.local_db.vacuum() if hasattr(supervisor.local_db, "vacuum") else False
+        supervisor.local_db.record_event("database_vacuumed", {"success": success})
+        return {"ok": success}
+
+    @app.get("/api/database/download")
+    def database_download(_: None = Depends(require_auth)):
+        db_path = getattr(supervisor.local_db, "db_path", None)
+        if not db_path or not Path(db_path).is_file():
+            raise HTTPException(status_code=404, detail="Database file not found on device.")
+        return FileResponse(
+            path=str(db_path),
+            media_type="application/x-sqlite3",
+            filename=f"vision_local_{int(time.time())}.db",
+        )
+
+    @app.post("/api/database/clear")
+    async def database_clear(request: Request, _: None = Depends(require_auth)):
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        tables = body.get("tables")
+        deleted = supervisor.local_db.clear(tables=tables) if hasattr(supervisor.local_db, "clear") else {}
+        supervisor.local_db.record_event("database_cleared", {"tables": tables, "deleted": deleted})
+        return {"ok": True, "deleted": deleted}
 
     @app.get("/stream/{node_id}")
     def stream(node_id: str, _: None = Depends(require_auth)):
@@ -148,8 +223,8 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
         return StreamingResponse(gen(), media_type=f"multipart/x-mixed-replace; boundary={boundary}")
 
     @app.get("/snapshot/{node_id}")
-    def snapshot(node_id: str, _: None = Depends(require_auth)):
-        jpeg = frame_cache.get(node_id)
+    def snapshot(node_id: str, raw: bool = False, _: None = Depends(require_auth)):
+        jpeg = frame_cache.get(node_id, raw=raw)
         if jpeg is None:
             raise HTTPException(status_code=404, detail="No frame captured yet.")
         return StreamingResponse(iter([jpeg]), media_type="image/jpeg")
@@ -159,6 +234,34 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
         supervisor.pending_commands.put({"type": "restart"})
         supervisor.local_db.record_event("restart_requested")
         return {"ok": True}
+
+    @app.get("/api/videos")
+    def list_input_videos(_: None = Depends(require_auth)):
+        """Lists available video files in services/vision/input_videos."""
+        v_dir = Path(__file__).resolve().parents[1] / "input_videos"
+        videos = []
+        if v_dir.is_dir():
+            for f in sorted(v_dir.glob("*.mp4")):
+                videos.append({
+                    "name": f.name,
+                    "path": str(f.resolve()),
+                    "size_mb": round(f.stat().st_size / (1024 * 1024), 1)
+                })
+        current = getattr(supervisor.cfg, "video_source", "synthetic")
+        return {
+            "current_source": current,
+            "videos": videos,
+        }
+
+    @app.post("/api/control/video-source")
+    async def control_video_source(request: Request, _: None = Depends(require_auth)):
+        body = await request.json()
+        new_source = body.get("video_source")
+        if not new_source:
+            raise HTTPException(status_code=400, detail="video_source is required.")
+        supervisor.pending_commands.put({"type": "update_settings", "fields": {"video_source": str(new_source)}})
+        supervisor.local_db.record_event("video_source_changed", {"source": str(new_source)})
+        return {"ok": True, "video_source": str(new_source)}
 
     @app.post("/api/control/settings")
     async def control_settings(request: Request, _: None = Depends(require_auth)):
@@ -181,9 +284,57 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
         supervisor.local_db.record_event("settings_updated", fields)
         return {"ok": True, "applied": fields}
 
+    @app.get("/api/control/occlusion-simulation")
+    def get_occlusion_simulation(_: None = Depends(require_auth)):
+        return {
+            "mode": getattr(supervisor, "occlusion_mode", "none"),
+            "target_roi": getattr(supervisor, "occlusion_target_roi", ""),
+            "available_modes": [
+                {"id": "none", "name_vi": "Bình thường (Tắt giả lập)", "name_en": "Normal (Simulation Off)"},
+                {"id": "full_occlusion", "name_vi": "Che kín ống kính (Băng keo / Bìa / Tay)", "name_en": "Full Lens Covered"},
+                {"id": "blackout", "name_vi": "Mất sáng toàn phần (Màn đêm / Mất tín hiệu)", "name_en": "Total Blackout"},
+                {"id": "glare", "name_vi": "Lóa sáng cực độ (Đèn pha / Chiếu trực tiếp)", "name_en": "Blinding Glare"},
+                {"id": "blur", "name_vi": "Mờ đục / Mất nét (Sương mù / Đọng nước)", "name_en": "Severe Blur / Defocus"},
+                {"id": "roi_occlusion", "name_vi": "Che khuất nhánh đường (Vật cản ROI)", "name_en": "Partial Approach ROI Blind"}
+            ]
+        }
+
+    @app.post("/api/control/occlusion-simulation")
+    async def post_occlusion_simulation(request: Request, _: None = Depends(require_auth)):
+        body = await request.json()
+        mode = body.get("mode", "none")
+        valid_modes = {"none", "full_occlusion", "blackout", "glare", "blur", "roi_occlusion"}
+        if mode not in valid_modes:
+            raise HTTPException(status_code=400, detail=f"Invalid occlusion mode '{mode}'. Valid modes: {valid_modes}")
+        target_roi = str(body.get("target_roi", ""))
+        supervisor.pending_commands.put({"type": "simulate_occlusion", "mode": mode, "target_roi": target_roi})
+        if hasattr(supervisor, "occlusion_mode"):
+            supervisor.occlusion_mode = mode
+            supervisor.occlusion_target_roi = target_roi
+        return {"ok": True, "mode": mode, "target_roi": target_roi}
+
     @app.get("/api/roi")
     def get_roi(_: None = Depends(require_auth)):
         roi = supervisor.roi_config
+        if roi:
+            current_nodes = {nid: {a: [list(p) for p in poly] for a, poly in apps.items()}
+                             for nid, apps in roi.nodes.items()}
+            camera_name = roi.camera
+            frame_sz = list(roi.frame_size)
+        else:
+            # Fallback to active engine in-memory ROIs so UI is prepopulated with all approaches
+            current_nodes = {}
+            default_nid = supervisor.node_ids[0] if supervisor.node_ids else "J1"
+            roi_mgr = getattr(supervisor.engine, "roi_manager", None)
+            rois = getattr(roi_mgr, "rois", {}) if roi_mgr else {}
+            for app_id, r in rois.items():
+                nid = r.get("node_id", default_nid)
+                poly = r.get("polygon")
+                if poly is not None:
+                    current_nodes.setdefault(nid, {})[app_id] = [list(map(int, pt)) for pt in poly]
+            camera_name = "default"
+            frame_sz = [supervisor.engine.width, supervisor.engine.height]
+
         return {
             "frame_size": [supervisor.engine.width, supervisor.engine.height],
             "approaches": {n["node_id"]: n.get("approaches", []) for n in supervisor.active_nodes},
@@ -199,11 +350,10 @@ def create_app(supervisor: Any, frame_cache: FrameCache) -> FastAPI:
                 for n in supervisor.active_nodes
             },
             "current": {
-                "camera": roi.camera,
-                "frame_size": list(roi.frame_size),
-                "nodes": {nid: {a: [list(p) for p in poly] for a, poly in apps.items()}
-                          for nid, apps in roi.nodes.items()},
-            } if roi else None,
+                "camera": camera_name,
+                "frame_size": frame_sz,
+                "nodes": current_nodes,
+            } if current_nodes else None,
         }
 
     @app.post("/api/roi")
@@ -245,8 +395,8 @@ class LocalDashboardServer:
     def start(self):
         self._thread.start()
 
-    def update_frame(self, node_id: str, jpeg_bytes: bytes):
-        self.frame_cache.update(node_id, jpeg_bytes)
+    def update_frame(self, node_id: str, jpeg_bytes: bytes, raw_bytes: Optional[bytes] = None):
+        self.frame_cache.update(node_id, jpeg_bytes, raw_bytes)
 
     def stop(self):
         self._server.should_exit = True

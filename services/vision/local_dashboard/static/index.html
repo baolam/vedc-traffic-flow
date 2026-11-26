@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -71,6 +71,16 @@
         <div class="live-layout">
           <!-- Main Camera View Column -->
           <div class="camera-col">
+            <!-- Camera Occlusion & Tamper Alert Banner -->
+            <div id="camera-alert-banner" class="alert-banner hidden">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <strong id="alert-title">CẢNH BÁO: PHÁT HIỆN CAMERA BỊ CHE KHUẤT / MẤT TẦM NHÌN</strong>
+                <p id="alert-desc">--</p>
+              </div>
+              <span class="badge-critical" id="alert-severity">CRITICAL</span>
+            </div>
+
             <div id="streams" class="streams-container"></div>
 
             <!-- Approach Telemetry Bar (Quick Traffic Summary) -->
@@ -120,6 +130,52 @@
                   <span class="field-hint">Điều chỉnh độ nhạy mô hình YOLOv8 trên camera thực tế</span>
                 </div>
 
+                <div class="field-group" style="margin-top:12px;">
+                  <div class="field-label-row">
+                    <label for="video-source-select">Nguồn Video (Input Source)</label>
+                    <span id="video-source-badge" class="val-pill mono" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="Nguồn hiện tại">--</span>
+                  </div>
+                  <div class="field-input-row">
+                    <select id="video-source-select" class="select-sm">
+                      <option value="1.mp4">1.mp4 (Video sa bàn 1)</option>
+                      <option value="2.mp4">2.mp4 (Video sa bàn 2)</option>
+                      <option value="3.mp4">3.mp4 (Video sa bàn 3)</option>
+                      <option value="4.mp4">4.mp4 (Video sa bàn 4)</option>
+                      <option value="5.mp4">5.mp4 (Video sa bàn 5)</option>
+                      <option value="synthetic">Synthetic (Mô phỏng)</option>
+                      <option value="0">Camera USB / Webcam (0)</option>
+                      <option value="picamera">Raspberry Pi CSI (Picamera2)</option>
+                    </select>
+                    <button id="btn-apply-video-source" class="btn-secondary" title="Chuyển nguồn video đầu vào">Đổi nguồn</button>
+                  </div>
+                  <span class="field-hint">Chọn video từ thư mục input_videos hoặc nguồn camera</span>
+                </div>
+
+                <!-- Camera Tamper & Occlusion Simulation Control -->
+                <div class="field-group" style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border);">
+                  <div class="field-label-row">
+                    <label for="occlusion-sim-select">🧪 Giả Lập Camera Bị Che Khuất</label>
+                    <span id="occlusion-status-badge" class="val-pill" style="color:var(--accent-green);border-color:var(--accent-green);">Bình thường</span>
+                  </div>
+                  <div class="field-input-row">
+                    <select id="occlusion-sim-select" class="select-sm">
+                      <option value="none">-- Tầm nhìn bình thường (Normal) --</option>
+                      <option value="full_occlusion">Che kín ống kính (Full Lens Covered)</option>
+                      <option value="blackout">Mất sáng toàn phần (Total Blackout)</option>
+                      <option value="glare">Lóa sáng cực độ (Blinding Glare)</option>
+                      <option value="blur">Mờ đục / Mất nét (Severe Blur / Defocus)</option>
+                      <option value="roi_occlusion">Che khuất nhánh đường (ROI Blind)</option>
+                    </select>
+                    <button id="btn-apply-occlusion" class="btn-secondary" title="Kích hoạt chế độ giả lập che khuất">Kích hoạt</button>
+                  </div>
+                  <div id="occlusion-roi-picker-row" class="field-input-row" style="margin-top:6px; display:none;">
+                    <select id="occlusion-roi-select" class="select-sm">
+                      <option value="">-- Mặc định (Tất cả ROIs) --</option>
+                    </select>
+                  </div>
+                  <span class="field-hint">Thử nghiệm thuật toán phát hiện che khuất tự động (Canny, Laplacian, Độ sáng)</span>
+                </div>
+
                 <div class="divider"></div>
 
                 <div class="action-buttons-group">
@@ -142,11 +198,58 @@
 
       <!-- TAB 2: HISTORY (ON-DEVICE SQLITE DB) -->
       <section id="tab-history" class="tab-panel" role="tabpanel">
+        <!-- Database Storage & Health Overview -->
+        <div class="card db-panel">
+          <div class="card-head">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              <h3>Cơ sở dữ liệu nội bộ (Local SQLite WAL)</h3>
+            </div>
+            <div class="db-actions">
+              <button id="btn-db-prune" class="btn-secondary btn-sm" title="Dọn dẹp bản ghi cũ hơn số ngày lưu trữ">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Dọn dẹp (Prune)</span>
+              </button>
+              <button id="btn-db-vacuum" class="btn-secondary btn-sm" title="Thu hồi dung lượng trống và chống phân mảnh">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Tối ưu (VACUUM)</span>
+              </button>
+              <button id="btn-db-download" class="btn-primary btn-sm" title="Tải xuống tệp database SQLite">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Tải file DB (.sqlite)</span>
+              </button>
+            </div>
+          </div>
+          <div class="db-metrics-grid">
+            <div class="db-metric-tile">
+              <span class="tile-label">Dung lượng Database</span>
+              <span id="db-stat-size" class="tile-val mono">-- KB</span>
+              <span id="db-stat-wal" class="tile-sub">WAL: --</span>
+            </div>
+            <div class="db-metric-tile">
+              <span class="tile-label">Tổng số bản ghi</span>
+              <span id="db-stat-records" class="tile-val mono">--</span>
+              <span id="db-stat-counts" class="tile-sub">Telem: -- | Health: --</span>
+            </div>
+            <div class="db-metric-tile">
+              <span class="tile-label">Thời hạn lưu trữ</span>
+              <span id="db-stat-retention" class="tile-val">14 ngày</span>
+              <span class="tile-sub">Tự động dọn dẹp hàng giờ</span>
+            </div>
+            <div class="db-metric-tile">
+              <span class="tile-label">Đường dẫn tệp</span>
+              <span id="db-stat-path" class="tile-val-sm mono text-truncate" title="Đường dẫn DB">--</span>
+              <span class="tile-sub text-success">SQLite 3 (WAL mode)</span>
+            </div>
+          </div>
+        </div>
+
         <div class="history-tabs-nav">
           <div class="history-subnav">
             <button class="sub-tab active" data-subtab="telemetry">Telemetry Queue</button>
             <button class="sub-tab" data-subtab="health">Sức khỏe (Health)</button>
             <button class="sub-tab" data-subtab="events">Nhật ký sự kiện (Events)</button>
+            <button class="sub-tab" data-subtab="alerts">Cảnh báo sự cố camera</button>
           </div>
           <div class="history-actions">
             <select id="history-limit-select" class="select-sm">
@@ -216,6 +319,25 @@
               </table>
             </div>
           </div>
+
+          <!-- Subtab 4: Alerts -->
+          <div id="subpanel-alerts" class="subpanel">
+            <div class="table-wrapper">
+              <table id="alerts-table" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Thời điểm</th>
+                    <th>Nút giao</th>
+                    <th>Loại cảnh báo</th>
+                    <th>Mức độ</th>
+                    <th>Trạng thái</th>
+                    <th>Nguyên nhân / Chi tiết</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -250,11 +372,30 @@
                 <label for="roi-approach">Hướng tiếp cận:</label>
                 <select id="roi-approach" class="select-sm"></select>
               </div>
-              <div class="tool-btn-group">
-                <button id="btn-roi-close-polygon" class="btn-secondary btn-sm" title="Đóng vòng đa giác hiện tại">Khép góc (&ge;3 điểm)</button>
-                <button id="btn-roi-undo" class="btn-secondary btn-sm" title="Xóa điểm vừa vẽ">Hoàn tác điểm</button>
-                <button id="btn-roi-clear-approach" class="btn-danger btn-sm" title="Xóa đa giác của hướng này">Xóa vùng này</button>
+              <div class="tool-group mode-toggle-group">
+                <label>Cách vẽ:</label>
+                <button id="btn-tool-poly" class="btn-toggle active" title="Bấm từng điểm đa giác, có đường ngắm preview">Đa giác</button>
+                <button id="btn-tool-rect" class="btn-toggle" title="Nhấp giữ và kéo thả tạo hình hộp 1 chạm">Kéo hình hộp</button>
               </div>
+              <div class="tool-group">
+                <label class="checkbox-inline" title="Sử dụng ảnh sạch nguyên bản không chứa khung HUD cũ">
+                  <input type="checkbox" id="roi-raw-frame-toggle" checked />
+                  <span>Ảnh sạch (không HUD)</span>
+                </label>
+              </div>
+              <div class="tool-btn-group">
+                <button id="btn-roi-preset-default" class="btn-secondary btn-sm" title="Tạo tự động 4 vùng làn đường mẫu">Mẫu mặc định</button>
+                <button id="btn-roi-close-polygon" class="btn-secondary btn-sm" title="Đóng vòng đa giác hiện tại">Khép góc (&ge;3 điểm)</button>
+                <button id="btn-roi-undo" class="btn-secondary btn-sm" title="Xóa điểm vừa vẽ">Hoàn tác</button>
+                <button id="btn-roi-cancel-draw" class="btn-secondary btn-sm" title="Hủy bỏ các điểm đang vẽ dở (hoặc nhấn phím Esc / Chuột phải)">Hủy vẽ (Esc)</button>
+                <button id="btn-roi-clear-approach" class="btn-secondary btn-sm" title="Xóa đa giác của hướng này">Xóa hướng này</button>
+                <button id="btn-roi-clear-all" class="btn-danger btn-sm" title="Xóa toàn bộ các vùng của nút này">Xóa tất cả</button>
+              </div>
+            </div>
+
+            <div class="roi-tip-bar">
+              <span class="tip-icon">💡</span>
+              <span><strong>Mẹo:</strong> Rê chuột và <strong>kéo các điểm đỉnh</strong> để nắn chỉnh tọa độ bất kỳ lúc nào. Hoặc chọn <strong>"Kéo hình hộp"</strong> để kéo thả 1 làn đường cực nhanh!</span>
             </div>
 
             <div id="roi-canvas-wrap" class="roi-canvas-container">

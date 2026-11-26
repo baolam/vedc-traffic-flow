@@ -42,6 +42,8 @@ class PerceptionEngine:
         self.height = height
         self.node_id = None
         self.node_ids: Optional[List[str]] = None
+        self.occlusion_mode: str = "none"
+        self.occlusion_target_roi: str = ""
         # Last processed frame: wall-clock capture time (ms) plus measured stage timings; {} on failure.
         # A processed frame reports confidence 1.0; main.TelemetryWindow lowers it when frames are lost.
         self.last_frame: Dict[str, Any] = {}
@@ -88,6 +90,70 @@ class PerceptionEngine:
 
         return self.detector.detect(frame)[0]
 
+    def _apply_occlusion_simulation(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Applies a simulated physical camera tampering or occlusion condition to the frame.
+        Faithfully models physical obstruction, lens blackout, blinding glare, severe blur, or ROI obstruction.
+        """
+        mode = getattr(self, "occlusion_mode", "none")
+        if mode == "none" or frame is None or frame.size == 0:
+            return frame
+
+        h, w = frame.shape[:2]
+        out = frame.copy()
+
+        if mode == "full_occlusion":
+            # Physical obstruction (e.g. hand, cardboard, tape directly covering lens):
+            # Flat matte dark surface with subtle sensor noise, near-zero Canny edges, low texture variance
+            noise = np.random.normal(loc=20.0, scale=2.0, size=(h, w, 3)).clip(0, 255).astype(np.uint8)
+            return noise
+
+        elif mode == "blackout":
+            # Complete blackout (power loss / sensor disconnected / pitch darkness):
+            # Extremely low brightness (< 3.0), no edge information
+            return np.random.randint(0, 4, size=(h, w, 3), dtype=np.uint8)
+
+        elif mode == "glare":
+            # High-beam glare / direct sunlight / blinding laser:
+            # Saturated overexposure wash, mean brightness > 250
+            glare_base = np.full((h, w, 3), 252, dtype=np.uint8)
+            noise = np.random.randint(0, 4, size=(h, w, 3), dtype=np.uint8)
+            return cv2.add(glare_base, noise)
+
+        elif mode == "blur":
+            # Severe defocus / condensation / dense fog / dirty smudge:
+            # Extreme Gaussian blur destroying high-frequency edge information (Laplacian variance < 10)
+            ksize = 85
+            return cv2.GaussianBlur(out, (ksize, ksize), 35.0)
+
+        elif mode == "roi_occlusion":
+            # Partial occlusion: physical obstruction covering a specific approach ROI
+            target_roi = getattr(self, "occlusion_target_roi", "")
+            rois_to_cover = []
+            if target_roi and target_roi in self.roi_manager.rois:
+                rois_to_cover.append(target_roi)
+            elif self.roi_manager.rois:
+                rois_to_cover.append(next(iter(self.roi_manager.rois.keys())))
+
+            for app_id in rois_to_cover:
+                roi_data = self.roi_manager.rois.get(app_id, {})
+                pts = roi_data.get("polygon")
+                if pts is None:
+                    coords = roi_data.get("coordinates", [])
+                    if len(coords) >= 3:
+                        pts = np.array(coords, dtype=np.int32).reshape((-1, 1, 2))
+                if pts is not None and len(pts) >= 3:
+                    pts = np.asarray(pts, dtype=np.int32).reshape((-1, 1, 2))
+                    # Cover the approach with an opaque matte obstruction patch (e.g. tape or physical block)
+                    # Expand bounding box slightly (6px) so the perimeter seam falls outside the ROI interior
+                    x, y, bw, bh = cv2.boundingRect(pts)
+                    y0, y1 = max(0, y - 6), min(h, y + bh + 6)
+                    x0, x1 = max(0, x - 6), min(w, x + bw + 6)
+                    out[y0:y1, x0:x1] = (25, 25, 25)
+            return out
+
+        return out
+
     def process_frame(self, node_id: str = "J1") -> List[Dict[str, Any]]:
         """
         Reads one frame, runs vehicle detection, maps to ROIs, and returns approach metrics list.
@@ -103,6 +169,8 @@ class PerceptionEngine:
         # ROI coordinates use the configured frame geometry, including real videos.
         if frame.shape[:2] != (self.height, self.width):
             frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+
+        frame = self._apply_occlusion_simulation(frame)
 
         # Detect vehicle boxes
         boxes = self.detect_vehicles(frame)
@@ -141,6 +209,8 @@ class PerceptionEngine:
                       "capture_ms": (time.perf_counter() - started) * 1000}
         if frame.shape[:2] != (self.height, self.width):
             frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+
+        frame = self._apply_occlusion_simulation(frame)
 
         all_boxes = self.detect_vehicles(frame)
         assigned_boxes = self.roi_manager.assign_detections(all_boxes)

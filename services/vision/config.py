@@ -62,6 +62,23 @@ class Settings(BaseSettings):
     # Share of Canny edge pixels below which a ROI counts as covered/blind for a frame (roi_visibility.py);
     # its approach then reports confidence 0 instead of "0 vehicles". 0 = off.
     vision_blind_edge_ratio: float = Field(default_factory=lambda: float(os.getenv("VISION_BLIND_EDGE_RATIO", "0.01")))
+    # Camera Tampering & Occlusion Detection (camera_tamper.py)
+    camera_tamper_detection_enabled: bool = Field(
+        default_factory=lambda: os.getenv("CAMERA_TAMPER_DETECTION_ENABLED", "true").lower() == "true")
+    camera_full_occlusion_edge_ratio: float = Field(
+        default_factory=lambda: float(os.getenv("CAMERA_FULL_OCCLUSION_EDGE_RATIO", "0.004")))
+    camera_dark_threshold: float = Field(
+        default_factory=lambda: float(os.getenv("CAMERA_DARK_THRESHOLD", "12.0")))
+    camera_glare_threshold: float = Field(
+        default_factory=lambda: float(os.getenv("CAMERA_GLARE_THRESHOLD", "245.0")))
+    camera_blur_threshold: float = Field(
+        default_factory=lambda: float(os.getenv("CAMERA_BLUR_THRESHOLD", "15.0")))
+    camera_tamper_min_duration_s: float = Field(
+        default_factory=lambda: float(os.getenv("CAMERA_TAMPER_MIN_DURATION_S", "2.0")))
+    camera_tamper_restore_duration_s: float = Field(
+        default_factory=lambda: float(os.getenv("CAMERA_TAMPER_RESTORE_DURATION_S", "1.5")))
+    camera_alert_publish_enabled: bool = Field(
+        default_factory=lambda: os.getenv("CAMERA_ALERT_PUBLISH_ENABLED", "true").lower() == "true")
 
     # Raspberry Pi 5 & Edge Hardware Telemetry Reporting
     enable_hardware_telemetry: bool = Field(default_factory=lambda: os.getenv("ENABLE_HARDWARE_TELEMETRY", "true").lower() == "true")

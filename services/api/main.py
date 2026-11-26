@@ -154,6 +154,8 @@ LIVE_STATE: Dict[str, Any] = {
     "control_acks": {},
     "health": {},
     "signal_faults": {},
+    "recent_mqtt_packets": [],
+    "last_mqtt_received_ms": None,
     "actuator_config": {
         "yellow_duration_s": 3.0,
         "all_red_duration_s": 2.0,
@@ -230,6 +232,34 @@ ws_manager = ConnectionManager()
 MQTT_CLIENT = None
 
 
+def record_mqtt_packet(
+    topic: str,
+    payload: Dict[str, Any],
+    kind: str,
+    node_id: str,
+    level: str = "INFO",
+    summary: str = ""
+) -> None:
+    """Store raw structured MQTT packets in a bounded ring buffer for live inspection on the dashboard."""
+    now_ms = int(time.time() * 1000)
+    now_str = time.strftime("%H:%M:%S")
+    pkt = {
+        "id": f"pkt-{now_ms}-{len(LIVE_STATE.get('recent_mqtt_packets', []))}",
+        "topic": topic,
+        "kind": kind,
+        "node_id": node_id,
+        "timestamp": now_str,
+        "timestamp_ms": now_ms,
+        "payload": payload,
+        "summary": summary,
+        "level": level,
+    }
+    packets = LIVE_STATE.setdefault("recent_mqtt_packets", [])
+    packets.insert(0, pkt)
+    LIVE_STATE["recent_mqtt_packets"] = packets[:150]
+    LIVE_STATE["last_mqtt_received_ms"] = now_ms
+
+
 def ingest_health_message(topic: str, payload: Dict[str, Any]) -> None:
     """Store a health/heartbeat message; its age is measured from when the API received it."""
     svc_id = payload.get("service_name") or payload.get("node_id") or topic.split("/")[-1]
@@ -255,6 +285,14 @@ def ingest_health_message(topic: str, payload: Dict[str, Any]) -> None:
     events = LIVE_STATE.setdefault("recent_inter_service_events", [])
     events.insert(0, event_msg)
     LIVE_STATE["recent_inter_service_events"] = events[:50]
+    record_mqtt_packet(
+        topic=topic,
+        payload=payload,
+        kind="health",
+        node_id=svc_id,
+        level="INFO" if payload.get("status") in ("HEALTHY", "GREEN") else "WARNING",
+        summary=f"Heartbeat [{svc_id}] -> Status: {payload.get('status', 'OK')}, Clearance: {payload.get('clearance', 'GREEN')}"
+    )
 
     # Health-based reconciliation: if an override was requested and the physical device is
     # already in that phase/clearance, confirm it without waiting for an isolated MQTT ACK packet.
@@ -375,6 +413,7 @@ def _start_mqtt_listener():
                     LIVE_STATE.setdefault("signal_faults", {})[node_id] = payload
 
                     severity = str(payload.get("severity", "WARNING")).upper()
+                    summary_text = f"FAULT [{node_id}] [{category.upper()}]: {payload.get('fault_code')} - {payload.get('reason', '')}"
                     event_msg = {
                         "timestamp": now_str,
                         "timestamp_ms": now_ms,
@@ -383,11 +422,19 @@ def _start_mqtt_listener():
                         "target": "SYSTEM",
                         "topic": topic,
                         "level": "CRITICAL" if severity == "CRITICAL" else "WARNING",
-                        "message": f"FAULT [{node_id}] [{category.upper()}]: {payload.get('fault_code')} - {payload.get('reason', '')}"
+                        "message": summary_text
                     }
                     events = LIVE_STATE.setdefault("recent_inter_service_events", [])
                     events.insert(0, event_msg)
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
+                    record_mqtt_packet(
+                        topic=topic,
+                        payload=payload,
+                        kind="fault",
+                        node_id=node_id,
+                        level="CRITICAL" if severity == "CRITICAL" else "WARNING",
+                        summary=summary_text
+                    )
 
                 elif topic.startswith(f"{topics.PREFIX_V1}/telemetry/"):
                     node_id = payload.get("node_id") or topic.split("/")[-1]
@@ -396,6 +443,7 @@ def _start_mqtt_listener():
                     LIVE_STATE["last_updated_ms"] = now_ms
                     db.record_telemetry(payload)
                     total_q = sum(a.get("queue_vehicles", 0) for a in payload.get("approaches", []))
+                    summary_text = f"Telemetry Node {node_id}: Phase={payload.get('current_phase_id')}, Queue={round(total_q, 1)} veh, Flow={round(sum(a.get('flow_veh_per_s', 0) for a in payload.get('approaches', [])), 2)} veh/s"
                     event_msg = {
                         "timestamp": now_str,
                         "timestamp_ms": now_ms,
@@ -404,17 +452,26 @@ def _start_mqtt_listener():
                         "target": "MQTT",
                         "topic": topic,
                         "level": "INFO",
-                        "message": f"Telemetry Node {node_id}: Phase={payload.get('current_phase_id')}, Queue={round(total_q, 1)} veh, Flow={round(sum(a.get('flow_veh_per_s', 0) for a in payload.get('approaches', [])), 2)} veh/s"
+                        "message": summary_text
                     }
                     events = LIVE_STATE.setdefault("recent_inter_service_events", [])
                     events.insert(0, event_msg)
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
+                    record_mqtt_packet(
+                        topic=topic,
+                        payload=payload,
+                        kind="telemetry",
+                        node_id=node_id,
+                        level="INFO",
+                        summary=summary_text
+                    )
 
                 elif topic.startswith(f"{topics.PREFIX_V1}/control/") and topic.endswith("/command"):
                     note_command_controller(payload)
                     parts = topic.split("/")
                     node_id = parts[3] if len(parts) > 3 else payload.get("node_id", "unknown")
                     db.record_command(payload)
+                    summary_text = f"ControlCommand [{node_id}] -> Target Phase: {payload.get('target_phase_id')} (Decision interval: 5s)"
                     event_msg = {
                         "timestamp": now_str,
                         "timestamp_ms": now_ms,
@@ -423,11 +480,19 @@ def _start_mqtt_listener():
                         "target": "ACTUATOR",
                         "topic": topic,
                         "level": "INFO",
-                        "message": f"ControlCommand [{node_id}] -> Target Phase: {payload.get('target_phase_id')} (Decision interval: 5s)"
+                        "message": summary_text
                     }
                     events = LIVE_STATE.setdefault("recent_inter_service_events", [])
                     events.insert(0, event_msg)
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
+                    record_mqtt_packet(
+                        topic=topic,
+                        payload=payload,
+                        kind="command",
+                        node_id=node_id,
+                        level="INFO",
+                        summary=summary_text
+                    )
 
                 elif (topic.startswith(f"{topics.PREFIX_V1}/control/") and topic.endswith("/ack")) or topic.startswith(f"{topics.PREFIX_V1}/control_ack/"):
                     node_id = payload.get("node_id") or (topic.split("/")[3] if len(topic.split("/")) > 3 else "unknown")
@@ -438,6 +503,7 @@ def _start_mqtt_listener():
                         LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
                         track_override_ack(node_id, payload)
                     db.record_ack(payload)
+                    summary_text = f"ControlACK [{node_id}] -> Status: {payload.get('status')} | {payload.get('reason', '')}"
                     event_msg = {
                         "timestamp": now_str,
                         "timestamp_ms": now_ms,
@@ -446,11 +512,19 @@ def _start_mqtt_listener():
                         "target": "SYSTEM",
                         "topic": topic,
                         "level": "SUCCESS" if payload.get("status") == "APPLIED" else "WARNING",
-                        "message": f"ControlACK [{node_id}] -> Status: {payload.get('status')} | {payload.get('reason', '')}"
+                        "message": summary_text
                     }
                     events = LIVE_STATE.setdefault("recent_inter_service_events", [])
                     events.insert(0, event_msg)
                     LIVE_STATE["recent_inter_service_events"] = events[:50]
+                    record_mqtt_packet(
+                        topic=topic,
+                        payload=payload,
+                        kind="ack",
+                        node_id=node_id,
+                        level="SUCCESS" if payload.get("status") == "APPLIED" else "WARNING",
+                        summary=summary_text
+                    )
 
                 elif topic.startswith(f"{topics.PREFIX_V1}/health/") or topic.startswith("edgex/health/"):
                     ingest_health_message(topic, payload)
@@ -517,7 +591,9 @@ def api_root():
             "/api/v1/approaches",
             "/api/v1/vision/live-frame",
             "/api/v1/vision/live-status/{node_id}",
-            "/api/v1/vision/live-stream/{node_id}"
+            "/api/v1/vision/live-stream/{node_id}",
+            "/api/v1/vision/rpi-stream-proxy/{node_id}",
+            "/api/v1/mqtt/packets"
         ]
     }
 
@@ -567,6 +643,15 @@ def ingest_telemetry(payload: Union[Dict[str, Any], List[Dict[str, Any]]]):
     payload["_ingested_at_ms"] = now_ms
     LIVE_STATE["nodes"][node_id] = payload
     LIVE_STATE["last_updated_ms"] = now_ms
+    total_q = sum(a.get("queue_vehicles", 0) for a in payload.get("approaches", []))
+    record_mqtt_packet(
+        topic=topics.get_telemetry_topic(node_id),
+        payload=payload,
+        kind="telemetry",
+        node_id=node_id,
+        level="INFO",
+        summary=f"Telemetry [{node_id}]: Phase={payload.get('current_phase_id')}, Queue={round(total_q, 1)} veh"
+    )
     return {"status": "SUCCESS", "node_id": node_id, "timestamp_ms": LIVE_STATE["last_updated_ms"]}
 
 @app.post("/api/v1/control_ack")
@@ -582,6 +667,14 @@ def ingest_control_ack(payload: Dict[str, Any]):
     LIVE_STATE["control_acks"][node_id].insert(0, payload)
     LIVE_STATE["control_acks"][node_id] = LIVE_STATE["control_acks"][node_id][:20]
     track_override_ack(node_id, payload)
+    record_mqtt_packet(
+        topic=topics.get_ack_topic(node_id),
+        payload=payload,
+        kind="ack",
+        node_id=node_id,
+        level="SUCCESS" if payload.get("status") == "APPLIED" else "WARNING",
+        summary=f"ControlACK [{node_id}] -> Status: {payload.get('status')} | {payload.get('reason', '')}"
+    )
     return {"status": "SUCCESS", "node_id": node_id}
 
 @app.post("/api/v1/health/heartbeat")
@@ -630,12 +723,27 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
     all_zero_conf = bool(approaches) and all(a.get("confidence", 1.0) <= 0.0 for a in approaches)
     avg_conf = (sum(a.get("confidence", 1.0) for a in approaches) / len(approaches)) if approaches else 0.0
 
+    active_fault = LIVE_STATE.get("signal_faults", {}).get(nid)
+    is_disconnect_fault = bool(active_fault and active_fault.get("fault_code") == "ERR_DISCONNECT_TIMEOUT")
+    is_camera_fault = bool(
+        active_fault and (
+            active_fault.get("category") == "camera"
+            or active_fault.get("fault_code") in ("ERR_CAMERA_OCCLUSION", "ERR_CAMERA_BLIND")
+        )
+    )
+
     # Simulation mode telemetry (SUMO / virtual sensor) has no real camera to lose signal on, so the
     # CAMERA half never degrades to SIGNAL_LOST/ZERO_CONFIDENCE for it. The ACTUATOR half must NOT be
     # short-circuited here though: run_demo.py --hardware mirrors ControlCommand to a REAL ESP32 while
     # still reporting source_type "simulation" (the telemetry itself comes from SUMO, not a camera) --
     # that board's genuine SAFE_STOP/HEARTBEAT_LOST/FALLBACK health must still surface on the dashboard.
-    if source_type == "simulation":
+    # EXCEPTION: If the physical edge device has an active ERR_DISCONNECT_TIMEOUT fault (e.g. Raspberry Pi
+    # vision process stopped or unreachable), the physical disconnect MUST take precedence over simulated data.
+    if is_disconnect_fault:
+        camera_status = "SIGNAL_LOST"
+    elif is_camera_fault:
+        camera_status = "ZERO_CONFIDENCE"
+    elif source_type == "simulation":
         camera_status = "ACTIVE"
     elif age_ms is None or age_ms > TELEMETRY_STALE_TIMEOUT_MS:
         camera_status = "SIGNAL_LOST"
@@ -708,18 +816,20 @@ def compute_node_device_health(nid: str, node_live: Optional[Dict[str, Any]], no
 
     return {
         "overall_status": overall_status,
+        "active_fault": active_fault,
         "camera": {
             "status": camera_status,
             "confidence": round(avg_conf, 2),
             "last_seen_ms_ago": age_ms,
-            "zero_confidence": all_zero_conf
+            "zero_confidence": all_zero_conf or is_camera_fault,
+            "active_fault": active_fault if (is_camera_fault or (active_fault and active_fault.get("category") == "camera")) else None
         },
         "actuator": {
             "status": actuator_status,
             "last_heartbeat_ms_ago": actuator_age_ms,
             "clearance": clearance,
             "raw_safe_stop": raw_safe_stop,
-            "active_fault": active_fault
+            "active_fault": active_fault if (active_fault and not is_camera_fault and not is_disconnect_fault) else None
         }
     }
 
@@ -771,7 +881,9 @@ def get_network_state():
             "last_updated_ms": LIVE_STATE["last_updated_ms"],
             "total_nodes": len(nodes_info),
             "nodes": nodes_info,
-            "signal_faults": LIVE_STATE.get("signal_faults", {})
+            "signal_faults": LIVE_STATE.get("signal_faults", {}),
+            "recent_mqtt_packets": LIVE_STATE.get("recent_mqtt_packets", [])[:30],
+            "mqtt_connected": bool(MQTT_CLIENT and getattr(MQTT_CLIENT, "is_connected", lambda: False)())
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed retrieving network state: {str(e)}")
@@ -1099,38 +1211,55 @@ def get_system_aggregated_reports():
     mean_wait_s = max(2.5, round(total_q * 1.8 / node_count, 1))
     throughput_per_min = max(45, round(total_flow * 60, 1))
 
-    # Evaluate active alerts based on physical criteria (congestion, health, hardware faults)
+    # Evaluate active alerts based on physical criteria (congestion, health, hardware faults, camera faults)
     active_alerts = []
-    # Hardware faults reported by ESP32 (Conflict Guard, Hardware Defect / GPIO short)
+    # Faults reported by Edge/Vision/ESP32 (Conflict Guard, Hardware Defect, Disconnects, Camera Occlusion)
     for nid, fault in LIVE_STATE.get("signal_faults", {}).items():
         f_code = fault.get("fault_code", "")
-        if f_code in ("ERR_HARDWARE_DEFECT", "ERR_CONFLICT_GUARD_TRIGGERED"):
+        cat = fault.get("category", "")
+        if f_code in ("ERR_CAMERA_OCCLUSION", "ERR_CAMERA_BLIND") or cat == "camera":
             active_alerts.append({
                 "node_id": nid,
-                "type": "HARDWARE_FAULT",
+                "type": "CAMERA_FAULT",
+                "fault_code": f_code,
+                "severity": fault.get("severity", "CRITICAL"),
+                "message": f"Sự cố camera tại {nid}: {f_code} - {fault.get('reason', 'Ống kính bị che khuất hoặc mất tầm nhìn')}"
+            })
+        elif f_code in ("ERR_HARDWARE_DEFECT", "ERR_CONFLICT_GUARD_TRIGGERED", "ERR_DISCONNECT_TIMEOUT"):
+            active_alerts.append({
+                "node_id": nid,
+                "type": "HARDWARE_FAULT" if "DEFECT" in f_code else "DEVICE_DISCONNECT",
                 "fault_code": f_code,
                 "severity": "CRITICAL",
-                "message": f"Hardware Fault at {nid}: {f_code} - {fault.get('reason', '')}"
+                "message": f"Sự cố phần cứng tại {nid}: {f_code} - {fault.get('reason', '')}"
             })
 
-    for nid, n in nodes.items():
-        apps = n.get("approaches", [])
-        q = sum(a.get("queue_vehicles", 0) for a in apps)
-        status = n.get("status", "ONLINE")
-        if q > 12:
+    # Evaluate dynamic liveness for each active topology node
+    now_ms = int(time.time() * 1000)
+    for n in topo.get("nodes", []):
+        nid = n["node_id"]
+        node_live = LIVE_STATE.get("nodes", {}).get(nid)
+        health_meta = compute_node_device_health(nid, node_live, now_ms)
+        h_status = health_meta["overall_status"]
+        cam_status = health_meta.get("camera", {}).get("status")
+        
+        if (cam_status == "SIGNAL_LOST" or h_status in ("SIGNAL_LOST", "HEARTBEAT_LOST", "ACTUATOR_FAULT")) and not any(a.get("node_id") == nid and "DISCONNECT" in a.get("type", "") for a in active_alerts):
             active_alerts.append({
                 "node_id": nid,
-                "type": "CONGESTION",
-                "severity": "WARNING" if q <= 18 else "CRITICAL",
-                "message": f"Elevated queue ({round(q, 1)} veh) detected at station {nid}"
+                "type": "DEVICE_DISCONNECT",
+                "severity": "CRITICAL",
+                "message": f"Cảnh báo: Trạm {nid} (Raspberry Pi/Camera) bị mất tín hiệu ({h_status})"
             })
-        elif status not in ("ONLINE", "NORMAL"):
-            active_alerts.append({
-                "node_id": nid,
-                "type": "DEVICE_HEALTH",
-                "severity": "WARNING",
-                "message": f"Station {nid} health state: {status}"
-            })
+        elif node_live:
+            apps = node_live.get("approaches", [])
+            q = sum(a.get("queue_vehicles", 0) for a in apps)
+            if q > 12:
+                active_alerts.append({
+                    "node_id": nid,
+                    "type": "CONGESTION",
+                    "severity": "WARNING" if q <= 18 else "CRITICAL",
+                    "message": f"Elevated queue ({round(q, 1)} veh) detected at station {nid}"
+                })
 
     _default_logs_now_ms = int(time.time() * 1000)
     default_system_logs = [
@@ -1178,6 +1307,8 @@ def get_system_aggregated_reports():
         "safety_compliance_rate_pct": 100.0,
         "safety_compliance_detail": "Zero conflicting green phases; clearance transitions (Yellow 3s + All-Red 2s) enforced by ActuatorStateMachine.",
         "recent_system_logs": recent_logs,
+        "recent_mqtt_packets": LIVE_STATE.get("recent_mqtt_packets", [])[:50],
+        "mqtt_connected": bool(MQTT_CLIENT and getattr(MQTT_CLIENT, "is_connected", lambda: False)()),
         "timestamp_ms": int(time.time() * 1000)
     }
 
@@ -1194,6 +1325,126 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
         ws_manager.disconnect(websocket)
     except Exception:
         ws_manager.disconnect(websocket)
+
+@app.get("/api/v1/mqtt/packets")
+def get_mqtt_packets(
+    kind: Optional[str] = None,
+    node_id: Optional[str] = None,
+    limit: int = 50
+):
+    """
+    Returns real-time structured MQTT packets received across telemetry, health, commands, acks, and faults.
+    """
+    packets = LIVE_STATE.get("recent_mqtt_packets", [])
+    if kind and kind.upper() != "ALL":
+        k_upper = kind.upper()
+        packets = [p for p in packets if p.get("kind", "").upper() == k_upper]
+    if node_id:
+        packets = [p for p in packets if str(p.get("node_id", "")).upper() == node_id.upper()]
+
+    is_connected = bool(MQTT_CLIENT and getattr(MQTT_CLIENT, "is_connected", lambda: False)())
+    mqtt_host = os.getenv("MQTT_HOST", getattr(settings, "mqtt_host", "localhost"))
+    mqtt_port = int(os.getenv("MQTT_PORT", getattr(settings, "mqtt_port", 1883)))
+
+    return {
+        "status": "online" if is_connected else "disconnected",
+        "broker": f"{mqtt_host}:{mqtt_port}",
+        "connected": is_connected,
+        "total_packets": len(LIVE_STATE.get("recent_mqtt_packets", [])),
+        "returned_packets": len(packets[:limit]),
+        "packets": packets[:limit],
+        "active_health": LIVE_STATE.get("health", {}),
+        "active_faults": LIVE_STATE.get("signal_faults", {}),
+        "last_received_ms": LIVE_STATE.get("last_mqtt_received_ms")
+    }
+
+@app.get("/api/v1/vision/rpi-stream-proxy/{node_id}")
+async def proxy_rpi_stream(node_id: str, rpi_url: Optional[str] = "http://raspberry.local:8080"):
+    """
+    MJPEG proxy to Raspberry Pi's standalone local dashboard server (/stream/{node_id}).
+    Allows browser clients to access the Raspberry Pi live camera stream when mDNS (.local)
+    cannot be resolved directly by the client machine.
+    """
+    clean_base = (rpi_url or "http://raspberry.local:8080").rstrip("/")
+    target_url = f"{clean_base}/stream/{node_id}"
+    boundary = "frame"
+
+    async def stream_generator():
+        try:
+            import urllib.request
+            req = urllib.request.Request(target_url, headers={"User-Agent": "EdgeFlow-Proxy/1.0"})
+            with urllib.request.urlopen(req, timeout=10.0) as resp:
+                while True:
+                    chunk = resp.read(65536)
+                    if not chunk:
+                        break
+                    yield chunk
+        except Exception as e:
+            logger.warning(f"Proxy stream failed connecting to {target_url}: {e}")
+            yield b""
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type=f"multipart/x-mixed-replace; boundary={boundary}"
+    )
+
+@app.get("/api/v1/vision/rpi-health-check")
+def check_rpi_health(
+    rpi_url: Optional[str] = "http://192.168.0.139:8080",
+    node_id: Optional[str] = "J3"
+):
+    """
+    Actively probes Raspberry Pi's standalone local dashboard server (/api/status).
+    When unreachable, automatically records an ERR_DISCONNECT_TIMEOUT signal fault
+    in LIVE_STATE so disconnect alerts propagate across the dashboard and system reports.
+    """
+    clean_base = (rpi_url or "http://192.168.0.139:8080").rstrip("/")
+    target_url = f"{clean_base}/api/status"
+    target_node = node_id or "J3"
+    now_ms = int(time.time() * 1000)
+
+    try:
+        import urllib.request
+        req = urllib.request.Request(target_url, headers={"User-Agent": "EdgeFlow-HealthCheck/1.0"})
+        with urllib.request.urlopen(req, timeout=1.8) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode("utf-8"))
+                if target_node in LIVE_STATE.get("signal_faults", {}):
+                    fault = LIVE_STATE["signal_faults"][target_node]
+                    if fault.get("fault_code") == "ERR_DISCONNECT_TIMEOUT":
+                        del LIVE_STATE["signal_faults"][target_node]
+                return {
+                    "online": True,
+                    "node_id": target_node,
+                    "rpi_url": clean_base,
+                    "identity": data.get("identity"),
+                    "stats": data.get("stats"),
+                    "timestamp_ms": now_ms
+                }
+            else:
+                err_msg = f"HTTP {resp.status} from Raspberry Pi server"
+    except Exception as e:
+        err_msg = str(e)
+
+    # Record or refresh signal fault in LIVE_STATE
+    fault_payload = {
+        "node_id": target_node,
+        "fault_code": "ERR_DISCONNECT_TIMEOUT",
+        "category": "disconnect",
+        "severity": "CRITICAL",
+        "reason": f"Mất kết nối máy chủ Raspberry Pi ({target_node}) tại {clean_base}. Tiến trình giám sát bị ngắt hoặc thiết bị tắt nguồn ({err_msg}).",
+        "timestamp_ms": now_ms,
+        "_ingested_at_ms": now_ms
+    }
+    LIVE_STATE.setdefault("signal_faults", {})[target_node] = fault_payload
+    return {
+        "online": False,
+        "node_id": target_node,
+        "rpi_url": clean_base,
+        "error": err_msg,
+        "fault": fault_payload,
+        "timestamp_ms": now_ms
+    }
 
 @app.get("/api/v1/experiments")
 def list_experiments():

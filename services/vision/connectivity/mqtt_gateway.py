@@ -107,6 +107,15 @@ class MqttGateway:
         return self._publish(self._health_topic, payload,
                              qos=self._settings.mqtt_qos_health, retain=True)
 
+    def publish_signal_fault(self, node_id: str, payload: Dict[str, Any], category: Optional[str] = None) -> bool:
+        validate_payload(payload, "signal_fault_event")
+        cat = category or payload.get("category", "camera")
+        topic = topics.get_signal_fault_topic(node_id, category=cat)
+        sent = self._publish(topic, payload, qos=1, retain=False)
+        if sent:
+            logger.warning(f"Published Signal Fault [{payload.get('fault_code')}] to {topic}: {payload.get('reason')}")
+        return sent
+
     def disconnect(self) -> None:
         """Explicit OFFLINE announce before disconnecting: a clean DISCONNECT suppresses the
         LWT, so the retained health topic would otherwise keep showing HEALTHY after a planned

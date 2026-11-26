@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopologyMap from '../components/TopologyMap';
 import PhaseIndicator from '../components/PhaseIndicator';
+import MqttPacketInspector from '../components/MqttPacketInspector';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useActiveScenario, MAP_ONLY_SCENARIOS } from '../hooks/useActiveScenario';
 import { useLanguage } from '../hooks/useLanguage';
@@ -186,6 +187,7 @@ const NetworkOverview = () => {
 
   // Collapsible Log Drawer State
   const [isLogExpanded, setIsLogExpanded] = useState(false);
+  const [streamViewMode, setStreamViewMode] = useState('LOGS'); // 'LOGS' | 'MQTT'
   const [logFilter, setLogFilter] = useState('ALL'); // 'ALL', 'WARN', 'CONTROL', 'ACTUATOR'
   const [logSearch, setLogSearch] = useState('');
   const [isStreamPaused, setIsStreamPaused] = useState(false);
@@ -1034,29 +1036,74 @@ const NetworkOverview = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             cursor: 'pointer',
-            userSelect: 'none'
+            userSelect: 'none',
+            flexWrap: 'wrap',
+            gap: '10px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Terminal size={18} color="#0284c7" />
-            <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
-              {t.systemLogsTitle}
-            </h3>
-            <span style={{
-              backgroundColor: '#f1f5f9',
-              color: '#64748b',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              padding: '2px 8px',
-              borderRadius: '9999px'
-            }}>
-              {filteredLogs.length} {isVi ? 'Sự kiện' : 'Events'}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {streamViewMode === 'MQTT' ? (
+                <Radio size={18} color="#0284c7" />
+              ) : (
+                <Terminal size={18} color="#0284c7" />
+              )}
+              <h3 style={{ fontSize: '0.95rem', margin: 0, fontWeight: 700, color: '#0f172a' }}>
+                {streamViewMode === 'MQTT'
+                  ? (isVi ? 'Gói Tin Trạng Thái MQTT (Trực Tiếp)' : 'Live MQTT Status Packets')
+                  : t.systemLogsTitle}
+              </h3>
+            </div>
+
+            {/* Mode Switcher Tabs */}
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              style={{ display: 'flex', gap: '4px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '6px' }}
+            >
+              <button
+                onClick={() => {
+                  setStreamViewMode('LOGS');
+                  setIsLogExpanded(true);
+                }}
+                style={{
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: '4px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  backgroundColor: streamViewMode === 'LOGS' ? '#ffffff' : 'transparent',
+                  color: streamViewMode === 'LOGS' ? '#0284c7' : '#64748b',
+                  boxShadow: streamViewMode === 'LOGS' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
+                }}
+              >
+                📋 {isVi ? 'Nhật Ký Thực Thi' : 'System Logs'} ({filteredLogs.length})
+              </button>
+              <button
+                onClick={() => {
+                  setStreamViewMode('MQTT');
+                  setIsLogExpanded(true);
+                }}
+                style={{
+                  border: 'none',
+                  padding: '3px 10px',
+                  borderRadius: '4px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  backgroundColor: streamViewMode === 'MQTT' ? '#0284c7' : 'transparent',
+                  color: streamViewMode === 'MQTT' ? '#ffffff' : '#64748b',
+                  boxShadow: streamViewMode === 'MQTT' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
+                }}
+              >
+                📡 {isVi ? 'Gói Tin MQTT (Live)' : 'MQTT Packets (Live)'}
+              </button>
+            </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              {isLogExpanded ? (isVi ? 'Nhấp để thu gọn' : 'Click to collapse drawer') : (isVi ? 'Nhấp để mở rộng nhật ký' : 'Click to expand logs')}
+              {isLogExpanded ? (isVi ? 'Nhấp để thu gọn' : 'Click to collapse drawer') : (isVi ? 'Nhấp để mở rộng' : 'Click to expand drawer')}
             </span>
             <button
               style={{
@@ -1075,128 +1122,134 @@ const NetworkOverview = () => {
 
         {/* Collapsible Content */}
         {isLogExpanded && (
-          <div style={{ padding: '14px 18px', backgroundColor: '#ffffff' }}>
-            {/* Filter Toolbar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {['ALL', 'WARN', 'CONTROL', 'ACTUATOR'].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setLogFilter(f)}
-                    style={{
-                      border: 'none',
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      backgroundColor: logFilter === f ? '#0284c7' : '#f1f5f9',
-                      color: logFilter === f ? '#ffffff' : '#64748b'
-                    }}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="Filter logs by keyword..."
-                  value={logSearch}
-                  onChange={(e) => setLogSearch(e.target.value)}
-                  style={{
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '5px',
-                    padding: '3px 8px',
-                    fontSize: '0.75rem',
-                    outline: 'none',
-                    width: '160px'
-                  }}
-                />
-                <button
-                  onClick={() => setIsStreamPaused(!isStreamPaused)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    backgroundColor: isStreamPaused ? '#fef9c3' : '#f1f5f9',
-                    color: isStreamPaused ? '#a16207' : '#64748b',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '5px',
-                    padding: '3px 8px',
-                    fontSize: '0.72rem',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {isStreamPaused ? <Play size={12} /> : <Pause size={12} />}
-                  {isStreamPaused ? 'Resume' : 'Pause'}
-                </button>
-              </div>
-            </div>
-
-            {/* Dark Terminal Output Stream */}
-            <div style={{
-              backgroundColor: '#0f172a',
-              borderRadius: '8px',
-              padding: '14px',
-              color: '#38bdf8',
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: '0.78rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-              maxHeight: '220px',
-              overflowY: 'auto'
-            }}>
-              {filteredLogs.map((log, idx) => {
-                const lvl = (log.level || 'INFO').toUpperCase();
-                const isWarn = lvl.includes('WARN') || lvl.includes('ERR');
-                const isCtrl = (log.service || '').toUpperCase().includes('CONTROL');
-
-                // Extract node mention if present to enable map link
-                const nodeMatch = (log.message || '').match(/\b(J[1-8]|A[0-3]|B[0-3]|C[0-3]|D[0-3])\b/);
-                const mentionedNode = nodeMatch ? nodeMatch[1] : null;
-
-                return (
-                  <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                    <span style={{ color: '#64748b', flexShrink: 0 }}>[{formatLogTime(log)}]</span>
-                    <span style={{
-                      color: isWarn ? '#f87171' : isCtrl ? '#38bdf8' : '#a7f3d0',
-                      fontWeight: 700,
-                      flexShrink: 0
-                    }}>
-                      [{log.service ? log.service.toUpperCase() : 'SYSTEM'}]
-                    </span>
-                    <span style={{ color: isWarn ? '#fca5a5' : '#e2e8f0', flex: 1 }}>
-                      {log.message}
-                    </span>
-                    {mentionedNode && (
+          <div style={{ padding: streamViewMode === 'MQTT' ? '0' : '14px 18px', backgroundColor: '#ffffff' }}>
+            {streamViewMode === 'MQTT' ? (
+              <MqttPacketInspector showHeader={true} maxHeight="320px" pollIntervalMs={1500} />
+            ) : (
+              <>
+                {/* Filter Toolbar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {['ALL', 'WARN', 'CONTROL', 'ACTUATOR'].map((f) => (
                       <button
-                        onClick={() => setSelectedNodeId(mentionedNode)}
+                        key={f}
+                        onClick={() => setLogFilter(f)}
                         style={{
-                          backgroundColor: '#1e293b',
-                          color: '#38bdf8',
-                          border: '1px solid #334155',
+                          border: 'none',
+                          padding: '3px 8px',
                           borderRadius: '4px',
-                          padding: '1px 5px',
-                          fontSize: '0.68rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
                           cursor: 'pointer',
-                          flexShrink: 0
+                          backgroundColor: logFilter === f ? '#0284c7' : '#f1f5f9',
+                          color: logFilter === f ? '#ffffff' : '#64748b'
                         }}
                       >
-                        {t.highlightBtn(mentionedNode)}
+                        {f}
                       </button>
-                    )}
+                    ))}
                   </div>
-                );
-              })}
 
-              {filteredLogs.length === 0 && (
-                <div style={{ color: '#64748b' }}>{t.noLogsMatch}</div>
-              )}
-            </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="text"
+                      placeholder="Filter logs by keyword..."
+                      value={logSearch}
+                      onChange={(e) => setLogSearch(e.target.value)}
+                      style={{
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '5px',
+                        padding: '3px 8px',
+                        fontSize: '0.75rem',
+                        outline: 'none',
+                        width: '160px'
+                      }}
+                    />
+                    <button
+                      onClick={() => setIsStreamPaused(!isStreamPaused)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backgroundColor: isStreamPaused ? '#fef9c3' : '#f1f5f9',
+                        color: isStreamPaused ? '#a16207' : '#64748b',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '5px',
+                        padding: '3px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {isStreamPaused ? <Play size={12} /> : <Pause size={12} />}
+                      {isStreamPaused ? 'Resume' : 'Pause'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dark Terminal Output Stream */}
+                <div style={{
+                  backgroundColor: '#0f172a',
+                  borderRadius: '8px',
+                  padding: '14px',
+                  color: '#38bdf8',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  maxHeight: '220px',
+                  overflowY: 'auto'
+                }}>
+                  {filteredLogs.map((log, idx) => {
+                    const lvl = (log.level || 'INFO').toUpperCase();
+                    const isWarn = lvl.includes('WARN') || lvl.includes('ERR');
+                    const isCtrl = (log.service || '').toUpperCase().includes('CONTROL');
+
+                    // Extract node mention if present to enable map link
+                    const nodeMatch = (log.message || '').match(/\b(J[1-8]|A[0-3]|B[0-3]|C[0-3]|D[0-3])\b/);
+                    const mentionedNode = nodeMatch ? nodeMatch[1] : null;
+
+                    return (
+                      <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        <span style={{ color: '#64748b', flexShrink: 0 }}>[{formatLogTime(log)}]</span>
+                        <span style={{
+                          color: isWarn ? '#f87171' : isCtrl ? '#38bdf8' : '#a7f3d0',
+                          fontWeight: 700,
+                          flexShrink: 0
+                        }}>
+                          [{log.service ? log.service.toUpperCase() : 'SYSTEM'}]
+                        </span>
+                        <span style={{ color: isWarn ? '#fca5a5' : '#e2e8f0', flex: 1 }}>
+                          {log.message}
+                        </span>
+                        {mentionedNode && (
+                          <button
+                            onClick={() => setSelectedNodeId(mentionedNode)}
+                            style={{
+                              backgroundColor: '#1e293b',
+                              color: '#38bdf8',
+                              border: '1px solid #334155',
+                              borderRadius: '4px',
+                              padding: '1px 5px',
+                              fontSize: '0.68rem',
+                              cursor: 'pointer',
+                              flexShrink: 0
+                            }}
+                          >
+                            {t.highlightBtn(mentionedNode)}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {filteredLogs.length === 0 && (
+                    <div style={{ color: '#64748b' }}>{t.noLogsMatch}</div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

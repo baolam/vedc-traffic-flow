@@ -390,6 +390,10 @@ const IntersectionDetail = () => {
   const activeFault = deviceHealth?.actuator?.active_fault;
   const isConflictGuard = activeFault?.fault_code === 'ERR_CONFLICT_GUARD_TRIGGERED';
   const isHardwareDefect = activeFault?.fault_code === 'ERR_HARDWARE_DEFECT';
+  const cameraFault = deviceHealth?.camera?.active_fault || (deviceHealth?.active_fault?.category === 'camera' ? deviceHealth?.active_fault : null);
+  const isCameraOcclusion = cameraFault?.fault_code === 'ERR_CAMERA_OCCLUSION';
+  const isCameraBlind = cameraFault?.fault_code === 'ERR_CAMERA_BLIND';
+  const isCameraFault = Boolean(cameraFault || isCameraOcclusion || isCameraBlind);
   const isEmergencyFlash = deviceHealth?.actuator?.status === 'EMERGENCY_FLASH';
   const isDegraded = deviceHealth?.actuator?.status === 'DEGRADED';
 
@@ -780,6 +784,7 @@ const IntersectionDetail = () => {
       {(isSafeStop ||
         isConflictGuard ||
         isHardwareDefect ||
+        isCameraFault ||
         isEmergencyFlash ||
         isDegraded ||
         nodeTelemetry?.status === 'SIGNAL_LOST' || 
@@ -811,6 +816,10 @@ const IntersectionDetail = () => {
                   ? (isVi ? `🚨 SỰ CỐ PHẦN CỨNG: XUNG ĐỘT ĐÈN XANH KÉP - CONFLICT GUARD (${nodeId})` : `🚨 CRITICAL HARDWARE FAULT: CONFLICT GUARD TRIGGERED (${nodeId})`)
                   : isHardwareDefect
                   ? (isVi ? `🛠️ SỰ CỐ PHẦN CỨNG: LỖI ĐỌC NGƯỢC GPIO / ĐOẢN MẠCH / SỤT ÁP (${nodeId})` : `🛠️ HARDWARE DEFECT: OUTPUT READBACK MISMATCH / BROWNOUT (${nodeId})`)
+                  : isCameraOcclusion
+                  ? (isVi ? `📷 CẢNH BÁO CAMERA THỊ GIÁC: ỐNG KÍNH BỊ CHE KHUẤT / MẤT TẦM NHÌN (${nodeId})` : `📷 VISION CAMERA FAULT: CAMERA OCCLUDED (${nodeId})`)
+                  : isCameraBlind
+                  ? (isVi ? `📷 CẢNH BÁO CAMERA THỊ GIÁC: MẤT TẦM NHÌN / LÓA SÁNG / MỜ ĐỤC (${nodeId})` : `📷 VISION CAMERA FAULT: BLIND / GLARE / BLUR (${nodeId})`)
                   : isEmergencyFlash
                   ? (isVi ? `⚡ CHẾ ĐỘ KHẨN CẤP: ĐANG NHÁY VÀNG CẢ 4 CỤM ĐÈN THEO LỆNH HỆ THỐNG (${nodeId})` : `⚡ EMERGENCY FLASH: ALL-YELLOW FLASHING ACTIVE (${nodeId})`)
                   : (isVi ? `CẢNH BÁO SỰ CỐ TÍN HIỆU THIẾT BỊ / PHẦN CỨNG (${nodeId})` : `HARDWARE / SIGNAL INTERRUPT ALERT (${nodeId})`)}
@@ -822,6 +831,8 @@ const IntersectionDetail = () => {
                   ? (isVi ? 'Phát hiện tín hiệu yêu cầu cả hai hướng cùng xanh đồng thời. Mạch bảo vệ phần cứng đã lập tức ép ĐỎ toàn bộ và chuyển nháy vàng an toàn 10s ngăn ngừa va chạm.' : 'Simultaneous green detected on both heads. Hardware conflict guard forced immediate ALL_RED and entered 10s safety flashing.')
                   : isHardwareDefect
                   ? (isVi ? `Phát hiện mức điện áp GPIO chân đèn không khớp giá trị ghi (nghi ngờ chập chân / mối hàn) hoặc vi điều khiển sụt áp Brownout. Chi tiết: ${activeFault?.reason || 'Hardware defect detected'}.` : `Output readback mismatch on LED pins or abnormal brownout reset. Details: ${activeFault?.reason || 'Hardware defect'}.`)
+                  : isCameraOcclusion || isCameraBlind
+                  ? (isVi ? `Phát hiện ống kính camera bị che lấp hoặc mất tầm nhìn (độ sắc nét cạnh = 0). Độ tin cậy thị giác hạ về 0, chuyển sang chu kỳ cố định và kích hoạt Fairness Guard. Chi tiết: ${cameraFault?.reason || 'Camera occlusion detected'}.` : `Camera lens occluded or optical sensor lost visibility. Perception confidence reduced to 0, fallback fixed-time cycle active with fairness guard. Details: ${cameraFault?.reason || 'Camera occlusion'}.`)
                   : isEmergencyFlash
                   ? (isVi ? 'Hệ thống đang phát lệnh khẩn cấp nháy vàng 4 đèn tại nút này. Nhấn nút "Phục hồi chu trình" để trở lại trạng thái điều khiển bình thường.' : 'Emergency all-yellow flashing is active. Click "Resume Cycle" to return to normal adaptive operation.')
                   : deviceHealth?.actuator?.status === 'HEARTBEAT_LOST'
@@ -869,7 +880,7 @@ const IntersectionDetail = () => {
               borderRadius: '8px',
               textTransform: 'uppercase'
             }}>
-              {isSafeStop ? 'SAFE-STOP' : isConflictGuard ? 'CONFLICT GUARD' : isHardwareDefect ? 'HARDWARE DEFECT' : isEmergencyFlash ? 'EMERGENCY FLASH' : 'FAIL-SAFE INTERLOCK'}
+              {isSafeStop ? 'SAFE-STOP' : isConflictGuard ? 'CONFLICT GUARD' : isHardwareDefect ? 'HARDWARE DEFECT' : isCameraOcclusion ? 'CAMERA OCCLUSION' : isCameraBlind ? 'CAMERA BLIND' : isEmergencyFlash ? 'EMERGENCY FLASH' : 'FAIL-SAFE INTERLOCK'}
             </div>
           </div>
         </div>

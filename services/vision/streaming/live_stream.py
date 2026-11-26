@@ -17,7 +17,7 @@ import logging
 import queue
 import threading
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional, Set
 
 import cv2
 import numpy as np
@@ -27,20 +27,48 @@ logger = logging.getLogger("vision-video-sync")
 
 def draw_sync_overlay(frame: np.ndarray, rois: Dict[str, Dict[str, Any]],
                       assigned_boxes: Dict[str, List[Tuple[int, int, int, int]]],
-                      node_id: str, timestamp_ms: int) -> np.ndarray:
+                      node_id: str, timestamp_ms: int,
+                      blind_approaches: Optional[Any] = None,
+                      active_alerts: Optional[List[Any]] = None) -> np.ndarray:
     """Lightweight HUD (ROI polygons + detection boxes + node/time label) for the streamed frame --
     intentionally much simpler than demo_video_pipeline.py's offline annotator, since this runs
-    every frame on Pi-class hardware alongside the real-time detection loop."""
+    every frame on Pi-class hardware alongside the real-time detection loop.
+    Includes visual alerts if camera or specific approach ROIs are obstructed/blinded."""
     canvas = frame.copy()
+    blind_set = set(blind_approaches or [])
+
     for approach_id, roi in rois.items():
         polygon = roi.get("polygon")
         if polygon is not None:
-            cv2.polylines(canvas, [polygon], True, (56, 189, 248), 1)
+            is_blind = approach_id in blind_set
+            color = (0, 0, 238) if is_blind else (56, 189, 248)
+            thickness = 2 if is_blind else 1
+            cv2.polylines(canvas, [polygon], True, color, thickness)
+            if is_blind and len(polygon) > 0:
+                pt = tuple(polygon[0])
+                cv2.putText(canvas, f"{approach_id} [CHE KHUAT]", (max(0, pt[0]), max(15, pt[1] - 5)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1, cv2.LINE_AA)
+
     for boxes in assigned_boxes.values():
         for (x, y, w, h) in boxes:
             cv2.rectangle(canvas, (x, y), (x + w, y + h), (34, 197, 94), 2)
+
+    # Top Warning Banner if any camera tamper alerts are active
+    if active_alerts:
+        top_alert = active_alerts[0]
+        alert_type = (top_alert.tamper_type if hasattr(top_alert, "tamper_type")
+                      else str(top_alert.get("tamper_type", "tamper"))).upper()
+        # Draw solid red/amber warning strip at top
+        banner_h = 24
+        cv2.rectangle(canvas, (0, 0), (canvas.shape[1], banner_h), (0, 0, 200), -1)
+        alert_msg = f"! CANH BAO: CAMERA CHE KHUAT / TAMPER [{alert_type}] !"
+        cv2.putText(canvas, alert_msg, (10, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+        label_y = banner_h + 18
+    else:
+        label_y = 20
+
     label = f"{node_id} | RPi5 Edge Vision | {time.strftime('%H:%M:%S', time.localtime(timestamp_ms / 1000))}"
-    cv2.putText(canvas, label, (8, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+    cv2.putText(canvas, label, (8, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
     return canvas
 
 

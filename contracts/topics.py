@@ -27,8 +27,8 @@ HEALTH_PUB_PATTERN = f"{PREFIX_V1}/health/{{service_name}}"
 HEALTH_SUB_PATTERN = f"{PREFIX_V1}/health/+"
 
 # Dedicated Signal Faults & Disconnection Channels
-# Categories: 'disconnect', 'feedback_error', 'emergency', 'hardware'
-FAULT_CATEGORIES = ("disconnect", "feedback_error", "emergency", "hardware")
+# Categories: 'disconnect', 'feedback_error', 'emergency', 'hardware', 'camera'
+FAULT_CATEGORIES = ("disconnect", "feedback_error", "emergency", "hardware", "camera")
 SIGNAL_FAULT_PUB_PATTERN = f"{PREFIX_V1}/signal_fault/{{node_id}}/{{category}}"
 SIGNAL_FAULT_SUB_PATTERN = f"{PREFIX_V1}/signal_fault/#"
 SIGNAL_FAULT_NODE_SUB_PATTERN = f"{PREFIX_V1}/signal_fault/{{node_id}}/+"

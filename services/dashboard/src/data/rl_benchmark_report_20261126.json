@@ -1,0 +1,247 @@
+{
+  "benchmark_meta": {
+    "title": "Test-Seed Benchmark: Deterministic Controllers vs Phase DQN",
+    "report_date": "2026-11-26",
+    "branch": "research/rl-benchmark-suite",
+    "evaluation_scope": "Held-out evaluation seeds (80001–80020) across 6 canonical benchmark maps, comparing all deterministic controllers, phase DQN baseline, and EdgeFlow RL (Two-Tier Residual DQN).",
+    "seeds_count": 20,
+    "runs_per_controller": 460,
+    "total_runs_evaluated": 10440,
+    "sumo_version": "SUMO 1.28 via libsumo"
+  },
+  "executive_summary": {
+    "best_overall_aggregate": "EdgeFlow RL (0.725–0.749 relative delay vs 0.751 for best deterministic flow_theory + max-red, and 1.000 for Fixed-Time)",
+    "hanoi_breakthrough": "Delay reduced from 42.0s (Fixed-Time) to 27.9s–32.5s (-28% to -34% delay reduction), but tail wait tolerance causes only seed 2026 to achieve official guardrail pass.",
+    "jakarta_promotion": "EdgeFlow RL promoted on research qualification gate (5/5 seeds promoted vs plain baselines, +24% over max_pressure, +25% over edgeflow).",
+    "seed_stability": "EdgeFlow RL is exceptionally stable (learner-seed standard deviation ≤ 0.8s on 5/6 maps) compared to free Phase DQN (sd up to 13.5s on Hanoi).",
+    "max_red_impact": "Max-red 40s envelope is critical: completely rescues Hanoi (339s down to 51s) and grid4x4 (450s down to 21s) from total pressure gridlock."
+  },
+  "maps": [
+    { "id": "cologne8", "name": "Cologne8 Real Urban", "junctions": 8, "best_deterministic": "flow_theory + max-red (35.0s)" },
+    { "id": "grid4x4", "name": "Grid 4x4 Network", "junctions": 16, "best_deterministic": "max_pressure + max-red (20.6s)" },
+    { "id": "HCM", "name": "HCM City Corridor v3", "junctions": 5, "best_deterministic": "edgeflow + max-red (72.2s)" },
+    { "id": "Jakarta", "name": "Jakarta Menteng Urban", "junctions": 3, "best_deterministic": "max_pressure + max-red (23.8s)" },
+    { "id": "Hanoi", "name": "Hanoi Dong Da Dynamic", "junctions": 4, "best_deterministic": "fixed_time (42.0s)" },
+    { "id": "4-node", "name": "4-Node Symmetrical Hub", "junctions": 4, "best_deterministic": "actuated (69.4s)" }
+  ],
+  "map_scores": [
+    {
+      "map": "cologne8",
+      "map_name": "Cologne8 Real Urban (8 Junc)",
+      "fixed_time": { "score": 61.7, "ci": 6.2, "pass": true },
+      "actuated": { "score": 39.4, "ci": 1.2, "pass": false },
+      "max_pressure_mr": { "score": 35.4, "ci": 1.3, "pass": true },
+      "flow_theory_mr": { "score": 35.0, "ci": 1.1, "pass": true },
+      "edgeflow_mr": { "score": 36.8, "ci": 1.2, "pass": true },
+      "phase_dqn_baseline": { "score": 42.8, "ci": 1.9, "pass": false, "pass_rate": "0/3" },
+      "round3_config_c": { "score": 34.7, "ci": 0.1, "pass": true, "pass_rate": "5/5" },
+      "verdict": "Tie / Marginal Win (-0.3s vs best det)",
+      "cases": {
+        "balanced": { "fixed_time": 44.0, "best_det": 30.0, "baseline_dqn": 37.0, "config_c": 29.2 },
+        "directional_reversal": { "fixed_time": 86.2, "best_det": 32.6, "baseline_dqn": 42.3, "config_c": 33.8 },
+        "downstream_bottleneck": { "fixed_time": 55.0, "best_det": 42.3, "baseline_dqn": 49.2, "config_c": 41.0 }
+      }
+    },
+    {
+      "map": "grid4x4",
+      "map_name": "Grid 4x4 Network (16 Junc)",
+      "fixed_time": { "score": 57.3, "ci": 2.4, "pass": true },
+      "actuated": { "score": 73.0, "ci": 1.9, "pass": false },
+      "max_pressure_mr": { "score": 20.6, "ci": 0.3, "pass": true },
+      "flow_theory_mr": { "score": 27.4, "ci": 0.5, "pass": true },
+      "edgeflow_mr": { "score": 23.6, "ci": 0.4, "pass": true },
+      "phase_dqn_baseline": { "score": 24.4, "ci": 1.2, "pass": true, "pass_rate": "3/3" },
+      "round3_config_c": { "score": 21.0, "ci": 0.3, "pass": true, "pass_rate": "5/5" },
+      "verdict": "Small Loss (+0.4s vs max_pressure+mr)",
+      "cases": {
+        "balanced": { "fixed_time": 45.8, "best_det": 19.6, "baseline_dqn": 23.2, "config_c": 20.2 },
+        "directional_reversal": { "fixed_time": 79.3, "best_det": 21.5, "baseline_dqn": 25.8, "config_c": 21.4 },
+        "downstream_bottleneck": { "fixed_time": 47.0, "best_det": 20.6, "baseline_dqn": 24.4, "config_c": 21.3 }
+      }
+    },
+    {
+      "map": "HCM",
+      "map_name": "HCM City Corridor v3",
+      "fixed_time": { "score": 147.5, "ci": 9.7, "pass": true },
+      "actuated": { "score": 99.7, "ci": 3.2, "pass": true },
+      "max_pressure_mr": { "score": 72.5, "ci": 1.4, "pass": true },
+      "flow_theory_mr": { "score": 73.1, "ci": 0.8, "pass": true },
+      "edgeflow_mr": { "score": 72.2, "ci": 1.0, "pass": true },
+      "phase_dqn_baseline": { "score": 84.0, "ci": 5.8, "pass": true, "pass_rate": "3/3" },
+      "round3_config_c": { "score": 74.5, "ci": 0.8, "pass": true, "pass_rate": "5/5" },
+      "verdict": "Competitive (+2.3s vs edgeflow+mr)",
+      "cases": {
+        "balanced": { "fixed_time": 104.1, "best_det": 70.1, "baseline_dqn": 81.3, "config_c": 72.1 },
+        "directional_reversal": { "fixed_time": 233.0, "best_det": 74.8, "baseline_dqn": 87.6, "config_c": 77.1 },
+        "downstream_bottleneck": { "fixed_time": 105.6, "best_det": 71.6, "baseline_dqn": 83.2, "config_c": 74.3 }
+      }
+    },
+    {
+      "map": "Jakarta",
+      "map_name": "Jakarta Menteng Urban",
+      "fixed_time": { "score": 54.7, "ci": 3.0, "pass": true },
+      "actuated": { "score": 33.6, "ci": 2.6, "pass": true },
+      "max_pressure_mr": { "score": 23.8, "ci": 1.3, "pass": true },
+      "flow_theory_mr": { "score": 18.7, "ci": 1.1, "pass": false },
+      "edgeflow_mr": { "score": 24.0, "ci": 1.2, "pass": true },
+      "phase_dqn_baseline": { "score": 39.3, "ci": 7.7, "pass": true, "pass_rate": "2/3" },
+      "round3_config_c": { "score": 23.9, "ci": 0.0, "pass": true, "pass_rate": "5/5" },
+      "verdict": "Tie (23.9s vs 23.8s, Promoted 5/5)",
+      "cases": {
+        "balanced": { "fixed_time": 16.3, "best_det": 15.0, "baseline_dqn": 16.1, "config_c": 15.0 },
+        "directional_reversal": { "fixed_time": 130.0, "best_det": 40.0, "baseline_dqn": 84.1, "config_c": 40.4 },
+        "downstream_bottleneck": { "fixed_time": 17.8, "best_det": 16.3, "baseline_dqn": 17.7, "config_c": 16.4 }
+      }
+    },
+    {
+      "map": "Hanoi",
+      "map_name": "Hanoi Dong Da Dynamic",
+      "fixed_time": { "score": 42.0, "ci": 2.0, "pass": true },
+      "actuated": { "score": 84.7, "ci": 5.8, "pass": false },
+      "max_pressure_mr": { "score": 51.2, "ci": 4.0, "pass": false },
+      "flow_theory_mr": { "score": 49.2, "ci": 3.1, "pass": false },
+      "edgeflow_mr": { "score": 57.9, "ci": 4.4, "pass": false },
+      "phase_dqn_baseline": { "score": 62.8, "ci": 13.5, "pass": false, "pass_rate": "0/3" },
+      "round3_config_c": { "score": 29.7, "ci": 1.9, "pass": false, "pass_rate": "1/5" },
+      "verdict": "Major Delay Win (-12.3s), Tail Risk",
+      "cases": {
+        "balanced": { "fixed_time": 25.4, "best_det": 25.4, "baseline_dqn": 25.7, "config_c": 19.6 },
+        "directional_reversal": { "fixed_time": 75.3, "best_det": 75.3, "baseline_dqn": 136.9, "config_c": 49.9 },
+        "downstream_bottleneck": { "fixed_time": 25.4, "best_det": 25.4, "baseline_dqn": 25.7, "config_c": 19.6 }
+      }
+    },
+    {
+      "map": "4-node",
+      "map_name": "4-Node Symmetrical Hub",
+      "fixed_time": { "score": 76.5, "ci": 1.8, "pass": true },
+      "actuated": { "score": 69.4, "ci": 1.4, "pass": true },
+      "max_pressure_mr": { "score": 112.4, "ci": 4.9, "pass": false },
+      "flow_theory_mr": { "score": 95.7, "ci": 5.0, "pass": false },
+      "edgeflow_mr": { "score": 112.9, "ci": 4.4, "pass": false },
+      "phase_dqn_baseline": { "score": 100.8, "ci": 4.2, "pass": false, "pass_rate": "0/3" },
+      "round3_config_c": { "score": 121.3, "ci": 0.6, "pass": false, "pass_rate": "0/5" },
+      "verdict": "Loss on Oversaturated (Max-Red penalty)",
+      "cases": {
+        "balanced": { "fixed_time": 37.0, "best_det": 39.3, "baseline_dqn": 40.7, "config_c": 40.6 },
+        "directional_reversal": { "fixed_time": 133.2, "best_det": 62.7, "baseline_dqn": 113.8, "config_c": 104.0 },
+        "downstream_bottleneck": { "fixed_time": 66.5, "best_det": 75.6, "baseline_dqn": 107.3, "config_c": 152.9 }
+      }
+    }
+  ],
+  "relative_delay_comparison": [
+    { "controller": "EdgeFlow RL (it32-17)", "category": "Learned RL", "relative_delay": 0.725 },
+    { "controller": "EdgeFlow RL (c-2026)", "category": "Learned RL", "relative_delay": 0.727 },
+    { "controller": "EdgeFlow RL (it37-29)", "category": "Learned RL", "relative_delay": 0.733 },
+    { "controller": "EdgeFlow RL (it44-41)", "category": "Learned RL", "relative_delay": 0.738 },
+    { "controller": "EdgeFlow RL (c-1604)", "category": "Learned RL", "relative_delay": 0.749 },
+    { "controller": "FlowTheory + max-red", "category": "Deterministic", "relative_delay": 0.751 },
+    { "controller": "Max-Pressure + max-red", "category": "Deterministic", "relative_delay": 0.791 },
+    { "controller": "EdgeFlow + max-red", "category": "Deterministic", "relative_delay": 0.814 },
+    { "controller": "Phase DQN Baseline (it00b)", "category": "Learned RL", "relative_delay": 0.852 },
+    { "controller": "Phase DQN Baseline (base-2026)", "category": "Learned RL", "relative_delay": 0.875 },
+    { "controller": "EdgeFlow (Plain)", "category": "Deterministic", "relative_delay": 0.882 },
+    { "controller": "Phase DQN Baseline (base-1604)", "category": "Learned RL", "relative_delay": 0.897 },
+    { "controller": "Fair Cycle Native + max-red", "category": "Deterministic", "relative_delay": 0.928 },
+    { "controller": "Fixed-Time + max-red", "category": "Deterministic", "relative_delay": 0.930 },
+    { "controller": "Actuated + max-red", "category": "Deterministic", "relative_delay": 0.933 },
+    { "controller": "Tuned Fixed-Time (Reference)", "category": "Baseline", "relative_delay": 1.000 },
+    { "controller": "Actuated (Plain)", "category": "Deterministic", "relative_delay": 1.109 },
+    { "controller": "FlowTheory (Plain - Gridlock)", "category": "Deterministic", "relative_delay": 1.909 },
+    { "controller": "Max-Pressure (Plain - Gridlock)", "category": "Deterministic", "relative_delay": 2.053 },
+    { "controller": "Max-Queue (Plain - Gridlock)", "category": "Deterministic", "relative_delay": 3.595 }
+  ],
+  "qualification_gate": [
+    {
+      "map": "cologne8",
+      "policy": "EdgeFlow RL (5 seeds)",
+      "promoted": false,
+      "vs_fixed_time": "+43.7% to +44.1%",
+      "vs_actuated": "+11.6% to +12.5%",
+      "vs_max_pressure": "+1.7% to +2.7%",
+      "vs_edgeflow": "+5.2% to +6.2%",
+      "status": "Blocked by strict +5% margin over Max-Pressure"
+    },
+    {
+      "map": "grid4x4",
+      "policy": "EdgeFlow RL (5 seeds)",
+      "promoted": false,
+      "vs_fixed_time": "+63.3% to +64.4%",
+      "vs_actuated": "+71.0% to +71.9%",
+      "vs_max_pressure": "-3.2% to -6.3%",
+      "vs_edgeflow": "+6.3% to +9.0%",
+      "status": "Tail wait regressions on bottleneck movements"
+    },
+    {
+      "map": "HCM",
+      "policy": "EdgeFlow RL (5 seeds)",
+      "promoted": false,
+      "vs_fixed_time": "+49.1% to +50.4%",
+      "vs_actuated": "+24.6% to +26.6%",
+      "vs_max_pressure": "-1.0% to -3.8%",
+      "vs_edgeflow": "-1.3% to -4.0%",
+      "status": "Ties EdgeFlow within ±2s, needs +5% lead for auto-promotion"
+    },
+    {
+      "map": "Jakarta",
+      "policy": "EdgeFlow RL (5 seeds)",
+      "promoted": true,
+      "vs_fixed_time": "+56.3% to +56.4%",
+      "vs_actuated": "+28.8% to +29.1%",
+      "vs_max_pressure": "+24.0% to +24.3%",
+      "vs_edgeflow": "+25.1% to +25.4%",
+      "status": "PROMOTED (5/5 Seeds Pass with Positive Bootstrap CIs)"
+    },
+    {
+      "map": "Hanoi",
+      "policy": "EdgeFlow RL (Seed 2026)",
+      "promoted": true,
+      "vs_fixed_time": "+33.0%",
+      "vs_actuated": "+66.8%",
+      "vs_max_pressure": "+90.8%",
+      "vs_edgeflow": "+63.6%",
+      "status": "PROMOTED for Seed 2026 (Regressions on other 4 seeds)"
+    },
+    {
+      "map": "4-node",
+      "policy": "EdgeFlow RL (5 seeds)",
+      "promoted": false,
+      "vs_fixed_time": "-58.0% to -59.9%",
+      "vs_actuated": "-74.2% to -76.3%",
+      "vs_max_pressure": "-1.2% to -2.4%",
+      "vs_edgeflow": "-0.4% to -1.6%",
+      "status": "Oversaturation penalty from safety envelope"
+    }
+  ],
+  "seed_variance": [
+    { "seed": "Seed 17", "baseline_jakarta": 48.1, "config_c_jakarta": 23.9, "baseline_hanoi": 47.2, "config_c_hanoi": 27.9 },
+    { "seed": "Seed 29", "baseline_jakarta": 39.3, "config_c_jakarta": 23.9, "baseline_hanoi": 62.8, "config_c_hanoi": 29.4 },
+    { "seed": "Seed 41", "baseline_jakarta": 39.3, "config_c_jakarta": 23.9, "baseline_hanoi": 62.8, "config_c_hanoi": 30.9 },
+    { "seed": "Seed 1604", "baseline_jakarta": 36.2, "config_c_jakarta": 23.8, "baseline_hanoi": 70.4, "config_c_hanoi": 32.5 },
+    { "seed": "Seed 2026", "baseline_jakarta": 33.6, "config_c_jakarta": 23.9, "baseline_hanoi": 70.9, "config_c_hanoi": 28.1 }
+  ],
+  "vehicle_class_delays": [
+    { "class": "Motorcycle", "fixed_time": 41.8, "actuated": 84.1, "max_pressure_mr": 31.7, "flow_theory_mr": 30.1, "config_c": 20.3 },
+    { "class": "Car", "fixed_time": 42.4, "actuated": 85.6, "max_pressure_mr": 32.1, "flow_theory_mr": 30.8, "config_c": 20.8 },
+    { "class": "Taxi", "fixed_time": 41.2, "actuated": 81.1, "max_pressure_mr": 31.4, "flow_theory_mr": 29.9, "config_c": 20.4 },
+    { "class": "Bus", "fixed_time": 45.7, "actuated": 96.6, "max_pressure_mr": 34.5, "flow_theory_mr": 32.2, "config_c": 22.4 },
+    { "class": "Truck", "fixed_time": 43.1, "actuated": 84.9, "max_pressure_mr": 32.9, "flow_theory_mr": 31.0, "config_c": 21.0 }
+  ],
+  "engineering_takeaways": [
+    {
+      "title": "Why Pure RL Fails in Complex Urban Traffic",
+      "detail": "End-to-end unconstrained Deep RL (Phase DQN baseline) suffers from massive sample complexity and exploratory variance. It creates tail delays, unserviced starvation phases, and high seed variance (sd 13.5s on Hanoi)."
+    },
+    {
+      "title": "The Power of EdgeFlow RL (Two-Tier Residual Architecture)",
+      "detail": "By anchoring the decision in proven deterministic principles (FlowTheory macroscopic cell transmission and Max-Pressure network queue balance), the Double DQN only overrides actions when high confidence (>5% or >20% Q-value gain) exists. This produces rock-solid seed stability (sd ≤ 0.8s)."
+    },
+    {
+      "title": "The Max-Red Safety Envelope is Essential",
+      "detail": "Any heuristic pressure controller left unconstrained eventually causes catastrophic gridlock under non-homogeneous or bottleneck traffic. Enforcing a hard max-red service limit (40s) completely eliminates deadlock in real-world networks."
+    },
+    {
+      "title": "Deployment Strategy",
+      "detail": "Use EdgeFlow RL on arterial networks (Jakarta, Cologne, HCM) where coordinated platoon dynamics thrive. Fall back to safety-enveloped deterministic controllers (or tuned actuated) during extreme oversaturation."
+    }
+  ]
+}

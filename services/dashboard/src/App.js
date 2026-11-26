@@ -10,7 +10,7 @@ import ControlPanel from './pages/ControlPanel';
 import BenchmarkSummary from './pages/BenchmarkSummary';
 import HcmCameraMap from './pages/HcmCameraMap';
 import RaspberryPiDemo from './pages/RaspberryPiDemo';
-import FlowTheorySimulationDemo from './pages/FlowTheorySimulationDemo';
+import RlBenchmarkReport from './pages/RlBenchmarkReport';
 import Stations from './pages/Stations';
 import AdminConsole from './pages/admin/AdminConsole';
 import './App.css';
@@ -31,7 +31,7 @@ function App() {
             <Route path="/experiments" element={<ControlPanel />} />
             <Route path="/cameras" element={<HcmCameraMap />} />
             <Route path="/raspberry-pi-demo" element={<RaspberryPiDemo />} />
-            <Route path="/flowtheory-demo" element={<FlowTheorySimulationDemo />} />
+            <Route path="/rl-benchmark" element={<RlBenchmarkReport />} />
             <Route path="/stations" element={<Stations />} />
             <Route path="/admin" element={<AdminConsole />} />
           </Routes>
