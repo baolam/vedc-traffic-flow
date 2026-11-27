@@ -1,3 +1,4 @@
+import json
 import pytest
 
 try:
@@ -194,6 +195,16 @@ def test_network_state_device_health_and_staleness():
     res4 = client.get("/api/v1/network/state/J1")
     data4 = res4.json()
     assert data4["device_health"]["actuator"]["status"] == "ACTIVE"
+
+
+@pytest.fixture(autouse=True)
+def benchmark_artifacts(tmp_path, monkeypatch):
+    import services.api.main as api
+    directory = tmp_path / 'sumo_benchmark_fixture'
+    directory.mkdir()
+    (directory / 'benchmark_comparison_report.json').write_text(json.dumps({
+        'controllers': ['flow_theory'], 'topologies': ['four_intersection_v1'], 'topology_aggregates': {}}))
+    monkeypatch.setattr(api, 'artifacts_dir', tmp_path)
 
 
 def test_get_benchmarks_list():

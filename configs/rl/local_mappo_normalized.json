@@ -1,0 +1,37 @@
+{
+  "environment": {
+    "topology_path": "contracts/topology/four_intersection_rl_v1.json",
+    "network_path": "networks/four_intersection_rl_v1/network.net.xml",
+    "demand_s": 1800,
+    "drain_s": 600,
+    "trace": false,
+    "wait_penalty_lambda": 0.0,
+    "mode": "local_mappo",
+    "cycle_time_s": 90,
+    "min_green_share": 0.25
+  },
+  "training": {
+    "algorithm": "local_mappo",
+    "device": "cuda",
+    "learning_rate": 0.0003,
+    "discount": 0.99,
+    "gae_lambda": 0.95,
+    "clip_epsilon": 0.2,
+    "update_epochs": 4,
+    "minibatch_size": 32,
+    "entropy_coefficient": 0.01,
+    "value_coefficient": 0.5,
+    "max_gradient_norm": 0.5,
+    "target_kl": 0.03,
+    "value_normalization": true,
+    "episodes_per_worker": 4,
+    "validation_interval": 16,
+    "max_episodes": 128,
+    "max_seconds": 3600
+  },
+  "evaluation": {
+    "cache_dir": "artifacts/mappo/validation-cache",
+    "workers": 2,
+    "case_timeout_s": 180
+  }
+}

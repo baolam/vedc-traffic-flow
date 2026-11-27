@@ -16,8 +16,8 @@ def test_export_preserves_batched_and_single_predictions(tmp_path):
     path = tmp_path / "model.json"
     agent.save_weights(path)
     policy = NumpyPolicy(json.loads(path.read_text()))
-    np.testing.assert_allclose(policy.predict(observations), agent.forward(observations)[1])
-    np.testing.assert_allclose(policy.predict(observations[0]), agent.forward(observations[0])[1])
+    np.testing.assert_allclose(policy.predict(observations), agent.forward(observations)[1], atol=1e-6)
+    np.testing.assert_allclose(policy.predict(observations[0]), agent.forward(observations[0])[1], atol=1e-6)
     with pytest.raises(ValueError):
         policy.predict(np.zeros(13))
     with pytest.raises(ValueError):

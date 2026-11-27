@@ -83,10 +83,66 @@ def test_fair_cycle_policy_runs_through_benchmark_inference(tmp_path):
                       {"type": "fair_cycle_rl", "model_path": str(model)}, "balanced", 20004,
                       tmp_path / "run")
     assert result["valid"]
-    assert result["metrics_version"] == 2
+    assert result["metrics_version"] == 3
+    assert result["signal_clearance_seconds"] == sum(
+        result["signal_clearance_seconds_by_node"].values())
+    assert set(result["signal_clearance_seconds_by_node"]) == {"J1", "J2", "J3", "J4"}
     assert result["p95_wait_s"] >= 0
     assert result["max_approach_p95_wait_s"] >= 0
     assert sum(sum(phases.values()) for phases in result["signal_green_seconds"].values()) <= 4 * result["time_s"]
+
+
+def test_zero_residual_graph_actor_runs_safe_90_second_cycles_in_sumo(tmp_path):
+    torch = pytest.importorskip("torch")
+    from contracts.contracts_sdk import load_topology
+    from contracts.research import GRAPH_MAPPO_NODE_ORDER, TOPOLOGY_ID, build_research_graph
+    from src.rl.benchmark import run_case
+    from src.rl.graph_mappo import GraphActor
+    from src.rl.train_mappo import _implementation_hash, export_actor
+    from src.simulation.runtime import file_hash
+
+    topology_path = "contracts/topology/four_intersection_rl_v1.json"
+    network_path = "networks/four_intersection_rl_v1/network.net.xml"
+    topology = load_topology(TOPOLOGY_ID)
+    actor = GraphActor(build_research_graph(topology), device="cpu")
+    with torch.no_grad():
+        for parameter in actor.parameters():
+            parameter.zero_()
+        actor.head.bias.copy_(torch.tensor([0., 1., 0.]))
+    model = tmp_path / "zero-residual-graph.json"
+    export_actor(model, actor, "graph_attention", 17, {}, {
+        "network_sha256": file_hash(network_path),
+        "topology_sha256": file_hash(topology_path),
+        "implementation_sha256": _implementation_hash()},
+        {"joint_decisions": 1, "episodes": 1, "elapsed_s": 0.})
+
+    output = tmp_path / "graph-run"
+    result = run_case({"environment": {"topology_path": topology_path,
+                                       "network_path": network_path,
+                                       "demand_s": 1800, "drain_s": 600,
+                                       "cycle_time_s": 90, "min_green_share": .25,
+                                       "trace": True}},
+                      {"type": "graph_mappo", "model_path": str(model)},
+                      "balanced", 31001, output)
+    assert result["valid"]
+    assert result["controller_timing"] == {"cycle_time_s": 90, "min_green_share": .25}
+    signals = [json.loads(line) for line in (output / "signals.jsonl").read_text().splitlines()]
+    j1 = [row for row in signals if row["node_id"] == "J1"]
+    assert j1 and all(row["expected"] == row["actual"] for row in j1)
+    runs, previous = [], None
+    for row in j1:
+        if row["state"] != previous:
+            runs.append([row["state"], 1])
+            previous = row["state"]
+        else:
+            runs[-1][1] += 1
+    for state, duration in runs[:-1]:
+        if state == "GREEN":
+            assert 20 <= duration <= 60
+        elif state == "YELLOW":
+            assert duration == 3
+        elif state == "ALL_RED":
+            assert duration == 2
 
 
 @pytest.mark.parametrize("scenario", list(RESEARCH_SCENARIOS))

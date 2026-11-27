@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schema", "algorithm", "architecture", "reward_version", "observation", "timing", "cycle_rule", "topology_id", "weights", "provenance"],
+  "properties": {
+    "schema": {"const": "unified_mappo_v2"},
+    "algorithm": {"enum": ["graph_mappo_unified", "local_mappo_unified"]},
+    "architecture": {"const": "graph_actor_critic"},
+    "reward_version": {"const": "node_wait_v1"},
+    "observation": {"type": "object", "required": ["version", "features", "radius_hops", "max_phases", "normalization"]},
+    "timing": {"type": "object"},
+    "cycle_rule": {"type": "object"},
+    "topology_id": {"type": "string"},
+    "weights": {"type": "object", "required": ["encoder", "attention", "head"]},
+    "provenance": {"type": "object", "required": ["network_sha256", "topology_sha256", "learner_seed"]},
+    "training": {"type": "object"}
+  }
+}

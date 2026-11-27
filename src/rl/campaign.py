@@ -108,7 +108,7 @@ class Campaign:
                                 "src/simulation/runtime.py", "src/control/controllers.py",
                                 "src/control/fair_cycle.py", "src/control/research.py",
                                 "src/control/factory.py", "src/rl/sumo_env.py",
-                                "src/rl/shared_dqn.py", "src/rl/benchmark.py",
+                                "src/rl/shared_dqn.py", "src/rl/policy.py", "src/rl/benchmark.py",
                                 "contracts/research.py", "contracts/scenarios.py",
                                 "contracts/schemas/telemetry.json")}})
         for scenario in scenarios:

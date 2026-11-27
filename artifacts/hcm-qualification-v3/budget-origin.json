@@ -1,0 +1,9 @@
+{
+  "original_budget_s": 7200,
+  "v2_ledger_sha256": "e661be9f5caf33669a980b5b05fb736262505623faf07662d15352ffbadc477b",
+  "v2_ledger_wall_s": 3547.489270400023,
+  "outside_ledger_diagnostic_wall_s": 453.2841334999539,
+  "prior_simulation_wall_s": 4000.773403899977,
+  "reserve_verification_s": 1800,
+  "unmetered_legacy_runs": "SUMO-only diagnostics have no wall-time metrics; prior consumption is a known lower bound."
+}

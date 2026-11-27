@@ -61,7 +61,8 @@ class NumpyPolicy:
         x = np.asarray(observations, dtype=np.float32)
         if x.ndim not in (1, 2) or x.shape[-1] != self.state_dim or not np.isfinite(x).all():
             raise ValueError(f"Expected finite observations with final dimension {self.state_dim}")
-        result = np.maximum(x @ self.w1.T + self.b1, 0) @ self.w2.T + self.b2
+        hidden = np.maximum(np.einsum("...i,oi->...o", x, self.w1, optimize=False) + self.b1, 0)
+        result = np.einsum("...i,oi->...o", hidden, self.w2, optimize=False) + self.b2
         if not np.isfinite(result).all():
             raise ValueError("Non-finite Q values")
         return result

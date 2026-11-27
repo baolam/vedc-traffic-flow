@@ -1,0 +1,886 @@
+{
+ "four_intersection_rl_v1|g10": {
+  "score": 156.3,
+  "feasible": false,
+  "reasons": [
+   "balanced: worst_approach_wait_s regression",
+   "directional_surge: p95_wait_s regression",
+   "directional_surge: worst_approach_wait_s regression",
+   "directional_surge: max_approach_p95_wait_s regression",
+   "directional_surge_ew: p95_wait_s regression",
+   "directional_surge_ew: worst_approach_wait_s regression",
+   "directional_surge_ew: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression",
+   "near_capacity: p95_wait_s regression",
+   "near_capacity: worst_approach_wait_s regression",
+   "near_capacity: max_approach_p95_wait_s regression",
+   "oversaturated: completion below 98% of reference",
+   "oversaturated: p95_wait_s regression",
+   "oversaturated: worst_approach_wait_s regression",
+   "oversaturated: max_approach_p95_wait_s regression",
+   "directional_reversal: p95_wait_s regression",
+   "directional_reversal: worst_approach_wait_s regression",
+   "directional_reversal: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 39.4,
+    "p95_wait_s": 41.0,
+    "worst_approach_wait_s": 48.4,
+    "max_approach_p95_wait_s": 37.4
+   },
+   "directional_surge": {
+    "delay_per_scheduled_s": 40.2,
+    "p95_wait_s": 49.5,
+    "worst_approach_wait_s": 67.3,
+    "max_approach_p95_wait_s": 52.4
+   },
+   "directional_surge_ew": {
+    "delay_per_scheduled_s": 42.4,
+    "p95_wait_s": 59.8,
+    "worst_approach_wait_s": 65.1,
+    "max_approach_p95_wait_s": 53.6
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 143.4,
+    "p95_wait_s": 393.9,
+    "worst_approach_wait_s": 493.8,
+    "max_approach_p95_wait_s": 466.4
+   },
+   "sparse": {
+    "delay_per_scheduled_s": 26.6,
+    "p95_wait_s": 24.8,
+    "worst_approach_wait_s": 24.5,
+    "max_approach_p95_wait_s": 16.9
+   },
+   "near_capacity": {
+    "delay_per_scheduled_s": 90.5,
+    "p95_wait_s": 95.1,
+    "worst_approach_wait_s": 129.3,
+    "max_approach_p95_wait_s": 110.9
+   },
+   "oversaturated": {
+    "delay_per_scheduled_s": 578.1,
+    "p95_wait_s": 912.0,
+    "worst_approach_wait_s": 981.0,
+    "max_approach_p95_wait_s": 956.9
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 289.7,
+    "p95_wait_s": 482.8,
+    "worst_approach_wait_s": 585.0,
+    "max_approach_p95_wait_s": 546.9
+   }
+  },
+  "ft": 76.6
+ },
+ "four_intersection_rl_v1|g15": {
+  "score": 104.1,
+  "feasible": false,
+  "reasons": [
+   "balanced: worst_approach_wait_s regression",
+   "sparse: p95_wait_s regression",
+   "near_capacity: max_approach_p95_wait_s regression",
+   "oversaturated: completion below 98% of reference",
+   "oversaturated: p95_wait_s regression",
+   "oversaturated: worst_approach_wait_s regression",
+   "oversaturated: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 41.9,
+    "p95_wait_s": 41.2,
+    "worst_approach_wait_s": 44.8,
+    "max_approach_p95_wait_s": 26.5
+   },
+   "directional_surge": {
+    "delay_per_scheduled_s": 31.9,
+    "p95_wait_s": 36.3,
+    "worst_approach_wait_s": 31.3,
+    "max_approach_p95_wait_s": 25.9
+   },
+   "directional_surge_ew": {
+    "delay_per_scheduled_s": 32.5,
+    "p95_wait_s": 36.3,
+    "worst_approach_wait_s": 36.4,
+    "max_approach_p95_wait_s": 24.8
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 89.3,
+    "p95_wait_s": 210.6,
+    "worst_approach_wait_s": 240.8,
+    "max_approach_p95_wait_s": 222.7
+   },
+   "sparse": {
+    "delay_per_scheduled_s": 33.3,
+    "p95_wait_s": 39.6,
+    "worst_approach_wait_s": 31.4,
+    "max_approach_p95_wait_s": 24.4
+   },
+   "near_capacity": {
+    "delay_per_scheduled_s": 55.8,
+    "p95_wait_s": 55.2,
+    "worst_approach_wait_s": 54.2,
+    "max_approach_p95_wait_s": 41.5
+   },
+   "oversaturated": {
+    "delay_per_scheduled_s": 435.6,
+    "p95_wait_s": 713.2,
+    "worst_approach_wait_s": 783.7,
+    "max_approach_p95_wait_s": 757.5
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 112.6,
+    "p95_wait_s": 168.4,
+    "worst_approach_wait_s": 209.9,
+    "max_approach_p95_wait_s": 194.9
+   }
+  },
+  "ft": 76.6
+ },
+ "four_intersection_rl_v1|g20": {
+  "score": 86.1,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "directional_surge: p95_wait_s regression",
+   "sparse: p95_wait_s regression",
+   "oversaturated: completion below 98% of reference",
+   "oversaturated: p95_wait_s regression",
+   "oversaturated: worst_approach_wait_s regression",
+   "oversaturated: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 42.9,
+    "p95_wait_s": 50.6,
+    "worst_approach_wait_s": 52.2,
+    "max_approach_p95_wait_s": 31.0
+   },
+   "directional_surge": {
+    "delay_per_scheduled_s": 31.3,
+    "p95_wait_s": 47.1,
+    "worst_approach_wait_s": 38.3,
+    "max_approach_p95_wait_s": 34.6
+   },
+   "directional_surge_ew": {
+    "delay_per_scheduled_s": 31.4,
+    "p95_wait_s": 45.6,
+    "worst_approach_wait_s": 39.5,
+    "max_approach_p95_wait_s": 32.3
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 75.8,
+    "p95_wait_s": 177.4,
+    "worst_approach_wait_s": 208.5,
+    "max_approach_p95_wait_s": 185.8
+   },
+   "sparse": {
+    "delay_per_scheduled_s": 33.1,
+    "p95_wait_s": 52.8,
+    "worst_approach_wait_s": 39.8,
+    "max_approach_p95_wait_s": 33.1
+   },
+   "near_capacity": {
+    "delay_per_scheduled_s": 51.6,
+    "p95_wait_s": 53.5,
+    "worst_approach_wait_s": 53.8,
+    "max_approach_p95_wait_s": 34.5
+   },
+   "oversaturated": {
+    "delay_per_scheduled_s": 349.7,
+    "p95_wait_s": 596.1,
+    "worst_approach_wait_s": 680.9,
+    "max_approach_p95_wait_s": 647.3
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 72.7,
+    "p95_wait_s": 88.5,
+    "worst_approach_wait_s": 116.1,
+    "max_approach_p95_wait_s": 99.0
+   }
+  },
+  "ft": 76.6
+ },
+ "four_intersection_rl_v1|g30": {
+  "score": 80.2,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "directional_surge: p95_wait_s regression",
+   "directional_surge: worst_approach_wait_s regression",
+   "directional_surge: max_approach_p95_wait_s regression",
+   "directional_surge_ew: p95_wait_s regression",
+   "directional_surge_ew: worst_approach_wait_s regression",
+   "directional_surge_ew: max_approach_p95_wait_s regression",
+   "sparse: p95_wait_s regression",
+   "sparse: worst_approach_wait_s regression",
+   "sparse: max_approach_p95_wait_s regression",
+   "near_capacity: p95_wait_s regression",
+   "near_capacity: worst_approach_wait_s regression",
+   "near_capacity: max_approach_p95_wait_s regression",
+   "oversaturated: p95_wait_s regression",
+   "oversaturated: worst_approach_wait_s regression",
+   "oversaturated: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 48.0,
+    "p95_wait_s": 74.7,
+    "worst_approach_wait_s": 73.4,
+    "max_approach_p95_wait_s": 48.5
+   },
+   "directional_surge": {
+    "delay_per_scheduled_s": 33.8,
+    "p95_wait_s": 66.6,
+    "worst_approach_wait_s": 60.7,
+    "max_approach_p95_wait_s": 52.9
+   },
+   "directional_surge_ew": {
+    "delay_per_scheduled_s": 35.2,
+    "p95_wait_s": 65.7,
+    "worst_approach_wait_s": 59.9,
+    "max_approach_p95_wait_s": 51.1
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 76.1,
+    "p95_wait_s": 159.9,
+    "worst_approach_wait_s": 189.6,
+    "max_approach_p95_wait_s": 171.9
+   },
+   "sparse": {
+    "delay_per_scheduled_s": 40.4,
+    "p95_wait_s": 78.8,
+    "worst_approach_wait_s": 59.3,
+    "max_approach_p95_wait_s": 53.7
+   },
+   "near_capacity": {
+    "delay_per_scheduled_s": 53.0,
+    "p95_wait_s": 69.4,
+    "worst_approach_wait_s": 72.3,
+    "max_approach_p95_wait_s": 46.7
+   },
+   "oversaturated": {
+    "delay_per_scheduled_s": 288.2,
+    "p95_wait_s": 507.9,
+    "worst_approach_wait_s": 612.6,
+    "max_approach_p95_wait_s": 568.0
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 67.1,
+    "p95_wait_s": 86.3,
+    "worst_approach_wait_s": 102.8,
+    "max_approach_p95_wait_s": 85.3
+   }
+  },
+  "ft": 76.6
+ },
+ "grid4x4_benchmark_v1|g10": {
+  "score": 54.5,
+  "feasible": false,
+  "reasons": [
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 43.7,
+    "p95_wait_s": 94.1,
+    "worst_approach_wait_s": 156.8,
+    "max_approach_p95_wait_s": 119.7
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 74.4,
+    "p95_wait_s": 219.1,
+    "worst_approach_wait_s": 334.5,
+    "max_approach_p95_wait_s": 302.2
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 45.4,
+    "p95_wait_s": 96.2,
+    "worst_approach_wait_s": 159.3,
+    "max_approach_p95_wait_s": 128.4
+   }
+  },
+  "ft": 54.2
+ },
+ "grid4x4_benchmark_v1|g15": {
+  "score": 46.6,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 45.0,
+    "p95_wait_s": 108.1,
+    "worst_approach_wait_s": 137.2,
+    "max_approach_p95_wait_s": 124.3
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 48.5,
+    "p95_wait_s": 108.6,
+    "worst_approach_wait_s": 138.3,
+    "max_approach_p95_wait_s": 126.1
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 46.4,
+    "p95_wait_s": 108.3,
+    "worst_approach_wait_s": 138.0,
+    "max_approach_p95_wait_s": 123.8
+   }
+  },
+  "ft": 54.2
+ },
+ "grid4x4_benchmark_v1|g20": {
+  "score": 54.1,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 53.5,
+    "p95_wait_s": 141.1,
+    "worst_approach_wait_s": 176.5,
+    "max_approach_p95_wait_s": 160.9
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 54.2,
+    "p95_wait_s": 135.9,
+    "worst_approach_wait_s": 170.4,
+    "max_approach_p95_wait_s": 157.3
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 54.8,
+    "p95_wait_s": 140.9,
+    "worst_approach_wait_s": 176.1,
+    "max_approach_p95_wait_s": 161.1
+   }
+  },
+  "ft": 54.2
+ },
+ "grid4x4_benchmark_v1|g30": {
+  "score": 71.9,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 70.5,
+    "p95_wait_s": 201.7,
+    "worst_approach_wait_s": 278.1,
+    "max_approach_p95_wait_s": 237.2
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 73.3,
+    "p95_wait_s": 199.7,
+    "worst_approach_wait_s": 277.3,
+    "max_approach_p95_wait_s": 247.0
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 71.9,
+    "p95_wait_s": 201.7,
+    "worst_approach_wait_s": 278.1,
+    "max_approach_p95_wait_s": 236.8
+   }
+  },
+  "ft": 54.2
+ },
+ "cologne8_benchmark_v1|g10": {
+  "score": 71.4,
+  "feasible": false,
+  "reasons": [
+   "directional_reversal: p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 46.8,
+    "p95_wait_s": 61.3,
+    "worst_approach_wait_s": 51.0,
+    "max_approach_p95_wait_s": 47.4
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 111.6,
+    "p95_wait_s": 188.9,
+    "worst_approach_wait_s": 205.8,
+    "max_approach_p95_wait_s": 63.3
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 55.7,
+    "p95_wait_s": 61.2,
+    "worst_approach_wait_s": 50.2,
+    "max_approach_p95_wait_s": 47.0
+   }
+  },
+  "ft": 71.4
+ },
+ "cologne8_benchmark_v1|g15": {
+  "score": 52.4,
+  "feasible": false,
+  "reasons": [
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 47.3,
+    "p95_wait_s": 71.7,
+    "worst_approach_wait_s": 66.2,
+    "max_approach_p95_wait_s": 58.3
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 53.4,
+    "p95_wait_s": 73.4,
+    "worst_approach_wait_s": 60.5,
+    "max_approach_p95_wait_s": 55.6
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 56.5,
+    "p95_wait_s": 71.4,
+    "worst_approach_wait_s": 66.2,
+    "max_approach_p95_wait_s": 58.3
+   }
+  },
+  "ft": 71.4
+ },
+ "cologne8_benchmark_v1|g20": {
+  "score": 54.1,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "directional_reversal: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 47.7,
+    "p95_wait_s": 82.8,
+    "worst_approach_wait_s": 81.4,
+    "max_approach_p95_wait_s": 76.2
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 56.0,
+    "p95_wait_s": 86.4,
+    "worst_approach_wait_s": 82.1,
+    "max_approach_p95_wait_s": 75.4
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 58.6,
+    "p95_wait_s": 83.2,
+    "worst_approach_wait_s": 81.2,
+    "max_approach_p95_wait_s": 76.2
+   }
+  },
+  "ft": 71.4
+ },
+ "cologne8_benchmark_v1|g30": {
+  "score": 64.4,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "directional_reversal: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 59.5,
+    "p95_wait_s": 112.0,
+    "worst_approach_wait_s": 121.6,
+    "max_approach_p95_wait_s": 115.3
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 64.7,
+    "p95_wait_s": 118.6,
+    "worst_approach_wait_s": 117.5,
+    "max_approach_p95_wait_s": 113.5
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 69.1,
+    "p95_wait_s": 112.1,
+    "worst_approach_wait_s": 121.4,
+    "max_approach_p95_wait_s": 115.3
+   }
+  },
+  "ft": 71.4
+ },
+ "hcm_neighborhood_v3_benchmark_v1|g10": {
+  "score": 197.5,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 131.6,
+    "p95_wait_s": 265.9,
+    "worst_approach_wait_s": 265.4,
+    "max_approach_p95_wait_s": 229.0
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 326.4,
+    "p95_wait_s": 687.8,
+    "worst_approach_wait_s": 672.8,
+    "max_approach_p95_wait_s": 626.9
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 134.6,
+    "p95_wait_s": 254.5,
+    "worst_approach_wait_s": 258.2,
+    "max_approach_p95_wait_s": 233.7
+   }
+  },
+  "ft": 191.5
+ },
+ "hcm_neighborhood_v3_benchmark_v1|g15": {
+  "score": 147.4,
+  "feasible": true,
+  "reasons": [],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 113.0,
+    "p95_wait_s": 191.0,
+    "worst_approach_wait_s": 186.2,
+    "max_approach_p95_wait_s": 165.4
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 215.0,
+    "p95_wait_s": 488.5,
+    "worst_approach_wait_s": 464.8,
+    "max_approach_p95_wait_s": 410.9
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 114.2,
+    "p95_wait_s": 188.8,
+    "worst_approach_wait_s": 180.0,
+    "max_approach_p95_wait_s": 160.2
+   }
+  },
+  "ft": 191.5
+ },
+ "hcm_neighborhood_v3_benchmark_v1|g20": {
+  "score": 114.2,
+  "feasible": true,
+  "reasons": [],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 105.0,
+    "p95_wait_s": 139.1,
+    "worst_approach_wait_s": 125.6,
+    "max_approach_p95_wait_s": 93.0
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 130.7,
+    "p95_wait_s": 216.9,
+    "worst_approach_wait_s": 229.6,
+    "max_approach_p95_wait_s": 171.3
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 106.8,
+    "p95_wait_s": 143.9,
+    "worst_approach_wait_s": 130.6,
+    "max_approach_p95_wait_s": 91.8
+   }
+  },
+  "ft": 191.5
+ },
+ "hcm_neighborhood_v3_benchmark_v1|g30": {
+  "score": 111.0,
+  "feasible": true,
+  "reasons": [],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 108.6,
+    "p95_wait_s": 152.8,
+    "worst_approach_wait_s": 98.8,
+    "max_approach_p95_wait_s": 82.3
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 115.8,
+    "p95_wait_s": 168.8,
+    "worst_approach_wait_s": 134.0,
+    "max_approach_p95_wait_s": 105.8
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 108.5,
+    "p95_wait_s": 154.5,
+    "worst_approach_wait_s": 98.0,
+    "max_approach_p95_wait_s": 84.5
+   }
+  },
+  "ft": 191.5
+ },
+ "hanoi_dong_da_v1|g10": {
+  "score": 61.1,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "directional_reversal: p95_wait_s regression",
+   "directional_reversal: worst_approach_wait_s regression",
+   "directional_reversal: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 28.2,
+    "p95_wait_s": 67.4,
+    "worst_approach_wait_s": 142.8,
+    "max_approach_p95_wait_s": 92.0
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 126.8,
+    "p95_wait_s": 409.4,
+    "worst_approach_wait_s": 494.6,
+    "max_approach_p95_wait_s": 465.9
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 28.2,
+    "p95_wait_s": 67.4,
+    "worst_approach_wait_s": 142.8,
+    "max_approach_p95_wait_s": 92.0
+   }
+  },
+  "ft": 43.2
+ },
+ "hanoi_dong_da_v1|g15": {
+  "score": 29.2,
+  "feasible": true,
+  "reasons": [],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 20.1,
+    "p95_wait_s": 40.8,
+    "worst_approach_wait_s": 57.3,
+    "max_approach_p95_wait_s": 43.2
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 47.4,
+    "p95_wait_s": 156.4,
+    "worst_approach_wait_s": 221.9,
+    "max_approach_p95_wait_s": 203.1
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 20.1,
+    "p95_wait_s": 40.8,
+    "worst_approach_wait_s": 57.3,
+    "max_approach_p95_wait_s": 43.2
+   }
+  },
+  "ft": 43.2
+ },
+ "hanoi_dong_da_v1|g20": {
+  "score": 31.3,
+  "feasible": true,
+  "reasons": [],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 22.8,
+    "p95_wait_s": 50.8,
+    "worst_approach_wait_s": 65.4,
+    "max_approach_p95_wait_s": 56.7
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 48.3,
+    "p95_wait_s": 145.5,
+    "worst_approach_wait_s": 187.4,
+    "max_approach_p95_wait_s": 172.5
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 22.8,
+    "p95_wait_s": 50.8,
+    "worst_approach_wait_s": 65.4,
+    "max_approach_p95_wait_s": 56.7
+   }
+  },
+  "ft": 43.2
+ },
+ "hanoi_dong_da_v1|g30": {
+  "score": 34.3,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 27.6,
+    "p95_wait_s": 71.4,
+    "worst_approach_wait_s": 87.3,
+    "max_approach_p95_wait_s": 78.8
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 47.7,
+    "p95_wait_s": 140.4,
+    "worst_approach_wait_s": 188.4,
+    "max_approach_p95_wait_s": 157.2
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 27.6,
+    "p95_wait_s": 71.4,
+    "worst_approach_wait_s": 87.3,
+    "max_approach_p95_wait_s": 78.8
+   }
+  },
+  "ft": 43.2
+ },
+ "jakarta_menteng_v1|g10": {
+  "score": 69.8,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "directional_reversal: p95_wait_s regression",
+   "directional_reversal: worst_approach_wait_s regression",
+   "directional_reversal: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 18.2,
+    "p95_wait_s": 36.1,
+    "worst_approach_wait_s": 66.2,
+    "max_approach_p95_wait_s": 46.8
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 171.9,
+    "p95_wait_s": 446.0,
+    "worst_approach_wait_s": 561.7,
+    "max_approach_p95_wait_s": 533.3
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 19.3,
+    "p95_wait_s": 35.3,
+    "worst_approach_wait_s": 64.5,
+    "max_approach_p95_wait_s": 47.1
+   }
+  },
+  "ft": 53.0
+ },
+ "jakarta_menteng_v1|g15": {
+  "score": 38.0,
+  "feasible": true,
+  "reasons": [],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 15.0,
+    "p95_wait_s": 26.1,
+    "worst_approach_wait_s": 42.1,
+    "max_approach_p95_wait_s": 29.9
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 82.5,
+    "p95_wait_s": 188.3,
+    "worst_approach_wait_s": 254.4,
+    "max_approach_p95_wait_s": 221.1
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 16.3,
+    "p95_wait_s": 26.1,
+    "worst_approach_wait_s": 42.3,
+    "max_approach_p95_wait_s": 29.8
+   }
+  },
+  "ft": 53.0
+ },
+ "jakarta_menteng_v1|g20": {
+  "score": 28.0,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 16.3,
+    "p95_wait_s": 32.1,
+    "worst_approach_wait_s": 46.6,
+    "max_approach_p95_wait_s": 36.1
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 49.9,
+    "p95_wait_s": 105.3,
+    "worst_approach_wait_s": 145.5,
+    "max_approach_p95_wait_s": 119.5
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 17.7,
+    "p95_wait_s": 32.1,
+    "worst_approach_wait_s": 46.7,
+    "max_approach_p95_wait_s": 35.9
+   }
+  },
+  "ft": 53.0
+ },
+ "jakarta_menteng_v1|g30": {
+  "score": 25.8,
+  "feasible": false,
+  "reasons": [
+   "balanced: p95_wait_s regression",
+   "balanced: worst_approach_wait_s regression",
+   "balanced: max_approach_p95_wait_s regression",
+   "downstream_bottleneck: p95_wait_s regression",
+   "downstream_bottleneck: worst_approach_wait_s regression",
+   "downstream_bottleneck: max_approach_p95_wait_s regression"
+  ],
+  "per": {
+   "balanced": {
+    "delay_per_scheduled_s": 19.2,
+    "p95_wait_s": 43.8,
+    "worst_approach_wait_s": 63.5,
+    "max_approach_p95_wait_s": 48.4
+   },
+   "directional_reversal": {
+    "delay_per_scheduled_s": 37.5,
+    "p95_wait_s": 74.2,
+    "worst_approach_wait_s": 96.6,
+    "max_approach_p95_wait_s": 83.2
+   },
+   "downstream_bottleneck": {
+    "delay_per_scheduled_s": 20.6,
+    "p95_wait_s": 43.5,
+    "worst_approach_wait_s": 63.5,
+    "max_approach_p95_wait_s": 46.2
+   }
+  },
+  "ft": 53.0
+ }
+}
