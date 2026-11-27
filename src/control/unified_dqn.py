@@ -19,6 +19,12 @@ RESIDUAL_BASE = os.environ.get("EDGEFLOW_RESIDUAL_BASE", "max_pressure")  # expe
 RESIDUAL_ALT = os.environ.get("EDGEFLOW_RESIDUAL_ALT", "")  # experiment: overrides may only pick this controller's phase
 ALT_MARGIN = float(os.environ.get("EDGEFLOW_ALT_MARGIN", "nan"))  # experiment: two-tier residual; nan = off
 _BASES = {}  # controller name -> [controller, last sim time seen]
+GATES_OFF = dict(max_red_s=0.0, max_red_external=False, mp_margin=float("nan"),
+                 residual_base="max_pressure", residual_alt="", alt_margin=float("nan"))
+# Round-3 config C (artifacts/benchmarks/rl-loop/it32/gates.env, inference gates only): the best method of the
+# 2026-11-26 test-seed benchmark, shown on the dashboard as "EdgeFlow RL"
+EDGEFLOW_RL_GATES = dict(max_red_s=40.0, max_red_external=True, mp_margin=0.20,
+                         residual_base="flow_theory", residual_alt="max_pressure", alt_margin=0.05)
 
 
 def controller_index(name, node, telemetry, view, topology):
@@ -45,21 +51,24 @@ def alt_index(node, telemetry, view, topology):
     return controller_index(RESIDUAL_ALT, node, telemetry, view, topology) if RESIDUAL_ALT else None
 
 
-def residual_choice(values, mask, mp_index, alt=None):
+def residual_choice(values, mask, mp_index, alt=None, mp_margin=None, alt_margin=None):
     """Greedy legal phase, except keep the base's legal phase unless the best Q beats it by MP_MARGIN * |Q|.
     With an alt index (RESIDUAL_ALT), the only allowed override is the alt controller's phase; with ALT_MARGIN set
-    as well (two-tier), any phase may still override at MP_MARGIN and the alt's phase already at ALT_MARGIN."""
-    two_tier = not np.isnan(ALT_MARGIN)
-    if alt is not None and not two_tier and not np.isnan(MP_MARGIN) and mask[mp_index]:
+    as well (two-tier), any phase may still override at MP_MARGIN and the alt's phase already at ALT_MARGIN.
+    The margins default to the env gates; a controller built with its own gates passes them explicitly."""
+    mp_margin = MP_MARGIN if mp_margin is None else mp_margin
+    alt_margin = ALT_MARGIN if alt_margin is None else alt_margin
+    two_tier = not np.isnan(alt_margin)
+    if alt is not None and not two_tier and not np.isnan(mp_margin) and mask[mp_index]:
         mask = mask & np.isin(np.arange(len(mask)), (mp_index, alt))
     masked = np.where(mask, values, -np.inf)
     best = int(np.argmax(masked))
-    if np.isnan(MP_MARGIN) or not mask[mp_index]:
+    if np.isnan(mp_margin) or not mask[mp_index]:
         return best
     scale = abs(masked[mp_index])
-    if masked[best] - masked[mp_index] > MP_MARGIN * scale:
+    if masked[best] - masked[mp_index] > mp_margin * scale:
         return best
-    if two_tier and alt is not None and mask[alt] and masked[alt] - masked[mp_index] > ALT_MARGIN * scale:
+    if two_tier and alt is not None and mask[alt] and masked[alt] - masked[mp_index] > alt_margin * scale:
         return alt
     return mp_index
 PHASE_ALGORITHMS = tuple(a for a, (arch, _) in U["algorithms"].items() if arch in PHASE_ARCHITECTURES)
@@ -93,9 +102,12 @@ def phase_scores(architecture, policy, observation):
 
 
 class UnifiedDQNController(BaseController):
-    def __init__(self, model_path, inference_device="cpu"):
+    def __init__(self, model_path, inference_device="cpu", gates=None):
+        """gates=None follows the EDGEFLOW_* env gates (training/benchmark); a dict fixes them for this instance
+        (missing keys = off), so differently gated policies can be switched live in one process."""
         if not model_path:
             raise ValueError("Unified DQN controllers require an explicit model_path")
+        self.gates = None if gates is None else {**GATES_OFF, **gates}
         with open(model_path, encoding="utf-8") as handle:
             self.artifact = a = json.load(handle)
         validate_payload(a, "unified_dqn_model")
@@ -120,10 +132,17 @@ class UnifiedDQNController(BaseController):
     def _command(self, node, telemetry, view, topology):
         values = phase_scores(self.architecture, self.policy,
                               observe_node(node, view, self._flow(topology), self.radius))
-        mask = phase_mask(node, telemetry)
-        choice = (int(np.argmax(np.where(mask, values, -np.inf))) if np.isnan(MP_MARGIN)
-                  else residual_choice(values, mask, base_index(node, telemetry, view, topology),
-                                    alt_index(node, telemetry, view, topology)))
+        # gates=None reads the env gates at call time (phase_mask's None defaults included)
+        g = self.gates or dict(max_red_s=None, max_red_external=None, mp_margin=MP_MARGIN,
+                               residual_base=RESIDUAL_BASE, residual_alt=RESIDUAL_ALT, alt_margin=ALT_MARGIN)
+        mask = phase_mask(node, telemetry, g["max_red_s"], g["max_red_external"])
+        if np.isnan(g["mp_margin"]):
+            choice = int(np.argmax(np.where(mask, values, -np.inf)))
+        else:
+            alt = (controller_index(g["residual_alt"], node, telemetry, view, topology)
+                   if g["residual_alt"] else None)
+            choice = residual_choice(values, mask, controller_index(g["residual_base"], node, telemetry, view, topology),
+                                     alt, g["mp_margin"], g["alt_margin"])
         return dict(command_id=str(uuid.uuid4()), node_id=node["node_id"],
                     target_phase_id=node["phases"][choice]["phase_id"],
                     min_green_s=TIMING["min_green_s"], max_green_s=TIMING["max_green_s"], controller=self.name)

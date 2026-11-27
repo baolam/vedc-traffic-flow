@@ -14,7 +14,10 @@ MAX_RED_S = float(os.environ.get("EDGEFLOW_MAX_RED", 0))  # experiment: force se
 MAX_RED_EXTERNAL = os.environ.get("EDGEFLOW_MAX_RED_EXTERNAL") == "1"
 
 
-def phase_mask(node, telemetry):
+def phase_mask(node, telemetry, max_red_s=None, max_red_external=None):
+    """Legal phases; max_red_s/max_red_external default to the env gates (per-controller values override them)."""
+    max_red_s = MAX_RED_S if max_red_s is None else max_red_s
+    max_red_external = MAX_RED_EXTERNAL if max_red_external is None else max_red_external
     phases = [p["phase_id"] for p in node["phases"]]
     current = phases.index(telemetry["current_phase_id"])
     mask = np.ones(len(phases), dtype=bool)
@@ -28,13 +31,13 @@ def phase_mask(node, telemetry):
         mask[current] = False
     if not mask.any():
         raise ValueError("No legal signal phase")
-    if MAX_RED_S and mask.sum() > 1:
+    if max_red_s and mask.sum() > 1:
         waits = {a["approach_id"]: max(a.get("oldest_stopped_wait_s", 0.0),
-                                       a.get("oldest_external_wait_s", 0.0) if MAX_RED_EXTERNAL else 0.0)
+                                       a.get("oldest_external_wait_s", 0.0) if max_red_external else 0.0)
                  for a in telemetry["approaches"]}
         worst = max(waits, key=waits.get)
         serve = mask & np.array([worst in p["approaches"] for p in node["phases"]])
-        if waits[worst] > MAX_RED_S and serve.any():
+        if waits[worst] > max_red_s and serve.any():
             return serve
     return mask
 

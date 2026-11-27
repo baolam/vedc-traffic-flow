@@ -1,0 +1,66 @@
+{
+  "phase_dqn_baseline": {
+    "cologne8_benchmark_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it00b/training/cologne8_benchmark_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 180",
+      "sha256": "8e28ae3de5e3bdecfef580766347cea7387ff74dd726cfe2ae6aae48d4cc5935"
+    },
+    "four_intersection_rl_v1": {
+      "source": "artifacts/benchmarks/rl-loop/bench-it00b/training/four_intersection_rl_v1/phase_dqn_unified/17/final-policy.json",
+      "checkpoint": "final checkpoint (no feasible checkpoint)",
+      "sha256": "eeac866637b2d657c822f4980f74f140dea88df3ae9d1aa5e2898859fa77a29e"
+    },
+    "grid4x4_benchmark_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it00b/training/grid4x4_benchmark_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 220",
+      "sha256": "05c9ea6d15c488cc1651e42fa730b6c9ef010591349d874f2f42fad96aebe7aa"
+    },
+    "hanoi_dong_da_v1": {
+      "source": "artifacts/benchmarks/rl-loop/bench-it00b/training/hanoi_dong_da_v1/phase_dqn_unified/17/final-policy.json",
+      "checkpoint": "final checkpoint (no feasible checkpoint)",
+      "sha256": "9535961acb0f67026fa88c864c465c4eb9804d2c8f933ff323a0288b257cdf42"
+    },
+    "hcm_neighborhood_v3_benchmark_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it00b/training/hcm_neighborhood_v3_benchmark_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 381",
+      "sha256": "4189a82dd358267a82de933a82c0333df944656e5fdb6b548ec46d78001f39f3"
+    },
+    "jakarta_menteng_v1": {
+      "source": "artifacts/benchmarks/rl-loop/bench-it00b/training/jakarta_menteng_v1/phase_dqn_unified/17/final-policy.json",
+      "checkpoint": "final checkpoint (no feasible checkpoint)",
+      "sha256": "ac46de00828ec16f5218d1e94e1390d040decfafdab191507fd81ae24b9c4255"
+    }
+  },
+  "edgeflow_rl": {
+    "cologne8_benchmark_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it32/training/cologne8_benchmark_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 140",
+      "sha256": "f45a36b36da5d8031a732d24c8ce4f221d277fdb4c0f824f788c65c1783c1f0f"
+    },
+    "four_intersection_rl_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it32/training/four_intersection_rl_v1/phase_dqn_unified/17/final-policy.json",
+      "checkpoint": "final checkpoint (no feasible checkpoint)",
+      "sha256": "66ab5fad9ffb8710bf44ee76fa7d35c204e5db01a058bf0d90d893d015f86263"
+    },
+    "grid4x4_benchmark_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it32/training/grid4x4_benchmark_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 180",
+      "sha256": "e9f710644267a5a07a350e634acec93fa34b240d9549f4232c6fcbf95fe37caf"
+    },
+    "hanoi_dong_da_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it32/training/hanoi_dong_da_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 140",
+      "sha256": "4463df92cdd7fccbe616bfc12c51f60bf9341bbfd23e04df86e746ff93c03fdf"
+    },
+    "hcm_neighborhood_v3_benchmark_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it32/training/hcm_neighborhood_v3_benchmark_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 140",
+      "sha256": "d342b0d4a519b0a0c29ad8cddf434c41b488e896af5bfc280089d27e26c096d0"
+    },
+    "jakarta_menteng_v1": {
+      "source": "artifacts/benchmarks/rl-loop/it32/training/jakarta_menteng_v1/phase_dqn_unified/17/policy.json",
+      "checkpoint": "selected ep 200",
+      "sha256": "14f94c0b809889ae4526da2a5589c37c95fad44e5dd69c0f2bf16e591d9d3149"
+    }
+  }
+}
