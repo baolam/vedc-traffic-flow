@@ -701,6 +701,9 @@ class SingleExperimentRunner:
 # CLI entry point
 # ================================================================
 def main():
+    if "--suite" in sys.argv:
+        from src.benchmark.cli import main as suite_main
+        sys.exit(suite_main())
     parser = argparse.ArgumentParser(
         description="EdgeFlow AI Standardized Single Experiment Runner"
     )

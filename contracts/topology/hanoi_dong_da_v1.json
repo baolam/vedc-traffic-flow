@@ -1,0 +1,1881 @@
+{
+  "topology_id": "hanoi_dong_da_v1",
+  "version": "1.0",
+  "nodes": [
+    {
+      "node_id": "J1",
+      "approaches": [
+        "J1_N_0_IN",
+        "J1_S_IN",
+        "J1_N_1_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J1_PHASE_0",
+          "approaches": [
+            "J1_N_0_IN",
+            "J1_S_IN"
+          ],
+          "sumo_state": "GGGGrGGGg",
+          "movements": [
+            {
+              "from_approach": "J1_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J1_PHASE_1",
+          "approaches": [
+            "J1_N_0_IN",
+            "J1_S_IN",
+            "J1_N_1_IN"
+          ],
+          "sumo_state": "GrrrGGGGr",
+          "movements": [
+            {
+              "from_approach": "J1_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J1_N_1_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 0,
+          "from": "1240127122#7",
+          "to": "1246265594#0"
+        },
+        {
+          "index": 1,
+          "from": "1240127122#7",
+          "to": "1240127122#11"
+        },
+        {
+          "index": 2,
+          "from": "1240127122#7",
+          "to": "1240127122#11"
+        },
+        {
+          "index": 3,
+          "from": "1240127122#7",
+          "to": "1240127122#11"
+        },
+        {
+          "index": 5,
+          "from": "1432500749#2",
+          "to": "207272547#1"
+        },
+        {
+          "index": 6,
+          "from": "1432500749#2",
+          "to": "207272547#1"
+        },
+        {
+          "index": 7,
+          "from": "1432500749#2",
+          "to": "207272547#1"
+        },
+        {
+          "index": 8,
+          "from": "1432500749#2",
+          "to": "1246265594#0"
+        },
+        {
+          "index": 4,
+          "from": "684352031#0",
+          "to": "684352031#1"
+        }
+      ],
+      "sumo_tls_id": "cluster_10060116470_10173310488_10173310489_10180021633_#3more",
+      "sumo_edges": {
+        "J1_N_0_IN": "1240127122#7",
+        "J1_S_IN": "1432500749#2",
+        "J1_N_1_IN": "684352031#0"
+      }
+    },
+    {
+      "node_id": "J2",
+      "approaches": [
+        "J2_S_IN",
+        "J2_W_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J2_PHASE_0",
+          "approaches": [
+            "J2_W_IN"
+          ],
+          "sumo_state": "rGG",
+          "movements": [
+            {
+              "from_approach": "J2_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J2_W_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J2_PHASE_1",
+          "approaches": [
+            "J2_S_IN",
+            "J2_W_IN"
+          ],
+          "sumo_state": "GGr",
+          "movements": [
+            {
+              "from_approach": "J2_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J2_W_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 0,
+          "from": "-710333845#1",
+          "to": "1478478191"
+        },
+        {
+          "index": 1,
+          "from": "600037935#0",
+          "to": "710333845#1"
+        },
+        {
+          "index": 2,
+          "from": "600037935#0",
+          "to": "1478478191"
+        }
+      ],
+      "sumo_tls_id": "cluster_10154763174_5707161146_5707161148",
+      "sumo_edges": {
+        "J2_S_IN": "-710333845#1",
+        "J2_W_IN": "600037935#0"
+      }
+    },
+    {
+      "node_id": "J3",
+      "approaches": [
+        "J3_S_IN",
+        "J3_E_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J3_PHASE_0",
+          "approaches": [
+            "J3_S_IN"
+          ],
+          "sumo_state": "rrGGG",
+          "movements": [
+            {
+              "from_approach": "J3_S_IN",
+              "to_node": "J4",
+              "to_approach": "J4_S_IN"
+            },
+            {
+              "from_approach": "J3_S_IN",
+              "to_node": "J4",
+              "to_approach": "J4_S_IN"
+            },
+            {
+              "from_approach": "J3_S_IN",
+              "to_node": "J4",
+              "to_approach": "J4_S_IN"
+            }
+          ]
+        },
+        {
+          "phase_id": "J3_PHASE_1",
+          "approaches": [
+            "J3_E_IN"
+          ],
+          "sumo_state": "GGrrr",
+          "movements": [
+            {
+              "from_approach": "J3_E_IN",
+              "to_node": "J4",
+              "to_approach": "J4_S_IN"
+            },
+            {
+              "from_approach": "J3_E_IN",
+              "to_node": "J4",
+              "to_approach": "J4_S_IN"
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 2,
+          "from": "1216203224",
+          "to": "1203979590#1"
+        },
+        {
+          "index": 3,
+          "from": "1216203224",
+          "to": "1203979590#1"
+        },
+        {
+          "index": 4,
+          "from": "1216203224",
+          "to": "1203979590#1"
+        },
+        {
+          "index": 0,
+          "from": "179989574#1",
+          "to": "1203979590#1"
+        },
+        {
+          "index": 1,
+          "from": "179989574#1",
+          "to": "1203979590#1"
+        }
+      ],
+      "sumo_tls_id": "cluster_10173310446_2174649887_6661111556",
+      "sumo_edges": {
+        "J3_S_IN": "1216203224",
+        "J3_E_IN": "179989574#1"
+      }
+    },
+    {
+      "node_id": "J4",
+      "approaches": [
+        "J4_S_IN",
+        "J4_W_IN",
+        "J4_N_IN",
+        "J4_E_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J4_PHASE_0",
+          "approaches": [
+            "J4_W_IN",
+            "J4_E_IN"
+          ],
+          "sumo_state": "rrrrGGGGGgrrrrrGGGGGg",
+          "movements": [
+            {
+              "from_approach": "J4_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_E_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J4_PHASE_1",
+          "approaches": [
+            "J4_S_IN",
+            "J4_N_IN"
+          ],
+          "sumo_state": "GGGgrrrrrrGGGGgrrrrrr",
+          "movements": [
+            {
+              "from_approach": "J4_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_N_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J4_PHASE_2",
+          "approaches": [
+            "J4_S_IN",
+            "J4_N_IN"
+          ],
+          "sumo_state": "rrrGrrrrrrrrrrGrrrrrr",
+          "movements": [
+            {
+              "from_approach": "J4_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J4_N_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 10,
+          "from": "1203979590#1",
+          "to": "506383095#1"
+        },
+        {
+          "index": 11,
+          "from": "1203979590#1",
+          "to": "709017797#0"
+        },
+        {
+          "index": 12,
+          "from": "1203979590#1",
+          "to": "709017797#0"
+        },
+        {
+          "index": 13,
+          "from": "1203979590#1",
+          "to": "709017797#0"
+        },
+        {
+          "index": 14,
+          "from": "1203979590#1",
+          "to": "1560461239#1"
+        },
+        {
+          "index": 15,
+          "from": "1576481768#0",
+          "to": "708914976#1"
+        },
+        {
+          "index": 16,
+          "from": "1576481768#0",
+          "to": "506383095#1"
+        },
+        {
+          "index": 17,
+          "from": "1576481768#0",
+          "to": "506383095#1"
+        },
+        {
+          "index": 18,
+          "from": "1576481768#0",
+          "to": "506383095#1"
+        },
+        {
+          "index": 19,
+          "from": "1576481768#0",
+          "to": "506383095#1"
+        },
+        {
+          "index": 20,
+          "from": "1576481768#0",
+          "to": "709017797#0"
+        },
+        {
+          "index": 0,
+          "from": "708903075#1",
+          "to": "1560461239#1"
+        },
+        {
+          "index": 1,
+          "from": "708903075#1",
+          "to": "708914976#1"
+        },
+        {
+          "index": 2,
+          "from": "708903075#1",
+          "to": "708914976#1"
+        },
+        {
+          "index": 3,
+          "from": "708903075#1",
+          "to": "506383095#1"
+        },
+        {
+          "index": 4,
+          "from": "711101759#4",
+          "to": "709017797#0"
+        },
+        {
+          "index": 5,
+          "from": "711101759#4",
+          "to": "1560461239#1"
+        },
+        {
+          "index": 6,
+          "from": "711101759#4",
+          "to": "1560461239#1"
+        },
+        {
+          "index": 7,
+          "from": "711101759#4",
+          "to": "1560461239#1"
+        },
+        {
+          "index": 8,
+          "from": "711101759#4",
+          "to": "1560461239#1"
+        },
+        {
+          "index": 9,
+          "from": "711101759#4",
+          "to": "708914976#1"
+        }
+      ],
+      "sumo_tls_id": "cluster_10180021536_10180021540_12669488031_4961341859_#6more",
+      "sumo_edges": {
+        "J4_S_IN": "1203979590#1",
+        "J4_W_IN": "1576481768#0",
+        "J4_N_IN": "708903075#1",
+        "J4_E_IN": "711101759#4"
+      }
+    },
+    {
+      "node_id": "J5",
+      "approaches": [
+        "J5_N_0_IN",
+        "J5_N_1_IN",
+        "J5_E_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J5_PHASE_0",
+          "approaches": [
+            "J5_N_0_IN",
+            "J5_E_IN"
+          ],
+          "sumo_state": "rrGGGg",
+          "movements": [
+            {
+              "from_approach": "J5_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J5_N_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J5_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J5_E_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J5_PHASE_1",
+          "approaches": [
+            "J5_N_1_IN",
+            "J5_E_IN"
+          ],
+          "sumo_state": "GGGrrr",
+          "movements": [
+            {
+              "from_approach": "J5_N_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J5_N_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J5_E_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 4,
+          "from": "-11839274#4",
+          "to": "-11839274#2"
+        },
+        {
+          "index": 5,
+          "from": "-11839274#4",
+          "to": "895546147#0"
+        },
+        {
+          "index": 0,
+          "from": "-895546147#0",
+          "to": "11839274#4"
+        },
+        {
+          "index": 1,
+          "from": "-895546147#0",
+          "to": "-11839274#2"
+        },
+        {
+          "index": 2,
+          "from": "11839274#2",
+          "to": "895546147#0"
+        },
+        {
+          "index": 3,
+          "from": "11839274#2",
+          "to": "11839274#4"
+        }
+      ],
+      "sumo_tls_id": "cluster_106109208_6688359120",
+      "sumo_edges": {
+        "J5_N_0_IN": "-11839274#4",
+        "J5_N_1_IN": "-895546147#0",
+        "J5_E_IN": "11839274#2"
+      }
+    },
+    {
+      "node_id": "J6",
+      "approaches": [
+        "J6_S_0_IN",
+        "J6_S_1_IN",
+        "J6_W_IN",
+        "J6_N_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J6_PHASE_0",
+          "approaches": [
+            "J6_S_1_IN",
+            "J6_W_IN"
+          ],
+          "sumo_state": "rrrrrGGGGGGgrrrrrrrGGGGGGGGGgg",
+          "movements": [
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": "J7",
+              "to_approach": "J7_E_1_IN"
+            },
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": "J7",
+              "to_approach": "J7_E_1_IN"
+            },
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": "J7",
+              "to_approach": "J7_E_1_IN"
+            },
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": "J7",
+              "to_approach": "J7_E_1_IN"
+            },
+            {
+              "from_approach": "J6_S_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J6_PHASE_1",
+          "approaches": [
+            "J6_S_0_IN",
+            "J6_W_IN",
+            "J6_N_IN"
+          ],
+          "sumo_state": "GGGrrrrrrrrrGGGGGGrGGGGGrrrrrr",
+          "movements": [
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_N_IN",
+              "to_node": "J7",
+              "to_approach": "J7_E_1_IN"
+            },
+            {
+              "from_approach": "J6_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_N_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J6_PHASE_2",
+          "approaches": [
+            "J6_S_0_IN",
+            "J6_N_IN"
+          ],
+          "sumo_state": "rrrGGrrrrrrrrrrrrrGrrrrrrrrrrr",
+          "movements": [
+            {
+              "from_approach": "J6_S_0_IN",
+              "to_node": "J7",
+              "to_approach": "J7_E_1_IN"
+            },
+            {
+              "from_approach": "J6_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J6_N_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 12,
+          "from": "1262818190#0",
+          "to": "1576482198#1"
+        },
+        {
+          "index": 13,
+          "from": "1262818190#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 14,
+          "from": "1262818190#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 15,
+          "from": "1262818190#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 16,
+          "from": "1262818190#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 17,
+          "from": "1262818190#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 18,
+          "from": "1262818190#0",
+          "to": "964674137#1"
+        },
+        {
+          "index": 5,
+          "from": "1392245988#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 6,
+          "from": "1392245988#0",
+          "to": "687098302#1"
+        },
+        {
+          "index": 7,
+          "from": "1392245988#0",
+          "to": "964674137#1"
+        },
+        {
+          "index": 8,
+          "from": "1392245988#0",
+          "to": "964674137#1"
+        },
+        {
+          "index": 9,
+          "from": "1392245988#0",
+          "to": "964674137#1"
+        },
+        {
+          "index": 10,
+          "from": "1392245988#0",
+          "to": "964674137#1"
+        },
+        {
+          "index": 11,
+          "from": "1392245988#0",
+          "to": "882269315#1"
+        },
+        {
+          "index": 19,
+          "from": "711109718#1",
+          "to": "600037940#0"
+        },
+        {
+          "index": 20,
+          "from": "711109718#1",
+          "to": "600037940#0"
+        },
+        {
+          "index": 21,
+          "from": "711109718#1",
+          "to": "600037940#0"
+        },
+        {
+          "index": 22,
+          "from": "711109718#1",
+          "to": "600037940#0"
+        },
+        {
+          "index": 23,
+          "from": "711109718#1",
+          "to": "600037940#0"
+        },
+        {
+          "index": 24,
+          "from": "711109718#1",
+          "to": "882269315#1"
+        },
+        {
+          "index": 25,
+          "from": "711109718#1",
+          "to": "1576482198#1"
+        },
+        {
+          "index": 26,
+          "from": "711109718#1",
+          "to": "1576482198#1"
+        },
+        {
+          "index": 27,
+          "from": "711109718#1",
+          "to": "1576482198#1"
+        },
+        {
+          "index": 28,
+          "from": "711109718#1",
+          "to": "687098302#1"
+        },
+        {
+          "index": 29,
+          "from": "711109718#1",
+          "to": "687098302#1"
+        },
+        {
+          "index": 0,
+          "from": "954341842#0",
+          "to": "964674137#1"
+        },
+        {
+          "index": 1,
+          "from": "954341842#0",
+          "to": "882269315#1"
+        },
+        {
+          "index": 2,
+          "from": "954341842#0",
+          "to": "882269315#1"
+        },
+        {
+          "index": 3,
+          "from": "954341842#0",
+          "to": "1576482198#1"
+        },
+        {
+          "index": 4,
+          "from": "954341842#0",
+          "to": "1576482198#1"
+        }
+      ],
+      "sumo_tls_id": "cluster_12357580640_1497544719_1497544735_421080868_#9more",
+      "sumo_edges": {
+        "J6_S_0_IN": "1262818190#0",
+        "J6_S_1_IN": "1392245988#0",
+        "J6_W_IN": "711109718#1",
+        "J6_N_IN": "954341842#0"
+      }
+    },
+    {
+      "node_id": "J7",
+      "approaches": [
+        "J7_N_IN",
+        "J7_E_0_IN",
+        "J7_E_1_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J7_PHASE_0",
+          "approaches": [
+            "J7_E_0_IN"
+          ],
+          "sumo_state": "rGGrrrr",
+          "movements": [
+            {
+              "from_approach": "J7_E_0_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J7_E_0_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J7_PHASE_1",
+          "approaches": [
+            "J7_E_1_IN"
+          ],
+          "sumo_state": "rrrGGGG",
+          "movements": [
+            {
+              "from_approach": "J7_E_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J7_E_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J7_E_1_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J7_E_1_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J7_PHASE_2",
+          "approaches": [
+            "J7_N_IN"
+          ],
+          "sumo_state": "Grrrrrr",
+          "movements": [
+            {
+              "from_approach": "J7_N_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 0,
+          "from": "600037938#1",
+          "to": "711101759#0"
+        },
+        {
+          "index": 1,
+          "from": "871891999#0",
+          "to": "711101759#0"
+        },
+        {
+          "index": 2,
+          "from": "871891999#0",
+          "to": "711101759#0"
+        },
+        {
+          "index": 3,
+          "from": "964674137#1",
+          "to": "711101759#0"
+        },
+        {
+          "index": 4,
+          "from": "964674137#1",
+          "to": "711101759#0"
+        },
+        {
+          "index": 5,
+          "from": "964674137#1",
+          "to": "711101759#0"
+        },
+        {
+          "index": 6,
+          "from": "964674137#1",
+          "to": "711101759#0"
+        }
+      ],
+      "sumo_tls_id": "cluster_12357580641_5707161154_5707161157_5707161164",
+      "sumo_edges": {
+        "J7_N_IN": "600037938#1",
+        "J7_E_0_IN": "871891999#0",
+        "J7_E_1_IN": "964674137#1"
+      }
+    },
+    {
+      "node_id": "J8",
+      "approaches": [
+        "J8_E_IN",
+        "J8_N_IN",
+        "J8_S_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J8_PHASE_0",
+          "approaches": [
+            "J8_N_IN",
+            "J8_S_IN"
+          ],
+          "sumo_state": "GGgrrGGG",
+          "movements": [
+            {
+              "from_approach": "J8_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_S_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J8_PHASE_1",
+          "approaches": [
+            "J8_E_IN",
+            "J8_S_IN"
+          ],
+          "sumo_state": "rrrGGGrr",
+          "movements": [
+            {
+              "from_approach": "J8_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J8_S_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 3,
+          "from": "11711997#6",
+          "to": "1266014435"
+        },
+        {
+          "index": 4,
+          "from": "11711997#6",
+          "to": "711083507#1"
+        },
+        {
+          "index": 0,
+          "from": "1266014434#0",
+          "to": "711083507#1"
+        },
+        {
+          "index": 1,
+          "from": "1266014434#0",
+          "to": "711083507#1"
+        },
+        {
+          "index": 2,
+          "from": "1266014434#0",
+          "to": "-11711997#6"
+        },
+        {
+          "index": 5,
+          "from": "838425496#2",
+          "to": "-11711997#6"
+        },
+        {
+          "index": 6,
+          "from": "838425496#2",
+          "to": "1266014435"
+        },
+        {
+          "index": 7,
+          "from": "838425496#2",
+          "to": "1266014435"
+        }
+      ],
+      "sumo_tls_id": "cluster_1314209723_5485651217_6689074607_6689373940_#2more",
+      "sumo_edges": {
+        "J8_E_IN": "11711997#6",
+        "J8_N_IN": "1266014434#0",
+        "J8_S_IN": "838425496#2"
+      }
+    },
+    {
+      "node_id": "J9",
+      "approaches": [
+        "J9_E_IN",
+        "J9_S_IN",
+        "J9_W_IN",
+        "J9_N_IN"
+      ],
+      "phases": [
+        {
+          "phase_id": "J9_PHASE_0",
+          "approaches": [
+            "J9_S_IN",
+            "J9_N_IN"
+          ],
+          "sumo_state": "GGGgrrrGGGgrrr",
+          "movements": [
+            {
+              "from_approach": "J9_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_S_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_N_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_N_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        },
+        {
+          "phase_id": "J9_PHASE_1",
+          "approaches": [
+            "J9_E_IN",
+            "J9_W_IN"
+          ],
+          "sumo_state": "rrrrGGgrrrrGGg",
+          "movements": [
+            {
+              "from_approach": "J9_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_E_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_W_IN",
+              "to_node": null,
+              "to_approach": null
+            },
+            {
+              "from_approach": "J9_W_IN",
+              "to_node": null,
+              "to_approach": null
+            }
+          ]
+        }
+      ],
+      "sumo_links": [
+        {
+          "index": 4,
+          "from": "-1184119038#1",
+          "to": "808672175#1"
+        },
+        {
+          "index": 5,
+          "from": "-1184119038#1",
+          "to": "-675260216#0"
+        },
+        {
+          "index": 6,
+          "from": "-1184119038#1",
+          "to": "1204846893#1"
+        },
+        {
+          "index": 7,
+          "from": "1204846892#1",
+          "to": "1184119038#1"
+        },
+        {
+          "index": 8,
+          "from": "1204846892#1",
+          "to": "808672175#1"
+        },
+        {
+          "index": 9,
+          "from": "1204846892#1",
+          "to": "808672175#1"
+        },
+        {
+          "index": 10,
+          "from": "1204846892#1",
+          "to": "-675260216#0"
+        },
+        {
+          "index": 11,
+          "from": "675260216#0",
+          "to": "1204846893#1"
+        },
+        {
+          "index": 12,
+          "from": "675260216#0",
+          "to": "1184119038#1"
+        },
+        {
+          "index": 13,
+          "from": "675260216#0",
+          "to": "808672175#1"
+        },
+        {
+          "index": 0,
+          "from": "711492060#2",
+          "to": "-675260216#0"
+        },
+        {
+          "index": 1,
+          "from": "711492060#2",
+          "to": "1204846893#1"
+        },
+        {
+          "index": 2,
+          "from": "711492060#2",
+          "to": "1204846893#1"
+        },
+        {
+          "index": 3,
+          "from": "711492060#2",
+          "to": "1184119038#1"
+        }
+      ],
+      "sumo_tls_id": "cluster_1497544669_318258663_6689495799_6689495800_#4more",
+      "sumo_edges": {
+        "J9_E_IN": "-1184119038#1",
+        "J9_S_IN": "1204846892#1",
+        "J9_W_IN": "675260216#0",
+        "J9_N_IN": "711492060#2"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "J1_N_0_IN",
+      "origin": "J1",
+      "axis": "NS",
+      "edges": [
+        "1240127122#7",
+        "1246265594#0",
+        "1246265594#1",
+        "1246265594#2",
+        "-708924032#13",
+        "-708924032#12",
+        "194759262"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J1_S_IN",
+      "origin": "J1",
+      "axis": "NS",
+      "edges": [
+        "1432500749#2",
+        "207272547#1",
+        "207272547#2",
+        "28947038#1",
+        "600037923"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J1_N_1_IN",
+      "origin": "J1",
+      "axis": "NS",
+      "edges": [
+        "684352031#0",
+        "684352031#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J2_S_IN",
+      "origin": "J2",
+      "axis": "NS",
+      "edges": [
+        "-710333845#1",
+        "1478478191"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J2_W_IN",
+      "origin": "J2",
+      "axis": "EW",
+      "edges": [
+        "600037935#0",
+        "1478478191"
+      ],
+      "allowed_classes": [
+        "motorcycle",
+        "car",
+        "taxi",
+        "bus",
+        "truck"
+      ]
+    },
+    {
+      "route_id": "J3_S_IN",
+      "origin": "J3",
+      "axis": "NS",
+      "edges": [
+        "1216203224",
+        "1203979590#1",
+        "1560461239#1",
+        "1552255181#0",
+        "1552255181#1",
+        "1552255181#2",
+        "-1552255196",
+        "-37891457#0"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J3_E_IN",
+      "origin": "J3",
+      "axis": "EW",
+      "edges": [
+        "179989574#1",
+        "1203979590#1",
+        "1560461239#1",
+        "1552255181#0",
+        "1552255181#1",
+        "1552255181#2",
+        "-1552255196",
+        "-37891457#0"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J4_S_IN",
+      "origin": "J4",
+      "axis": "NS",
+      "edges": [
+        "1203979590#1",
+        "1560461239#1",
+        "1552255181#0",
+        "1552255181#1",
+        "1552255181#2",
+        "-1552255196",
+        "-37891457#0"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J4_W_IN",
+      "origin": "J4",
+      "axis": "EW",
+      "edges": [
+        "1576481768#0",
+        "708914976#1",
+        "1240127122#0",
+        "1240127122#1",
+        "599994461#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J4_N_IN",
+      "origin": "J4",
+      "axis": "NS",
+      "edges": [
+        "708903075#1",
+        "708914976#1",
+        "1240127122#0",
+        "1240127122#1",
+        "599994461#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J4_E_IN",
+      "origin": "J4",
+      "axis": "EW",
+      "edges": [
+        "711101759#4",
+        "708914976#1",
+        "1240127122#0",
+        "1240127122#1",
+        "599994461#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J5_N_0_IN",
+      "origin": "J5",
+      "axis": "NS",
+      "edges": [
+        "-11839274#4",
+        "-11839274#2",
+        "28947136#0",
+        "-28947132#1",
+        "-28947132#0",
+        "-38028976"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J5_N_1_IN",
+      "origin": "J5",
+      "axis": "NS",
+      "edges": [
+        "-895546147#0",
+        "-11839274#2",
+        "28947136#0",
+        "-28947132#1",
+        "-28947132#0",
+        "-38028976"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J5_E_IN",
+      "origin": "J5",
+      "axis": "EW",
+      "edges": [
+        "11839274#2",
+        "11839274#4",
+        "-1194666255#1",
+        "-1194666255#0",
+        "-675260246",
+        "-11839300#3",
+        "-38028976"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J6_S_0_IN",
+      "origin": "J6",
+      "axis": "NS",
+      "edges": [
+        "1262818190#0",
+        "1576482198#1",
+        "964868047#0",
+        "964868047#1"
+      ],
+      "allowed_classes": [
+        "motorcycle",
+        "car",
+        "taxi",
+        "bus",
+        "truck"
+      ]
+    },
+    {
+      "route_id": "J6_S_1_IN",
+      "origin": "J6",
+      "axis": "NS",
+      "edges": [
+        "1392245988#0",
+        "687098302#1",
+        "1335897899#0",
+        "1335897899#1",
+        "600037935#0",
+        "1478478191"
+      ],
+      "allowed_classes": [
+        "motorcycle",
+        "car",
+        "taxi",
+        "bus",
+        "truck"
+      ]
+    },
+    {
+      "route_id": "J6_W_IN",
+      "origin": "J6",
+      "axis": "EW",
+      "edges": [
+        "711109718#1",
+        "1576482198#1",
+        "964868047#0",
+        "964868047#1"
+      ],
+      "allowed_classes": [
+        "motorcycle",
+        "car",
+        "taxi",
+        "bus",
+        "truck"
+      ]
+    },
+    {
+      "route_id": "J6_N_IN",
+      "origin": "J6",
+      "axis": "NS",
+      "edges": [
+        "954341842#0",
+        "1576482198#1",
+        "964868047#0",
+        "964868047#1"
+      ],
+      "allowed_classes": [
+        "motorcycle",
+        "car",
+        "taxi",
+        "bus",
+        "truck"
+      ]
+    },
+    {
+      "route_id": "J7_N_IN",
+      "origin": "J7",
+      "axis": "NS",
+      "edges": [
+        "600037938#1",
+        "711101759#0",
+        "711101759#2",
+        "711101759#3",
+        "711101759#4",
+        "708914976#1",
+        "1240127122#0",
+        "1240127122#1",
+        "599994461#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J7_E_0_IN",
+      "origin": "J7",
+      "axis": "EW",
+      "edges": [
+        "871891999#0",
+        "711101759#0",
+        "711101759#2",
+        "711101759#3",
+        "711101759#4",
+        "708914976#1",
+        "1240127122#0",
+        "1240127122#1",
+        "599994461#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J7_E_1_IN",
+      "origin": "J7",
+      "axis": "EW",
+      "edges": [
+        "964674137#1",
+        "711101759#0",
+        "711101759#2",
+        "711101759#3",
+        "711101759#4",
+        "708914976#1",
+        "1240127122#0",
+        "1240127122#1",
+        "599994461#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J8_E_IN",
+      "origin": "J8",
+      "axis": "EW",
+      "edges": [
+        "11711997#6",
+        "711083507#1",
+        "600510784#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J8_N_IN",
+      "origin": "J8",
+      "axis": "NS",
+      "edges": [
+        "1266014434#0",
+        "711083507#1",
+        "600510784#1"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J8_S_IN",
+      "origin": "J8",
+      "axis": "NS",
+      "edges": [
+        "838425496#2",
+        "-11711997#6",
+        "-11711997#5",
+        "840074803"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J9_E_IN",
+      "origin": "J9",
+      "axis": "EW",
+      "edges": [
+        "-1184119038#1",
+        "-675260216#0",
+        "600131706"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J9_S_IN",
+      "origin": "J9",
+      "axis": "NS",
+      "edges": [
+        "1204846892#1",
+        "-675260216#0",
+        "600131706"
+      ],
+      "allowed_classes": []
+    },
+    {
+      "route_id": "J9_W_IN",
+      "origin": "J9",
+      "axis": "EW",
+      "edges": [
+        "675260216#0",
+        "1184119038#1",
+        "1184119038#2",
+        "1184119038#3"
+      ],
+      "allowed_classes": [
+        "motorcycle",
+        "car",
+        "taxi",
+        "bus",
+        "truck"
+      ]
+    },
+    {
+      "route_id": "J9_N_IN",
+      "origin": "J9",
+      "axis": "NS",
+      "edges": [
+        "711492060#2",
+        "-675260216#0",
+        "600131706"
+      ],
+      "allowed_classes": []
+    }
+  ]
+}

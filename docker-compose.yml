@@ -73,6 +73,8 @@ services:
       - EDGEFLOW_TOPOLOGY=${EDGEFLOW_TOPOLOGY:-four_intersection_v1}
       - EDGEFLOW_CONTROLLER=${EDGEFLOW_CONTROLLER:-max_pressure}
       - RL_MODEL_PATH=${RL_MODEL_PATH:-}
+      # phase_dqn_baseline / edgeflow_rl: models/rl_demo/<name>/<EDGEFLOW_TOPOLOGY>.json
+      - RL_MODELS_DIR=${RL_MODELS_DIR:-/models/rl_demo}
       # Dashboard "Apply Policy" switches the running controller through the API (empty = off)
       - CONTROL_POLICY_URL=${CONTROL_POLICY_URL:-http://api:8000/api/v1/control/policy}
       # Dashboard phase override: seconds the forced phase stays green (api reads the same value)

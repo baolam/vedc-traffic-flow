@@ -156,12 +156,18 @@ nvtx = [
 
 [[package]]
 name = "eclipse-sumo"
-version = "1.25.0"
+version = "1.28.0"
 source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sumo-data" },
+]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/37/899fe7ae079f8f546d0e97fc35012ac260c0d50e69049b565108a5802b1e/eclipse_sumo-1.25.0-py2.py3-none-macosx_15_0_arm64.whl", hash = "sha256:461e5749b20df26e56c2c409aaed6672dfbaabc4339a3b7a8ebf6ad4c9f2ea8a", size = 69523761, upload-time = "2025-11-13T09:40:43.791Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/b7/e802b6090820d356402a3104690fbcdf38cc111293854edea174300240f3/eclipse_sumo-1.25.0-py2.py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:57bee7cd36f9859e20e2143ca67163f7aa4e8fd36f73b078af8a3b443d4845b3", size = 105816894, upload-time = "2025-11-13T09:41:21.234Z" },
-    { url = "https://files.pythonhosted.org/packages/67/e8/1d1e26664973bd879d3987469f1e9d9dfba1f9bb15124ca1015961068203/eclipse_sumo-1.25.0-py2.py3-none-win_amd64.whl", hash = "sha256:151b836d680a2c243bc5e6dbdafcd7507928adfcb3da23db7134533d179da20c", size = 163390122, upload-time = "2025-11-13T09:41:53.006Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/3d/a05bfded39ae2edfec9bf49b1f1bef1ba40b3dde7f7c661c4a1300949e2f/eclipse_sumo-1.28.0-py3-none-macosx_15_0_arm64.whl", hash = "sha256:bf9babaa01976356255a91a7fe715b285663c22fd6035b19bfb7e9bf46fff348", size = 54963592, upload-time = "2026-10-08T09:29:17.557Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/f2/af4d92d3f415f1a54286e80525db8366a459b959ba1786410641ceda6021/eclipse_sumo-1.28.0-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:8af54645cf25e28eeed5e359256e470a87b8c039e54f25027edfccd194bb3561", size = 78718270, upload-time = "2026-10-08T09:29:22.795Z" },
+    { url = "https://files.pythonhosted.org/packages/43/c6/16c5ac778c77dde18c7c1a55425128fcd16a5ca33b16184f6f9d98be8835/eclipse_sumo-1.28.0-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:8d96fb90562085524d24cccbb884853e70ee2f0ceb6464d0c055be9f9506240c", size = 90369620, upload-time = "2026-10-08T09:29:28.137Z" },
+    { url = "https://files.pythonhosted.org/packages/20/e5/080446da257fe3366adf02dfe7c22cb9442d9777672a60b5c2f504eca5ef/eclipse_sumo-1.28.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:7e94b2da13d20eb4e31b76fcbca9101ec798fb71efee0ca1c0b28ec3e1d0c1a1", size = 127791557, upload-time = "2026-10-08T09:29:34.341Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/12/b37bcb407bdfe811e1a38179b4abc3142290e589104a33a8f88a3e661eb0/eclipse_sumo-1.28.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ec7042794e5ab1d806b90a5983aeda4a978dc4224141b94c0ff3affeeb4ec977", size = 148526232, upload-time = "2026-10-08T09:29:41.344Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/58/9f46c983b516d758065d99bcffe26ebd196f2529470c904f6835580a345a/eclipse_sumo-1.28.0-py3-none-win_amd64.whl", hash = "sha256:c8c898237d0a98f7f87ae762195a62114baca7b54394a430a06bbfc166145aa8", size = 158043683, upload-time = "2026-10-08T09:29:49.08Z" },
 ]
 
 [[package]]
@@ -179,6 +185,8 @@ dependencies = [
 research = [
     { name = "eclipse-sumo" },
     { name = "gymnasium" },
+    { name = "libsumo" },
+    { name = "paho-mqtt" },
     { name = "pyyaml" },
     { name = "sumolib" },
     { name = "torch" },
@@ -194,19 +202,21 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "eclipse-sumo", marker = "extra == 'research'", specifier = "==1.25.0" },
+    { name = "eclipse-sumo", marker = "extra == 'research'", specifier = "==1.28.0" },
     { name = "fastapi", marker = "extra == 'test'", specifier = ">=0.100.0" },
     { name = "gymnasium", marker = "extra == 'research'", specifier = "==1.2.3" },
     { name = "httpx", marker = "extra == 'test'", specifier = ">=0.24.0" },
     { name = "jsonschema", specifier = ">=4.21,<5" },
+    { name = "libsumo", marker = "extra == 'research'", specifier = "==1.28.0" },
     { name = "numpy", specifier = ">=1.26,<2.3" },
+    { name = "paho-mqtt", marker = "extra == 'research'", specifier = ">=1.6.1,<3" },
     { name = "pydantic-settings", marker = "extra == 'test'", specifier = ">=2.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
     { name = "pyyaml", marker = "extra == 'research'", specifier = ">=6,<7" },
     { name = "scikit-learn", specifier = ">=1.3.0" },
-    { name = "sumolib", marker = "extra == 'research'", specifier = "==1.25.0" },
+    { name = "sumolib", marker = "extra == 'research'", specifier = "==1.28.0" },
     { name = "torch", marker = "extra == 'research'", specifier = ">=2.6,<3" },
-    { name = "traci", marker = "extra == 'research'", specifier = "==1.25.0" },
+    { name = "traci", marker = "extra == 'research'", specifier = "==1.28.0" },
 ]
 provides-extras = ["research", "test"]
 
@@ -402,6 +412,65 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/19/74/a633ee74eb36c44aa6d1095e7cc5569bebf04342ee146178e2d36600708b/jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d", size = 32855, upload-time = "2025-09-08T01:34:59.186Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe", size = 18437, upload-time = "2025-09-08T01:34:57.871Z" },
+]
+
+[[package]]
+name = "libsumo"
+version = "1.28.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sumo-data" },
+    { name = "traci" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/df/d4/17be8e32f11ca5207c8d4291b026233bf501c96ff7a35600df925dbba4d2/libsumo-1.28.0-cp310-cp310-macosx_15_0_arm64.whl", hash = "sha256:d88bbf53c3103713ad999fc85bf071ea917c907018cb08099f50269672d78d0f", size = 5706822, upload-time = "2026-10-08T09:29:52.603Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/e9/e1125835a7938279f650e890e7098c1300d0edde3daf99a6538d2480727e/libsumo-1.28.0-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:e7db883058e89721276c0e92dad93bf867678c725a091153d498f046d74f0c56", size = 27094537, upload-time = "2026-10-08T09:29:55.025Z" },
+    { url = "https://files.pythonhosted.org/packages/36/a7/e000e79e65d1c140873164444bb39e6d22b872525402a949e7678fdc709e/libsumo-1.28.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:de836638748841aa1efa3f5ee04bbe6e4cc8937a4fe89d65d4c94e9f93ede832", size = 36529930, upload-time = "2026-10-08T09:29:58.529Z" },
+    { url = "https://files.pythonhosted.org/packages/17/e0/14fcf1b3473a7a63f5f1e1904b1cfd0fea9f0646a2373262e510b82e616c/libsumo-1.28.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:3d7127bd6367ee2bf1900d46ee8ccb63945d78881919d0fae744b132e7d4f820", size = 68266761, upload-time = "2026-10-08T09:30:02.925Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/a7/867aeba6f688db89519907246c1d6f521bfa96db292148912f1439075f44/libsumo-1.28.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:c95d68349eaa0855602f272a3172083f2adbe494ec658b54b8df951f470e997d", size = 85704452, upload-time = "2026-10-08T09:30:08.198Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/cf/2f24ad951c7e8bcd61c88a07e3115ef87e4a7caf7e4d186b59b22453dbc2/libsumo-1.28.0-cp310-cp310-win_amd64.whl", hash = "sha256:ba7fd73bd19015f399f7faf11c916d1b7e2c4ef9aba3956091e0d25ea65aafdd", size = 77947654, upload-time = "2026-10-08T09:30:12.799Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/49/35fe2dc85fc10eac6220925c56051ec2195ec36d88aca583dfbd8c8bcef7/libsumo-1.28.0-cp311-cp311-macosx_15_0_arm64.whl", hash = "sha256:748d7d0f060b05d0d8acb67386dbc90e4e086b56a0d23a27a9e51258fd42056b", size = 5706819, upload-time = "2026-10-08T09:30:15.544Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/11/5feda48fe6a0903470370a32296986e812311bb80511f475790099052a48/libsumo-1.28.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:7ac3bf4b28170e8c36750aaa6532ad5ede6112a44f66da468aaf9fc805b854a1", size = 27094643, upload-time = "2026-10-08T09:30:18.301Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/48/b438d479e542d13044f5fe070f084d3027cd4a44c6852514fd24ee7aa3ac/libsumo-1.28.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:4a9aec121a20d962a74cc2ac858e0b31211f6516bcaddedb49fa0b24cec75f3a", size = 36529972, upload-time = "2026-10-08T09:30:21.644Z" },
+    { url = "https://files.pythonhosted.org/packages/27/9c/58ba6f9a8093e9b38603d9df05ed5d2fbb7c4354d505784fb2778fe17242/libsumo-1.28.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:7f38ba51492df1e2ecdf97a7c7bfa4956c8f2c03d7cfd17585a6e34de354eb10", size = 68266663, upload-time = "2026-10-08T09:30:25.725Z" },
+    { url = "https://files.pythonhosted.org/packages/50/11/adb01dc74a1a2fddd661ee40480f7f71235fb8df706be0d10f6fd8011544/libsumo-1.28.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:0a14e87f601979870e07c4943cbe2c404b9adfdc8f819391b2d0041e56003e8d", size = 85704305, upload-time = "2026-10-08T09:30:30.253Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/04/ff48f0e28734e03e3f0dbe26b0d47656b7036bc068117489edff736441e9/libsumo-1.28.0-cp311-cp311-win_amd64.whl", hash = "sha256:f3a2ffc1bcbf0b5c0d2a93f8d766e959893259b7e1068e33c7ece81b58a0fb5f", size = 77946852, upload-time = "2026-10-08T09:30:34.893Z" },
+    { url = "https://files.pythonhosted.org/packages/09/75/54584f121553491239b805ef0fbd165b60910cf20903c03e47acb0d92c9e/libsumo-1.28.0-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:5451d9efd66500e7afa4130b43c619d2c11d82f01adaec45e6b791522d1c2379", size = 5708736, upload-time = "2026-10-08T09:30:37.492Z" },
+    { url = "https://files.pythonhosted.org/packages/30/64/ec691322a79a8499db1124a97128df349f1252abb2da07a5e2b37c0e679d/libsumo-1.28.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:de02ca415d625a22e97ceaabaaba72155a70cc8c805cee7aadfa25014f4abed4", size = 27107731, upload-time = "2026-10-08T09:30:40.029Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/db/4a01fec5e3df9617f685bec81bb6880d6873159876aa9646215faec59885/libsumo-1.28.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:9eb88ebc0d5de6ba2cde4eddae8d156188786694adb3b75c0f22ac82316d3636", size = 36543153, upload-time = "2026-10-08T09:30:44.469Z" },
+    { url = "https://files.pythonhosted.org/packages/34/e7/ca9dc2e8e9ddd958c143fea619f92f64d413b9d1515ebff3e988c5a608f4/libsumo-1.28.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:12068100a963d21daafa53e30a51f80a14da27dbee5d3c82ffe0e7ec4fae147f", size = 68263579, upload-time = "2026-10-08T09:30:48.864Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/37/60cb3520359da875d285ccb96f8db89d38389bc822d5a2c4383b364f46b9/libsumo-1.28.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:210dd26aee5621ca507ed80d82bf3a436dc109c3c8fd6793f46d4713ba7123cf", size = 85707873, upload-time = "2026-10-08T09:30:53.436Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/b9/c3e693a1c8769902e849bfe3a9952f0ae5c92a7fea70af8681c2efe92304/libsumo-1.28.0-cp312-cp312-win_amd64.whl", hash = "sha256:d18c3a573060a84c46085cf1c1c9888151608b957da842b3543cf8fd0b0017a1", size = 77950122, upload-time = "2026-10-08T09:30:58.195Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/b8/c3c60acc58ff920179b23b1f911d0c6ad69e97da49d65731a8075674dd83/libsumo-1.28.0-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:85c4dd5e0fe1a7aecb60fbbfcca7db5dadd103272ffa4297f4c9a70af12dd668", size = 5708842, upload-time = "2026-10-08T09:31:00.952Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/f4/877f0db41bfbf8bc7df242a7fe72eae76fa105d9e4acc7fb5768504edda8/libsumo-1.28.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:4e794fab8485c1053c0efe390104ac4bb12b031ec0fb75eb84c5094d5ff1be77", size = 27106772, upload-time = "2026-10-08T09:31:03.251Z" },
+    { url = "https://files.pythonhosted.org/packages/61/81/df39249d0f75197a6d910b43bb055b4983b891d865dd7246a7a85e767350/libsumo-1.28.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:03927ff054376f6bdbd5a26d088a6c9a6871874b38638dac142e8c94bf704b6a", size = 36542356, upload-time = "2026-10-08T09:31:06.051Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/63/2aaf5ef7f854fb345364192399a62d842867355aa78d013d9c6e3cac0f3c/libsumo-1.28.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:09804772745d8aaa475c43fa2962853f68441582e21101153d1d7e879ba6f077", size = 68264229, upload-time = "2026-10-08T09:31:10.02Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/8e/e06a1c3040e13b7b4acbb010bbb2194d32353e13294f0d82c2838abc6bb8/libsumo-1.28.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:2735b689afde026216f461bee4e09411cc814fb8735565f184537c238818d833", size = 85706859, upload-time = "2026-10-08T09:31:14.781Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/92/22eef403ea7d866306b0b88f62b4ba157bbdf259fde697c8f2ec7fb39274/libsumo-1.28.0-cp313-cp313-win_amd64.whl", hash = "sha256:18b16f2c0801c52ae9cdf4a937cfc828f6b4fa9ed5b50896ae4a920a4cdc8896", size = 77950075, upload-time = "2026-10-08T09:31:19.677Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/99/49e4f42b38730dc609f6b9e3d29a3417b150b40a7208f625f123083e9c04/libsumo-1.28.0-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:4a13a4dadafb5ed4381a1d7e05ea47fa40c73f87db94a6efe8b3bbcb0c3b2c37", size = 5709321, upload-time = "2026-10-08T09:31:22.337Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/e1/b53ab7e3c4d0564cf0490dd5b01ab1c03c4d9e4cb9b12ac8297dd2a5b640/libsumo-1.28.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:261d1caf1dee36182fffa707ffbf897df838a3e5a1355b05bb74e7d1bf314102", size = 27107274, upload-time = "2026-10-08T09:31:24.49Z" },
+    { url = "https://files.pythonhosted.org/packages/22/39/3fc3df19e1684c74ead59e11eb3d2c0ed068d26039845bd917c3717dc06d/libsumo-1.28.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:18f4c06b9b4014dc1d1b065a8313a5b7a5fecf159568b5010546a40a099f5f86", size = 36545144, upload-time = "2026-10-08T09:31:27.658Z" },
+    { url = "https://files.pythonhosted.org/packages/68/c7/082ac8543ffe7111304a1c82aedb5835d60378e254b7fcb18ff232b9b249/libsumo-1.28.0-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:10895000509f6afcb5297aaaceca1d697724da88643e5acc67cd8a78c4da5dab", size = 68265307, upload-time = "2026-10-08T09:31:32.535Z" },
+    { url = "https://files.pythonhosted.org/packages/42/00/c3d9fed27a0d9fbf487dd0bb2c0c7bc1dfcf693ec4edcf7c280252031a14/libsumo-1.28.0-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:90b7ee6c8d0ff7cfc6387aa9990eb872ebc35e344f6bd26c3da8ef2e1cc98371", size = 85707568, upload-time = "2026-10-08T09:31:37.278Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/75/8a41a93ba3440f0fbf02b4f9809dbe219c9ecbd64d2103e1ad3fb5d61aa6/libsumo-1.28.0-cp314-cp314-win_amd64.whl", hash = "sha256:68f2a4da72efa1216b206254319d4b953088fd25ae62881aa9fd67bdca378069", size = 80185528, upload-time = "2026-10-08T09:31:42.133Z" },
+    { url = "https://files.pythonhosted.org/packages/42/96/7ea51f77a2384975b1a2ec8088ba5a7f357da24c975513a6aa7ab17ae764/libsumo-1.28.0-cp314-cp314t-macosx_15_0_arm64.whl", hash = "sha256:c92059f524ba39e422d96ad5841ca0bb009b066dbbcd97115dd202b40fa58e59", size = 5733992, upload-time = "2026-10-08T09:31:45.571Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/bd/448c8eba889d860bb1f0d8dbee2aaff5c9893934db9691ca1516584edafd/libsumo-1.28.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:574c00ab5e40ab60d3715a9636eaf19798009d6d347936871fad8121e93a0d23", size = 27076544, upload-time = "2026-10-08T09:31:48.289Z" },
+    { url = "https://files.pythonhosted.org/packages/81/9a/7ccfac98e8a00a50d004bffbbf0515fd064658c89dd28ad8520a629a26ce/libsumo-1.28.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:48bb8bdcfece630b5541956cb84ae6a0869f4c366e29fa33b8bed8d18b5853c9", size = 36507118, upload-time = "2026-10-08T09:31:52.268Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/76/2717b5382176383559aa5a97395d715f66926e8c445bf828d183678de007/libsumo-1.28.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:377dda0c4a37b643ae85981f2fbc80adda16a5bcd1f6f8067e1909c367a33927", size = 68255853, upload-time = "2026-10-08T09:31:56.29Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/75/1bf346109ce1741d815d847046fca9ffb7f667a3ea2ded41c3541220ab3a/libsumo-1.28.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:a8905bf11510243b79e2265611bd4422778f4594423a5b8e430e702a717cf964", size = 85680221, upload-time = "2026-10-08T09:32:01.592Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/c8/70bae6deef4126b88adee61a5e519ca198565abb66ff889b8d8ad1751374/libsumo-1.28.0-cp314-cp314t-win_amd64.whl", hash = "sha256:a423c45d4ac3fbb070015432031d2002dd97d66561a86616151bbc61b85a28e7", size = 80211125, upload-time = "2026-10-08T09:32:06.101Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/3c/5bec59bf40de5f90ab448909857461e8ce3783af9bee8487ef44a6c9a724/libsumo-1.28.0-cp315-cp315-macosx_15_0_arm64.whl", hash = "sha256:50c784fa289035976bf9ae4093bb177a17cdc109f48cc768fc99beb3e5482aa7", size = 5709326, upload-time = "2026-10-08T09:32:08.826Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/10/c0c0c61cb54215553062ed0a0bd5d5ae44577b181a29d1d555998e51d98d/libsumo-1.28.0-cp315-cp315-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:bcc221104e846d66d52515c155b25af0c3a723e3eb84c4d11db7c3ac7c48e742", size = 27107273, upload-time = "2026-10-08T09:32:10.873Z" },
+    { url = "https://files.pythonhosted.org/packages/73/65/ae620193e0e239674e43d94ee66e21ba9e8d6143f44353f7de198ebc9573/libsumo-1.28.0-cp315-cp315-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:6810a7ff9f79554a010178d22c5cca126213dafd26f4634d7ac8e18a79d6a521", size = 36545145, upload-time = "2026-10-08T09:32:13.715Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/cf/8313e252d9c31b9c4bd8d517387dd8552eadd8d524035f41e9b3609fb3aa/libsumo-1.28.0-cp315-cp315-manylinux_2_28_aarch64.whl", hash = "sha256:e48e3453339c9d170e1249894877b18f3f168a50bcea293f718d7a1df39c3318", size = 68265302, upload-time = "2026-10-08T09:32:18.332Z" },
+    { url = "https://files.pythonhosted.org/packages/33/a4/7eb83605c7ab8dfd88908f0051167780effe0acc7b19ca19fa4a6b819d7d/libsumo-1.28.0-cp315-cp315-manylinux_2_28_x86_64.whl", hash = "sha256:fb370003ce7e18cdf415daa453fde3b45d17d792913d592ba7a58feea3df85a9", size = 85707570, upload-time = "2026-10-08T09:32:23.372Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/22/8354bc66b1cb5a49eff6aa01b8170789fc7a48447063b30a91d4b476c352/libsumo-1.28.0-cp315-cp315-win_amd64.whl", hash = "sha256:dd3683548ce7b013a6ddf8e0359480119eabf4b022ed26186db283dc2378e4d7", size = 80185009, upload-time = "2026-10-08T09:32:28.984Z" },
+    { url = "https://files.pythonhosted.org/packages/21/3c/6085795f96d321a1b86583fbb224e65d76a9c21af48ba65fc888dd981697/libsumo-1.28.0-cp315-cp315t-macosx_15_0_arm64.whl", hash = "sha256:2d608822730db5465fd4327e9569d860f6db7917671c618d1158a9724d88363e", size = 5734032, upload-time = "2026-10-08T09:32:31.742Z" },
+    { url = "https://files.pythonhosted.org/packages/69/80/0dab642938dbfd73566a88ce342b663c864567958ec2c990374d69ad24e5/libsumo-1.28.0-cp315-cp315t-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:75668d3c40c0483753246f5e737bf16742f51417846f545e57f4e99fd2e46aca", size = 27074135, upload-time = "2026-10-08T09:32:33.661Z" },
+    { url = "https://files.pythonhosted.org/packages/28/89/af9890978535a77f321ad550b34768c4c3a6ea2030c2f35d48b471734e35/libsumo-1.28.0-cp315-cp315t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:9f7c5da01f7aeba540569d1b8c455f3b9bf70c1da6729a4ce29768733845b841", size = 36504543, upload-time = "2026-10-08T09:32:36.605Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/e8/0176a9de3defaa5f2bac78c5dbd08955f751339493ea94e401af442887df/libsumo-1.28.0-cp315-cp315t-manylinux_2_28_aarch64.whl", hash = "sha256:4640da2121e948585eb77e6142e6a70b408ef9b2f7204e4128e1cf2e3e78f52e", size = 68256858, upload-time = "2026-10-08T09:32:41.034Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/24/eec0f4371b137918314cb8bd6907e9a870ba2a84389536a7de278a1a886a/libsumo-1.28.0-cp315-cp315t-manylinux_2_28_x86_64.whl", hash = "sha256:a2c6eb43503ae73fb3c0444e10eb8e0cd38f5cd56f32472371e286cdbb6319df", size = 85677695, upload-time = "2026-10-08T09:32:46.297Z" },
+    { url = "https://files.pythonhosted.org/packages/38/c3/ad4672dc58cfa73b59949488d8d0caf2e8f7e59add16cb11bcd2fbc360d1/libsumo-1.28.0-cp315-cp315t-win_amd64.whl", hash = "sha256:c4cc72084dbb85344830180a134adcd26b051aaa9293ba95bc8967376f04026d", size = 80209883, upload-time = "2026-10-08T09:32:51.213Z" },
 ]
 
 [[package]]
@@ -834,6 +903,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7d/fa/3944b40b07da9ce895c0e6303a5ab7d53da063554f534556b134a54d6093/packaging-26.3.tar.gz", hash = "sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79", size = 313412, upload-time = "2026-08-04T18:15:28.737Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl", hash = "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c", size = 129956, upload-time = "2026-08-04T18:15:27.159Z" },
+]
+
+[[package]]
+name = "paho-mqtt"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/66/bba39edaac853235385c59e1e30600cd104b8779164c181780742d8095fc/paho_mqtt-2.2.0.tar.gz", hash = "sha256:bcf706f03f1f49e0fc3ae166dc7b67ee35463496f8bdfd7c9c36181f6ba635c9", size = 133751, upload-time = "2026-11-04T20:10:51.405Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/af/fea4b0ee14cee6149f18d180430a14be0963b9a4fbc7875421a7de75f831/paho_mqtt-2.2.0-py3-none-any.whl", hash = "sha256:3243630f7c2b05f71d1de8c6f59865eb04d3a59ae8c866e92377faed6753db4d", size = 77202, upload-time = "2026-11-04T20:10:50.148Z" },
 ]
 
 [[package]]
@@ -1761,11 +1839,22 @@ wheels = [
 ]
 
 [[package]]
-name = "sumolib"
-version = "1.25.0"
+name = "sumo-data"
+version = "1.28.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1a/48/39dbcca267b826eaf7b0edc1f0e78f85698b4132393a894fe58656535927/sumolib-1.25.0-py3-none-any.whl", hash = "sha256:32e431ba0737dc44f25916371900996e09d6dac51c93cd178fdb2c91c6aa18a9", size = 278270, upload-time = "2025-11-13T09:43:16.826Z" },
+    { url = "https://files.pythonhosted.org/packages/35/69/5272a2b8a88034fe2adea6869a04eb555695f257292c68593dd6226f5e01/sumo_data-1.28.0-py3-none-any.whl", hash = "sha256:1f934259d328ed42d12ae0852bae654c79457debbf68b51406aa817c2088b037", size = 16345159, upload-time = "2026-10-08T09:33:18.063Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/95/8c5650c55da61caab4282bceec8a2c475a57ffb1fa6672799161464dbf22/sumo_data-1.28.0-py3-none-macosx_15_0_arm64.whl", hash = "sha256:6d488fba4f9f0398964dae165c32a21545a1cde71cde1755cca0ab398ec6a8f6", size = 120801605, upload-time = "2026-10-08T09:33:28.388Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/44/28876275739735594db402e23ff9d190fee6d30634e77ba47fe476135b30/sumo_data-1.28.0-py3-none-win_amd64.whl", hash = "sha256:48120c1b0174fe7af69a5711d936fc4d3b6d41f28e48326602d7d6d6b6efcc42", size = 116048875, upload-time = "2026-10-08T09:33:34.732Z" },
+]
+
+[[package]]
+name = "sumolib"
+version = "1.28.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/06/87b2ece00c650531e3f776a809982e488a8f6a4dd109d7e810381c5d1583/sumolib-1.28.0.tar.gz", hash = "sha256:8547d6c699a9a97c00a539869f58676f7d8c70afa06a965b4af7f8a870739177", size = 142390, upload-time = "2026-10-08T09:33:39.811Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/97/3c/bb2ba08247793748be59bf93759d1452ed1201e6f143dc98fc51511c87d4/sumolib-1.28.0-py2.py3-none-any.whl", hash = "sha256:eda134defdcc39b966756cc00828ecbabfc35e0631326971f2fe1dea8acd9239", size = 236390, upload-time = "2026-10-08T09:33:37.547Z" },
 ]
 
 [[package]]
@@ -1913,13 +2002,14 @@ wheels = [
 
 [[package]]
 name = "traci"
-version = "1.25.0"
+version = "1.28.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sumolib" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/04/f7/43e04a40da868af0fdc767d417ea27b89958d3b2ec0ae2de0860519e10f9/traci-1.28.0.tar.gz", hash = "sha256:f53483a7f3a15910b88579cfb4c72a8e304364e58a2b3f0a1acbcf460598c6b3", size = 103837, upload-time = "2026-10-08T10:42:32.77Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/7b/f3b53b523616e8fed7f354de6389307cc5664e16660085fa4934a0c9b09d/traci-1.25.0-py3-none-any.whl", hash = "sha256:76bffcb529cb6a8d9494d496f0190ae82c1be4ea28a879fd537ac22b59c4223a", size = 278508, upload-time = "2025-11-13T09:43:18.052Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/a1/a95328ff82da409b46d5ed2723b70dff6a5445776ad95c34b5d1a84de7f2/traci-1.28.0-py2.py3-none-any.whl", hash = "sha256:cbc88b5b38b60c0dba4939f9171615a97bd12dd113c5bc7730d76dfe2db73881", size = 139433, upload-time = "2026-10-08T09:33:38.705Z" },
 ]
 
 [[package]]

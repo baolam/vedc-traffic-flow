@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     edgeflow_topology: str = "four_intersection_v1"
     edgeflow_controller: str = "max_pressure"
     rl_model_path: str = ""
+    rl_models_dir: str = "/models/rl_demo"  # phase_dqn_baseline / edgeflow_rl policies per topology
     # API endpoint whose "active_controller" is followed live (dashboard "Apply Policy"); empty = off
     control_policy_url: str = ""
     # Dashboard phase override: seconds the forced phase stays green before the controller resumes; 0 = no hold

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-10-11T19:48:49.242964+07:00 by Eclipse SUMO sumo 1.25.0
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\inputs\hcm_neighborhood_benchmark_v2\network.net.xml"/>
+        <route-files value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v1-baseline\inputs\hcm_neighborhood_benchmark_v1\demand\directional_shift-500-72003.rou.xml"/>
+        <additional-files value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\inputs\hcm_neighborhood_benchmark_v2\native_fixed.add.xml"/>
+    </input>
+
+    <output>
+        <fcd-output value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72003-native_fixed\fcd.xml"/>
+        <tripinfo-output value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72003-native_fixed\tripinfo.xml"/>
+        <tripinfo-output.write-unfinished value="true"/>
+        <collision-output value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72003-native_fixed\collisions.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="4500"/>
+        <step-length value="1"/>
+    </time>
+
+    <processing>
+        <ignore-route-errors value="false"/>
+        <collision.action value="warn"/>
+        <collision.check-junctions value="true"/>
+        <time-to-teleport value="300"/>
+        <max-depart-delay value="-1"/>
+    </processing>
+
+    <report>
+        <error-log value="C:\Users\Zephyrus M16\Desktop\UNI\VEDC\vedc-traffic-flow\workspaces\hcm-benchmark-v2\artifacts\hcm-qualification-v2\diagnostics\qualification-directional_shift-500-72003-native_fixed\sumo-warnings.log"/>
+        <duration-log.disable value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="54816"/>
+    </traci_server>
+
+    <random_number>
+        <seed value="72003"/>
+    </random_number>
+
+</sumoConfiguration>
+-->
+
+<collisions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/collision_file.xsd">
+    <collision time="333.00" type="junction" lane=":366426721_2_0" pos="3.28" collider="veh_000034" victim="veh_000031" colliderType="truck" victimType="car" colliderSpeed="2.71" victimSpeed="0.00" colliderFront="271.16,285.71" colliderBack="273.86,293.23" victimFront="274.44,286.95" victimBack="271.06,284.10"/>
+    <collision time="900.00" type="junction" lane=":cluster_2217938303_2217938318_14_0" pos="0.37" collider="veh_000103" victim="veh_000114" colliderType="motorcycle" victimType="bus" colliderSpeed="0.00" victimSpeed="6.81" colliderFront="145.58,401.09" colliderBack="143.55,401.92" victimFront="143.40,405.47" victimBack="149.46,396.19"/>
+    <collision time="1653.00" type="junction" lane=":cluster_2217938303_2217938318_14_0" pos="0.37" collider="veh_000202" victim="veh_000210" colliderType="motorcycle" victimType="bus" colliderSpeed="0.00" victimSpeed="8.05" colliderFront="145.58,401.09" colliderBack="143.55,401.92" victimFront="143.14,405.58" victimBack="149.42,396.47"/>
+    <collision time="2310.00" type="junction" lane=":cluster_2217938303_2217938318_14_0" pos="0.37" collider="veh_000316" victim="veh_000313" colliderType="taxi" victimType="bus" colliderSpeed="0.00" victimSpeed="6.66" colliderFront="145.58,401.09" colliderBack="141.44,402.83" victimFront="141.47,406.30" victimBack="149.14,398.27"/>
+</collisions>

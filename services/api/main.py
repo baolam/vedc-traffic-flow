@@ -975,8 +975,10 @@ def set_control_policy(req: PolicyChangeRequest):
     Updates the active traffic control policy (fixed_time, max_queue, max_pressure, edgeflow).
     """
     # RL policies need a trained model file on the graph-control host; accepting them here would only
-    # change the dashboard label while graph-control keeps the previous controller.
-    valid_controllers = ["fixed_time", "max_queue", "max_pressure", "edgeflow", "flow_theory", "actuated"]
+    # change the dashboard label while graph-control keeps the previous controller. The two learned
+    # demo policies ship their per-map models in models/rl_demo (mounted into graph-control at /models).
+    valid_controllers = ["fixed_time", "max_queue", "max_pressure", "edgeflow", "flow_theory", "actuated",
+                         "phase_dqn_baseline", "edgeflow_rl"]
     req_ctrl = req.controller.lower()
     if req_ctrl not in valid_controllers:
         raise HTTPException(

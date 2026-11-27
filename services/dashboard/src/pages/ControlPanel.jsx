@@ -12,6 +12,20 @@ const OVERRIDE_FOLLOW_MAX_POLLS = 60; // 1 s each: covers the 25 s wait + 15 s h
 
 const CONTROLLER_DESCRIPTIONS = {
   en: {
+    edgeflow_rl: {
+      name: 'EdgeFlow RL (Two-Tier Residual DQN)',
+      tag: 'Learned · Benchmark Best',
+      tagColor: '#7c3aed',
+      summary: 'Trained phase DQN acting as a residual on FlowTheory, inside the 40 s max-red safety envelope.',
+      howItWorks: 'Keeps FlowTheory\'s phase unless the learned Q-value beats it: Max-Pressure\'s phase may override at +5 %, any other phase at +20 %. Any approach stopped over 40 s must be served next. Best seed (17) of the 2026-11-26 test benchmark: 0.725 relative delay vs tuned Fixed-Time. Needs this map\'s trained model (models/rl_demo).'
+    },
+    phase_dqn_baseline: {
+      name: 'Phase DQN Baseline (Free DQN)',
+      tag: 'Learned · Baseline',
+      tagColor: '#f59e0b',
+      summary: 'Same phase-scoring DQN choosing phases freely, without residual or max-red gates.',
+      howItWorks: 'Scores each legal phase from its own, 2-hop downstream and upstream queues and occupancy, and greens the highest Q-value. Best seed (17) of the 2026-11-26 test benchmark: 0.852 relative delay vs tuned Fixed-Time. Needs this map\'s trained model (models/rl_demo).'
+    },
     flow_theory: {
       name: 'FlowTheory (CTM & Anti-Gridlock Gating)',
       tag: 'Recommended · Optimal',
@@ -49,6 +63,20 @@ const CONTROLLER_DESCRIPTIONS = {
     }
   },
   vi: {
+    edgeflow_rl: {
+      name: 'EdgeFlow RL (Two-Tier Residual DQN)',
+      tag: 'Học Tăng Cường · Tốt Nhất',
+      tagColor: '#7c3aed',
+      summary: 'Mạng DQN đã huấn luyện chạy dạng residual trên FlowTheory, trong vùng an toàn max-red 40 s.',
+      howItWorks: 'Giữ pha của FlowTheory trừ khi giá trị Q học được vượt trội: pha của Max-Pressure được chọn khi hơn 5 %, pha khác khi hơn 20 %. Hướng nào chờ đỏ quá 40 s phải được phục vụ ngay. Seed tốt nhất (17) của benchmark 26/11/2026: độ trễ tương đối 0.725 so với Fixed-Time. Cần model đã huấn luyện cho bản đồ này (models/rl_demo).'
+    },
+    phase_dqn_baseline: {
+      name: 'Phase DQN Baseline (DQN Tự Do)',
+      tag: 'Học Tăng Cường · Cơ Sở',
+      tagColor: '#f59e0b',
+      summary: 'Cùng mạng DQN chấm điểm pha nhưng chọn pha tự do, không có residual hay max-red.',
+      howItWorks: 'Chấm điểm từng pha hợp lệ từ hàng chờ và độ chiếm dụng của nhánh được phục vụ, hạ lưu và thượng lưu 2 bước, rồi bật xanh pha có Q cao nhất. Seed tốt nhất (17) của benchmark 26/11/2026: độ trễ tương đối 0.852 so với Fixed-Time. Cần model đã huấn luyện cho bản đồ này (models/rl_demo).'
+    },
     flow_theory: {
       name: 'FlowTheory (CTM & Anti-Gridlock Gating)',
       tag: 'Khuyên Dùng · Tối Ưu Nhất',
@@ -396,6 +424,12 @@ const ControlPanel = () => {
                   cursor: 'pointer'
                 }}
               >
+                <option value="edgeflow_rl">
+                  {isVi ? 'EdgeFlow RL (Two-Tier Residual DQN) — [Học Tăng Cường · Tốt Nhất Benchmark]' : 'EdgeFlow RL (Two-Tier Residual DQN) — [Learned · Benchmark Best]'}
+                </option>
+                <option value="phase_dqn_baseline">
+                  {isVi ? 'Phase DQN Baseline — [Học Tăng Cường Cơ Sở]' : 'Phase DQN Baseline — [Learned Baseline]'}
+                </option>
                 <option value="flow_theory">
                   {isVi ? 'FlowTheory (CTM & Anti-Gridlock Gating) — [Khuyên Dùng / Khóa Kẹt Mạng]' : 'FlowTheory (CTM & Anti-Gridlock Gating) — [Recommended / Zero-Gridlock]'}
                 </option>

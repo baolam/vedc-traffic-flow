@@ -2,6 +2,7 @@ import os
 import json
 import time
 import logging
+from pathlib import Path
 from typing import Dict, Any
 
 from config import settings
@@ -19,6 +20,8 @@ logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.I
 logger = logging.getLogger("graph-control")
 
 POLICY_POLL_S = 2.0
+# Trained demo policies, one file per map: <rl_models_dir>/<name>/<topology_id>.json (models/rl_demo/manifest.json)
+DEMO_RL_POLICIES = ("phase_dqn_baseline", "edgeflow_rl")
 
 
 def create_controller(name=None):
@@ -26,7 +29,10 @@ def create_controller(name=None):
     name = (name or settings.edgeflow_controller).lower()
     aliases = {"flow": "flow_theory", "ctm": "flow_theory", "flow_rl": "presslight_rl",
                "presslight": "presslight_rl", "rl_ppo": "presslight_rl"}
-    return build_controller(aliases.get(name, name), model_path=settings.rl_model_path or None)
+    name = aliases.get(name, name)
+    if name in DEMO_RL_POLICIES:  # a missing map model raises here, so the policy follower keeps the old controller
+        return build_controller(name, model_path=str(Path(settings.rl_models_dir) / name / f"{settings.edgeflow_topology}.json"))
+    return build_controller(name, model_path=settings.rl_model_path or None)
 
 
 def main():

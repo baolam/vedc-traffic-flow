@@ -48,3 +48,7 @@ create-scenario:
 	python src/tools/generate_traffic_scenario.py --net $(NET) --scenario-id $(SCENARIO) $(if $(VEHICLES),--vehicles $(VEHICLES),) $(if $(DURATION),--duration $(DURATION),)
 
 
+
+.PHONY: benchmark
+benchmark:
+	python services/experiment-runner/runner.py --suite configs/benchmarks/suite_v1.yaml --stage $(or $(STAGE),preflight)

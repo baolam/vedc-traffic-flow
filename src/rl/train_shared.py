@@ -10,14 +10,30 @@ from src.rl.shared_dqn import Learner
 from src.simulation.runtime import file_hash
 
 
+def resolve_fair_cycle_environment(environment, training):
+    """Resolve one authoritative cycle timing for worker, learner and artifact use."""
+    resolved = dict(environment)
+    if resolved.get("mode") != "fair_cycle_dqn":
+        return resolved
+    for key, default in (("cycle_time_s", 70), ("min_green_share", 1/3)):
+        environment_value = resolved.get(key, training.get(key, default))
+        training_value = training.get(key, environment_value)
+        if environment_value != training_value:
+            raise ValueError(f"Environment and learner {key} settings disagree")
+        resolved[key] = training_value
+    resolved["discount"] = training.get("discount", .99)
+    return resolved
+
+
 def worker(pipe, env_config, output):
     from src.rl.sumo_env import FairCycleSumoEnv, SumoNetworkEnv
     env_config = dict(env_config)
     mode = env_config.pop("mode", "shared_dqn")
     env_type = FairCycleSumoEnv if mode == "fair_cycle_dqn" else SumoNetworkEnv
     if mode == "fair_cycle_dqn":
-        env_config.update(cycle_time_s=70, min_green_share=1/3,
-                          discount=env_config.pop("discount", .99))
+        env_config.setdefault("cycle_time_s", 70)
+        env_config.setdefault("min_green_share", 1/3)
+        env_config["discount"] = env_config.pop("discount", .99)
     env = env_type(**env_config, output=output)
     try:
         while True:
@@ -67,10 +83,8 @@ def train(config, output, seed, resume=None):
     learner = Learner(config["training"], seed)
     if resume:
         learner.load(resume)
-    env_config = dict(config["environment"])
+    env_config = resolve_fair_cycle_environment(config["environment"], config["training"])
     env_config["trace"] = False
-    if env_config.get("mode") == "fair_cycle_dqn":
-        env_config["discount"] = config["training"].get("discount", .99)
     provenance = {k: file_hash(env_config[v]) for k, v in (
         ("network_sha256", "network_path"), ("topology_sha256", "topology_path"))}
     if resume:
